@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daniel's timing — 전고점 대비 현재</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+:root{
+  --paper:#E9ECF0; --card:#FFFFFF;
+  --ink:#0F1A24; --ink-2:#5A6B7A; --ink-3:#8B99A6;
+  --rule:#D3DAE1; --rule-2:#E6EAEF;
+  --up:#C4362C; --down:#1F5FA9;
+  --band-2:rgba(31,95,169,.18);
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --cond:"IBM Plex Sans Condensed","Pretendard Variable",Pretendard,sans-serif;
+  --body:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  background-image:linear-gradient(rgba(15,26,36,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(15,26,36,.028) 1px,transparent 1px);
+  background-size:56px 56px;
+  color:var(--ink);font-family:var(--body);line-height:1.5;-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:900px;margin:0 auto;padding:36px 20px 72px}
+
+/* masthead */
+.masthead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding-bottom:14px;margin-bottom:22px;border-bottom:2px solid var(--ink)}
+.eyebrow{margin:0 0 6px;font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.masthead h1{margin:0;font-family:var(--cond);font-weight:700;font-size:30px;letter-spacing:-.01em;line-height:1}
+.stamp{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+
+/* controls */
+.mast-right{display:flex;flex-direction:column;align-items:flex-end;gap:9px}
+.tools{display:flex;justify-content:flex-end;padding:12px 20px 0}
+.seg{display:flex;border:1px solid var(--rule);background:var(--card)}
+.seg.mini button{padding:4px 8px;font-size:10.5px;color:var(--ink-3)}
+.seg.mini button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.seg button{appearance:none;border:0;background:transparent;cursor:pointer;font-family:var(--mono);font-size:11.5px;
+  font-weight:500;letter-spacing:.02em;padding:6px 11px;color:var(--ink-2)}
+.seg.kr button{font-family:var(--cond);font-weight:600;font-size:12px;letter-spacing:.06em}
+.seg button+button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.seg button:focus-visible{outline:2px solid var(--down);outline-offset:2px}
+
+/* panel */
+.panel{background:var(--card);border:1px solid var(--rule);margin-bottom:20px}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:16px 20px 14px;border-bottom:1px solid var(--rule-2)}
+.name{display:flex;align-items:baseline;gap:9px}
+.name h2{margin:0;font-family:var(--cond);font-weight:700;font-size:19px}
+.ticker{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink-3);border:1px solid var(--rule);padding:2px 5px}
+.now{display:flex;align-items:baseline;gap:10px;white-space:nowrap}
+.now-val{font-family:var(--mono);font-weight:500;font-size:24px;letter-spacing:-.02em}
+.now-chg{font-family:var(--mono);font-size:13px;font-weight:500}
+.dn{color:var(--down)} .up{color:var(--up)}
+
+/* chart + tooltip */
+.chart{position:relative;padding:6px 8px 0}
+.chart svg{display:block;width:100%;height:auto;touch-action:pan-y}
+.tip{position:absolute;top:10px;pointer-events:none;opacity:0;transition:opacity .12s;
+  background:var(--card);border:1px solid var(--rule);border-left:2px solid var(--ink-2);
+  padding:7px 10px;font-family:var(--mono);font-size:11px;line-height:1.65;white-space:nowrap;
+  box-shadow:0 2px 10px rgba(15,26,36,.10);transform:translateX(-50%);z-index:2}
+.tip.on{opacity:1}
+.tip .t-d{color:var(--ink-3);font-size:10px;letter-spacing:.04em}
+.tip .t-v{font-size:14px;font-weight:500;letter-spacing:-.01em}
+.tip .t-x{margin-top:1px}
+
+/* readout */
+.readout{display:grid;grid-template-columns:repeat(4,1fr);margin:0;border-top:1px solid var(--rule-2)}
+.readout>div{padding:14px 20px 16px}
+.readout>div+div{border-left:1px solid var(--rule-2)}
+.readout dt{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px}
+.readout dd{margin:0}
+.readout .num{font-family:var(--mono);font-weight:500;font-size:20px;letter-spacing:-.02em;line-height:1.1}
+.readout .unit{font-size:12px;font-weight:400;color:var(--ink-2);margin-left:1px}
+.readout .sub{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-top:5px}
+.cell-dd{background:rgba(31,95,169,.05)}
+.cell-dd .num{color:var(--down)}
+.cell-dd .sub{color:var(--down);opacity:.75}
+
+/* fng head */
+.fng-body{padding:18px 20px 2px}
+.fng-headline{display:flex;align-items:baseline;gap:14px}
+.fng-val{font-family:var(--mono);font-weight:500;font-size:52px;line-height:.9;letter-spacing:-.03em}
+.fng-label{font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase}
+.fng-note{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-top:2px}
+
+.foot{margin-top:26px;padding-top:14px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.8}
+.foot b{color:var(--ink-2);font-weight:500}
+
+.svg-label{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.svg-num{font-family:var(--mono);font-size:11.5px;font-weight:500}
+.svg-axis{font-family:var(--mono);font-size:10px;fill:var(--ink-3)}
+/* 좁은 화면에서는 뷰박스를 줄여 그리므로 축소율이 낮다. 그에 맞춰 한 단계만 키운다. */
+svg.sm .svg-label{font-size:9.5px;letter-spacing:.06em}
+svg.sm .svg-num{font-size:12px}
+svg.sm .svg-axis{font-size:11px}
+
+.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw .9s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.fade{opacity:0;animation:fade .5s ease forwards}
+@keyframes fade{to{opacity:1}}
+.d1{animation-delay:.45s}.d2{animation-delay:.7s}.d3{animation-delay:.9s}
+@media (prefers-reduced-motion:reduce){.draw,.fade{animation:none;stroke-dashoffset:0;opacity:1}}
+
+@media (max-width:640px){
+  .wrap{padding:24px 14px 56px}
+  .masthead{flex-direction:column;align-items:flex-start;gap:10px}
+  .mast-right{align-items:flex-start}
+  .masthead h1{font-size:24px}
+  .tools{padding:12px 14px 0}
+  .seg button{padding:6px 8px;font-size:11px}
+  .seg.mini button{padding:4px 6px;font-size:10px}
+  .panel-head{flex-direction:column;align-items:flex-start;gap:6px}
+  .readout{grid-template-columns:1fr 1fr}
+  .readout>div{padding:13px 14px 15px}
+  .readout dt{font-size:11px;letter-spacing:.1em}
+  .readout .num{font-size:21px}
+  .readout .sub{font-size:12px}
+  .readout>div:nth-child(3),.readout>div:nth-child(4){border-top:1px solid var(--rule-2)}
+  .readout>div:nth-child(odd){border-left:0}
+  .tip{font-size:12px;padding:8px 11px}
+  .tip .t-d{font-size:11px}
+  .tip .t-v{font-size:15px}
+  .stamp{font-size:11.5px}
+  .fng-val{font-size:42px}
+  .fng-note{font-size:11.5px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">Drawdown from all-time high</p>
+      <h1>Daniel's timing</h1>
+    </div>
+    <div class="mast-right">
+      <div class="stamp" id="stamp">—</div>
+      <div class="seg kr" id="scene-seg" role="group" aria-label="상태 미리보기">
+        <button type="button" data-scene="now" aria-pressed="true">현재</button>
+        <button type="button" data-scene="dip" aria-pressed="false">조정장 예시</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="panel" id="panel-spx"></section>
+  <section class="panel" id="panel-ndx"></section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="name"><h2>공포탐욕지수</h2><span class="ticker">CNN F&amp;G</span></div>
+    </div>
+    <div class="fng-body">
+      <div class="fng-headline">
+        <div class="fng-val" id="fng-val">—</div>
+        <div>
+          <div class="fng-label" id="fng-label">—</div>
+          <div class="fng-note" id="fng-note"></div>
+        </div>
+      </div>
+    </div>
+    <div id="fng-tools"></div>
+    <div class="chart" id="fng-chart"></div>
+    <dl class="readout" id="fng-readout"></dl>
+  </section>
+
+  <p class="foot">
+    <b>표시된 수치는 디자인 확인용 샘플입니다.</b><br>
+    전고점은 기간 선택과 무관하게 사상 최고 종가 기준. 경과일수는 달력일 기준.<br>
+    연동 예정 소스 — 지수: Stooq / Yahoo Finance, 공포탐욕지수: CNN Business.
+  </p>
+</div>
+
+<script>
+/* ================= 데이터 ================= */
+const SCENES={
+  now:{
+    stamp:"2026.08.06 기준 · 샘플 데이터",
+    spx:{name:"S&P 500",ticker:"SPX",peak:7793.68,peakDate:"2026-08-05",cur:7738.20,curDate:"2026-08-06",start:.56,seed:7},
+    ndx:{name:"나스닥 100",ticker:"NDX",peak:29014.35,peakDate:"2026-08-05",cur:28712.60,curDate:"2026-08-06",start:.50,seed:23},
+    fng:{value:59,prev:58,date:"2026-08-06",seed:41,bias:6}
+  },
+  dip:{
+    stamp:"조정장 예시 · 가상 데이터",
+    spx:{name:"S&P 500",ticker:"SPX",peak:7793.68,peakDate:"2026-08-05",cur:6624.63,curDate:"2026-11-20",start:.56,seed:7},
+    ndx:{name:"나스닥 100",ticker:"NDX",peak:29014.35,peakDate:"2026-08-05",cur:23501.62,curDate:"2026-11-20",start:.50,seed:23},
+    fng:{value:21,prev:27,date:"2026-11-20",seed:41,bias:-14}
+  }
+};
+const RANGES=[["30D",30],["90D",90],["180D",180],["1Y",365],["3Y",1095],["5Y",1825]];
+let state={scene:"now",range:{spx:365,ndx:365,fng:365}};
+const rangeSeg=slot=>`<div class="tools"><div class="seg mini" role="group" aria-label="차트 기간">`+
+  RANGES.map(([l,d])=>`<button type="button" data-slot="${slot}" data-range="${d}" aria-pressed="${d===state.range[slot]}">${l}</button>`).join("")+
+  `</div></div>`;
+
+/* ================= 유틸 ================= */
+const fmt=n=>n.toLocaleString("ko-KR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const dot=s=>s.replace(/-/g,".");
+const dayDiff=(a,b)=>Math.round((new Date(b)-new Date(a))/864e5);
+const shift=(iso,d)=>{const t=new Date(iso+"T00:00:00Z");t.setUTCDate(t.getUTCDate()+d);return t.toISOString().slice(0,10)};
+function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+/* 뷰박스 폭을 패널의 실제 폭에 맞춘다.
+   창 폭으로 판정하면 패널마다 좌표계가 어긋날 수 있고,
+   1:1로 그리면 축소가 없어 글자가 지정한 px 그대로 찍힌다. */
+function geo(el){
+  const raw=(el&&el.clientWidth)||796;
+  return {W:Math.max(300,Math.round(raw-16)),sm:raw<560};
+}
+
+/* 영업일 배열 (오름차순, 마지막이 기준일) */
+function bizDates(endISO,span){
+  const out=[];let d=endISO,i=0;
+  while(i<=span){
+    const wd=new Date(d+"T00:00:00Z").getUTCDay();
+    if(wd!==0&&wd!==6)out.push(d);
+    d=shift(d,-1);i++;
+  }
+  return out.reverse();
+}
+
+/* ================= 시계열 생성 ================= */
+const CACHE={};
+function indexSeries(key,cfg){
+  if(CACHE[key])return CACHE[key];
+  const dates=bizDates(cfg.curDate,1900),n=dates.length,r=rng(cfg.seed);
+  let pk=0;for(let i=0;i<n;i++)if(dates[i]<=cfg.peakDate)pk=i;
+  const endRatio=cfg.cur/cfg.peak;
+  const bear=(u,c,w,d)=>-d*Math.exp(-Math.pow((u-c)/w,2));
+  let w=0;const v=[];
+  for(let i=0;i<n;i++){
+    let b;
+    if(i<=pk){
+      const u=pk?i/pk:1;
+      b=(cfg.start+(1-cfg.start)*Math.pow(u,.95))*(1+bear(u,.17,.055,.17)+bear(u,.46,.04,.09)+bear(u,.71,.032,.055));
+    }else{
+      const u=(i-pk)/Math.max(n-1-pk,1);
+      b=1+(endRatio-1)*(.72*u+.28*Math.pow(u,2.4));
+    }
+    w=w*.9+(r()-.5)*.0085;
+    let ratio=b*(1+w);
+    if(i!==pk&&ratio>.9985)ratio=.9985-r()*.012;
+    v.push(cfg.peak*ratio);
+  }
+  v[pk]=cfg.peak;v[n-1]=cfg.cur;
+  const run=[];let m=0;for(let i=0;i<n;i++){m=Math.max(m,v[i]);run.push(m)}
+  return CACHE[key]={dates,v,run,peakIdx:pk};
+}
+function fngSeries(key,f){
+  if(CACHE[key])return CACHE[key];
+  const dates=bizDates(f.date,1900),n=dates.length,r=rng(f.seed);
+  let x=50,w=0;const v=[];
+  for(let i=0;i<n;i++){
+    w=w*.72+(r()-.5)*9;
+    x+=(48-x)*.045+w;
+    x=Math.max(6,Math.min(94,x));
+    v.push(x);
+  }
+  const k=180;
+  for(let i=0;i<k;i++){const u=(i+1)/k,j=n-k+i;v[j]=v[j]+f.bias*u}
+  const t=26;
+  for(let i=0;i<t;i++){const u=Math.pow((i+1)/t,1.6),j=n-t+i;v[j]=v[j]*(1-u)+f.value*u}
+  v[n-1]=f.value;v[n-2]=f.prev;
+  return CACHE[key]={dates,v:v.map(a=>Math.max(2,Math.min(98,Math.round(a))))};
+}
+
+/* ================= X축 눈금 ================= */
+function xTicks(dates,i0,i1,c){
+  const span=dayDiff(dates[i0],dates[i1]),out=[];
+  const label=iso=>{
+    const[y,m,d]=iso.split("-").map(Number);
+    if(span<=120)return m+"."+d;
+    if(span<=800)return "'"+String(y).slice(2)+"."+m;
+    return String(y);
+  };
+  for(let k=0;k<c;k++){
+    const i=Math.round(i0+(i1-i0)*k/(c-1));
+    out.push({i,t:label(dates[i])});
+  }
+  return out;
+}
+
+/* ================= 호버 ================= */
+function attachHover(box,meta){
+  const svg=box.querySelector("svg");
+  const tip=document.createElement("div");tip.className="tip";box.appendChild(tip);
+  const cross=svg.querySelector(".cross"),cdot=svg.querySelector(".cdot"),cline=svg.querySelector(".cline");
+  const move=e=>{
+    const rc=svg.getBoundingClientRect();
+    const vx=(e.clientX-rc.left)*(meta.W/rc.width);
+    let k=Math.round((vx-meta.L)/meta.pw*(meta.n-1));
+    k=Math.max(0,Math.min(meta.n-1,k));
+    const x=meta.X(k),y=meta.Y(meta.val(k));
+    cline.setAttribute("x1",x);cline.setAttribute("x2",x);
+    cdot.setAttribute("cx",x);cdot.setAttribute("cy",y);
+    cross.style.opacity=1;
+    tip.innerHTML=meta.html(k);
+    tip.style.left=(x/meta.W*rc.width+8)+"px";
+    tip.classList.add("on");
+    const tw=tip.offsetWidth,bw=box.clientWidth,lx=parseFloat(tip.style.left);
+    tip.style.left=Math.max(tw/2+4,Math.min(bw-tw/2-4,lx))+"px";
+  };
+  const out=()=>{cross.style.opacity=0;tip.classList.remove("on")};
+  svg.addEventListener("pointermove",move);
+  svg.addEventListener("pointerleave",out);
+  svg.addEventListener("pointercancel",out);
+}
+
+/* ================= 지수 패널 ================= */
+function renderPanel(id,cfg,key,slot){
+  const S=indexSeries(key,cfg),{dates,v,run}=S,N=dates.length;
+  const from=shift(cfg.curDate,-state.range[slot]);
+  let i0=0;for(let i=0;i<N;i++)if(dates[i]<from)i0=i+1;
+  i0=Math.min(i0,N-3);
+  const i1=N-1,n=i1-i0+1;
+
+  const {W,sm}=geo(document.getElementById(id));
+  const g=sm?{L:8,R:58,T:26,ph:150,B:54,dim:22,ax:42,dxo:16,ticks:3}
+            :{L:12,R:92,T:30,ph:190,B:70,dim:24,ax:44,dxo:30,ticks:5};
+  const L=g.L,R=g.R,T=g.T,ph=g.ph,H=T+ph+g.B;
+  const pw=W-L-R;
+  const win=v.slice(i0,i1+1);
+  const lo=Math.min(...win),hi=Math.max(Math.max(...win),cfg.peak);
+  const pad=(hi-lo)*.2||1,yMin=lo-pad,yMax=hi+pad*.5;
+  const X=i=>L+pw*(i-i0)/(n-1),Y=val=>T+ph*(1-(val-yMin)/(yMax-yMin));
+  const P=a=>a.map((p,j)=>(j?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+  const pts=[];for(let i=i0;i<=i1;i++)pts.push([X(i),Y(v[i])]);
+
+  const pk=S.peakIdx,inWin=pk>=i0;
+  const yPeak=Y(cfg.peak),yCur=Y(cfg.cur),xPk=inWin?X(pk):L,xEnd=X(i1);
+  const cut=Math.max(pk,i0)-i0;
+  const pre=pts.slice(0,cut+1),post=pts.slice(cut);
+  const band=P(post)+` L ${xEnd.toFixed(1)} ${yPeak.toFixed(1)} L ${pts[cut][0].toFixed(1)} ${yPeak.toFixed(1)} Z`;
+
+  const pct=(cfg.cur/cfg.peak-1)*100,back=(cfg.peak/cfg.cur-1)*100,el=dayDiff(cfg.peakDate,cfg.curDate);
+  const dx=xEnd+g.dxo,gap=Math.abs(yCur-yPeak),yMid=(yCur+yPeak)/2;
+  const yBot=T+ph,yDim=yBot+g.dim,yAx=yBot+g.ax;
+  const narrow=(xEnd-xPk)<(sm?46:80);
+
+  const ticks=xTicks(dates,i0,i1,g.ticks).map((t,j,arr)=>{
+    const x=X(t.i),anc=j===0?"start":j===arr.length-1?"end":"middle";
+    return `<line x1="${x.toFixed(1)}" y1="${yAx-11}" x2="${x.toFixed(1)}" y2="${yAx-6}" stroke="var(--rule)" stroke-width="1"/>
+      <text x="${x.toFixed(1)}" y="${yAx}" text-anchor="${anc}" class="svg-axis">${t.t}</text>`;
+  }).join("");
+
+  document.getElementById(id).innerHTML=`
+  <div class="panel-head">
+    <div class="name"><h2>${cfg.name}</h2><span class="ticker">${cfg.ticker}</span></div>
+    <div class="now"><span class="now-val">${fmt(cfg.cur)}</span><span class="now-chg dn">${pct.toFixed(2)}%</span></div>
+  </div>
+  ${rangeSeg(slot)}
+  <div class="chart" id="${id}-c">
+  <svg viewBox="0 0 ${W} ${H}" class="${sm?"sm":""}" role="img" aria-label="${cfg.name} 전고점 대비 추이">
+    <defs><pattern id="h${cfg.ticker}" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="var(--band-2)" stroke-width="1.6"/></pattern></defs>
+    <path d="${band}" fill="url(#h${cfg.ticker})" class="fade d1"/>
+    <line x1="${L}" y1="${yPeak.toFixed(1)}" x2="${(xEnd+8).toFixed(1)}" y2="${yPeak.toFixed(1)}" stroke="var(--up)" stroke-width="1.2" stroke-dasharray="7 4" class="fade d1"/>
+    <text x="${L}" y="${(yPeak-9).toFixed(1)}" class="svg-label" fill="var(--up)">전고점 ${fmt(cfg.peak)}</text>
+    ${pre.length>1?`<path d="${P(pre)}" fill="none" stroke="var(--ink-2)" stroke-width="1.5" stroke-linejoin="round" class="draw" style="--len:${(pw*2).toFixed(0)}"/>`:""}
+    <path d="${P(post)}" fill="none" stroke="var(--down)" stroke-width="2.1" stroke-linejoin="round" class="draw d1" style="--len:${(pw*2).toFixed(0)}"/>
+    ${inWin?`<circle cx="${xPk.toFixed(1)}" cy="${yPeak.toFixed(1)}" r="3.4" fill="var(--up)" class="fade d2"/>`:""}
+    <circle cx="${xEnd.toFixed(1)}" cy="${yCur.toFixed(1)}" r="3.4" fill="var(--down)" class="fade d2"/>
+
+    <g class="fade d3">
+      <line x1="${xEnd.toFixed(1)}" y1="${yPeak.toFixed(1)}" x2="${dx}" y2="${yPeak.toFixed(1)}" stroke="var(--rule)" stroke-width="1"/>
+      <line x1="${xEnd.toFixed(1)}" y1="${yCur.toFixed(1)}" x2="${dx}" y2="${yCur.toFixed(1)}" stroke="var(--rule)" stroke-width="1"/>
+      <line x1="${dx}" y1="${yPeak.toFixed(1)}" x2="${dx}" y2="${yCur.toFixed(1)}" stroke="var(--down)" stroke-width="1.3"/>
+      <line x1="${dx-4}" y1="${yPeak.toFixed(1)}" x2="${dx+4}" y2="${yPeak.toFixed(1)}" stroke="var(--down)" stroke-width="1.6"/>
+      <line x1="${dx-4}" y1="${yCur.toFixed(1)}" x2="${dx+4}" y2="${yCur.toFixed(1)}" stroke="var(--down)" stroke-width="1.6"/>
+      <text x="${dx+(sm?6:9)}" y="${(gap<24?yMid-4:yMid+4).toFixed(1)}" class="svg-num" fill="var(--down)">${pct.toFixed(2)}%</text>
+    </g>
+
+    <g class="fade d3">
+      ${inWin
+        ?`<line x1="${xPk.toFixed(1)}" y1="${yDim-5}" x2="${xPk.toFixed(1)}" y2="${yDim+5}" stroke="var(--ink-3)" stroke-width="1.2"/>`
+        :`<line x1="${L+3}" y1="${yDim-5}" x2="${L-1}" y2="${yDim+5}" stroke="var(--ink-3)" stroke-width="1.2"/>
+          <line x1="${L+9}" y1="${yDim-5}" x2="${L+5}" y2="${yDim+5}" stroke="var(--ink-3)" stroke-width="1.2"/>`}
+      <line x1="${xEnd.toFixed(1)}" y1="${yDim-5}" x2="${xEnd.toFixed(1)}" y2="${yDim+5}" stroke="var(--ink-3)" stroke-width="1.2"/>
+      <line x1="${xPk.toFixed(1)}" y1="${yDim}" x2="${xEnd.toFixed(1)}" y2="${yDim}" stroke="var(--ink-3)" stroke-width="1"/>
+      <text x="${narrow?(xPk-8).toFixed(1):((xPk+xEnd)/2).toFixed(1)}" y="${yDim-9}" text-anchor="${narrow?"end":"middle"}" class="svg-num" fill="var(--ink-2)">${el}일 경과</text>
+    </g>
+
+    <line x1="${L}" y1="${yAx-11}" x2="${xEnd.toFixed(1)}" y2="${yAx-11}" stroke="var(--rule-2)" stroke-width="1"/>
+    ${ticks}
+    <g class="cross" style="opacity:0">
+      <line class="cline" y1="${T}" y2="${yBot}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="2 3"/>
+      <circle class="cdot" r="3.6" fill="var(--card)" stroke="var(--ink)" stroke-width="1.8"/>
+    </g>
+    <rect x="${L}" y="${T}" width="${pw}" height="${ph}" fill="transparent"/>
+  </svg></div>
+  <dl class="readout">
+    <div><dt>전고점</dt><dd class="num">${fmt(cfg.peak)}</dd><dd class="sub">${dot(cfg.peakDate)}</dd></div>
+    <div><dt>현재 지수</dt><dd class="num">${fmt(cfg.cur)}</dd><dd class="sub">${dot(cfg.curDate)}</dd></div>
+    <div><dt>경과 일수</dt><dd class="num">${el}<span class="unit">일</span></dd><dd class="sub">전고점 이후</dd></div>
+    <div class="cell-dd"><dt>전고점 대비</dt><dd class="num">${pct.toFixed(2)}<span class="unit">%</span></dd><dd class="sub">회복까지 +${back.toFixed(2)}%</dd></div>
+  </dl>`;
+
+  attachHover(document.getElementById(id+"-c"),{
+    W,L,pw,n:i1-i0+1,
+    X:k=>X(i0+k),Y,val:k=>v[i0+k],
+    html:k=>{
+      const i=i0+k,d=(v[i]/run[i]-1)*100;
+      return `<div class="t-d">${dot(dates[i])}</div>
+        <div class="t-v">${fmt(v[i])}</div>
+        <div class="t-x" style="color:${d<-.005?"var(--down)":"var(--ink-3)"}">전고점 대비 ${d.toFixed(2)}%</div>`;
+    }
+  });
+}
+
+/* ================= 공포탐욕 ================= */
+const ZONES=[[0,25,"극단적 공포"],[25,45,"공포"],[45,55,"중립"],[55,75,"탐욕"],[75,100,"극단적 탐욕"]];
+const zoneOf=v=>(ZONES.find(z=>v>=z[0]&&v<z[1])||ZONES[4])[2];
+const zoneColor=v=>v<45?"var(--down)":v>55?"var(--up)":"var(--ink-2)";
+
+function renderFng(f,key){
+  const S=fngSeries(key,f),{dates,v}=S,N=dates.length;
+  document.getElementById("fng-tools").innerHTML=rangeSeg("fng");
+  const from=shift(f.date,-state.range.fng);
+  let i0=0;for(let i=0;i<N;i++)if(dates[i]<from)i0=i+1;
+  i0=Math.min(i0,N-3);
+  const i1=N-1,n=i1-i0+1;
+
+  const {W,sm}=geo(document.getElementById("fng-chart"));
+  const g=sm?{L:6,R:48,T:22,ph:142,B:40,sw:12,so:6,ax:30,ticks:3,names:false}
+            :{L:12,R:104,T:26,ph:176,B:46,sw:20,so:22,ax:30,ticks:5,names:true};
+  const L=g.L,R=g.R,T=g.T,ph=g.ph,H=T+ph+g.B;
+  const pw=W-L-R;
+  const X=i=>L+pw*(i-i0)/(n-1),Y=val=>T+ph*(1-val/100);
+  const pts=[];for(let i=i0;i<=i1;i++)pts.push([X(i),Y(v[i])]);
+  const P=a=>a.map((p,j)=>(j?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+  const xEnd=X(i1),yCur=Y(f.value),col=zoneColor(f.value),yBot=T+ph,yAx=yBot+g.ax;
+
+  const tint=i=>i<2?"31,95,169":i>2?"196,54,44":"120,135,150";
+  const bands=ZONES.map(([a,b],i)=>`<rect x="${L}" y="${Y(b).toFixed(1)}" width="${pw}" height="${(Y(a)-Y(b)).toFixed(1)}" fill="rgba(${tint(i)},${[.07,.04,.025,.04,.07][i]})"/>`).join("");
+  const sx=W-R+g.so,sw=g.sw;
+  const strip=ZONES.map(([a,b],i)=>`<rect x="${sx}" y="${Y(b).toFixed(1)}" width="${sw}" height="${(Y(a)-Y(b)).toFixed(1)}" fill="rgba(${tint(i)},${[.20,.11,.06,.11,.20][i]})"/>`).join("");
+  const yt=[0,25,50,75,100].map(t=>`<line x1="${sx+sw}" y1="${Y(t).toFixed(1)}" x2="${sx+sw+4}" y2="${Y(t).toFixed(1)}" stroke="var(--rule)" stroke-width="1"/><text x="${sx+sw+7}" y="${(Y(t)+3.5).toFixed(1)}" class="svg-axis">${t}</text>`).join("");
+  const zn=g.names?ZONES.map(([a,b,nm])=>`<text x="${sx-7}" y="${((Y(a)+Y(b))/2+3).toFixed(1)}" text-anchor="end" class="svg-label" fill="var(--ink-3)">${nm}</text>`).join(""):"";
+  const ticks=xTicks(dates,i0,i1,g.ticks).map((t,j,arr)=>{
+    const x=X(t.i),anc=j===0?"start":j===arr.length-1?"end":"middle";
+    return `<line x1="${x.toFixed(1)}" y1="${yAx-11}" x2="${x.toFixed(1)}" y2="${yAx-6}" stroke="var(--rule)" stroke-width="1"/>
+      <text x="${x.toFixed(1)}" y="${yAx}" text-anchor="${anc}" class="svg-axis">${t.t}</text>`;
+  }).join("");
+
+  document.getElementById("fng-chart").innerHTML=`
+  <svg viewBox="0 0 ${W} ${H}" class="${sm?"sm":""}" role="img" aria-label="공포탐욕지수 추이, 현재 ${f.value}">
+    ${bands}
+    <line x1="${L}" y1="${Y(50).toFixed(1)}" x2="${sx+sw}" y2="${Y(50).toFixed(1)}" stroke="var(--rule)" stroke-width="1" stroke-dasharray="2 4"/>
+    <path d="${P(pts)}" fill="none" stroke="var(--ink-2)" stroke-width="1.6" stroke-linejoin="round" class="draw" style="--len:${(pw*2.4).toFixed(0)}"/>
+    <g class="fade d2">
+      <line x1="${xEnd.toFixed(1)}" y1="${yCur.toFixed(1)}" x2="${sx}" y2="${yCur.toFixed(1)}" stroke="${col}" stroke-width="1" stroke-dasharray="3 3"/>
+      <circle cx="${xEnd.toFixed(1)}" cy="${yCur.toFixed(1)}" r="3.6" fill="${col}"/>
+    </g>
+    ${zn}${strip}
+    <rect x="${sx}" y="${T}" width="${sw}" height="${ph}" fill="none" stroke="var(--rule)" stroke-width="1"/>
+    ${yt}
+    <g class="fade d3">
+      <line x1="${sx-1}" y1="${yCur.toFixed(1)}" x2="${sx+sw+1}" y2="${yCur.toFixed(1)}" stroke="${col}" stroke-width="2.4"/>
+      <path d="M ${sx-(sm?11:14)} ${(yCur-5).toFixed(1)} L ${sx-(sm?11:14)} ${(yCur+5).toFixed(1)} L ${sx-4} ${yCur.toFixed(1)} Z" fill="${col}"/>
+    </g>
+    <line x1="${L}" y1="${yAx-11}" x2="${xEnd.toFixed(1)}" y2="${yAx-11}" stroke="var(--rule-2)" stroke-width="1"/>
+    ${ticks}
+    <g class="cross" style="opacity:0">
+      <line class="cline" y1="${T}" y2="${yBot}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="2 3"/>
+      <circle class="cdot" r="3.6" fill="var(--card)" stroke="var(--ink)" stroke-width="1.8"/>
+    </g>
+    <rect x="${L}" y="${T}" width="${pw}" height="${ph}" fill="transparent"/>
+  </svg>`;
+
+  document.getElementById("fng-val").textContent=f.value;
+  const lab=document.getElementById("fng-label");
+  lab.textContent=zoneOf(f.value);lab.style.color=col;
+  const df=f.value-f.prev;
+  document.getElementById("fng-note").textContent=`${dot(f.date)} 기준 · 전일 대비 ${df>0?"+":""}${df}`;
+
+  const win=v.slice(i0,i1+1),lo=Math.min(...win),hi=Math.max(...win);
+  const rl=RANGES.find(r=>r[1]===state.range.fng)[0].replace("D","일").replace("Y","년");
+  const at=k=>v[Math.max(0,N-1-k)];
+  const cell=(t,val,sub,tone)=>`<div><dt>${t}</dt><dd class="num"${tone?` style="color:${tone}"`:""}>${val}</dd><dd class="sub">${sub}</dd></div>`;
+  document.getElementById("fng-readout").innerHTML=
+    cell("1주 전",at(5),zoneOf(at(5)))+
+    cell("1개월 전",at(21),zoneOf(at(21)))+
+    cell(rl+" 최저",lo,dot(dates[i0+win.indexOf(lo)]),"var(--down)")+
+    cell(rl+" 최고",hi,dot(dates[i0+win.indexOf(hi)]),"var(--up)");
+
+  attachHover(document.getElementById("fng-chart"),{
+    W,L,pw,n,X:k=>X(i0+k),Y,val:k=>v[i0+k],
+    html:k=>{const i=i0+k;return `<div class="t-d">${dot(dates[i])}</div>
+      <div class="t-v" style="color:${zoneColor(v[i])}">${v[i]}</div>
+      <div class="t-x">${zoneOf(v[i])}</div>`;}
+  });
+}
+
+/* ================= 렌더 ================= */
+/* 선 그리기 애니메이션은 실제 경로 길이를 재서 적용한다.
+   어림값을 쓰면 꺾임이 많은 선에서 대시가 반복되며 중간이 끊겨 보인다. */
+function calibrateDraw(){
+  document.querySelectorAll("path.draw").forEach(p=>{
+    if(typeof p.getTotalLength!=="function")return;
+    const len=p.getTotalLength();
+    if(len>0)p.style.setProperty("--len",Math.ceil(len));
+  });
+}
+function drawSlot(slot){
+  const s=SCENES[state.scene];
+  if(slot==="spx")renderPanel("panel-spx",s.spx,state.scene+"-spx","spx");
+  if(slot==="ndx")renderPanel("panel-ndx",s.ndx,state.scene+"-ndx","ndx");
+  if(slot==="fng")renderFng(s.fng,state.scene+"-fng");
+  calibrateDraw();
+}
+function render(){
+  document.getElementById("stamp").textContent=SCENES[state.scene].stamp;
+  ["spx","ndx","fng"].forEach(drawSlot);
+}
+/* 기간 버튼은 차트마다 따로 — 눌린 차트만 다시 그린다 */
+document.addEventListener("click",e=>{
+  const b=e.target.closest(".seg.mini button");if(!b)return;
+  const slot=b.dataset.slot;
+  if(state.range[slot]===+b.dataset.range)return;
+  state.range[slot]=+b.dataset.range;
+  drawSlot(slot);
+});
+const ss=document.getElementById("scene-seg");
+ss.addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  state.scene=b.dataset.scene;
+  ss.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+  render();
+});
+render();
+/* 폭이 실제로 달라졌을 때만 다시 그린다.
+   패널 하나만 갱신될 때 좌표계가 어긋나지 않도록 항상 세 개를 함께 그린다. */
+let lastW=(document.getElementById("panel-spx")||{}).clientWidth||0,tid;
+function onResize(){
+  clearTimeout(tid);
+  tid=setTimeout(()=>{
+    const w=(document.getElementById("panel-spx")||{}).clientWidth||0;
+    if(Math.abs(w-lastW)<8)return;
+    lastW=w;render();
+  },160);
+}
+window.addEventListener("resize",onResize);
+if(window.ResizeObserver)new ResizeObserver(onResize).observe(document.querySelector(".wrap"));
+</script>
+</body>
+</html>
