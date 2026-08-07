@@ -91,6 +91,7 @@ body{
 .fng-label{font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase}
 .fng-note{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-top:2px}
 
+.empty{padding:44px 20px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--ink-3);line-height:1.9}
 .foot{margin-top:26px;padding-top:14px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.8}
 .foot b{color:var(--ink-2);font-weight:500}
 
@@ -143,11 +144,7 @@ svg.sm .svg-axis{font-size:11px}
       <h1>Daniel's timing</h1>
     </div>
     <div class="mast-right">
-      <div class="stamp" id="stamp">—</div>
-      <div class="seg kr" id="scene-seg" role="group" aria-label="상태 미리보기">
-        <button type="button" data-scene="now" aria-pressed="true">현재</button>
-        <button type="button" data-scene="dip" aria-pressed="false">조정장 예시</button>
-      </div>
+      <div class="stamp" id="stamp">불러오는 중…</div>
     </div>
   </header>
 
@@ -172,29 +169,16 @@ svg.sm .svg-axis{font-size:11px}
     <dl class="readout" id="fng-readout"></dl>
   </section>
 
-  <p class="foot">
-    <b>표시된 수치는 디자인 확인용 샘플입니다.</b><br>
-    전고점은 기간 선택과 무관하게 사상 최고 종가 기준. 경과일수는 달력일 기준.<br>
-    연동 예정 소스 — 지수: Stooq / Yahoo Finance, 공포탐욕지수: CNN Business.
+  <p class="foot" id="foot">
+    전고점은 기간 선택과 무관하게 최근 10년 내 최고 종가 기준. 경과일수는 달력일 기준.<br>
+    지수: Yahoo Finance · 공포탐욕지수: CNN Business<br>
+    데이터는 미국장 마감 후 매일 자동 갱신됩니다.
   </p>
 </div>
 
 <script>
 /* ================= 데이터 ================= */
-const SCENES={
-  now:{
-    stamp:"2026.08.06 기준 · 샘플 데이터",
-    spx:{name:"S&P 500",ticker:"SPX",peak:7793.68,peakDate:"2026-08-05",cur:7738.20,curDate:"2026-08-06",start:.56,seed:7},
-    ndx:{name:"나스닥 100",ticker:"NDX",peak:29014.35,peakDate:"2026-08-05",cur:28712.60,curDate:"2026-08-06",start:.50,seed:23},
-    fng:{value:59,prev:58,date:"2026-08-06",seed:41,bias:6}
-  },
-  dip:{
-    stamp:"조정장 예시 · 가상 데이터",
-    spx:{name:"S&P 500",ticker:"SPX",peak:7793.68,peakDate:"2026-08-05",cur:6624.63,curDate:"2026-11-20",start:.56,seed:7},
-    ndx:{name:"나스닥 100",ticker:"NDX",peak:29014.35,peakDate:"2026-08-05",cur:23501.62,curDate:"2026-11-20",start:.50,seed:23},
-    fng:{value:21,prev:27,date:"2026-11-20",seed:41,bias:-14}
-  }
-};
+let DATA=null;
 const RANGES=[["30D",30],["90D",90],["180D",180],["1Y",365],["3Y",1095],["5Y",1825]];
 let state={scene:"now",range:{spx:365,ndx:365,fng:365}};
 const rangeSeg=slot=>`<div class="tools"><div class="seg mini" role="group" aria-label="차트 기간">`+
@@ -206,7 +190,6 @@ const fmt=n=>n.toLocaleString("ko-KR",{minimumFractionDigits:2,maximumFractionDi
 const dot=s=>s.replace(/-/g,".");
 const dayDiff=(a,b)=>Math.round((new Date(b)-new Date(a))/864e5);
 const shift=(iso,d)=>{const t=new Date(iso+"T00:00:00Z");t.setUTCDate(t.getUTCDate()+d);return t.toISOString().slice(0,10)};
-function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 /* 뷰박스 폭을 패널의 실제 폭에 맞춘다.
    창 폭으로 판정하면 패널마다 좌표계가 어긋날 수 있고,
    1:1로 그리면 축소가 없어 글자가 지정한 px 그대로 찍힌다. */
@@ -215,60 +198,20 @@ function geo(el){
   return {W:Math.max(300,Math.round(raw-16)),sm:raw<560};
 }
 
-/* 영업일 배열 (오름차순, 마지막이 기준일) */
-function bizDates(endISO,span){
-  const out=[];let d=endISO,i=0;
-  while(i<=span){
-    const wd=new Date(d+"T00:00:00Z").getUTCDay();
-    if(wd!==0&&wd!==6)out.push(d);
-    d=shift(d,-1);i++;
-  }
-  return out.reverse();
-}
-
-/* ================= 시계열 생성 ================= */
+/* ================= JSON → 차트용 배열 ================= */
 const CACHE={};
-function indexSeries(key,cfg){
-  if(CACHE[key])return CACHE[key];
-  const dates=bizDates(cfg.curDate,1900),n=dates.length,r=rng(cfg.seed);
-  let pk=0;for(let i=0;i<n;i++)if(dates[i]<=cfg.peakDate)pk=i;
-  const endRatio=cfg.cur/cfg.peak;
-  const bear=(u,c,w,d)=>-d*Math.exp(-Math.pow((u-c)/w,2));
-  let w=0;const v=[];
-  for(let i=0;i<n;i++){
-    let b;
-    if(i<=pk){
-      const u=pk?i/pk:1;
-      b=(cfg.start+(1-cfg.start)*Math.pow(u,.95))*(1+bear(u,.17,.055,.17)+bear(u,.46,.04,.09)+bear(u,.71,.032,.055));
-    }else{
-      const u=(i-pk)/Math.max(n-1-pk,1);
-      b=1+(endRatio-1)*(.72*u+.28*Math.pow(u,2.4));
-    }
-    w=w*.9+(r()-.5)*.0085;
-    let ratio=b*(1+w);
-    if(i!==pk&&ratio>.9985)ratio=.9985-r()*.012;
-    v.push(cfg.peak*ratio);
-  }
-  v[pk]=cfg.peak;v[n-1]=cfg.cur;
-  const run=[];let m=0;for(let i=0;i<n;i++){m=Math.max(m,v[i]);run.push(m)}
-  return CACHE[key]={dates,v,run,peakIdx:pk};
+function prepIndex(cfg){
+  if(CACHE[cfg.ticker])return CACHE[cfg.ticker];
+  const dates=cfg.series.map(p=>p[0]),v=cfg.series.map(p=>p[1]);
+  const run=[];let m=0;
+  for(let i=0;i<v.length;i++){m=Math.max(m,v[i]);run.push(m)}
+  let pk=-1;                       /* 전고점이 보관 기간보다 오래됐으면 -1 */
+  if(cfg.peakDate>=dates[0])for(let i=0;i<dates.length;i++)if(dates[i]<=cfg.peakDate)pk=i;
+  return CACHE[cfg.ticker]={dates,v,run,peakIdx:pk};
 }
-function fngSeries(key,f){
-  if(CACHE[key])return CACHE[key];
-  const dates=bizDates(f.date,1900),n=dates.length,r=rng(f.seed);
-  let x=50,w=0;const v=[];
-  for(let i=0;i<n;i++){
-    w=w*.72+(r()-.5)*9;
-    x+=(48-x)*.045+w;
-    x=Math.max(6,Math.min(94,x));
-    v.push(x);
-  }
-  const k=180;
-  for(let i=0;i<k;i++){const u=(i+1)/k,j=n-k+i;v[j]=v[j]+f.bias*u}
-  const t=26;
-  for(let i=0;i<t;i++){const u=Math.pow((i+1)/t,1.6),j=n-t+i;v[j]=v[j]*(1-u)+f.value*u}
-  v[n-1]=f.value;v[n-2]=f.prev;
-  return CACHE[key]={dates,v:v.map(a=>Math.max(2,Math.min(98,Math.round(a))))};
+function prepFng(f){
+  if(CACHE.fng)return CACHE.fng;
+  return CACHE.fng={dates:f.series.map(p=>p[0]),v:f.series.map(p=>p[1])};
 }
 
 /* ================= X축 눈금 ================= */
@@ -314,8 +257,8 @@ function attachHover(box,meta){
 }
 
 /* ================= 지수 패널 ================= */
-function renderPanel(id,cfg,key,slot){
-  const S=indexSeries(key,cfg),{dates,v,run}=S,N=dates.length;
+function renderPanel(id,cfg,slot){
+  const S=prepIndex(cfg),{dates,v,run}=S,N=dates.length;
   const from=shift(cfg.curDate,-state.range[slot]);
   let i0=0;for(let i=0;i<N;i++)if(dates[i]<from)i0=i+1;
   i0=Math.min(i0,N-3);
@@ -419,8 +362,8 @@ const ZONES=[[0,25,"극단적 공포"],[25,45,"공포"],[45,55,"중립"],[55,75,
 const zoneOf=v=>(ZONES.find(z=>v>=z[0]&&v<z[1])||ZONES[4])[2];
 const zoneColor=v=>v<45?"var(--down)":v>55?"var(--up)":"var(--ink-2)";
 
-function renderFng(f,key){
-  const S=fngSeries(key,f),{dates,v}=S,N=dates.length;
+function renderFng(f){
+  const S=prepFng(f),{dates,v}=S,N=dates.length;
   document.getElementById("fng-tools").innerHTML=rangeSeg("fng");
   const from=shift(f.date,-state.range.fng);
   let i0=0;for(let i=0;i<N;i++)if(dates[i]<from)i0=i+1;
@@ -509,35 +452,63 @@ function calibrateDraw(){
   });
 }
 function drawSlot(slot){
-  const s=SCENES[state.scene];
-  if(slot==="spx")renderPanel("panel-spx",s.spx,state.scene+"-spx","spx");
-  if(slot==="ndx")renderPanel("panel-ndx",s.ndx,state.scene+"-ndx","ndx");
-  if(slot==="fng")renderFng(s.fng,state.scene+"-fng");
-  calibrateDraw();
+  if(!DATA)return;
+  if(slot==="fng"){ if(DATA.fng&&DATA.fng.series)renderFng(DATA.fng); return; }
+  const cfg=DATA.indices&&DATA.indices[slot];
+  const box=document.getElementById("panel-"+slot);
+  if(!cfg||!cfg.series||!cfg.series.length){
+    box.innerHTML='<div class="empty">'+(slot==="spx"?"S&P 500":"나스닥 100")+
+      ' 데이터를 아직 받지 못했습니다.<br>다음 자동 갱신 때 다시 시도합니다.</div>';
+    return;
+  }
+  renderPanel("panel-"+slot,cfg,slot);
 }
 function render(){
-  document.getElementById("stamp").textContent=SCENES[state.scene].stamp;
   ["spx","ndx","fng"].forEach(drawSlot);
+  calibrateDraw();
 }
-/* 기간 버튼은 차트마다 따로 — 눌린 차트만 다시 그린다 */
+
+/* 기간 버튼 — 눌린 차트만 다시 그린다 */
 document.addEventListener("click",e=>{
   const b=e.target.closest(".seg.mini button");if(!b)return;
   const slot=b.dataset.slot;
   if(state.range[slot]===+b.dataset.range)return;
   state.range[slot]=+b.dataset.range;
-  drawSlot(slot);
+  drawSlot(slot);calibrateDraw();
 });
-const ss=document.getElementById("scene-seg");
-ss.addEventListener("click",e=>{
-  const b=e.target.closest("button");if(!b)return;
-  state.scene=b.dataset.scene;
-  ss.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+
+/* ================= 데이터 불러오기 ================= */
+function stamp(iso){
+  try{
+    const d=new Date(iso);
+    const t=new Intl.DateTimeFormat("ko-KR",{timeZone:"Asia/Seoul",dateStyle:"medium",
+      timeStyle:"short"}).format(d);
+    return "데이터 기준 "+t+" KST";
+  }catch(e){return "데이터 기준 "+iso}
+}
+async function load(){
+  /* 시간 단위 캐시 무력화 — 갱신 직후에도 옛 파일이 잡히지 않도록 */
+  const v=new Date().toISOString().slice(0,13).replace(/[-T]/g,"");
+  try{
+    const r=await fetch("data/market.json?v="+v,{cache:"no-store"});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    DATA=await r.json();
+  }catch(err){
+    document.getElementById("stamp").textContent="데이터를 불러오지 못했습니다";
+    ["spx","ndx"].forEach(k=>{
+      document.getElementById("panel-"+k).innerHTML=
+        '<div class="empty">데이터를 불러오지 못했습니다.<br>잠시 후 새로고침해 주세요.</div>';
+    });
+    document.getElementById("fng-chart").innerHTML="";
+    console.error(err);
+    return;
+  }
+  document.getElementById("stamp").textContent=stamp(DATA.updated);
   render();
-});
-render();
-/* 폭이 실제로 달라졌을 때만 다시 그린다.
-   패널 하나만 갱신될 때 좌표계가 어긋나지 않도록 항상 세 개를 함께 그린다. */
-let lastW=(document.getElementById("panel-spx")||{}).clientWidth||0,tid;
+  lastW=(document.getElementById("panel-spx")||{}).clientWidth||0;
+}
+
+let lastW=0,tid;
 function onResize(){
   clearTimeout(tid);
   tid=setTimeout(()=>{
@@ -548,6 +519,7 @@ function onResize(){
 }
 window.addEventListener("resize",onResize);
 if(window.ResizeObserver)new ResizeObserver(onResize).observe(document.querySelector(".wrap"));
+load();
 </script>
 </body>
 </html>
