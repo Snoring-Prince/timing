@@ -58,6 +58,16 @@ body{
 .now-val{font-family:var(--mono);font-weight:500;font-size:24px;letter-spacing:-.02em}
 .now-chg{font-family:var(--mono);font-size:13px;font-weight:500}
 .dn{color:var(--down)} .up{color:var(--up)}
+.mark{display:inline-flex;align-items:center;gap:5px;font-family:var(--cond);font-weight:700;
+  font-size:10px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.mark.on{color:var(--ink)}
+.mark.off{color:var(--ink-3);font-weight:600}
+.mark i{width:6px;height:6px;border-radius:50%;background:var(--up);animation:blip 2.4s ease-in-out infinite}
+@keyframes blip{0%,100%{opacity:1}50%{opacity:.2}}
+.ago{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);white-space:nowrap}
+body.settled .draw{animation:none;stroke-dashoffset:0}
+body.settled .fade{animation:none;opacity:1}
+@media (prefers-reduced-motion:reduce){.mark i{animation:none}}
 
 /* chart + tooltip */
 .chart{position:relative;padding:6px 8px 0}
@@ -172,7 +182,8 @@ svg.sm .svg-axis{font-size:11px}
   <p class="foot" id="foot">
     전고점은 기간 선택과 무관하게 최근 10년 내 최고 종가 기준. 경과일수는 달력일 기준.<br>
     지수: Yahoo Finance · 공포탐욕지수: CNN Business<br>
-    데이터는 미국장 마감 후 매일 자동 갱신됩니다.
+    종가는 미국장 마감 후 하루 한 번, 장중 시세는 10분마다 갱신됩니다.<br>
+    장중 표시는 지연될 수 있습니다.
   </p>
 </div>
 
@@ -296,7 +307,7 @@ function renderPanel(id,cfg,slot){
   document.getElementById(id).innerHTML=`
   <div class="panel-head">
     <div class="name"><h2>${cfg.name}</h2><span class="ticker">${cfg.ticker}</span></div>
-    <div class="now"><span class="now-val">${fmt(cfg.cur)}</span><span class="now-chg dn">${pct.toFixed(2)}%</span></div>
+    <div class="now"><span class="now-val">${fmt(cfg.cur)}</span><span class="now-chg dn">${pct.toFixed(2)}%</span>${liveTag(cfg)}</div>
   </div>
   ${rangeSeg(slot)}
   <div class="chart" id="${id}-c">
@@ -477,6 +488,66 @@ document.addEventListener("click",e=>{
   drawSlot(slot);calibrateDraw();
 });
 
+/* ================= 장중 시세 ================= */
+/* 시세 파일은 별도 브랜치에 있다. raw 는 브라우저 접근을 허용하고,
+   비기본 브랜치라 Pages 빌드가 일어나지 않는다. */
+const OWNER=location.hostname.split(".")[0];
+const REPO=location.pathname.split("/").filter(Boolean)[0]||(OWNER+".github.io");
+const QUOTE=`https://raw.githubusercontent.com/${OWNER}/${REPO}/data/quote.json`;
+
+function minsAgo(iso){
+  const t=Date.parse(iso);
+  return isNaN(t)?null:Math.max(0,Math.round((Date.now()-t)/60000));
+}
+function liveTag(cfg){
+  const q=cfg.live;
+  if(!q)return "";
+  const m=minsAgo(q.time);
+  const age=m===null?"":`<span class="ago">${m<1?"방금":m+"분 전"}</span>`;
+  return q.open?`<span class="mark on"><i></i>Live</span>${age}`
+               :`<span class="mark off">장 마감</span>${age}`;
+}
+function refreshTags(){
+  for(const k of ["spx","ndx"]){
+    const cfg=(DATA.indices||{})[k],box=document.querySelector("#panel-"+k+" .now");
+    if(!cfg||!cfg.live||!box)continue;
+    [...box.querySelectorAll(".mark,.ago")].forEach(n=>n.remove());
+    box.insertAdjacentHTML("beforeend",liveTag(cfg));
+  }
+}
+async function pollQuote(){
+  if(!DATA||!DATA.indices)return;
+  let q;
+  try{
+    const r=await fetch(QUOTE+"?t="+Date.now(),{cache:"no-store"});
+    if(!r.ok)return;
+    q=await r.json();
+  }catch(e){return}
+  if(!q||!q.quotes)return;
+
+  const touched=[];
+  for(const k of ["spx","ndx"]){
+    const cfg=DATA.indices[k],live=q.quotes[k];
+    if(!cfg||!live||!live.price||!live.date)continue;
+    if(live.date<cfg.curDate)continue;      /* 종가 파일이 더 최신이면 무시 */
+
+    const same=cfg.cur===live.price&&cfg.live&&cfg.live.time===live.time;
+    cfg.live=live;
+    if(same)continue;
+
+    cfg.cur=live.price;
+    cfg.curDate=live.date;
+    const last=cfg.series[cfg.series.length-1];
+    if(last[0]===live.date)last[1]=live.price;
+    else cfg.series.push([live.date,live.price]);
+    if(live.price>cfg.peak){cfg.peak=live.price;cfg.peakDate=live.date}  /* 신고가 */
+    delete CACHE[cfg.ticker];
+    touched.push(k);
+  }
+  if(touched.length){touched.forEach(drawSlot);calibrateDraw();}
+  else refreshTags();
+}
+
 /* ================= 데이터 불러오기 ================= */
 function stamp(iso){
   try{
@@ -506,6 +577,10 @@ async function load(){
   document.getElementById("stamp").textContent=stamp(DATA.updated);
   render();
   lastW=(document.getElementById("panel-spx")||{}).clientWidth||0;
+  setTimeout(()=>document.body.classList.add("settled"),1600);  /* 애니메이션은 첫 회만 */
+  pollQuote();
+  setInterval(pollQuote,60000);
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)pollQuote()});
 }
 
 let lastW=0,tid;
