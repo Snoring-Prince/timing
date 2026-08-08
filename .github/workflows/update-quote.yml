@@ -1,0 +1,48 @@
+name: Update quote
+
+on:
+  # 미국장 시간대(UTC 13~21시)에 10분마다. 한국시간 밤 10시~새벽 6시쯤.
+  schedule:
+    - cron: "*/10 13-21 * * 1-5"
+  workflow_dispatch:
+
+# 같은 시각에 여러 개가 겹쳐 돌지 않도록
+concurrency:
+  group: quote
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  quote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 내려받기
+        uses: actions/checkout@v4
+
+      - name: 파이썬 준비
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 시세 받아오기
+        run: python scripts/fetch_quote.py > /tmp/quote.json
+
+      - name: data 브랜치에 올리기
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          # 커밋 1개짜리 브랜치를 매번 새로 만들어 강제로 덮어쓴다.
+          # 기록이 쌓이지 않으므로 저장소가 지저분해지지 않는다.
+          rm -rf /tmp/pub && mkdir /tmp/pub && cd /tmp/pub
+          cp /tmp/quote.json .
+          git init -q
+          git checkout -qb data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add quote.json
+          git commit -qm "시세 $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push -qf "https://x-access-token:${TOKEN}@github.com/${REPO}.git" data
+          echo "완료"
