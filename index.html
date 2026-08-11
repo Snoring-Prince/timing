@@ -101,6 +101,13 @@ body.settled .fade{animation:none;opacity:1}
 .fng-label{font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase}
 .fng-note{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-top:2px}
 
+/* ---------- 유가 차트 ---------- */
+.tvbox{padding:2px 8px 10px}
+.tvbox > div{height:400px}
+[hidden]{display:none!important}
+.tvnote{padding:0 20px 16px;font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+@media (max-width:640px){.tvbox{padding:2px 4px 8px}.tvbox > div{height:320px}}
+
 .empty{padding:44px 20px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--ink-3);line-height:1.9}
 .foot{margin-top:26px;padding-top:14px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.8}
 .foot b{color:var(--ink-2);font-weight:500}
@@ -150,14 +157,19 @@ svg.sm .svg-axis{font-size:11px}
 
   <header class="masthead">
     <div>
-      <p class="eyebrow">Drawdown from all-time high</p>
+      <p class="eyebrow" id="eyebrow">Drawdown from all-time high</p>
       <h1>Daniel's timing</h1>
     </div>
     <div class="mast-right">
+      <div class="seg kr" id="view-seg" role="group" aria-label="화면 선택">
+        <button type="button" data-view="market" aria-pressed="true">지수</button>
+        <button type="button" data-view="oil" aria-pressed="false">유가</button>
+      </div>
       <div class="stamp" id="stamp">불러오는 중…</div>
     </div>
   </header>
 
+  <div id="view-market">
   <section class="panel" id="panel-spx"></section>
   <section class="panel" id="panel-ndx"></section>
 
@@ -178,6 +190,12 @@ svg.sm .svg-axis{font-size:11px}
     <div class="chart" id="fng-chart"></div>
     <dl class="readout" id="fng-readout"></dl>
   </section>
+  </div>
+
+  <div id="view-oil" hidden>
+    <section class="panel" id="panel-brent"></section>
+    <section class="panel" id="panel-gasoil"></section>
+  </div>
 
   <p class="foot" id="foot">
     전고점은 기간 선택과 무관하게 최근 10년 내 최고 종가 기준. 경과일수는 달력일 기준.<br>
@@ -483,9 +501,117 @@ function render(){
 document.addEventListener("click",e=>{
   const b=e.target.closest(".seg.mini button");if(!b)return;
   const slot=b.dataset.slot;
+  if(!slot||!(slot in state.range))return;   /* 유가 패널의 봉 간격 버튼은 건너뛴다 */
   if(state.range[slot]===+b.dataset.range)return;
   state.range[slot]=+b.dataset.range;
   drawSlot(slot);calibrateDraw();
+});
+
+/* ================= 유가 차트 ================= */
+/* TradingView 위젯을 쓰되 자체 툴바는 숨기고, 봉 간격 선택은
+   지수 패널의 기간 버튼과 같은 모양으로 직접 붙인다.
+   캔들 색은 이 페이지 규칙(상승 빨강 / 하락 파랑)으로 덮어쓴다. */
+const OIL={
+  brent :{name:"브렌트유",        ticker:"TVC:UKOIL"},
+  gasoil:{name:"London Gas Oil", ticker:"CAPITALCOM:GASOIL"}
+};
+const BARS=[["1분","1"],["5분","5"],["15분","15"],["1시간","60"]];
+const oilBar={brent:"1",gasoil:"1"};
+let tvState="idle",tvSeq=0,view="market";
+
+function loadTV(done){
+  if(tvState==="ready")return done(true);
+  if(tvState==="failed")return done(false);
+  if(tvState==="loading")return void setTimeout(()=>loadTV(done),300);
+  tvState="loading";
+  const el=document.createElement("script");
+  el.src="https://s3.tradingview.com/tv.js";
+  el.onload=()=>{tvState="ready";done(true)};
+  el.onerror=()=>{tvState="failed";done(false)};
+  document.head.appendChild(el);
+}
+
+function barSeg(slot){
+  return '<div class="tools"><div class="seg mini" role="group" aria-label="봉 간격">'+
+    BARS.map(([l,v])=>'<button type="button" data-bar="'+slot+'" data-iv="'+v+
+      '" aria-pressed="'+(v===oilBar[slot])+'">'+l+'</button>').join("")+"</div></div>";
+}
+
+function renderOil(slot){
+  const o=OIL[slot],box=document.getElementById("panel-"+slot);
+  const id="tv-"+slot+"-"+(++tvSeq);
+  box.innerHTML=
+    '<div class="panel-head"><div class="name"><h2>'+o.name+'</h2>'+
+    '<span class="ticker">'+o.ticker+'</span></div></div>'+
+    barSeg(slot)+
+    '<div class="tvbox"><div id="'+id+'"></div></div>';
+  loadTV(ok=>{
+    if(!ok){
+      box.innerHTML=box.innerHTML.replace(/<div class="tvbox">[\s\S]*<\/div>\s*$/,
+        '<div class="empty">차트를 불러오지 못했습니다.<br>연결을 확인하고 새로고침해 주세요.</div>');
+      return;
+    }
+    if(!document.getElementById(id))return;   /* 그새 화면이 바뀌었으면 취소 */
+    new TradingView.widget({
+      autosize:true,symbol:o.ticker,interval:oilBar[slot],
+      timezone:"Asia/Seoul",locale:"ko",theme:"light",style:"1",
+      container_id:id,
+      hide_top_toolbar:true,hide_side_toolbar:true,
+      allow_symbol_change:false,save_image:false,details:false,
+      enable_publishing:false,withdateranges:false,
+      backgroundColor:"#FFFFFF",gridColor:"#EEF1F5",
+      loading_screen:{backgroundColor:"#FFFFFF",foregroundColor:"#D3DAE1"},
+      overrides:{
+        "paneProperties.background":"#FFFFFF",
+        "paneProperties.backgroundType":"solid",
+        "paneProperties.vertGridProperties.color":"#EEF1F5",
+        "paneProperties.horzGridProperties.color":"#EEF1F5",
+        "scalesProperties.textColor":"#5A6B7A",
+        "scalesProperties.lineColor":"#D3DAE1",
+        "mainSeriesProperties.candleStyle.upColor":"#C4362C",
+        "mainSeriesProperties.candleStyle.downColor":"#1F5FA9",
+        "mainSeriesProperties.candleStyle.borderUpColor":"#C4362C",
+        "mainSeriesProperties.candleStyle.borderDownColor":"#1F5FA9",
+        "mainSeriesProperties.candleStyle.wickUpColor":"#C4362C",
+        "mainSeriesProperties.candleStyle.wickDownColor":"#1F5FA9"
+      }
+    });
+  });
+}
+
+const MARKET_FOOT=document.getElementById("foot").innerHTML;
+const OIL_FOOT='봉 간격은 패널마다 따로 고를 수 있습니다.<br>'+
+  '차트·시세: TradingView (CFD 기준, 거래소 원장가와 다를 수 있음)';
+
+function setView(next){
+  if(next===view)return;
+  view=next;
+  document.querySelectorAll("#view-seg button").forEach(b=>
+    b.setAttribute("aria-pressed",String(b.dataset.view===view)));
+  const oil=view==="oil";
+  document.getElementById("view-market").hidden=oil;
+  document.getElementById("view-oil").hidden=!oil;
+  document.getElementById("eyebrow").textContent=
+    oil?"Brent · London Gasoil intraday":"Drawdown from all-time high";
+  document.getElementById("foot").innerHTML=oil?OIL_FOOT:MARKET_FOOT;
+  const st=document.getElementById("stamp");
+  if(oil){st.dataset.keep=st.textContent;st.textContent="TradingView 실시간"}
+  else if(st.dataset.keep){st.textContent=st.dataset.keep}
+  if(oil){["brent","gasoil"].forEach(renderOil)}
+  else{render()}                    /* 숨은 동안의 폭 변화를 반영해 다시 그린다 */
+}
+
+document.getElementById("view-seg").addEventListener("click",e=>{
+  const b=e.target.closest("button");
+  if(b)setView(b.dataset.view);
+});
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-bar]");
+  if(!b)return;
+  const slot=b.dataset.bar;
+  if(oilBar[slot]===b.dataset.iv)return;
+  oilBar[slot]=b.dataset.iv;
+  renderOil(slot);
 });
 
 /* ================= 장중 시세 ================= */
