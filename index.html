@@ -210,7 +210,7 @@ svg.sm .svg-axis{font-size:11px}
     <div class="bt-sec">
       <div class="bt-head">
         <div class="bt-name">
-          <span class="bt-title">지수별 승률</span>
+          <span class="bt-title">지수별 성적</span>
           <span class="ticker" id="bt-range">—</span>
           <span class="bt-cap">이 값에서 샀다면</span>
         </div>
@@ -558,111 +558,152 @@ const ZALPHA=[.07,.045,.025,.045,.07];
 function btSeries(){
   return Object.keys(BT.indices).map((k,i)=>{
     const c=BT.indices[k].curve[btH]||{};
-    return {k,name:BT.indices[k].name,win:c.win||[],avg:c.avg||[],n:c.n||[],
+    return {k,name:BT.indices[k].name,win:c.win||[],med:c.med||[],avg:c.avg||[],n:c.n||[],
             col:i?"var(--ink-3)":"var(--ink)",wd:i?1.5:2.1,dash:i?"4 3":""};
   });
 }
 
-/* 가로축은 공포탐욕 0~100, 세로축은 승률.
-   지수 한 눈금마다 값이 있으므로 "35면 40이랑 뭐가 다른가"가 보인다. */
-function btChart(){
+/* 축 범위를 "보기 좋은 눈금"으로 넓힌다 */
+function btScale(vals,step,floor0){
+  let lo=Math.min(...vals),hi=Math.max(...vals);
+  lo=Math.floor((lo-step*.4)/step)*step;
+  hi=Math.ceil((hi+step*.4)/step)*step;
+  if(floor0){lo=Math.max(0,lo);hi=Math.min(100,hi)}
+  if(hi-lo<step*2){
+    hi=lo+step*2;
+    if(floor0&&hi>100){hi=100;lo=Math.max(0,hi-step*2)}   /* 승률은 100%를 넘지 않는다 */
+  }
+  const ticks=[];
+  for(let t=lo;t<=hi+1e-6;t+=step)ticks.push(+t.toFixed(2));
+  return {lo,hi,ticks};
+}
+
+/* 가로축(공포탐욕 0~100)을 공유하는 2단 차트.
+   위 — 그 값에서 샀을 때 수익률(중앙값). "얼마나 벌었나"
+   아래 — 같은 값에서의 승률. "얼마나 자주 벌었나"
+   지수 한 눈금마다 값이 있어서 "35면 40이랑 뭐가 다른가"가 보인다. */
+let BTGEO=null;
+
+function btGeo(){
   const S=btSeries();
-  const all=S.flatMap(s=>s.win).filter(w=>w!=null);
-  if(!all.length)return '<div class="empty">표본이 부족해 그릴 수 없습니다.</div>';
+  const meds=S.flatMap(s=>s.med).filter(x=>x!=null);
+  const wins=S.flatMap(s=>s.win).filter(x=>x!=null);
+  if(!meds.length||!wins.length)return null;
 
   const {W,sm}=geo(document.getElementById("bt-body"));
-  const g=sm?{L:30,R:10,T:24,ph:146,B:32,names:false}
-            :{L:40,R:16,T:30,ph:184,B:38,names:true};
-  const L=g.L,T=g.T,ph=g.ph,H=T+ph+g.B,pw=W-L-g.R,yBot=T+ph;
+  const g=sm?{L:34,R:10,T:24,ph1:126,gap:22,ph2:40,B:30,names:false}
+            :{L:44,R:16,T:30,ph1:162,gap:28,ph2:52,B:36,names:true};
+  const L=g.L,pw=W-L-g.R;
+  const T1=g.T,B1=T1+g.ph1,T2=B1+g.gap,B2=T2+g.ph2,H=B2+g.B;
 
-  let lo=Math.max(0,Math.floor((Math.min(...all)-4)/5)*5);
-  let hi=Math.min(100,Math.ceil((Math.max(...all)+4)/5)*5);
-  if(hi-lo<20)lo=Math.max(0,hi-20);
-  const span=hi-lo,step=span<=20?5:span<=45?10:20;
-  const X=v=>L+pw*v/100,Y=w=>T+ph*(1-(w-lo)/span);
+  const rSpan=Math.max(...meds)-Math.min(...meds);
+  const r=btScale(meds.concat([0]),rSpan<=12?2:rSpan<=30?5:10,false);
+  const w=btScale(wins,10,true);
 
-  const bands=(BT.zones||[]).map((z,i)=>
-    `<rect x="${X(z.lo).toFixed(1)}" y="${T}" width="${(X(Math.min(z.hi,100))-X(z.lo)).toFixed(1)}" height="${ph}" fill="rgba(${ZTINT[i]},${ZALPHA[i]})"/>`).join("");
-  const zn=g.names?(BT.zones||[]).map(z=>
-    `<text x="${((X(z.lo)+X(Math.min(z.hi,100)))/2).toFixed(1)}" y="${T-9}" text-anchor="middle" class="svg-label" fill="var(--ink-3)">${z.label}</text>`).join(""):"";
+  return {S,W,sm,names:g.names,L,pw,T1,B1,T2,B2,H,
+    X:v=>L+pw*v/100,
+    Y1:y=>T1+g.ph1*(1-(y-r.lo)/(r.hi-r.lo)),
+    Y2:y=>T2+g.ph2*(1-(y-w.lo)/(w.hi-w.lo)),
+    r,w,ph1:g.ph1,ph2:g.ph2};
+}
 
-  const yt=[];
-  for(let w=lo;w<=hi+.001;w+=step)yt.push(
-    `<line x1="${L}" y1="${Y(w).toFixed(1)}" x2="${(L+pw).toFixed(1)}" y2="${Y(w).toFixed(1)}" stroke="var(--rule-2)" stroke-width="1"/>`+
-    `<text x="${L-6}" y="${(Y(w)+3.5).toFixed(1)}" text-anchor="end" class="svg-axis">${w}%</text>`);
+function btChart(){
+  const G=BTGEO=btGeo();
+  if(!G)return '<div class="empty">표본이 부족해 그릴 수 없습니다.</div>';
+  const {S,W,L,pw,T1,B1,T2,B2,H,X,Y1,Y2,r,w}=G;
+
+  const bands=(BT.zones||[]).map((z,i)=>{
+    const x=X(z.lo),wd=X(Math.min(z.hi,100))-x,f=`rgba(${ZTINT[i]},${ZALPHA[i]})`;
+    return `<rect x="${x.toFixed(1)}" y="${T1}" width="${wd.toFixed(1)}" height="${(B1-T1).toFixed(1)}" fill="${f}"/>`+
+           `<rect x="${x.toFixed(1)}" y="${T2}" width="${wd.toFixed(1)}" height="${(B2-T2).toFixed(1)}" fill="${f}"/>`;
+  }).join("");
+  const zn=G.names?(BT.zones||[]).map(z=>
+    `<text x="${((X(z.lo)+X(Math.min(z.hi,100)))/2).toFixed(1)}" y="${T1-9}" text-anchor="middle" class="svg-label" fill="var(--ink-3)">${z.label}</text>`).join(""):"";
+
+  /* 수익률 축만 + 부호를 붙인다. 승률에 +90% 라고 쓰면 안 된다. */
+  const grid=(ticks,Y,signed)=>ticks.map(t=>
+    `<line x1="${L}" y1="${Y(t).toFixed(1)}" x2="${(L+pw).toFixed(1)}" y2="${Y(t).toFixed(1)}" stroke="var(--rule-2)" stroke-width="1"/>`+
+    `<text x="${L-6}" y="${(Y(t)+3.5).toFixed(1)}" text-anchor="end" class="svg-axis">${signed&&t>0?"+":""}${t}%</text>`).join("");
+
+  /* 0% 선은 수익이냐 손실이냐를 가르는 기준이라 굵게 */
+  const zero=(r.lo<0&&r.hi>0)
+    ?`<line x1="${L}" y1="${Y1(0).toFixed(1)}" x2="${(L+pw).toFixed(1)}" y2="${Y1(0).toFixed(1)}" stroke="var(--ink-2)" stroke-width="1.3"/>`:"";
+  const half=(w.lo<50&&w.hi>50)
+    ?`<line x1="${L}" y1="${Y2(50).toFixed(1)}" x2="${(L+pw).toFixed(1)}" y2="${Y2(50).toFixed(1)}" stroke="var(--ink-2)" stroke-width="1" stroke-dasharray="2 4"/>`:"";
 
   /* 표본이 모자란 눈금에서는 선을 끊는다 */
-  const paths=S.map((s,si)=>{
+  const line=(s,key,Y,si)=>{
     let d="",open=false;
     for(let v=0;v<=100;v++){
-      const w=s.win[v];
-      if(w==null){open=false;continue}
-      d+=(open?"L":"M")+X(v).toFixed(1)+" "+Y(w).toFixed(1)+" ";
+      const y=s[key][v];
+      if(y==null){open=false;continue}
+      d+=(open?"L":"M")+X(v).toFixed(1)+" "+Y(y).toFixed(1)+" ";
       open=true;
     }
     return d?`<path d="${d.trim()}" fill="none" stroke="${s.col}" stroke-width="${s.wd}" stroke-linejoin="round"${s.dash?` stroke-dasharray="${s.dash}"`:""} class="draw${si?" d1":""}" style="--len:${(pw*2).toFixed(0)}"/>`:"";
-  }).join("");
+  };
+  const paths=S.map((s,i)=>line(s,"med",Y1,i)).join("")+
+              S.map((s,i)=>line(s,"win",Y2,i)).join("");
 
   const xt=[0,25,50,75,100].map(v=>{
     const anc=v===0?"start":v===100?"end":"middle";
-    return `<line x1="${X(v).toFixed(1)}" y1="${yBot}" x2="${X(v).toFixed(1)}" y2="${yBot+5}" stroke="var(--rule)" stroke-width="1"/>`+
-      `<text x="${X(v).toFixed(1)}" y="${yBot+18}" text-anchor="${anc}" class="svg-axis">${v}</text>`;
+    return `<line x1="${X(v).toFixed(1)}" y1="${B2}" x2="${X(v).toFixed(1)}" y2="${B2+5}" stroke="var(--rule)" stroke-width="1"/>`+
+      `<text x="${X(v).toFixed(1)}" y="${B2+18}" text-anchor="${anc}" class="svg-axis">${v}</text>`;
   }).join("");
 
-  /* 현재 지수 위치 — 세로 치수선 하나로 표시한다.
-     글자는 구간 이름과 부딪히지 않도록 위쪽이 아니라 점 옆에 붙인다.
-     선 위에 겹쳐도 읽히게 흰 테두리(paint-order)를 두른다. */
+  /* 현재 지수 — 두 칸을 관통하는 세로 치수선.
+     글자는 구간 이름과 부딪히지 않게 점 옆에 붙이고,
+     선 위에 겹쳐도 읽히도록 흰 테두리(paint-order)를 두른다. */
   const cur=DATA&&DATA.fng?DATA.fng.value:null;
   let mark="";
   if(cur!=null){
-    const v=Math.max(0,Math.min(100,Math.round(cur))),w=S[0].win[v];
-    const col=zoneColor(cur),xc=X(v);
+    const v=Math.max(0,Math.min(100,Math.round(cur)));
+    const md=S[0].med[v],wn=S[0].win[v],col=zoneColor(cur),xc=X(v);
     const anc=v<12?"start":v>88?"end":"middle";
     const lx=v<12?xc+5:v>88?xc-5:xc;
-    const yd=w!=null?Y(w):T;
-    const ly=w==null?T+18:(yd<yBot-36?yd+21:yd-14);
+    const yd=md!=null?Y1(md):T1;
+    const ly=md==null?T1+18:(yd<B1-34?yd+21:yd-14);
     mark=`<g class="fade d3">
-      <line x1="${xc.toFixed(1)}" y1="${T}" x2="${xc.toFixed(1)}" y2="${yBot}" stroke="${col}" stroke-width="1.2" stroke-dasharray="3 3"/>
-      ${w!=null?`<circle cx="${xc.toFixed(1)}" cy="${yd.toFixed(1)}" r="3.8" fill="${col}"/>`:""}
+      <line x1="${xc.toFixed(1)}" y1="${T1}" x2="${xc.toFixed(1)}" y2="${B2}" stroke="${col}" stroke-width="1.2" stroke-dasharray="3 3"/>
+      ${md!=null?`<circle cx="${xc.toFixed(1)}" cy="${yd.toFixed(1)}" r="3.8" fill="${col}"/>`:""}
+      ${wn!=null?`<circle cx="${xc.toFixed(1)}" cy="${Y2(wn).toFixed(1)}" r="3" fill="${col}"/>`:""}
       <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anc}" class="svg-num" fill="${col}"
-        stroke="var(--card)" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">지금 ${cur}${w!=null?" · "+w.toFixed(0)+"%":""}</text>
+        stroke="var(--card)" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">지금 ${cur}${md!=null?" · "+sign(md):""}</text>
     </g>`;
   }
 
+  const cap=(y,t)=>`<text x="${L}" y="${y}" class="svg-label" fill="var(--ink-3)">${t}</text>`;
+
   return `<div class="chart" id="bt-c">
-  <svg viewBox="0 0 ${W} ${H}" class="${sm?"sm":""}" role="img" aria-label="공포탐욕 지수값별 ${H_LABEL[btH]} 승률">
-    ${bands}${yt.join("")}
-    <rect x="${L}" y="${T}" width="${pw}" height="${ph}" fill="none" stroke="var(--rule)" stroke-width="1"/>
-    ${zn}${paths}${mark}
+  <svg viewBox="0 0 ${W} ${H}" class="${G.sm?"sm":""}" role="img" aria-label="공포탐욕 지수값별 ${H_LABEL[btH]} 수익률과 승률">
+    ${bands}
+    ${grid(r.ticks,Y1,true)}${zero}
+    ${grid(w.ticks,Y2,false)}${half}
+    <rect x="${L}" y="${T1}" width="${pw}" height="${(B1-T1).toFixed(1)}" fill="none" stroke="var(--rule)" stroke-width="1"/>
+    <rect x="${L}" y="${T2}" width="${pw}" height="${(B2-T2).toFixed(1)}" fill="none" stroke="var(--rule)" stroke-width="1"/>
+    ${zn}${cap(T2-9,"승률")}
+    ${paths}${mark}
     ${xt}
     <g class="cross" style="opacity:0">
-      <line class="cline" y1="${T}" y2="${yBot}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="2 3"/>
+      <line class="cline" y1="${T1}" y2="${B2}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="2 3"/>
       <circle class="cdot" r="3.6" fill="var(--card)" stroke="var(--ink)" stroke-width="1.8"/>
     </g>
-    <rect x="${L}" y="${T}" width="${pw}" height="${ph}" fill="transparent"/>
+    <rect x="${L}" y="${T1}" width="${pw}" height="${(B2-T1).toFixed(1)}" fill="transparent"/>
   </svg></div>
   <div class="bt-key">${S.map(s=>`<span><i class="${s.dash?"d":""}"></i>${s.name}</span>`).join("")}</div>`;
 }
 
 function btHover(){
-  const box=document.getElementById("bt-c");
-  if(!box)return;
-  const S=btSeries();
-  const all=S.flatMap(s=>s.win).filter(w=>w!=null);
-  const {W,sm}=geo(document.getElementById("bt-body"));
-  const g=sm?{L:30,R:10,T:24,ph:146}:{L:40,R:16,T:30,ph:184};
-  const pw=W-g.L-g.R;
-  let lo=Math.max(0,Math.floor((Math.min(...all)-4)/5)*5);
-  let hi=Math.min(100,Math.ceil((Math.max(...all)+4)/5)*5);
-  if(hi-lo<20)lo=Math.max(0,hi-20);
-  const Y=w=>g.T+g.ph*(1-(w-lo)/(hi-lo));
+  const box=document.getElementById("bt-c"),G=BTGEO;
+  if(!box||!G)return;
+  const S=G.S;
   attachHover(box,{
-    W,L:g.L,pw,n:101,
-    X:k=>g.L+pw*k/100,Y,
-    val:k=>S[0].win[k]!=null?S[0].win[k]:lo,
+    W:G.W,L:G.L,pw:G.pw,n:101,
+    X:k=>G.X(k),Y:G.Y1,
+    val:k=>S[0].med[k]!=null?S[0].med[k]:G.r.lo,
     html:k=>{
-      const rows=S.map(s=>s.win[k]==null?`<div class="t-x">${s.name} 표본 부족</div>`
-        :`<div class="t-x">${s.name} <b>${s.win[k].toFixed(0)}%</b> · 평균 ${sign(s.avg[k])}</div>`).join("");
+      const rows=S.map(s=>s.med[k]==null?`<div class="t-x">${s.name} 표본 부족</div>`
+        :`<div class="t-x">${s.name} <b>${sign(s.med[k])}</b> · 승률 ${s.win[k].toFixed(0)}% <span style="color:var(--ink-3)">(평균 ${sign(s.avg[k])})</span></div>`).join("");
       return `<div class="t-d">공포탐욕 ${k} · ${H_LABEL[btH]} 보유</div>${rows}`+
         `<div class="t-d">표본 ${(S[0].n[k]||0).toLocaleString("ko-KR")}일</div>`;
     }
@@ -674,12 +715,12 @@ function btNote(){
   const cur=DATA&&DATA.fng?DATA.fng.value:null;
   if(cur===null)return "";
   const v=Math.max(0,Math.min(100,Math.round(cur)));
-  const S=btSeries().filter(s=>s.win[v]!=null);
+  const S=btSeries().filter(s=>s.med[v]!=null);
   if(!S.length)
     return '<div class="bt-note">지금 지수는 표본이 부족해 통계를 내지 않았습니다.</div>';
-  const part=S.map(s=>s.name+' <b>승률 '+s.win[v].toFixed(0)+'%, 평균 '+sign(s.avg[v])+'</b>').join(' · ');
+  const part=S.map(s=>s.name+' <b>'+sign(s.med[v])+'</b>(승률 '+s.win[v].toFixed(0)+'%)').join(' · ');
   return '<div class="bt-note">공포탐욕 <b class="v">'+cur+'</b> 언저리에서 사서 '+
-    H_LABEL[btH]+' 보유했다면 '+part+'였습니다. '+
+    H_LABEL[btH]+' 보유했다면 절반은 '+part+' 이상이었습니다. '+
     '<span class="v">(표본 '+(S[0].n[v]||0).toLocaleString("ko-KR")+'일)</span></div>';
 }
 
@@ -695,13 +736,13 @@ function renderBT(){
       '첫 계산이 끝나면 여기에 표시됩니다.</div>';
     return;
   }
-  /* 구간 5칸짜리 옛 형식이면 곡선을 그릴 수 없다.
+  /* 수익률(med)이 없는 옛 데이터면 그릴 수 없다.
      화면만 먼저 갈아끼우고 계산을 안 돌렸을 때 여기로 온다. */
-  if(!Object.values(BT.indices).some(x=>x&&x.curve)){
+  if(!Object.values(BT.indices).some(x=>x&&x.curve&&x.curve[btH]&&x.curve[btH].med)){
     tools.innerHTML="";
     document.getElementById("bt-range").textContent="—";
-    body.innerHTML='<div class="empty">데이터가 옛 형식(구간 5칸)입니다.<br>'+
-      'Actions에서 Update backtest를 한 번 실행하면 곡선이 나옵니다.</div>';
+    body.innerHTML='<div class="empty">데이터가 옛 형식입니다.<br>'+
+      'Actions에서 Update backtest를 한 번 실행하면 나옵니다.</div>';
     return;
   }
   const any=Object.values(BT.indices)[0];
@@ -714,8 +755,10 @@ function renderBT(){
     b.setAttribute("aria-pressed",String(b.dataset.bt===btH)));
   const w=BT.window||5;
   body.innerHTML=btChart()+btNote()+
-    '<div class="bt-foot">가로축은 공포탐욕지수, 세로축은 그 값에서 사서 '+
-    '기간을 채웠을 때 수익이 났던 비율입니다.<br>'+
+    '<div class="bt-foot">가로축은 공포탐욕지수. 위 칸은 그 값에서 사서 기간을 채웠을 때의 '+
+    '수익률 <b>중앙값</b>(절반은 이 위, 절반은 아래), 아래 칸은 수익이 났던 비율입니다.<br>'+
+    '평균이 아니라 중앙값을 그립니다. 2020년 3월 바닥 같은 며칠이 평균을 크게 끌어올려 '+
+    '공포 구간을 실제보다 후하게 보이게 하기 때문입니다. 평균은 마우스를 올리면 함께 나옵니다.<br>'+
     '눈금마다 지수 ±'+w+' 포인트였던 날들을 묶었고, 표본 '+(BT.min_n||30)+
     '일 미만인 구간은 선을 끊었습니다. 배당 재투자 기준(SPY·QQQ).<br>'+
     '과거 성과일 뿐 미래를 보장하지 않습니다.</div>';
