@@ -19,6 +19,7 @@ import csv
 import io
 import json
 import os
+import statistics
 import time
 import urllib.request
 from datetime import datetime, timezone
@@ -149,7 +150,7 @@ def backtest(fng, prices):
         pairs = [(vals[i], (px[i + span] / px[i] - 1) * 100)
                  for i in range(len(px) - span)]
 
-        win, avg, ns = [], [], []
+        win, med, avg, ns = [], [], [], []
         for v in range(101):
             lo, hi = v - WINDOW, v + WINDOW
             rets = [r for f, r in pairs if lo <= f <= hi]
@@ -157,12 +158,16 @@ def backtest(fng, prices):
             ns.append(n)
             if n < MIN_N:
                 win.append(None)
+                med.append(None)
                 avg.append(None)
                 continue
             wins = sum(1 for r in rets if r > 0)
             win.append(round(wins / n * 100, 1))
+            # 화면에 그리는 선은 중앙값이다. 평균은 2020년 3월 바닥 같은
+            # 며칠에 끌려가 공포 구간을 실제보다 후하게 보이게 만든다.
+            med.append(round(statistics.median(rets), 2))
             avg.append(round(sum(rets) / n, 2))
-        out[hkey] = {"win": win, "avg": avg, "n": ns}
+        out[hkey] = {"win": win, "med": med, "avg": avg, "n": ns}
     return out, days
 
 
@@ -200,8 +205,9 @@ def main():
         y = curve["1Y"]
         for v in range(0, 101, 10):
             w = y["win"][v]
-            print(f"    지수 {v:3d}: 1년 승률 "
-                  + (f"{w:5.1f}% 평균 {y['avg'][v]:+6.1f}% (표본 {y['n'][v]})"
+            print(f"    지수 {v:3d}: 1년 중앙값 "
+                  + (f"{y['med'][v]:+6.1f}% 평균 {y['avg'][v]:+6.1f}% "
+                     f"승률 {w:5.1f}% (표본 {y['n'][v]})"
                      if w is not None else "  표본 부족"))
 
     if not result["indices"]:
