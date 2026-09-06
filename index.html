@@ -107,27 +107,28 @@ body.settled .fade{animation:none;opacity:1}
 .bt-head{display:flex;align-items:center;justify-content:space-between;gap:12px;
   flex-wrap:wrap;padding:15px 20px 12px}
 .bt-name{display:flex;align-items:center;gap:9px}
-.bt-title{font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.11em;
-  text-transform:uppercase;white-space:nowrap}
-.bt-cap{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.13em;
+/* 제목 크기는 위 패널들의 h2(S&P 500 / 공포탐욕지수)와 맞춘다 */
+.bt-title{font-family:var(--cond);font-weight:700;font-size:19px}
+/* 지금 지수에서의 성적 한 줄 요약 — 버튼을 누르면 같이 바뀐다 */
+.bt-sum{display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 13px;
+  padding:0 20px 13px;font-family:var(--mono);font-size:12.5px;color:var(--ink-2);line-height:1.6}
+.bt-sum .cap{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.13em;
   text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.bt-sum .idx{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.03em;color:var(--ink)}
+.bt-sum b{font-weight:500;color:var(--ink)}
+.bt-sum .n{color:var(--ink-3)}
 /* 범례 — 선 두 개를 글로 풀지 않고 모양 그대로 보여준다 */
 .bt-key{display:flex;gap:18px;padding:2px 20px 0;font-family:var(--cond);
   font-weight:600;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
 .bt-key span{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
 .bt-key i{width:16px;height:0;border-top:2px solid var(--ink)}
 .bt-key i.d{border-top:1.5px dashed var(--ink-3)}
-.bt-note{padding:14px 20px 18px;border-top:1px solid var(--rule-2);
-  font-family:var(--body);font-size:13px;line-height:1.75;color:var(--ink-2)}
-.bt-note b{font-weight:600;color:var(--ink)}
-.bt-note .v{font-family:var(--mono)}
-.bt-foot{padding:0 20px 16px;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);line-height:1.7}
+.bt-foot{padding:10px 20px 16px;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);line-height:1.7}
 @media (max-width:640px){
-  .bt-head{padding:13px 14px 10px}
-  .bt-cap{display:none}
+  .bt-head{padding:13px 14px 8px}
+  .bt-sum{padding:0 14px 11px;gap:4px 10px}
   .bt-key{padding:2px 14px 0;gap:14px;font-size:11px}
-  .bt-note{font-size:12.5px;padding:13px 14px 16px}
-  .bt-foot{padding:0 14px 14px}
+  .bt-foot{padding:10px 14px 14px}
 }
 
 .empty{padding:44px 20px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--ink-3);line-height:1.9}
@@ -210,12 +211,12 @@ svg.sm .svg-axis{font-size:11px}
     <div class="bt-sec">
       <div class="bt-head">
         <div class="bt-name">
-          <span class="bt-title">지수별 성적</span>
+          <span class="bt-title">공포와 탐욕 지수별 수익률</span>
           <span class="ticker" id="bt-range">—</span>
-          <span class="bt-cap">이 값에서 샀다면</span>
         </div>
         <div id="bt-tools"></div>
       </div>
+      <div class="bt-sum" id="bt-sum"></div>
       <div id="bt-body"><div class="empty">불러오는 중…</div></div>
     </div>
   </section>
@@ -710,18 +711,29 @@ function btHover(){
   });
 }
 
-/* 지금 지수에서의 성적을 한 문장으로 */
-function btNote(){
+/* 머리글 옆 한 줄 요약 — 지금 지수에서, 고른 기간으로 샀다면.
+   버튼을 누르면 기간 표현과 숫자가 함께 바뀐다. */
+function btSummary(){
+  const el=document.getElementById("bt-sum");
+  if(!el)return;
   const cur=DATA&&DATA.fng?DATA.fng.value:null;
-  if(cur===null)return "";
+  if(!BT||!BT.indices||cur==null){el.innerHTML="";return}
   const v=Math.max(0,Math.min(100,Math.round(cur)));
-  const S=btSeries().filter(s=>s.med[v]!=null);
-  if(!S.length)
-    return '<div class="bt-note">지금 지수는 표본이 부족해 통계를 내지 않았습니다.</div>';
-  const part=S.map(s=>s.name+' <b>'+sign(s.med[v])+'</b>(승률 '+s.win[v].toFixed(0)+'%)').join(' · ');
-  return '<div class="bt-note">공포탐욕 <b class="v">'+cur+'</b> 언저리에서 사서 '+
-    H_LABEL[btH]+' 보유했다면 절반은 '+part+' 이상이었습니다. '+
-    '<span class="v">(표본 '+(S[0].n[v]||0).toLocaleString("ko-KR")+'일)</span></div>';
+  const S=btSeries();
+  if(!S.length||S[0].med[v]==null){
+    el.innerHTML='<span class="cap">이 값에서 샀다면</span>'+
+      '<span>지금 지수는 표본이 부족해 통계를 내지 않았습니다.</span>';
+    return;
+  }
+  const body=S.map(s=>{
+    if(s.med[v]==null)return `<span><span class="idx">${s.name}</span> 표본 부족</span>`;
+    const m=s.med[v];
+    return `<span><span class="idx">${s.name}</span> 수익날 확률 <b>${s.win[v].toFixed(0)}%</b>, `+
+      `중위 ${m>=0?"수익":"손실"} <b class="${m>=0?"up":"dn"}">${m>0?"+":""}${m.toFixed(2)}%</b></span>`;
+  }).join("");
+  el.innerHTML='<span class="cap">이 값에서 샀다면</span>'+
+    `<span><b>${H_LABEL[btH]} 뒤</b></span>`+body+
+    `<span class="n">(표본 ${(S[0].n[v]||0).toLocaleString("ko-KR")}일)</span>`;
 }
 
 function renderBT(){
@@ -731,6 +743,7 @@ function renderBT(){
   if(!BT||!BT.indices||!BT.zones){
     /* 아직 backtest.json 이 없을 때. 버튼도 같이 감춘다. */
     tools.innerHTML="";
+    document.getElementById("bt-sum").innerHTML="";
     document.getElementById("bt-range").textContent="—";
     body.innerHTML='<div class="empty">승률 데이터가 아직 없습니다.<br>'+
       '첫 계산이 끝나면 여기에 표시됩니다.</div>';
@@ -740,6 +753,7 @@ function renderBT(){
      화면만 먼저 갈아끼우고 계산을 안 돌렸을 때 여기로 온다. */
   if(!Object.values(BT.indices).some(x=>x&&x.curve&&x.curve[btH]&&x.curve[btH].med)){
     tools.innerHTML="";
+    document.getElementById("bt-sum").innerHTML="";
     document.getElementById("bt-range").textContent="—";
     body.innerHTML='<div class="empty">데이터가 옛 형식입니다.<br>'+
       'Actions에서 Update backtest를 한 번 실행하면 나옵니다.</div>';
@@ -754,7 +768,8 @@ function renderBT(){
   else tools.querySelectorAll("button[data-bt]").forEach(b=>
     b.setAttribute("aria-pressed",String(b.dataset.bt===btH)));
   const w=BT.window||5;
-  body.innerHTML=btChart()+btNote()+
+  btSummary();
+  body.innerHTML=btChart()+
     '<div class="bt-foot">가로축은 공포탐욕지수. 위 칸은 그 값에서 사서 기간을 채웠을 때의 '+
     '수익률 <b>중앙값</b>(절반은 이 위, 절반은 아래), 아래 칸은 수익이 났던 비율입니다.<br>'+
     '평균이 아니라 중앙값을 그립니다. 2020년 3월 바닥 같은 며칠이 평균을 크게 끌어올려 '+
