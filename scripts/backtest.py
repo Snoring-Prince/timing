@@ -1,11 +1,16 @@
 """
-Daniel's timing — 공포탐욕 구간별 백테스팅
+Daniel's timing — 공포탐욕 지수값별 백테스팅
 
-공포탐욕지수가 특정 구간에 있던 날에 샀다면 1·3·6·12개월 뒤
-어땠는지를 과거 데이터로 집계해 data/backtest.json 에 저장한다.
+공포탐욕지수가 어떤 값이었던 날에 샀다면 1·3·6·12개월 뒤 어땠는지를
+지수 0~100 한 눈금마다 집계해 data/backtest.json 에 저장한다.
 
-기간 참고: CNN 공포탐욕지수는 2011년부터 존재한다. 그 이전 값은
-어디에도 없으므로 백테스트 구간은 2011년 이후로 한정된다.
+구간을 다섯 덩어리로 묶으면 안 보이는 것이 있다. 예컨대 '극단적 공포'
+한 칸에 지수 5와 24가 같이 들어가는데, 둘의 성적은 꽤 다르다.
+그래서 눈금마다 ±WINDOW 포인트를 창으로 잡아 승률 곡선을 만든다.
+
+기간 참고: CNN 공포탐욕지수는 2012년 봄에 나왔고, 구할 수 있는 값은
+2011년까지 소급된 것이 가장 이르다. 그 이전은 어디에도 없으므로
+백테스트 구간은 2011년 이후로 한정된다. 2008년 금융위기는 빠진다.
 
 저장 위치: scripts/backtest.py
 """
@@ -14,7 +19,6 @@ import csv
 import io
 import json
 import os
-import statistics
 import time
 import urllib.request
 from datetime import datetime, timezone
@@ -39,7 +43,7 @@ FNG_SOURCES = [
      "main/datasets/cnn_fear_greed.csv"),
 ]
 
-# 화면에 쓰는 것과 같은 구간 정의
+# 화면 배경의 색 띠에만 쓴다. 통계는 구간이 아니라 눈금마다 낸다.
 ZONES = [
     ("extreme_fear", "극단적 공포", 0, 25),
     ("fear",         "공포",       25, 45),
@@ -53,10 +57,13 @@ HORIZONS = [("1M", 21), ("3M", 63), ("6M", 126), ("1Y", 252)]
 
 INDICES = [("spx", "S&P 500", "SPY"), ("ndx", "나스닥 100", "QQQ")]
 
-# 표본이 이보다 적은 칸은 통계로 쓰지 않고 비운다.
-# 1M·3M 같은 단기 구간은 거시 이슈 하나에 통째로 휘둘리므로,
-# 표본이 얇으면 숫자가 있는 편이 오히려 사람을 오도한다.
-MIN_N = 20
+# 눈금 v의 표본은 지수가 v-WINDOW ~ v+WINDOW 였던 날들이다.
+# 좁히면 곡선이 톱니처럼 튀고, 넓히면 구간 평균과 다를 바 없어진다.
+WINDOW = 5
+
+# 표본이 이보다 적은 눈금은 비운다(화면에서 선이 끊긴다).
+# 지수 97 이상처럼 역사적으로 며칠 없던 값은 숫자를 내봐야 오도한다.
+MIN_N = 30
 
 
 def fetch(url, tries=3):
@@ -126,42 +133,36 @@ def load_prices(symbol):
 
 # -------------------------------------------------------------- 집계
 
-def summarize(returns):
-    """수익률 목록을 요약. 평균은 이상치에 약해 중앙값도 함께 낸다."""
-    n = len(returns)
-    wins = sum(1 for r in returns if r > 0)
-    return {
-        "n": n,
-        "win": round(wins / n * 100, 1),
-        "avg": round(sum(returns) / n, 2),
-        "med": round(statistics.median(returns), 2),
-        "best": round(max(returns), 2),
-        "worst": round(min(returns), 2),
-    }
-
-
 def backtest(fng, prices):
-    """구간 × 보유기간별 결과를 만든다."""
+    """지수 눈금(0~100) × 보유기간별 승률 곡선을 만든다."""
     days = sorted(set(fng) & set(prices))
     if len(days) < 500:
         raise RuntimeError(f"겹치는 날짜 부족 ({len(days)}일)")
 
-    idx = {d: i for i, d in enumerate(days)}
     px = [prices[d] for d in days]
+    vals = [fng[d] for d in days]
 
     out = {}
-    for key, _, lo, hi in ZONES:
-        entries = [d for d in days if lo <= fng[d] < hi]
-        out[key] = {}
-        for hkey, span in HORIZONS:
-            rets = []
-            for d in entries:
-                i = idx[d]
-                j = i + span
-                if j >= len(px):          # 아직 결과가 안 나온 날은 제외
-                    continue
-                rets.append((px[j] / px[i] - 1) * 100)
-            out[key][hkey] = summarize(rets) if len(rets) >= MIN_N else None
+    for hkey, span in HORIZONS:
+        # 그 날 사서 span 거래일 뒤 팔았을 때의 수익률.
+        # 아직 span 일이 안 지난 최근 날들은 결과가 없으므로 뺀다.
+        pairs = [(vals[i], (px[i + span] / px[i] - 1) * 100)
+                 for i in range(len(px) - span)]
+
+        win, avg, ns = [], [], []
+        for v in range(101):
+            lo, hi = v - WINDOW, v + WINDOW
+            rets = [r for f, r in pairs if lo <= f <= hi]
+            n = len(rets)
+            ns.append(n)
+            if n < MIN_N:
+                win.append(None)
+                avg.append(None)
+                continue
+            wins = sum(1 for r in rets if r > 0)
+            win.append(round(wins / n * 100, 1))
+            avg.append(round(sum(rets) / n, 2))
+        out[hkey] = {"win": win, "avg": avg, "n": ns}
     return out, days
 
 
@@ -173,6 +174,8 @@ def main():
 
     result = {
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "window": WINDOW,
+        "min_n": MIN_N,
         "zones": [{"key": k, "label": l, "lo": lo, "hi": hi}
                   for k, l, lo, hi in ZONES],
         "horizons": [h for h, _ in HORIZONS],
@@ -188,17 +191,18 @@ def main():
             continue
         pd = sorted(prices)
         print(f"  가격: {len(prices)}일 ({pd[0]} ~ {pd[-1]})")
-        stats, days = backtest(fng, prices)
+        curve, days = backtest(fng, prices)
         result["indices"][key] = {
             "name": name, "symbol": symbol,
             "from": days[0], "to": days[-1], "days": len(days),
-            "stats": stats,
+            "curve": curve,
         }
-        for zk, _, lo, hi in ZONES:
-            row = stats[zk].get("1Y")
-            if row:
-                print(f"    {lo}~{hi}: 1년 승률 {row['win']}% "
-                      f"평균 {row['avg']:+.1f}% (표본 {row['n']})")
+        y = curve["1Y"]
+        for v in range(0, 101, 10):
+            w = y["win"][v]
+            print(f"    지수 {v:3d}: 1년 승률 "
+                  + (f"{w:5.1f}% 평균 {y['avg'][v]:+6.1f}% (표본 {y['n'][v]})"
+                     if w is not None else "  표본 부족"))
 
     if not result["indices"]:
         raise SystemExit("가격 데이터를 받지 못했습니다.")
