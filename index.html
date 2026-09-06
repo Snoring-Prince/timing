@@ -109,6 +109,12 @@ body.settled .fade{animation:none;opacity:1}
 .bt-name{display:flex;align-items:center;gap:9px}
 /* 제목 크기는 위 패널들의 h2(S&P 500 / 공포탐욕지수)와 맞춘다 */
 .bt-title{font-family:var(--cond);font-weight:700;font-size:19px}
+.bt-ctl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+/* 잣대 전환 버튼은 기간 버튼과 구분되게 한글 라벨을 쓴다 */
+.seg.mini.ax button{font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.04em}
+/* 주식이 처음인 사람을 위한 한 줄 설명 */
+.bt-help{padding:0 20px 14px;font-family:var(--body);font-size:12.5px;
+  line-height:1.75;color:var(--ink-3);max-width:78ch}
 /* 지금 지수에서의 성적 한 줄 요약 — 버튼을 누르면 같이 바뀐다 */
 .bt-sum{display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 13px;
   padding:0 20px 13px;font-family:var(--mono);font-size:12.5px;color:var(--ink-2);line-height:1.6}
@@ -127,6 +133,7 @@ body.settled .fade{animation:none;opacity:1}
 @media (max-width:640px){
   .bt-head{padding:13px 14px 8px}
   .bt-sum{padding:0 14px 11px;gap:4px 10px}
+  .bt-help{padding:0 14px 12px}
   .bt-key{padding:2px 14px 0;gap:14px;font-size:11px}
   .bt-foot{padding:10px 14px 14px}
 }
@@ -211,12 +218,13 @@ svg.sm .svg-axis{font-size:11px}
     <div class="bt-sec">
       <div class="bt-head">
         <div class="bt-name">
-          <span class="bt-title">공포와 탐욕 지수별 수익률</span>
+          <span class="bt-title" id="bt-title">공포와 탐욕 지수별 수익률</span>
           <span class="ticker" id="bt-range">—</span>
         </div>
-        <div id="bt-tools"></div>
+        <div class="bt-ctl"><div id="bt-axes"></div><div id="bt-tools"></div></div>
       </div>
       <div class="bt-sum" id="bt-sum"></div>
+      <div class="bt-help" id="bt-help"></div>
       <div id="bt-body"><div class="empty">불러오는 중…</div></div>
     </div>
   </section>
@@ -538,11 +546,31 @@ document.addEventListener("click",e=>{
 /* 공포탐욕지수가 각 구간에 있던 날 샀다면 1·3·6·12개월 뒤 어땠는지를 보여준다.
    현재 지수가 속한 구간은 표에서 강조한다.
    데이터는 data/backtest.json — 주 1회 GitHub Actions가 다시 계산한다. */
-let BT=null,btH="1Y";
+let BT=null,btH="1Y",btAx="fng";
 const H_LABEL={"1M":"1개월","3M":"3개월","6M":"6개월","1Y":"1년"};
 const H_ORDER=["1M","3M","6M","1Y"];
 
 function sign(x){return (x>0?"+":"")+x.toFixed(1)+"%"}
+
+/* 지금 고른 잣대(공포탐욕 / VIX)의 정의 */
+function axMeta(){
+  const A=(BT&&BT.axes)||[];
+  return A.find(a=>a.key===btAx)||A[0]||null;
+}
+/* 그 잣대의 오늘 값. 공포탐욕은 fng, VIX는 vix 에서 온다. */
+function axNow(){
+  if(!DATA)return null;
+  const src=btAx==="vix"?DATA.vix:DATA.fng;
+  return src&&typeof src.value==="number"?src.value:null;
+}
+function axZone(v){
+  const a=axMeta();
+  return a?(a.zones||[]).find(z=>v>=z.lo&&v<z.hi)||null:null;
+}
+const toneColor=t=>t<0?"var(--down)":t>0?"var(--up)":"var(--ink-2)";
+/* 색 띠 — 음수 tone 이 공포(파랑), 양수가 탐욕(빨강) */
+const TONE={"-2":["31,95,169",.075],"-1":["31,95,169",.045],
+            "0":["120,135,150",.025],"1":["196,54,44",.045],"2":["196,54,44",.075]};
 
 function btTools(){
   /* .tools 래퍼 없이 세그먼트만 — 카드 안쪽 소제목 줄에 얹힌다 */
@@ -551,14 +579,23 @@ function btTools(){
     hs.map(h=>'<button type="button" data-bt="'+h+'" aria-pressed="'+
       (h===btH)+'">'+(H_LABEL[h]||h)+'</button>').join("")+'</div>';
 }
-
-/* 구간 색 띠 — 위 공포탐욕 차트와 같은 규칙(공포 파랑 / 탐욕 빨강) */
-const ZTINT=["31,95,169","31,95,169","120,135,150","196,54,44","196,54,44"];
-const ZALPHA=[.07,.045,.025,.045,.07];
+function btAxTools(){
+  const A=(BT.axes||[]).filter(a=>btHas(a.key));
+  if(A.length<2)return "";
+  return '<div class="seg mini ax" role="group" aria-label="잣대">'+
+    A.map(a=>'<button type="button" data-btax="'+a.key+'" aria-pressed="'+
+      (a.key===btAx)+'">'+a.short+'</button>').join("")+'</div>';
+}
+/* 그 잣대로 계산된 곡선이 실제로 들어 있는가 */
+function btHas(key){
+  return !!(BT&&BT.indices&&Object.values(BT.indices)
+    .some(x=>x&&x.curve&&x.curve[key]&&x.curve[key].h));
+}
 
 function btSeries(){
   return Object.keys(BT.indices).map((k,i)=>{
-    const c=BT.indices[k].curve[btH]||{};
+    const cv=(BT.indices[k].curve||{})[btAx]||{};
+    const c=(cv.h||{})[btH]||{};
     return {k,name:BT.indices[k].name,win:c.win||[],med:c.med||[],avg:c.avg||[],n:c.n||[],
             col:i?"var(--ink-3)":"var(--ink)",wd:i?1.5:2.1,dash:i?"4 3":""};
   });
@@ -586,9 +623,13 @@ function btScale(vals,step,floor0){
 let BTGEO=null;
 
 function btGeo(){
+  const a=axMeta();
+  if(!a)return null;
   const S=btSeries();
-  const meds=S.flatMap(s=>s.med).filter(x=>x!=null);
-  const wins=S.flatMap(s=>s.win).filter(x=>x!=null);
+  const v0=Math.ceil(a.lo),v1=Math.floor(a.hi);
+  const inRange=arr=>arr.slice(v0,v1+1).filter(x=>x!=null);
+  const meds=S.flatMap(s=>inRange(s.med));
+  const wins=S.flatMap(s=>inRange(s.win));
   if(!meds.length||!wins.length)return null;
 
   const {W,sm}=geo(document.getElementById("bt-body"));
@@ -600,9 +641,10 @@ function btGeo(){
   const rSpan=Math.max(...meds)-Math.min(...meds);
   const r=btScale(meds.concat([0]),rSpan<=12?2:rSpan<=30?5:10,false);
   const w=btScale(wins,10,true);
+  const ax=a.hi-a.lo;
 
-  return {S,W,sm,names:g.names,L,pw,T1,B1,T2,B2,H,
-    X:v=>L+pw*v/100,
+  return {a,S,W,sm,names:g.names,L,pw,T1,B1,T2,B2,H,v0,v1,
+    X:v=>L+pw*(Math.max(a.lo,Math.min(a.hi,v))-a.lo)/ax,
     Y1:y=>T1+g.ph1*(1-(y-r.lo)/(r.hi-r.lo)),
     Y2:y=>T2+g.ph2*(1-(y-w.lo)/(w.hi-w.lo)),
     r,w,ph1:g.ph1,ph2:g.ph2};
@@ -611,15 +653,23 @@ function btGeo(){
 function btChart(){
   const G=BTGEO=btGeo();
   if(!G)return '<div class="empty">표본이 부족해 그릴 수 없습니다.</div>';
-  const {S,W,L,pw,T1,B1,T2,B2,H,X,Y1,Y2,r,w}=G;
+  const {a,S,W,L,pw,T1,B1,T2,B2,H,X,Y1,Y2,r,w,v0,v1}=G;
 
-  const bands=(BT.zones||[]).map((z,i)=>{
-    const x=X(z.lo),wd=X(Math.min(z.hi,100))-x,f=`rgba(${ZTINT[i]},${ZALPHA[i]})`;
+  /* 화면 밖으로 나가는 구간은 잘라서 칠한다 */
+  const clip=z=>[Math.max(z.lo,a.lo),Math.min(z.hi,a.hi)];
+  const vis=(a.zones||[]).map(z=>({z,c:clip(z)})).filter(o=>o.c[1]>o.c[0]);
+  const bands=vis.map(({z,c})=>{
+    const x=X(c[0]),wd=X(c[1])-x,t=TONE[String(z.tone)]||TONE["0"];
+    const f=`rgba(${t[0]},${t[1]})`;
     return `<rect x="${x.toFixed(1)}" y="${T1}" width="${wd.toFixed(1)}" height="${(B1-T1).toFixed(1)}" fill="${f}"/>`+
            `<rect x="${x.toFixed(1)}" y="${T2}" width="${wd.toFixed(1)}" height="${(B2-T2).toFixed(1)}" fill="${f}"/>`;
   }).join("");
-  const zn=G.names?(BT.zones||[]).map(z=>
-    `<text x="${((X(z.lo)+X(Math.min(z.hi,100)))/2).toFixed(1)}" y="${T1-9}" text-anchor="middle" class="svg-label" fill="var(--ink-3)">${z.label}</text>`).join(""):"";
+  /* 띠가 좁으면 이름을 못 넣는다 */
+  const zn=G.names?vis.map(({z,c})=>{
+    const wd=X(c[1])-X(c[0]);
+    if(wd<z.label.length*9+6)return "";
+    return `<text x="${((X(c[0])+X(c[1]))/2).toFixed(1)}" y="${T1-9}" text-anchor="middle" class="svg-label" fill="var(--ink-3)">${z.label}</text>`;
+  }).join(""):"";
 
   /* 수익률 축만 + 부호를 붙인다. 승률에 +90% 라고 쓰면 안 된다. */
   const grid=(ticks,Y,signed)=>ticks.map(t=>
@@ -635,7 +685,7 @@ function btChart(){
   /* 표본이 모자란 눈금에서는 선을 끊는다 */
   const line=(s,key,Y,si)=>{
     let d="",open=false;
-    for(let v=0;v<=100;v++){
+    for(let v=v0;v<=v1;v++){
       const y=s[key][v];
       if(y==null){open=false;continue}
       d+=(open?"L":"M")+X(v).toFixed(1)+" "+Y(y).toFixed(1)+" ";
@@ -646,22 +696,26 @@ function btChart(){
   const paths=S.map((s,i)=>line(s,"med",Y1,i)).join("")+
               S.map((s,i)=>line(s,"win",Y2,i)).join("");
 
-  const xt=[0,25,50,75,100].map(v=>{
-    const anc=v===0?"start":v===100?"end":"middle";
+  const xs=[];
+  for(let v=a.lo;v<=a.hi+1e-6;v+=a.step)xs.push(+v.toFixed(2));
+  const xt=xs.map((v,i)=>{
+    const anc=i===0?"start":i===xs.length-1?"end":"middle";
     return `<line x1="${X(v).toFixed(1)}" y1="${B2}" x2="${X(v).toFixed(1)}" y2="${B2+5}" stroke="var(--rule)" stroke-width="1"/>`+
-      `<text x="${X(v).toFixed(1)}" y="${B2+18}" text-anchor="${anc}" class="svg-axis">${v}</text>`;
+      `<text x="${X(v).toFixed(1)}" y="${B2+18}" text-anchor="${anc}" class="svg-axis">${v}${i===xs.length-1&&a.hi<100?"+":""}</text>`;
   }).join("");
 
   /* 현재 지수 — 두 칸을 관통하는 세로 치수선.
      글자는 구간 이름과 부딪히지 않게 점 옆에 붙이고,
      선 위에 겹쳐도 읽히도록 흰 테두리(paint-order)를 두른다. */
-  const cur=DATA&&DATA.fng?DATA.fng.value:null;
+  const cur=axNow();
   let mark="";
   if(cur!=null){
     const v=Math.max(0,Math.min(100,Math.round(cur)));
-    const md=S[0].med[v],wn=S[0].win[v],col=zoneColor(cur),xc=X(v);
-    const anc=v<12?"start":v>88?"end":"middle";
-    const lx=v<12?xc+5:v>88?xc-5:xc;
+    const z=axZone(cur),md=S[0].med[v],wn=S[0].win[v];
+    const col=toneColor(z?z.tone:0),xc=X(cur);
+    const near=(xc-L)/pw;
+    const anc=near<.12?"start":near>.88?"end":"middle";
+    const lx=near<.12?xc+5:near>.88?xc-5:xc;
     const yd=md!=null?Y1(md):T1;
     const ly=md==null?T1+18:(yd<B1-34?yd+21:yd-14);
     mark=`<g class="fade d3">
@@ -669,14 +723,14 @@ function btChart(){
       ${md!=null?`<circle cx="${xc.toFixed(1)}" cy="${yd.toFixed(1)}" r="3.8" fill="${col}"/>`:""}
       ${wn!=null?`<circle cx="${xc.toFixed(1)}" cy="${Y2(wn).toFixed(1)}" r="3" fill="${col}"/>`:""}
       <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anc}" class="svg-num" fill="${col}"
-        stroke="var(--card)" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">지금 ${cur}${md!=null?" · "+sign(md):""}</text>
+        stroke="var(--card)" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">지금 ${cur.toFixed(a.dec||0)}${md!=null?" · "+sign(md):""}</text>
     </g>`;
   }
 
   const cap=(y,t)=>`<text x="${L}" y="${y}" class="svg-label" fill="var(--ink-3)">${t}</text>`;
 
   return `<div class="chart" id="bt-c">
-  <svg viewBox="0 0 ${W} ${H}" class="${G.sm?"sm":""}" role="img" aria-label="공포탐욕 지수값별 ${H_LABEL[btH]} 수익률과 승률">
+  <svg viewBox="0 0 ${W} ${H}" class="${G.sm?"sm":""}" role="img" aria-label="${a.label} 값별 ${H_LABEL[btH]} 수익률과 승률">
     ${bands}
     ${grid(r.ticks,Y1,true)}${zero}
     ${grid(w.ticks,Y2,false)}${half}
@@ -697,16 +751,17 @@ function btChart(){
 function btHover(){
   const box=document.getElementById("bt-c"),G=BTGEO;
   if(!box||!G)return;
-  const S=G.S;
+  const S=G.S,a=G.a,v0=G.v0;
   attachHover(box,{
-    W:G.W,L:G.L,pw:G.pw,n:101,
-    X:k=>G.X(k),Y:G.Y1,
-    val:k=>S[0].med[k]!=null?S[0].med[k]:G.r.lo,
+    W:G.W,L:G.L,pw:G.pw,n:G.v1-v0+1,
+    X:k=>G.X(v0+k),Y:G.Y1,
+    val:k=>S[0].med[v0+k]!=null?S[0].med[v0+k]:G.r.lo,
     html:k=>{
-      const rows=S.map(s=>s.med[k]==null?`<div class="t-x">${s.name} 표본 부족</div>`
-        :`<div class="t-x">${s.name} <b>${sign(s.med[k])}</b> · 승률 ${s.win[k].toFixed(0)}% <span style="color:var(--ink-3)">(평균 ${sign(s.avg[k])})</span></div>`).join("");
-      return `<div class="t-d">공포탐욕 ${k} · ${H_LABEL[btH]} 보유</div>${rows}`+
-        `<div class="t-d">표본 ${(S[0].n[k]||0).toLocaleString("ko-KR")}일</div>`;
+      const v=v0+k,z=axZone(v);
+      const rows=S.map(s=>s.med[v]==null?`<div class="t-x">${s.name} 표본 부족</div>`
+        :`<div class="t-x">${s.name} <b>${sign(s.med[v])}</b> · 승률 ${s.win[v].toFixed(0)}% <span style="color:var(--ink-3)">(평균 ${sign(s.avg[v])})</span></div>`).join("");
+      return `<div class="t-d">${a.short} ${v}${z?" · "+z.label:""} · ${H_LABEL[btH]} 보유</div>${rows}`+
+        `<div class="t-d">표본 ${(S[0].n[v]||0).toLocaleString("ko-KR")}일</div>`;
     }
   });
 }
@@ -716,13 +771,15 @@ function btHover(){
 function btSummary(){
   const el=document.getElementById("bt-sum");
   if(!el)return;
-  const cur=DATA&&DATA.fng?DATA.fng.value:null;
-  if(!BT||!BT.indices||cur==null){el.innerHTML="";return}
+  const a=axMeta(),cur=axNow();
+  if(!BT||!BT.indices||!a||cur==null){el.innerHTML="";return}
   const v=Math.max(0,Math.min(100,Math.round(cur)));
+  const z=axZone(cur);
+  const cap='<span class="cap">지금 '+a.short+' '+cur.toFixed(a.dec||0)+
+    (z?' · '+z.label:'')+' — 이 값에서 샀다면</span>';
   const S=btSeries();
   if(!S.length||S[0].med[v]==null){
-    el.innerHTML='<span class="cap">이 값에서 샀다면</span>'+
-      '<span>지금 지수는 표본이 부족해 통계를 내지 않았습니다.</span>';
+    el.innerHTML=cap+'<span>표본이 부족해 통계를 내지 않았습니다.</span>';
     return;
   }
   const body=S.map(s=>{
@@ -731,8 +788,7 @@ function btSummary(){
     return `<span><span class="idx">${s.name}</span> 수익날 확률 <b>${s.win[v].toFixed(0)}%</b>, `+
       `중위 ${m>=0?"수익":"손실"} <b class="${m>=0?"up":"dn"}">${m>0?"+":""}${m.toFixed(2)}%</b></span>`;
   }).join("");
-  el.innerHTML='<span class="cap">이 값에서 샀다면</span>'+
-    `<span><b>${H_LABEL[btH]} 뒤</b></span>`+body+
+  el.innerHTML=cap+`<span><b>${H_LABEL[btH]} 뒤</b></span>`+body+
     `<span class="n">(표본 ${(S[0].n[v]||0).toLocaleString("ko-KR")}일)</span>`;
 }
 
@@ -740,52 +796,73 @@ function renderBT(){
   const body=document.getElementById("bt-body");
   const tools=document.getElementById("bt-tools");
   if(!body)return;
-  if(!BT||!BT.indices||!BT.zones){
-    /* 아직 backtest.json 이 없을 때. 버튼도 같이 감춘다. */
-    tools.innerHTML="";
+  const axes=document.getElementById("bt-axes");
+  const blank=msg=>{
+    tools.innerHTML="";axes.innerHTML="";
     document.getElementById("bt-sum").innerHTML="";
+    document.getElementById("bt-help").innerHTML="";
     document.getElementById("bt-range").textContent="—";
-    body.innerHTML='<div class="empty">승률 데이터가 아직 없습니다.<br>'+
-      '첫 계산이 끝나면 여기에 표시됩니다.</div>';
+    body.innerHTML='<div class="empty">'+msg+'</div>';
+  };
+  if(!BT||!BT.indices){
+    blank('승률 데이터가 아직 없습니다.<br>첫 계산이 끝나면 여기에 표시됩니다.');
     return;
   }
-  /* 수익률(med)이 없는 옛 데이터면 그릴 수 없다.
+  if(!BT.axes||!BT.axes.length){
+    blank('데이터가 옛 형식입니다.<br>Actions에서 Update backtest를 한 번 실행하면 나옵니다.');
+    return;
+  }
+  /* 잣대별 곡선이 없는 옛 데이터면 그릴 수 없다.
      화면만 먼저 갈아끼우고 계산을 안 돌렸을 때 여기로 온다. */
-  if(!Object.values(BT.indices).some(x=>x&&x.curve&&x.curve[btH]&&x.curve[btH].med)){
-    tools.innerHTML="";
-    document.getElementById("bt-sum").innerHTML="";
-    document.getElementById("bt-range").textContent="—";
-    body.innerHTML='<div class="empty">데이터가 옛 형식입니다.<br>'+
-      'Actions에서 Update backtest를 한 번 실행하면 나옵니다.</div>';
-    return;
+  if(!btHas(btAx)){
+    const alt=(BT.axes||[]).map(a=>a.key).find(btHas);
+    if(!alt){
+      blank('데이터가 옛 형식입니다.<br>Actions에서 Update backtest를 한 번 실행하면 나옵니다.');
+      return;
+    }
+    btAx=alt;                        /* 고른 잣대가 없으면 있는 쪽으로 넘어간다 */
   }
-  const any=Object.values(BT.indices)[0];
+  const a=axMeta();
+  document.getElementById("bt-title").textContent=a.title||"지수별 수익률";
+  document.getElementById("bt-help").textContent=a.help||"";
+  /* 버튼은 한 번만 만들고 이후에는 눌린 표시만 옮긴다(포커스 보존) */
+  if(!axes.firstChild)axes.innerHTML=btAxTools();
+  else axes.querySelectorAll("button[data-btax]").forEach(b=>
+    b.setAttribute("aria-pressed",String(b.dataset.btax===btAx)));
+  const holder=Object.values(BT.indices).find(x=>x&&x.curve&&x.curve[btAx]);
+  const cv=holder?holder.curve[btAx]:null;
   document.getElementById("bt-range").textContent=
-    any?any.from.slice(0,4)+"–"+any.to.slice(0,4):"—";
+    cv?cv.from.slice(0,4)+"–"+cv.to.slice(0,4):"—";
   /* 버튼은 한 번만 만들고 이후에는 눌린 표시만 옮긴다.
      매번 다시 그리면 방금 누른 버튼이 사라져 키보드 포커스를 잃는다. */
   if(!tools.firstChild)tools.innerHTML=btTools();
   else tools.querySelectorAll("button[data-bt]").forEach(b=>
     b.setAttribute("aria-pressed",String(b.dataset.bt===btH)));
-  const w=BT.window||5;
   btSummary();
   body.innerHTML=btChart()+
-    '<div class="bt-foot">가로축은 공포탐욕지수. 위 칸은 그 값에서 사서 기간을 채웠을 때의 '+
+    '<div class="bt-foot">가로축은 '+a.label+'. 위 칸은 그 값에서 사서 기간을 채웠을 때의 '+
     '수익률 <b>중앙값</b>(절반은 이 위, 절반은 아래), 아래 칸은 수익이 났던 비율입니다.<br>'+
     '평균이 아니라 중앙값을 그립니다. 2020년 3월 바닥 같은 며칠이 평균을 크게 끌어올려 '+
     '공포 구간을 실제보다 후하게 보이게 하기 때문입니다. 평균은 마우스를 올리면 함께 나옵니다.<br>'+
-    '눈금마다 지수 ±'+w+' 포인트였던 날들을 묶었고, 표본 '+(BT.min_n||30)+
-    '일 미만인 구간은 선을 끊었습니다. 배당 재투자 기준(SPY·QQQ).<br>'+
+    '눈금마다 '+a.short+' ±'+(a.window||5)+'였던 날들을 묶었고, 표본 '+(BT.min_n||30)+
+    '일 미만인 구간은 선을 끊었습니다. 배당 재투자 기준(SPY·QQQ), 표본 기간 '+
+    (cv?cv.from+'~'+cv.to:'—')+'.<br>'+
     '과거 성과일 뿐 미래를 보장하지 않습니다.</div>';
   btHover();
   calibrateDraw();
 }
 
-/* 보유기간 버튼 — 새로고침 없이 표만 갈아 끼운다 */
+/* 보유기간·잣대 버튼 — 새로고침 없이 차트만 갈아 끼운다 */
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-bt]");
   if(!b||b.dataset.bt===btH)return;
   btH=b.dataset.bt;
+  renderBT();
+});
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-btax]");
+  if(!b||b.dataset.btax===btAx)return;
+  btAx=b.dataset.btax;
   renderBT();
 });
 
