@@ -609,16 +609,23 @@ function btChart(){
       `<text x="${X(v).toFixed(1)}" y="${yBot+18}" text-anchor="${anc}" class="svg-axis">${v}</text>`;
   }).join("");
 
-  /* 현재 지수 위치 — 세로 치수선 하나로 표시한다 */
+  /* 현재 지수 위치 — 세로 치수선 하나로 표시한다.
+     글자는 구간 이름과 부딪히지 않도록 위쪽이 아니라 점 옆에 붙인다.
+     선 위에 겹쳐도 읽히게 흰 테두리(paint-order)를 두른다. */
   const cur=DATA&&DATA.fng?DATA.fng.value:null;
   let mark="";
   if(cur!=null){
     const v=Math.max(0,Math.min(100,Math.round(cur))),w=S[0].win[v];
     const col=zoneColor(cur),xc=X(v);
+    const anc=v<12?"start":v>88?"end":"middle";
+    const lx=v<12?xc+5:v>88?xc-5:xc;
+    const yd=w!=null?Y(w):T;
+    const ly=w==null?T+18:(yd<yBot-36?yd+21:yd-14);
     mark=`<g class="fade d3">
       <line x1="${xc.toFixed(1)}" y1="${T}" x2="${xc.toFixed(1)}" y2="${yBot}" stroke="${col}" stroke-width="1.2" stroke-dasharray="3 3"/>
-      ${w!=null?`<circle cx="${xc.toFixed(1)}" cy="${Y(w).toFixed(1)}" r="3.8" fill="${col}"/>`:""}
-      <text x="${(xc+(v>72?-7:7)).toFixed(1)}" y="${T-9}" text-anchor="${v>72?"end":"start"}" class="svg-num" fill="${col}">지금 ${cur}${w!=null?" · "+w.toFixed(0)+"%":""}</text>
+      ${w!=null?`<circle cx="${xc.toFixed(1)}" cy="${yd.toFixed(1)}" r="3.8" fill="${col}"/>`:""}
+      <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anc}" class="svg-num" fill="${col}"
+        stroke="var(--card)" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">지금 ${cur}${w!=null?" · "+w.toFixed(0)+"%":""}</text>
     </g>`;
   }
 
