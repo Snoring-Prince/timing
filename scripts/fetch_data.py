@@ -1,11 +1,13 @@
 """
-Daniel's timing — 데이터 수집 스크립트 (v2)
+Daniel's timing — 데이터 수집 스크립트 (v3)
 
-지수와 공포탐욕지수를 받아 data/market.json 하나로 저장한다.
+지수와 공포탐욕지수, VIX를 받아 data/market.json 하나로 저장한다.
 GitHub Actions가 매일 실행한다. 표준 라이브러리만 사용한다.
 
 출처를 하나만 믿지 않는다. 여러 곳을 순서대로 시도하고,
 전부 실패하면 무엇이 어떻게 실패했는지 로그에 남긴다.
+
+저장 위치: scripts/fetch_data.py
 """
 
 import csv
@@ -202,6 +204,31 @@ def build_fng(previous):
     }
 
 
+# ------------------------------------------------------------------ VIX
+
+# 승률 차트의 두 번째 가로축. 화면에는 현재 값만 쓰므로 이력은 담지 않는다
+# (구간별 통계는 backtest.py 가 따로 20년치를 받아 계산한다).
+
+def build_vix():
+    hist = None
+    for label, fn, sym in [("Stooq", src_stooq, "vix"),
+                           ("Yahoo", src_yahoo, "VIX")]:
+        try:
+            hist = fn(sym)
+            print(f"  {label} 성공 ({len(hist)}행)")
+            break
+        except Exception as e:                       # noqa: BLE001
+            print(f"  {label} 실패: {e}")
+    if not hist:
+        raise RuntimeError("모든 출처 실패")
+
+    hist = sorted(set(hist))
+    cur_date, cur = hist[-1]
+    prev = hist[-2][1] if len(hist) > 1 else cur
+    print(f"  → 현재 {cur:.2f} ({cur_date}), 전일 {prev:.2f}")
+    return {"value": round(cur, 2), "date": cur_date, "prev": round(prev, 2)}
+
+
 # ---------------------------------------------------------------- 실행
 
 def main():
@@ -217,6 +244,7 @@ def main():
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "indices": dict(old.get("indices", {})),
         "fng": old.get("fng", {}),
+        "vix": old.get("vix", {}),
     }
     failed = []
 
@@ -235,6 +263,13 @@ def main():
     except Exception as e:                           # noqa: BLE001
         print(f"  갱신 실패: {e}")
         failed.append("F&G")
+
+    print("\n[VIX]")
+    try:
+        result["vix"] = build_vix()
+    except Exception as e:                           # noqa: BLE001
+        print(f"  갱신 실패: {e}")
+        failed.append("VIX")
 
     if not result["indices"] and not result["fng"]:
         raise SystemExit("\n받아온 데이터가 하나도 없습니다. 중단합니다.")

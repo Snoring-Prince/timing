@@ -1,16 +1,19 @@
 """
-Daniel's timing — 공포탐욕 지수값별 백테스팅
+Daniel's timing — 지수값별 백테스팅 (공포탐욕 / VIX)
 
-공포탐욕지수가 어떤 값이었던 날에 샀다면 1·3·6·12개월 뒤 어땠는지를
-지수 0~100 한 눈금마다 집계해 data/backtest.json 에 저장한다.
+"시장이 이만큼 겁먹었던 날 샀다면 1·3·6·12개월 뒤 어땠나"를
+잣대 눈금마다 집계해 data/backtest.json 에 저장한다.
 
-구간을 다섯 덩어리로 묶으면 안 보이는 것이 있다. 예컨대 '극단적 공포'
-한 칸에 지수 5와 24가 같이 들어가는데, 둘의 성적은 꽤 다르다.
-그래서 눈금마다 ±WINDOW 포인트를 창으로 잡아 승률 곡선을 만든다.
+잣대는 둘이다.
+  fng — CNN 공포탐욕지수 0~100. 낮을수록 공포. 2011년부터.
+  vix — VIX 변동성지수. 높을수록 공포. 1990년부터.
 
-기간 참고: CNN 공포탐욕지수는 2012년 봄에 나왔고, 구할 수 있는 값은
-2011년까지 소급된 것이 가장 이르다. 그 이전은 어디에도 없으므로
-백테스트 구간은 2011년 이후로 한정된다. 2008년 금융위기는 빠진다.
+VIX를 함께 두는 이유는 표본이다. 공포탐욕은 2011년부터라 2008년
+금융위기가 통째로 빠지고, 남은 기간이 거의 강세장이라 구간별 차이가
+잘 드러나지 않는다. VIX는 1990년부터 있어 닷컴과 리먼이 들어온다.
+
+구간을 몇 덩어리로 묶지 않고 눈금마다 ±WINDOW 만큼을 창으로 잡는다.
+'극단적 공포' 한 칸에 지수 5와 24를 같이 넣으면 성적이 뭉개진다.
 
 저장 위치: scripts/backtest.py
 """
@@ -33,6 +36,10 @@ HEADERS = {
     "Accept": "text/csv,application/json,*/*",
 }
 
+# 1990-01-01. 야후는 range=max 를 주면 월봉으로 내려보내므로
+# 일봉을 받으려면 period1/period2 를 명시해야 한다.
+SINCE = 631152000
+
 # 공포탐욕지수 이력. 두 소스를 이어 붙여야 2011년까지 올라간다.
 # 2020-09 ~ 2021-02 사이 약 4개월 공백이 있으나 통계에는 무해하다.
 FNG_SOURCES = [
@@ -44,27 +51,47 @@ FNG_SOURCES = [
      "main/datasets/cnn_fear_greed.csv"),
 ]
 
-# 화면 배경의 색 띠에만 쓴다. 통계는 구간이 아니라 눈금마다 낸다.
-ZONES = [
-    ("extreme_fear", "극단적 공포", 0, 25),
-    ("fear",         "공포",       25, 45),
-    ("neutral",      "중립",       45, 55),
-    ("greed",        "탐욕",       55, 75),
-    ("extreme_greed", "극단적 탐욕", 75, 101),
-]
-
 # 보유 기간(거래일 기준). 월 21일, 분기 63일로 환산.
 HORIZONS = [("1M", 21), ("3M", 63), ("6M", 126), ("1Y", 252)]
 
 INDICES = [("spx", "S&P 500", "SPY"), ("ndx", "나스닥 100", "QQQ")]
 
-# 눈금 v의 표본은 지수가 v-WINDOW ~ v+WINDOW 였던 날들이다.
-# 좁히면 곡선이 톱니처럼 튀고, 넓히면 구간 평균과 다를 바 없어진다.
-WINDOW = 5
-
 # 표본이 이보다 적은 눈금은 비운다(화면에서 선이 끊긴다).
-# 지수 97 이상처럼 역사적으로 며칠 없던 값은 숫자를 내봐야 오도한다.
 MIN_N = 30
+
+# 두 잣대의 정의. tone 은 배경 색 띠 — 음수가 공포(파랑), 양수가 탐욕(빨강).
+# lo/hi 는 화면에 보여줄 가로축 범위이고, 통계는 0~100 눈금 전부에 대해 낸다.
+AXES = [
+    {
+        "key": "fng",
+        "label": "공포탐욕지수",
+        "short": "공포탐욕",
+        "title": "공포와 탐욕 지수별 수익률",
+        "window": 5,
+        "lo": 0, "hi": 100, "step": 25, "dec": 0,
+        "zones": [("극단적 공포", 0, 25, -2), ("공포", 25, 45, -1),
+                  ("중립", 45, 55, 0), ("탐욕", 55, 75, 1),
+                  ("극단적 탐욕", 75, 101, 2)],
+        "help": ("공포탐욕지수는 CNN이 시장 분위기를 0~100 한 숫자로 나타낸 것입니다. "
+                 "0에 가까울수록 다들 겁먹은 상태, 100에 가까울수록 들뜬 상태입니다. "
+                 "왼쪽이 공포입니다."),
+    },
+    {
+        "key": "vix",
+        "label": "VIX",
+        "short": "VIX",
+        "title": "VIX별 수익률",
+        "window": 1.5,
+        "lo": 10, "hi": 45, "step": 5, "dec": 1,
+        "zones": [("아주 잠잠", 0, 15, 2), ("보통", 15, 20, 1),
+                  ("불안", 20, 28, 0), ("공포", 28, 40, -1),
+                  ("패닉", 40, 200, -2)],
+        "help": ("VIX는 앞으로 한 달 주가가 얼마나 출렁일지 시장이 내다보는 정도라서 "
+                 "'공포지수'라고 부릅니다. 평소에는 15~20 사이이고, 20을 넘으면 불안, "
+                 "30을 넘으면 공포, 40을 넘으면 패닉에 가깝습니다. "
+                 "공포탐욕지수와 반대로 오른쪽이 공포입니다."),
+    },
+]
 
 
 def fetch(url, tries=3):
@@ -82,6 +109,29 @@ def fetch(url, tries=3):
 
 
 # ------------------------------------------------------------ 데이터 수집
+
+def yahoo_daily(symbol):
+    """야후 일봉 종가(배당 반영). period1/period2 로 전 기간을 받는다."""
+    url = (f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+           f"?period1={SINCE}&period2={int(time.time())}&interval=1d")
+    j = json.loads(fetch(url))
+    res = j["chart"]["result"][0]
+    ind = res["indicators"]
+    vals = None
+    if ind.get("adjclose"):
+        vals = ind["adjclose"][0].get("adjclose")
+    if not vals:
+        vals = ind["quote"][0]["close"]
+    out = {}
+    for t, c in zip(res["timestamp"], vals):
+        if c is None:
+            continue
+        day = datetime.fromtimestamp(t, timezone.utc).strftime("%Y-%m-%d")
+        out[day] = float(c)
+    if len(out) < 1000:
+        raise RuntimeError(f"{symbol}: 데이터 부족 ({len(out)}일)")
+    return out
+
 
 def load_fng():
     """두 소스를 병합. 겹치는 날짜는 나중 소스가 이긴다."""
@@ -109,39 +159,16 @@ def load_fng():
     return out
 
 
-def load_prices(symbol):
-    """배당 반영 종가를 쓴다. QQQ/SPY 모두 배당이 있어 총수익 기준이 맞다."""
-    url = (f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
-           "?range=20y&interval=1d")
-    j = json.loads(fetch(url))
-    res = j["chart"]["result"][0]
-    ind = res["indicators"]
-    vals = None
-    if ind.get("adjclose"):
-        vals = ind["adjclose"][0].get("adjclose")
-    if not vals:
-        vals = ind["quote"][0]["close"]
-    out = {}
-    for t, c in zip(res["timestamp"], vals):
-        if c is None:
-            continue
-        day = datetime.fromtimestamp(t, timezone.utc).strftime("%Y-%m-%d")
-        out[day] = float(c)
-    if len(out) < 1000:
-        raise RuntimeError(f"{symbol}: 가격 데이터 부족 ({len(out)}일)")
-    return out
-
-
 # -------------------------------------------------------------- 집계
 
-def backtest(fng, prices):
-    """지수 눈금(0~100) × 보유기간별 승률 곡선을 만든다."""
-    days = sorted(set(fng) & set(prices))
+def backtest(gauge, prices, window):
+    """잣대 눈금(0~100) × 보유기간별 수익률과 승률."""
+    days = sorted(set(gauge) & set(prices))
     if len(days) < 500:
         raise RuntimeError(f"겹치는 날짜 부족 ({len(days)}일)")
 
     px = [prices[d] for d in days]
-    vals = [fng[d] for d in days]
+    vals = [gauge[d] for d in days]
 
     out = {}
     for hkey, span in HORIZONS:
@@ -152,7 +179,7 @@ def backtest(fng, prices):
 
         win, med, avg, ns = [], [], [], []
         for v in range(101):
-            lo, hi = v - WINDOW, v + WINDOW
+            lo, hi = v - window, v + window
             rets = [r for f, r in pairs if lo <= f <= hi]
             n = len(rets)
             ns.append(n)
@@ -172,43 +199,76 @@ def backtest(fng, prices):
 
 
 def main():
-    print("공포탐욕지수 이력")
-    fng = load_fng()
-    fd = sorted(fng)
-    print(f"  병합: {len(fng)}일 ({fd[0]} ~ {fd[-1]})")
+    gauges = {}
+
+    print("[공포탐욕지수]")
+    try:
+        fng = load_fng()
+        fd = sorted(fng)
+        print(f"  병합: {len(fng)}일 ({fd[0]} ~ {fd[-1]})")
+        gauges["fng"] = fng
+    except Exception as e:                            # noqa: BLE001
+        print(f"  실패: {e}")
+
+    print("\n[VIX]")
+    try:
+        vix = yahoo_daily("%5EVIX")
+        vd = sorted(vix)
+        print(f"  {len(vix)}일 ({vd[0]} ~ {vd[-1]})")
+        gauges["vix"] = vix
+    except Exception as e:                            # noqa: BLE001
+        print(f"  실패: {e}")
+
+    if not gauges:
+        raise SystemExit("잣대를 하나도 받지 못했습니다.")
 
     result = {
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "window": WINDOW,
         "min_n": MIN_N,
-        "zones": [{"key": k, "label": l, "lo": lo, "hi": hi}
-                  for k, l, lo, hi in ZONES],
+        "axes": [{**{k: a[k] for k in
+                     ("key", "label", "short", "title", "window",
+                      "lo", "hi", "step", "dec", "help")},
+                  "zones": [{"label": l, "lo": lo, "hi": hi, "tone": t}
+                            for l, lo, hi, t in a["zones"]]}
+                 for a in AXES if a["key"] in gauges],
         "horizons": [h for h, _ in HORIZONS],
         "indices": {},
     }
 
     for key, name, symbol in INDICES:
-        print(f"\n{name} ({symbol})")
+        print(f"\n[{name} ({symbol})]")
         try:
-            prices = load_prices(symbol)
+            prices = yahoo_daily(symbol)
         except Exception as e:                        # noqa: BLE001
             print(f"  가격 실패: {e}")
             continue
         pd = sorted(prices)
         print(f"  가격: {len(prices)}일 ({pd[0]} ~ {pd[-1]})")
-        curve, days = backtest(fng, prices)
-        result["indices"][key] = {
-            "name": name, "symbol": symbol,
-            "from": days[0], "to": days[-1], "days": len(days),
-            "curve": curve,
-        }
-        y = curve["1Y"]
-        for v in range(0, 101, 10):
-            w = y["win"][v]
-            print(f"    지수 {v:3d}: 1년 중앙값 "
-                  + (f"{y['med'][v]:+6.1f}% 평균 {y['avg'][v]:+6.1f}% "
-                     f"승률 {w:5.1f}% (표본 {y['n'][v]})"
-                     if w is not None else "  표본 부족"))
+
+        curve = {}
+        for a in AXES:
+            if a["key"] not in gauges:
+                continue
+            try:
+                h, days = backtest(gauges[a["key"]], prices, a["window"])
+            except Exception as e:                    # noqa: BLE001
+                print(f"  {a['label']} 집계 실패: {e}")
+                continue
+            curve[a["key"]] = {"from": days[0], "to": days[-1],
+                               "days": len(days), "h": h}
+            y = h["1Y"]
+            span = a["hi"] - a["lo"]
+            print(f"  {a['label']} — {days[0]}~{days[-1]} ({len(days)}일), 1년 보유")
+            for k in range(6):
+                v = int(round(a["lo"] + span * k / 5))
+                w = y["win"][v]
+                print(f"    {a['short']} {v:3d}: "
+                      + (f"중앙값 {y['med'][v]:+6.2f}%  승률 {w:5.1f}%  "
+                         f"(표본 {y['n'][v]})"
+                         if w is not None else "표본 부족"))
+        if curve:
+            result["indices"][key] = {"name": name, "symbol": symbol,
+                                      "curve": curve}
 
     if not result["indices"]:
         raise SystemExit("가격 데이터를 받지 못했습니다.")
