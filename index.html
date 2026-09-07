@@ -647,14 +647,19 @@ function btGeo(){
   const wins=S.flatMap(s=>inRange(s.win));
   if(!meds.length||!wins.length)return null;
 
+  /* T 는 머리 여백. 구간 이름 줄과 세로축 이름 줄, 두 줄이 들어간다. */
   const {W,sm}=geo(document.getElementById("bt-body"));
-  const g=sm?{L:34,R:10,T:24,ph1:126,gap:22,ph2:40,B:30,names:false}
-            :{L:44,R:16,T:30,ph1:162,gap:28,ph2:52,B:36,names:true};
+  const g=sm?{L:36,R:10,T:38,ph1:180,gap:26,ph2:62,B:30,names:false}
+            :{L:48,R:16,T:46,ph1:230,gap:30,ph2:78,B:38,names:true};
   const L=g.L,pw=W-L-g.R;
   const T1=g.T,B1=T1+g.ph1,T2=B1+g.gap,B2=T2+g.ph2,H=B2+g.B;
 
-  const rSpan=Math.max(...meds)-Math.min(...meds);
-  const r=btScale(meds.concat([0]),rSpan<=12?2:rSpan<=30?5:10,false);
+  /* 0%는 값이 실제로 마이너스로 내려갈 때만 축에 넣는다.
+     전부 플러스인데 0을 끼우면 칸의 절반이 빈 공간이 되어 선이 납작해 보인다. */
+  const rLo=Math.min(...meds),rHi=Math.max(...meds);
+  const rSpan=rHi-rLo;
+  const r=btScale(rLo<0?meds.concat([0]):meds,
+                  rSpan<=12?2:rSpan<=30?5:rSpan<=70?10:20,false);
   const w=btScale(wins,10,true);
   const ax=a.hi-a.lo;
 
@@ -679,11 +684,11 @@ function btChart(){
     return `<rect x="${x.toFixed(1)}" y="${T1}" width="${wd.toFixed(1)}" height="${(B1-T1).toFixed(1)}" fill="${f}"/>`+
            `<rect x="${x.toFixed(1)}" y="${T2}" width="${wd.toFixed(1)}" height="${(B2-T2).toFixed(1)}" fill="${f}"/>`;
   }).join("");
-  /* 띠가 좁으면 이름을 못 넣는다 */
+  /* 구간 이름은 위쪽 줄, 세로축 이름은 그 아래 줄. 띠가 좁으면 이름을 뺀다. */
   const zn=G.names?vis.map(({z,c})=>{
     const wd=X(c[1])-X(c[0]);
     if(wd<z.label.length*9+6)return "";
-    return `<text x="${((X(c[0])+X(c[1]))/2).toFixed(1)}" y="${T1-9}" text-anchor="middle" class="svg-label" fill="var(--ink-3)">${z.label}</text>`;
+    return `<text x="${((X(c[0])+X(c[1]))/2).toFixed(1)}" y="${T1-27}" text-anchor="middle" class="svg-label" fill="var(--ink-3)">${z.label}</text>`;
   }).join(""):"";
 
   /* 수익률 축만 + 부호를 붙인다. 승률에 +90% 라고 쓰면 안 된다. */
@@ -734,7 +739,8 @@ function btChart(){
     </g>`;
   }
 
-  const cap=(y,t)=>`<text x="${L}" y="${y}" class="svg-label" fill="var(--ink-3)">${t}</text>`;
+  /* 세로축이 무엇인지 각 칸 왼쪽 위에 붙인다 */
+  const cap=(y,t)=>`<text x="${L}" y="${y}" class="svg-label" fill="var(--ink-2)">${t}</text>`;
 
   return `<div class="chart" id="bt-c">
   <svg viewBox="0 0 ${W} ${H}" class="${G.sm?"sm":""}" role="img" aria-label="${a.label} 값별 ${H_LABEL[btH]} 수익률과 승률">
@@ -743,7 +749,7 @@ function btChart(){
     ${grid(w.ticks,Y2,false)}${half}
     <rect x="${L}" y="${T1}" width="${pw}" height="${(B1-T1).toFixed(1)}" fill="none" stroke="var(--rule)" stroke-width="1"/>
     <rect x="${L}" y="${T2}" width="${pw}" height="${(B2-T2).toFixed(1)}" fill="none" stroke="var(--rule)" stroke-width="1"/>
-    ${zn}${cap(T2-9,"승률")}
+    ${zn}${cap(T1-9,"세로축 — 수익률 중앙값")}${cap(T2-9,"세로축 — 수익날 확률")}
     ${paths}${mark}
     ${xt}
     <g class="cross" style="opacity:0">
