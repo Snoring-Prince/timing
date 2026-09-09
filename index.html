@@ -592,8 +592,10 @@ svg.sm .svg-axis{font-size:11px}
 let DATA=null;
 const RANGES=[["30D",30],["90D",90],["180D",180],["1Y",365],["3Y",1095],["5Y",1825]];
 let state={scene:"now",range:{main:365,spx:365,ndx:365,fng:365}};
-/* 합친 차트에서 켜져 있는 선. gauge 는 공포탐욕이냐 VIX 냐와 별개로 "지수선을 보이나" */
-let MSHOW={spx:true,ndx:false,gauge:true};
+/* 합친 차트에서 켜져 있는 선.
+   price 는 SPY 냐 QQQ 냐(둘은 서로 배타 — 겹쳐 두면 구분이 안 된다),
+   gauge 는 공포탐욕이냐 VIX 냐와 별개로 "지수선을 보이나". 그래서 선은 최대 둘. */
+let MSHOW={price:"spx",gauge:true};
 const rangeSeg=(slot,list)=>`<div class="tools${list?" scroll":""}"><div class="seg mini" role="group" aria-label="${tx("aria").range}">`+
   (list||RANGES).map(([l,d])=>`<button type="button" data-slot="${slot}" data-range="${d}" aria-pressed="${d===state.range[slot]}">${l}</button>`).join("")+
   `</div></div>`;
@@ -996,12 +998,14 @@ function tTicks(t0,t1,c){
   return out;
 }
 
+const mainOn=k=>(k==="spx"||k==="ndx")?MSHOW.price===k:(MSHOW.gauge&&btAx===k);
 const mainLines=()=>{
   if(!LONG||!LONG.series)return [];
   const S=LONG.series,out=[];
-  if(MSHOW.spx&&S.spx)out.push({key:"spx",side:"L",s:S.spx,col:"var(--ink)",wd:2,dash:""});
-  if(MSHOW.ndx&&S.ndx)out.push({key:"ndx",side:"L",s:S.ndx,col:"var(--ink-2)",wd:1.6,dash:"4 3"});
-  if(MSHOW.gauge&&S[btAx])out.push({key:btAx,side:"R",s:S[btAx],col:"rgba(120,135,150,.95)",wd:1.3,dash:""});
+  if(MSHOW.price&&S[MSHOW.price])
+    out.push({key:MSHOW.price,side:"L",s:S[MSHOW.price],col:"var(--down)",wd:2.1,dash:""});
+  if(MSHOW.gauge&&S[btAx])
+    out.push({key:btAx,side:"R",s:S[btAx],col:"rgba(120,135,150,.95)",wd:1.3,dash:""});
   return out;
 };
 const inf=k=>(tx("info")||{})[k]||{};
@@ -1011,7 +1015,7 @@ const mainFull=k=>inf(k).name||mainName(k);
 /* 선 켜고 끄는 버튼. 공포탐욕과 VIX 는 서로 배타 — 눌린 것을 다시 누르면 꺼진다. */
 function mainLineSeg(){
   const S=(LONG||{}).series||{};
-  const on=k=>k==="spx"?MSHOW.spx:k==="ndx"?MSHOW.ndx:(MSHOW.gauge&&btAx===k);
+  const on=mainOn;
   const ks=["spx","ndx","fng","vix"].filter(k=>S[k]);
   if(ks.length<2)return "";
   return '<div class="seg mini lines" role="group" aria-label="'+tx("aria").lines+'">'+
@@ -1019,7 +1023,7 @@ function mainLineSeg(){
       mainName(k)+'</button>').join("")+'</div>';
 }
 function mainHead(shown){
-  const on=k=>k==="spx"?MSHOW.spx:k==="ndx"?MSHOW.ndx:(MSHOW.gauge&&btAx===k);
+  const on=mainOn;
   /* 제목은 지금 켜져 있는 선의 이름을 이어 붙인다. 켠 것이 바뀌면 제목도 바뀐다. */
   const nm=document.getElementById("main-name");
   if(nm){
@@ -1120,6 +1124,40 @@ function renderMain(){
   const P=a=>a.map((p,j)=>(j?"L":"M")+X(dnum(p[0])).toFixed(1)+" "+Yof(a.__l)(p[1]).toFixed(1)).join(" ");
   const path=l=>{const a=l.pts.slice();a.__l=l;return P(a)};
 
+  /* 선 그리기 애니메이션은 첫 화면에서만. 끌면서 다시 그릴 때도 대시를 걸면
+     실제 길이를 다시 재기 전까지 선이 중간에서 끊겨 보인다(CLAUDE.md 7번). */
+  const anim=document.body.classList.contains("settled")
+    ?"":` class="draw" style="--len:${(pw*2.4).toFixed(0)}"`;
+
+  /* 전고점(수위선)과 그 아래 낙폭 — 이 사이트의 원래 디자인 언어다.
+     보이는 구간 안에서 가장 높았던 종가를 기준으로 삼는다.
+     색은 --up/--down 이라 언어를 바꾸면 함께 뒤집힌다. */
+  const priceL=drawn.find(l=>l.side==="L");
+  let peakArt="",priceArt="",hatch="";
+  if(priceL&&priceL.pts.length>1){
+    const pts=priceL.pts,vals=pts.map(p=>p[1]);
+    let pk=0;for(let i=1;i<vals.length;i++)if(vals[i]>vals[pk])pk=i;
+    const peak=vals[pk],last=vals[vals.length-1];
+    const yPk=YL(peak),xPk=X(dnum(pts[pk][0])),xEnd=X(dnum(pts[pts.length-1][0]));
+    const seg=a=>{const c=a.slice();c.__l=priceL;return P(c)};
+    const pre=pts.slice(0,pk+1),post=pts.slice(pk);
+    const hid="mh"+priceL.key;
+    hatch=`<defs><pattern id="${hid}" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="var(--band-2)" stroke-width="1.6"/></pattern></defs>`;
+    const dd=(last/peak-1)*100;
+    peakArt=(post.length>1
+        ?`<path d="${seg(post)} L ${xEnd.toFixed(1)} ${yPk.toFixed(1)} L ${xPk.toFixed(1)} ${yPk.toFixed(1)} Z" fill="url(#${hid})"/>`:"")+
+      `<line x1="${Lm}" y1="${yPk.toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${yPk.toFixed(1)}" stroke="var(--up)" stroke-width="1.2" stroke-dasharray="7 4"/>`+
+      `<text x="${Lm}" y="${(yPk-7).toFixed(1)}" class="svg-label" fill="var(--up)">${tx("peakMark",fmt(peak))}</text>`+
+      `<circle cx="${xPk.toFixed(1)}" cy="${yPk.toFixed(1)}" r="3.2" fill="var(--up)"/>`+
+      (dd<-0.05?`<text x="${(Lm+pw-2).toFixed(1)}" y="${Math.min(T+ph-4,Math.max(T+11,YL(last)-9)).toFixed(1)}" text-anchor="end" class="svg-num" fill="var(--down)">${dd.toFixed(2)}%</text>`:"");
+    priceArt=
+      (pre.length>1?`<path d="${seg(pre)}" fill="none" stroke="var(--ink-2)" stroke-width="1.6" stroke-linejoin="round"${anim}/>`:"")+
+      (post.length>1?`<path d="${seg(post)}" fill="none" stroke="var(--down)" stroke-width="2.1" stroke-linejoin="round"${anim}/>`:"");
+  }
+  const gaugeArt=gl&&gl.pts.length>1
+    ?`<path d="${path(gl)}" fill="none" stroke="${gl.col}" stroke-width="${gl.wd}" stroke-linejoin="round"${anim}/>`:"";
+
   const grid=ps?ps.ticks.map(t=>`<line x1="${Lm}" y1="${YL(t).toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${YL(t).toFixed(1)}" stroke="var(--rule-2)" stroke-width="1"/>`+
     `<text x="${Lm-6}" y="${(YL(t)+3.5).toFixed(1)}" text-anchor="end" class="svg-axis">${num(t)}</text>`).join(""):"";
   const rax=gs?gs.ticks.map(t=>`<text x="${(Lm+pw+6).toFixed(1)}" y="${(YR(t)+3.5).toFixed(1)}" class="svg-axis">${t}</text>`).join(""):"";
@@ -1140,8 +1178,9 @@ function renderMain(){
 
   chart.innerHTML=`
   <svg viewBox="0 0 ${W} ${H}" class="${sm?"sm":""}" role="img" aria-label="${tx("aria").main}">
-    ${grid}${area}
-    ${drawn.slice().sort((a,b)=>(a.side==="R"?0:1)-(b.side==="R"?0:1)).map(l=>`<path d="${path(l)}" fill="none" stroke="${l.col}" stroke-width="${l.wd}" stroke-linejoin="round"${l.dash?` stroke-dasharray="${l.dash}"`:""} class="draw" style="--len:${(pw*2.4).toFixed(0)}"/>`).join("")}
+    ${hatch}
+    ${grid}${area}${gaugeArt}
+    ${peakArt}${priceArt}
     ${rax}
     <line x1="${Lm}" y1="${yBot}" x2="${(Lm+pw).toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>
     ${xt}
@@ -1153,7 +1192,8 @@ function renderMain(){
   </svg>`;
 
   key.innerHTML=drawn.map(l=>
-    `<span><i style="border-top:${l.wd}px ${l.dash?"dashed":"solid"} ${l.col}"></i>${mainName(l.key)}</span>`).join("");
+    `<span><i style="border-top:${l.wd}px solid ${l.col}"></i>${mainName(l.key)}</span>`).join("")+
+    (priceL?`<span><i style="border-top:1.2px dashed var(--up)"></i>${tx("peak")}</span>`:"");
   mainHead(drawn.map(l=>l.key));
   mainNotes(drawn.map(l=>l.key));
 
@@ -1241,7 +1281,7 @@ function panTo(v){
   if(next===PAN)return;
   PAN=next;
   if(panRAF)return;
-  panRAF=requestAnimationFrame(()=>{panRAF=0;renderMain()});
+  panRAF=requestAnimationFrame(()=>{panRAF=0;renderMain();calibrateDraw()});
 }
 document.addEventListener("pointerdown",e=>{
   const box=e.target.closest&&e.target.closest("#main-chart");
@@ -1703,14 +1743,14 @@ document.addEventListener("click",e=>{
   const k=b.dataset.mline;
   let axChanged=false;
   if(k==="spx"||k==="ndx"){
-    MSHOW[k]=!MSHOW[k];
+    MSHOW.price=(MSHOW.price===k)?null:k;      /* 둘은 서로 배타, 켜진 것을 다시 누르면 끈다 */
   }else if(MSHOW.gauge&&btAx===k){
     MSHOW.gauge=false;
   }else{
     if(btAx!==k){btAx=k;axChanged=true}
     MSHOW.gauge=true;
   }
-  if(!MSHOW.spx&&!MSHOW.ndx&&!MSHOW.gauge)MSHOW[k==="spx"?"ndx":"spx"]=true;  /* 전부 끄면 빈 화면 */
+  if(!MSHOW.price&&!MSHOW.gauge)MSHOW.price="spx";   /* 전부 끄면 빈 화면이 된다 */
   renderMain();
   if(axChanged){ if(DATA)renderGauge(); else if(BT)renderBT(); }
   calibrateDraw();savePrefs();
@@ -1807,14 +1847,19 @@ function loadPrefs(){
   try{
     const o=JSON.parse(localStorage.getItem(PREF)||"{}");
     if(o&&typeof o==="object"){
-      if(o.show&&typeof o.show==="object")
-        ["spx","ndx","gauge"].forEach(k=>{if(typeof o.show[k]==="boolean")MSHOW[k]=o.show[k]});
+      const sh=o.show;
+      if(sh&&typeof sh==="object"){
+        if(sh.price===null||sh.price==="spx"||sh.price==="ndx")MSHOW.price=sh.price;
+        else if(typeof sh.spx==="boolean"||typeof sh.ndx==="boolean")
+          MSHOW.price=sh.spx?"spx":sh.ndx?"ndx":null;      /* 선을 둘 켜던 옛 저장값 */
+        if(typeof sh.gauge==="boolean")MSHOW.gauge=sh.gauge;
+      }
       if(MAIN_RANGES.some(r=>r[1]===o.range))state.range.main=o.range;
       if(GAUGE[o.ax])btAx=o.ax;
       if(H_ORDER.indexOf(o.hold)>=0)btH=o.hold;
     }
   }catch(e){}
-  if(!MSHOW.spx&&!MSHOW.ndx&&!MSHOW.gauge)MSHOW.spx=true;
+  if(!MSHOW.price&&!MSHOW.gauge)MSHOW.price="spx";
 }
 function savePrefs(){
   try{ localStorage.setItem(PREF,JSON.stringify(
