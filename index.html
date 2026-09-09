@@ -26,6 +26,7 @@ const D={
 ko:{
   locale:"ko-KR", dir:"ltr", name:"한국어",
   docTitle:"Daniel's timing — 전고점 대비 현재",
+  eyebrow:"전고점 대비 현재",
   loading:"불러오는 중…",
   idx:{spx:"S&P 500",ndx:"나스닥 100"},
   hold:{"30D":"30일","90D":"90일","180D":"180일","1Y":"1년","3Y":"3년","5Y":"5년"},
@@ -55,6 +56,7 @@ ko:{
   capMed:"수익률 중앙값", capWin:"수익날 확률",
   fewSample:"표본 부족", winRateShort:"승률", avgShort:"평균", holdWord:"보유",
   sampleDays:(n,all)=>`표본 ${n}일 / 전체 ${all}일`,
+  samplePeriod:"표본 기간",
   nowIs:(s,v)=>`지금 ${s} ${v}`,
   buyHere:h=>`— 여기서 사서 ${h} 뒤`,
   noStats:"표본이 부족해 통계를 내지 않았습니다.",
@@ -65,10 +67,9 @@ ko:{
   loadFail:"데이터를 불러오지 못했습니다",
   loadFailPanel:"데이터를 불러오지 못했습니다.<br>잠시 후 새로고침해 주세요.",
   stampAs:t=>`데이터 기준 ${t}`,
-  foot:["전고점은 기간 선택과 무관하게 최근 10년 내 최고 종가 기준. 경과일수는 달력일 기준.",
-        "지수: Yahoo Finance · 공포탐욕지수: CNN Business",
-        "종가는 미국장 마감 후 하루 한 번, 장중 시세는 10분마다 갱신됩니다.",
-        "장중 표시는 지연될 수 있습니다."],
+  foot:["전고점은 화면에 보이는 기간 안의 최고 종가입니다. 옆으로 끌면 그 구간의 전고점으로 바뀝니다.",
+        "SPY·QQQ 배당 재투자 기준 · 출처: Yahoo Finance · 공포탐욕지수: CNN Business · VIX: CBOE",
+        "종가는 미국장 마감 후 하루 한 번 갱신됩니다. 최근 5년은 하루 단위, 그 이전은 주 단위입니다."],
   btFoot:()=>`과거 성과일 뿐 미래를 보장하지 않습니다.`,
   ax:{
     fng:{label:"공포탐욕지수",short:"공포탐욕",title:"공포와 탐욕 지수별 수익률",
@@ -87,6 +88,7 @@ ko:{
 en:{
   locale:"en-US", dir:"ltr", name:"English",
   docTitle:"Daniel's timing — Drawdown from the peak",
+  eyebrow:"Drawdown from the peak",
   loading:"Loading…",
   idx:{spx:"S&P 500",ndx:"Nasdaq 100"},
   hold:{"30D":"30 days","90D":"90 days","180D":"180 days","1Y":"1 year","3Y":"3 years","5Y":"5 years"},
@@ -116,6 +118,7 @@ en:{
   capMed:"Median return", capWin:"Chance of profit",
   fewSample:"too few samples", winRateShort:"win rate", avgShort:"avg", holdWord:"hold",
   sampleDays:(n,all)=>`${n} of ${all} sample days`,
+  samplePeriod:"Sample",
   nowIs:(s,v)=>`Now ${s} ${v}`,
   buyHere:h=>`— buy here, hold ${h}`,
   noStats:"Not enough samples to compute statistics.",
@@ -126,10 +129,9 @@ en:{
   loadFail:"Could not load the data",
   loadFailPanel:"Could not load the data.<br>Please refresh in a moment.",
   stampAs:t=>`Data as of ${t}`,
-  foot:["Peak is the highest close within the last 10 years, regardless of the selected range. Elapsed days are calendar days.",
-        "Index data: Yahoo Finance · Fear &amp; Greed: CNN Business",
-        "Closing prices update once a day after the US market closes; intraday quotes every 10 minutes.",
-        "Intraday figures may be delayed."],
+  foot:["The peak is the highest close inside the window on screen. Drag sideways and it becomes that stretch's peak.",
+        "Total return on SPY and QQQ · Source: Yahoo Finance · Fear &amp; Greed: CNN Business · VIX: CBOE",
+        "Closing prices update once a day after the US market closes. Daily for the last five years, weekly before that."],
   btFoot:()=>`Past performance does not guarantee future results.`,
   ax:{
     fng:{label:"Fear & Greed Index",short:"F&G",title:"Returns by Fear &amp; Greed level",
@@ -258,8 +260,10 @@ window.track=function(name,data){
 <style>
 :root{
   --paper:#E9ECF0; --card:#FFFFFF;
-  --ink:#0F1A24; --ink-2:#5A6B7A; --ink-3:#8B99A6;
-  --rule:#D3DAE1; --rule-2:#E6EAEF;
+  /* 흰 카드 위 대비: ink 17.6 · ink-2 7.5 · ink-3 4.7 (WCAG AA 4.5 이상).
+     예전 ink-3 #8B99A6 은 2.91 이라 작은 글자가 흐려 보였다. */
+  --ink:#0F1A24; --ink-2:#475765; --ink-3:#68767F;
+  --rule:#BCC6D0; --rule-2:#DDE3E9;
   /* applyLang() 이 언어에 따라 덮어쓴다 — 기본값은 서구식(상승 초록) */
   --up:#1B7F4B; --down:#C4362C;
   --up-rgb:27,127,75; --down-rgb:196,54,44;
@@ -459,7 +463,7 @@ svg.sm .svg-axis{font-size:11px}
 
   <header class="masthead">
     <div>
-      <p class="eyebrow">Drawdown from all-time high</p>
+      <p class="eyebrow" id="eyebrow">Drawdown from the peak</p>
       <h1>Daniel's timing</h1>
     </div>
     <div class="mast-right">
@@ -637,18 +641,39 @@ function niceScale(lo,hi,n){
   return {lo:l,hi:h,ticks};
 }
 /* 가로축 눈금 — 기간이 길면 연도만, 짧으면 월·일까지 */
+/* 가로축 눈금은 달력 경계에 찍는다 — 연은 1월 1일, 월은 1일.
+   창을 균등 분할한 자리에 연도를 붙이면 3월과 12월에 "2025"가 두 번 찍히고,
+   끌 때도 눈금이 날짜를 따라가지 않는다. */
 function tTicks(t0,t1,c){
-  const span=t1-t0,out=[];
-  const label=t=>{
-    const d=new Date(t*864e5);
-    const y=d.getUTCFullYear(),m=d.getUTCMonth()+1,dd=d.getUTCDate();
-    if(span<=120)return m+"."+dd;
-    if(span<=800)return "'"+String(y).slice(2)+"."+m;
-    return String(y);
-  };
-  for(let k=0;k<c;k++){
-    const t=Math.round(t0+span*k/(c-1));
-    out.push({t,x:span?(t-t0)/span:0,lab:label(t)});
+  const span=(t1-t0)||1,out=[];
+  const U=t=>new Date(t*864e5);
+  const key=(y,m,d)=>Math.round(Date.UTC(y,m,d)/864e5);
+  const push=(t,lab)=>{ if(t>=t0&&t<=t1)out.push({t,x:(t-t0)/span,lab}) };
+  const yrs=span/365.25;
+
+  if(yrs>=2.2){                                   /* 연 단위 */
+    const step=[1,2,5,10,20,25,50].find(v=>yrs/v<=c)||50;
+    const y0=U(t0).getUTCFullYear(),y1=U(t1).getUTCFullYear();
+    for(let y=Math.ceil(y0/step)*step;y<=y1;y+=step)push(key(y,0,1),String(y));
+  }else if(span>=100){                            /* 월 단위 */
+    const step=[1,2,3,6,12].find(v=>(span/30.44)/v<=c)||12;
+    const d0=U(t0);
+    let y=d0.getUTCFullYear(),m=Math.ceil(d0.getUTCMonth()/step)*step;
+    for(let g=0;g<80;g++){
+      const yy=y+Math.floor(m/12),mm=((m%12)+12)%12,t=key(yy,mm,1);
+      if(t>t1)break;
+      push(t,mm===0?String(yy):"'"+String(yy).slice(2)+"."+(mm+1));
+      m+=step;
+    }
+  }else{                                          /* 일 단위 */
+    const step=Math.max(1,Math.round(span/Math.max(1,c-1)));
+    for(let t=t1;t>=t0;t-=step){const d=U(t);push(t,(d.getUTCMonth()+1)+"."+d.getUTCDate())}
+    out.sort((a,b)=>a.t-b.t);
+  }
+  if(!out.length){                                /* 경계가 하나도 안 걸리면 양 끝이라도 */
+    const f=t=>{const d=U(t);return yrs>=2.2?String(d.getUTCFullYear())
+      :(d.getUTCMonth()+1)+"."+d.getUTCDate()};
+    push(t0,f(t0)); if(t1>t0)push(t1,f(t1));
   }
   return out;
 }
@@ -901,8 +926,8 @@ function renderMain(){
   const area=gl?(()=>{const a=gl.pts.slice();a.__l=gl;
     return `<path d="${P(a)} L ${X(dnum(gl.pts[gl.pts.length-1][0])).toFixed(1)} ${yBot} L ${X(dnum(gl.pts[0][0])).toFixed(1)} ${yBot} Z" fill="rgba(120,135,150,.10)"/>`})():"";
 
-  const xt=tTicks(t0,t1,g.ticks).map((t,j,arr)=>{
-    const x=Lm+pw*t.x,anc=j===0?"start":j===arr.length-1?"end":"middle";
+  const xt=tTicks(t0,t1,g.ticks).map(t=>{
+    const x=Lm+pw*t.x,anc=t.x<0.04?"start":t.x>0.96?"end":"middle";
     return `<line x1="${x.toFixed(1)}" y1="${yBot}" x2="${x.toFixed(1)}" y2="${yBot+5}" stroke="var(--rule)" stroke-width="1"/>`+
       `<text x="${x.toFixed(1)}" y="${yAx}" text-anchor="${anc}" class="svg-axis">${t.lab}</text>`;
   }).join("");
@@ -1073,6 +1098,7 @@ function langSeg(){
 function paintStatic(){
   const put=(id,html)=>{const e=document.getElementById(id);if(e)e.innerHTML=html};
   put("foot",tx("foot").join("<br>"));
+  put("eyebrow",tx("eyebrow"));
   put("fng-name",axName(btAx));
   const st=document.getElementById("stamp");
   if(st)st.textContent=STAMP_ISO?stamp(STAMP_ISO):tx("loading");
@@ -1428,7 +1454,7 @@ function renderBT(){
   const holder=Object.values(BT.indices).find(x=>x&&x.curve&&x.curve[btAx]);
   const cv=holder?holder.curve[btAx]:null;
   document.getElementById("bt-range").textContent=
-    cv?cv.from.slice(0,4)+"–"+cv.to.slice(0,4):"—";
+    cv?tx("samplePeriod")+" "+cv.from.slice(0,4)+"–"+cv.to.slice(0,4):"—";
   /* 버튼은 한 번만 만들고 이후에는 눌린 표시만 옮긴다.
      매번 다시 그리면 방금 누른 버튼이 사라져 키보드 포커스를 잃는다. */
   if(!tools.firstChild)tools.innerHTML=btTools();
