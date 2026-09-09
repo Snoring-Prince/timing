@@ -52,6 +52,10 @@ ko:{
   },
   infoLabel:"설명 보기",
   noLine:"볼 선을 하나 이상 골라 주세요.",
+  vsAvg:(w,m)=>`전체 평균은 승률 ${w}% · 중위 ${m}% 입니다 —`,
+  verdict:{better:"지금이 나은 편입니다.",same:"지금은 비슷한 자리입니다.",worse:"지금이 못한 편입니다."},
+  thinHere:"— 표본이 적어 흔들릴 수 있습니다",
+  thinNote:"빗금 친 구간은 표본이 100일 미만이라 숫자가 크게 흔들립니다.",
   capMed:"수익률 중앙값", capWin:"수익날 확률",
   fewSample:"표본 부족", winRateShort:"승률", avgShort:"평균", holdWord:"보유",
   sampleDays:n=>`표본 ${n}일`,
@@ -76,6 +80,7 @@ ko:{
     `공포 구간을 실제보다 후하게 보이게 하기 때문입니다. 평균은 마우스를 올리면 함께 나옵니다.<br>`+
     `눈금마다 ${short} ±${w}였던 날들을 묶었고, 표본 ${n}일 미만인 구간은 선을 끊었습니다. `+
     `배당 재투자 기준(SPY·QQQ), 표본 기간 ${from}~${to}.<br>`+
+    `${tx("thinNote")}<br>`+
     `과거 성과일 뿐 미래를 보장하지 않습니다.`,
   ax:{
     fng:{label:"공포탐욕지수",short:"공포탐욕",title:"공포와 탐욕 지수별 수익률",
@@ -120,6 +125,10 @@ en:{
   },
   infoLabel:"About this",
   noLine:"Pick at least one line to show.",
+  vsAvg:(w,m)=>`Across every level: ${w}% and a median of ${m}% —`,
+  verdict:{better:"this level has done better.",same:"this level is about average.",worse:"this level has done worse."},
+  thinHere:"— few samples, so this moves around",
+  thinNote:"Hatched levels rest on fewer than 100 days, so their numbers swing.",
   capMed:"Median return", capWin:"Chance of profit",
   fewSample:"too few samples", winRateShort:"win rate", avgShort:"avg", holdWord:"hold",
   sampleDays:n=>`${n} sample days`,
@@ -145,6 +154,7 @@ en:{
     `far enough to make the fear zones look better than they were. The mean is shown on hover.<br>`+
     `Each tick groups the days when ${short} was within ±${w}, and levels with fewer than ${n} sample `+
     `days are left blank, breaking the line. Total-return basis (SPY·QQQ), sample period ${from}–${to}.<br>`+
+    `${tx("thinNote")}<br>`+
     `Past performance does not guarantee future results.`,
   ax:{
     fng:{label:"Fear & Greed Index",short:"F&G",title:"Returns by Fear &amp; Greed level",
@@ -421,6 +431,12 @@ body.settled .fade{animation:none;opacity:1}
 .bt-key span{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
 .bt-key i{width:16px;height:0;border-top:2px solid var(--ink)}
 .bt-key i.d{border-top:1.5px dashed var(--ink-3)}
+.bt-verdict{padding:2px 20px 0;font-size:12.5px;line-height:1.7;color:var(--ink-3)}
+.bt-verdict b{font-weight:600}
+.bt-verdict .v-better{color:var(--up)}
+.bt-verdict .v-worse{color:var(--down)}
+.bt-verdict .v-same{color:var(--ink-2)}
+.bt-sum .warn{color:var(--ink-3)}
 .bt-foot{padding:10px 20px 16px;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);line-height:1.7}
 @media (max-width:640px){
   .bt-head{padding:13px 14px 8px}
@@ -434,6 +450,7 @@ body.settled .fade{animation:none;opacity:1}
   .notes{padding:12px 14px 14px}
   .notes p{font-size:12px}
   .pop{max-width:240px}
+  .bt-verdict{padding:2px 14px 0;font-size:12px}
   .bt-foot{padding:10px 14px 14px}
 }
 
@@ -1333,9 +1350,28 @@ function btChart(){
   /* 세로축 숫자 바로 위에 얹는다. 축 위에 있으면 "세로축"이라고 쓸 필요가 없다. */
   const cap=(y,t)=>`<text x="0" y="${y}" class="svg-label" fill="var(--ink-2)">${t}</text>`;
 
+  /* 표본이 얇은 눈금은 빗금으로 덮는다. 42일짜리 95%와 1,871일짜리 92%가
+     똑같은 굵기로 그려지면 끝쪽이 실제보다 미덥게 보인다. */
+  const THIN=100;
+  const runs=[];
+  for(let v=v0;v<=v1;v++){
+    const n=S[0]&&S[0].n[v],has=S[0]&&S[0].med[v]!=null;
+    if(has&&n&&n<THIN){
+      if(runs.length&&runs[runs.length-1][1]===v-1)runs[runs.length-1][1]=v;
+      else runs.push([v,v]);
+    }
+  }
+  const thinArt=runs.map(([p0,p1])=>{
+    const x=X(p0),wd=Math.max(2,X(p1)-x);
+    return `<rect x="${x.toFixed(1)}" y="${T1}" width="${wd.toFixed(1)}" height="${(B1-T1).toFixed(1)}" fill="url(#thinPat)"/>`+
+      `<rect x="${x.toFixed(1)}" y="${T2}" width="${wd.toFixed(1)}" height="${(B2-T2).toFixed(1)}" fill="url(#thinPat)"/>`;
+  }).join("");
+  const thinDef=runs.length?`<defs><pattern id="thinPat" width="5" height="5" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-3)" stroke-width="1" opacity=".22"/></pattern></defs>`:"";
+
   return `<div class="chart" id="bt-c">
   <svg viewBox="0 0 ${W} ${H}" class="${G.sm?"sm":""}" role="img" aria-label="${tx("aria").bt(axLabel(a),tx("hold")[btH])}">
-    ${bands}
+    ${thinDef}${bands}${thinArt}
     ${grid(r.ticks,Y1,true)}${zero}
     ${grid(w.ticks,Y2,false)}${half}
     <rect x="${L}" y="${T1}" width="${pw}" height="${(B1-T1).toFixed(1)}" fill="none" stroke="var(--rule)" stroke-width="1"/>
@@ -1402,8 +1438,32 @@ function btSummary(){
       `<span>${tx("winProb")} <b>${s.win[v].toFixed(0)}%</b> · `+
       `${m>=0?tx("medGain"):tx("medLoss")} <b class="${m>=0?"up":"dn"}">${m>0?"+":""}${m.toFixed(2)}%</b></span></div>`;
   }).join("");
+  /* 곡선이 U자라 "높을수록 좋다"로 요약이 안 된다. 대신 지금 자리를
+     전체 평균과 견줘 한 줄로 알려 준다. 평균은 눈금별 표본 수로 가중한다. */
+  const base=(()=>{
+    const s0=S[0],lo=Math.ceil(a.lo),hi=Math.floor(a.hi);
+    let W=0,M=0,N=0;
+    for(let i=lo;i<=hi;i++){
+      const n=s0.n[i];
+      if(s0.med[i]==null||!n)continue;
+      W+=s0.win[i]*n; M+=s0.med[i]*n; N+=n;
+    }
+    return N?{win:W/N,med:M/N}:null;
+  })();
+  let verdict="";
+  if(base){
+    /* 기준은 비율로 잡는다. 1Y 중위 +15% 에서의 1.5%p 와
+       5Y 중위 +89% 에서의 1.5%p 는 전혀 다른 크기다. */
+    const m=S[0].med[v],d=m-base.med;
+    const tol=Math.max(1.5,Math.abs(base.med)*0.08);
+    const how=d>tol?"better":d<-tol?"worse":"same";
+    verdict=`<div class="bt-verdict">${tx("vsAvg",base.win.toFixed(0),
+      (base.med>0?"+":"")+base.med.toFixed(1))} <b class="v-${how}">${tx("verdict")[how]}</b></div>`;
+  }
+  const thin=(S[0].n[v]||0)<100;
   el.innerHTML=head+body+
-    `<div class="n">${tx("sampleDays",num(S[0].n[v]||0))}</div>`;
+    `<div class="n">${tx("sampleDays",num(S[0].n[v]||0))}`+
+    (thin?` <span class="warn">${tx("thinHere")}</span>`:"")+`</div>`+verdict;
 }
 
 function renderBT(){
