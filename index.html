@@ -953,8 +953,9 @@ function btGeo(){
 
   /* T 는 머리 여백. 구간 이름 줄과 세로축 이름 줄, 두 줄이 들어간다. */
   const {W,sm}=geo(document.getElementById("bt-body"));
-  const g=sm?{L:36,R:10,T:38,ph1:180,gap:26,ph2:62,B:30,names:false}
-            :{L:48,R:16,T:46,ph1:230,gap:30,ph2:78,B:38,names:true};
+  /* 아래 칸(승률)은 값이 70~100%에 몰려 선이 납작해 보인다. 위 칸 대비 높이를 1.5배로 준다. */
+  const g=sm?{L:36,R:10,T:38,ph1:180,gap:26,ph2:93,B:30,names:false}
+            :{L:48,R:16,T:46,ph1:230,gap:30,ph2:117,B:38,names:true};
   const L=g.L,pw=W-L-g.R;
   const T1=g.T,B1=T1+g.ph1,T2=B1+g.gap,B2=T2+g.ph2,H=B2+g.B;
 
