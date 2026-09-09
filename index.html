@@ -592,8 +592,10 @@ svg.sm .svg-axis{font-size:11px}
 let DATA=null;
 const RANGES=[["30D",30],["90D",90],["180D",180],["1Y",365],["3Y",1095],["5Y",1825]];
 let state={scene:"now",range:{main:365,spx:365,ndx:365,fng:365}};
-/* 합친 차트에서 켜져 있는 선. gauge 는 공포탐욕이냐 VIX 냐와 별개로 "지수선을 보이나" */
-let MSHOW={spx:true,ndx:false,gauge:true};
+/* 합친 차트에서 켜져 있는 선.
+   price 는 SPY 냐 QQQ 냐(둘은 서로 배타 — 겹쳐 두면 구분이 안 된다),
+   gauge 는 공포탐욕이냐 VIX 냐와 별개로 "지수선을 보이나". 그래서 선은 최대 둘. */
+let MSHOW={price:"spx",gauge:true};
 const rangeSeg=(slot,list)=>`<div class="tools${list?" scroll":""}"><div class="seg mini" role="group" aria-label="${tx("aria").range}">`+
   (list||RANGES).map(([l,d])=>`<button type="button" data-slot="${slot}" data-range="${d}" aria-pressed="${d===state.range[slot]}">${l}</button>`).join("")+
   `</div></div>`;
@@ -996,12 +998,23 @@ function tTicks(t0,t1,c){
   return out;
 }
 
+/* 구간 이름이 길면 두 줄로 접는다. '극단적 공포', 'Extreme Greed' 처럼
+   띄어쓰기가 있는 것만 대상이고, 짧은 이름은 그대로 한 줄. */
+const zW=n=>String(n).length*(/[가-힣]/.test(n)?10.5:7.6);
+function zSplit(nm){
+  if(!nm)return [];
+  if(zW(nm)<=46||nm.indexOf(" ")<0)return [nm];
+  const i=nm.lastIndexOf(" ");
+  return [nm.slice(0,i),nm.slice(i+1)];
+}
+const mainOn=k=>(k==="spx"||k==="ndx")?MSHOW.price===k:(MSHOW.gauge&&btAx===k);
 const mainLines=()=>{
   if(!LONG||!LONG.series)return [];
   const S=LONG.series,out=[];
-  if(MSHOW.spx&&S.spx)out.push({key:"spx",side:"L",s:S.spx,col:"var(--ink)",wd:2,dash:""});
-  if(MSHOW.ndx&&S.ndx)out.push({key:"ndx",side:"L",s:S.ndx,col:"var(--ink-2)",wd:1.6,dash:"4 3"});
-  if(MSHOW.gauge&&S[btAx])out.push({key:btAx,side:"R",s:S[btAx],col:"rgba(120,135,150,.95)",wd:1.3,dash:""});
+  if(MSHOW.price&&S[MSHOW.price])
+    out.push({key:MSHOW.price,side:"L",s:S[MSHOW.price],col:"var(--down)",wd:2.1,dash:""});
+  if(MSHOW.gauge&&S[btAx])
+    out.push({key:btAx,side:"R",s:S[btAx],col:"rgba(120,135,150,.95)",wd:1.3,dash:""});
   return out;
 };
 const inf=k=>(tx("info")||{})[k]||{};
@@ -1011,7 +1024,7 @@ const mainFull=k=>inf(k).name||mainName(k);
 /* 선 켜고 끄는 버튼. 공포탐욕과 VIX 는 서로 배타 — 눌린 것을 다시 누르면 꺼진다. */
 function mainLineSeg(){
   const S=(LONG||{}).series||{};
-  const on=k=>k==="spx"?MSHOW.spx:k==="ndx"?MSHOW.ndx:(MSHOW.gauge&&btAx===k);
+  const on=mainOn;
   const ks=["spx","ndx","fng","vix"].filter(k=>S[k]);
   if(ks.length<2)return "";
   return '<div class="seg mini lines" role="group" aria-label="'+tx("aria").lines+'">'+
@@ -1019,7 +1032,7 @@ function mainLineSeg(){
       mainName(k)+'</button>').join("")+'</div>';
 }
 function mainHead(shown){
-  const on=k=>k==="spx"?MSHOW.spx:k==="ndx"?MSHOW.ndx:(MSHOW.gauge&&btAx===k);
+  const on=mainOn;
   /* 제목은 지금 켜져 있는 선의 이름을 이어 붙인다. 켠 것이 바뀌면 제목도 바뀐다. */
   const nm=document.getElementById("main-name");
   if(nm){
@@ -1085,12 +1098,28 @@ function renderMain(){
   }
 
   const {W,sm}=geo(document.getElementById("main-chart"));
-  const g=sm?{L:40,R:34,T:26,ph:172,B:38,ticks:3}
-            :{L:56,R:48,T:30,ph:236,B:44,ticks:5};
+  const hasG=drawn.some(l=>l.side==="R");
+  /* 오른쪽 여백은 세 층이다 — 선 끝의 현재값, 축 숫자, 구간 이름.
+     현재값을 그림 안에 두면 선 위에 얹혀 읽기 어렵다. */
+  const labW=sm?44:52, numW=sm?24:26;
+  /* 구간 이름 자리는 실제 이름 길이로 잡는다. 영어 "EXTREME GREED" 는
+     한글 "극단적 탐욕" 보다 훨씬 길어서 고정폭으로 두면 차트 밖으로 나간다. */
+  const zNm=hasG?(GAUGE[btAx]||GAUGE.fng).zones
+        .map(z=>(tx("zone")||{})[z[3]]||"").filter(Boolean):[];
+  const zLines=zNm.length?[].concat(...zNm.map(zSplit)):[];
+  const nameW=zLines.length
+    ?Math.min(96,Math.max(...zLines.map(zW))+4):0;
+  const g=sm?{L:40,T:26,ph:172,B:38,ticks:3,names:false,
+              R:6+labW+(hasG?5+numW:0)}
+            :{L:56,T:30,ph:236,B:44,ticks:5,names:hasG,
+              R:7+labW+(hasG?7+numW+10+nameW:0)};
   const Lm=g.L,Rm=g.R,T=g.T,ph=g.ph,H=T+ph+g.B;
   const pw=W-Lm-Rm,yBot=T+ph,yAx=yBot+26;
   const X=t=>Lm+pw*(t-t0)/((t1-t0)||1);
   MAINGEO={span:t1-t0,W,pw,tEnd,tMin};
+  const xLab=Lm+pw+(sm?6:7);                 /* 선 끝의 현재값 */
+  const xNum=xLab+labW+(sm?5:7);             /* 오른쪽 축 숫자 */
+  const xName=xNum+numW+10;                  /* 구간 이름 */
 
   /* 왼쪽 — 가격. 켜진 가격선들의 실제 범위에 맞춘다. */
   const pv=[].concat(...drawn.filter(l=>l.side==="L").map(l=>l.pts.map(p=>p[1])));
@@ -1109,6 +1138,34 @@ function renderMain(){
   }
   const Yof=l=>l.side==="L"?YL:YR;
 
+  /* 공포탐욕·VIX 구간을 색 띠로 깐다. 아래 게이지와 같은 색 규칙이라
+     한국어는 공포가 파랑, 영어는 공포가 빨강으로 함께 뒤집힌다. */
+  let zbands="",znames="";
+  if(gl&&gs){
+    const G=gs.G;
+    const vis=G.zones.map(z=>[Math.max(z[0],gs.lo),Math.min(z[1],gs.hi),z[2],z[3]])
+                     .filter(z=>z[1]>z[0]);
+    const tint=t=>t<0?downRGB():t>0?upRGB():"120,135,150";
+    const soft={"-2":.085,"-1":.05,"0":.028,"1":.05,"2":.085};
+    zbands=vis.map(([a,bb,t])=>
+      `<rect x="${Lm}" y="${YR(bb).toFixed(1)}" width="${pw}" height="${(YR(a)-YR(bb)).toFixed(1)}" fill="rgba(${tint(t)},${soft[t]})"/>`).join("");
+    if(g.names){
+      /* 띠가 얇으면 이름을 뺀다(아래 게이지와 같은 규칙) */
+      const rows=vis.map(([a,bb,t,k])=>({lo:YR(bb),hi:YR(a),nm:(tx("zone")||{})[k]||""}))
+                    .filter(r=>r.nm&&r.hi-r.lo>=14);
+      const n=rows.length;
+      znames=rows.map((r,i)=>{
+        const ls=zSplit(r.nm),h=(ls.length-1)*11;
+        /* 위아래로 고르게 벌린다. 띠 높이가 제각각이라 띠 한가운데에 두면
+           극단 쪽이 안으로 들어와 보인다. 다만 제 띠 밖으로는 나가지 않게 붙든다. */
+        const even=n>1?(T+ph-12)-((ph-24)*i/(n-1)):T+ph/2;
+        const y=Math.max(r.lo+h/2+5,Math.min(r.hi-h/2-4,even));
+        return `<text x="${xName.toFixed(1)}" y="${(y-h/2+3).toFixed(1)}" class="svg-label" fill="var(--ink-3)">`+
+          ls.map((t2,j)=>`<tspan x="${xName.toFixed(1)}"${j?' dy="11"':''}>${t2}</tspan>`).join("")+`</text>`;
+      }).join("");
+    }
+  }
+
   /* 기간이 길수록 지수선은 뒤로 물린다. 10년치 0~100 등락을 진하게 그리면
      선이 아니라 빗금이 되어 가격선을 덮는다. */
   if(gl){
@@ -1120,9 +1177,70 @@ function renderMain(){
   const P=a=>a.map((p,j)=>(j?"L":"M")+X(dnum(p[0])).toFixed(1)+" "+Yof(a.__l)(p[1]).toFixed(1)).join(" ");
   const path=l=>{const a=l.pts.slice();a.__l=l;return P(a)};
 
+  /* 선 그리기 애니메이션은 첫 화면에서만. 끌면서 다시 그릴 때도 대시를 걸면
+     실제 길이를 다시 재기 전까지 선이 중간에서 끊겨 보인다(CLAUDE.md 7번). */
+  const anim=document.body.classList.contains("settled")
+    ?"":` class="draw" style="--len:${(pw*2.4).toFixed(0)}"`;
+
+  /* 전고점(수위선)과 그 아래 낙폭 — 이 사이트의 원래 디자인 언어다.
+     보이는 구간 안에서 가장 높았던 종가를 기준으로 삼는다.
+     색은 --up/--down 이라 언어를 바꾸면 함께 뒤집힌다. */
+  const priceL=drawn.find(l=>l.side==="L");
+  let peakArt="",priceArt="",hatch="",priceEnd="",gaugeEnd="";
+  let yEndPrice=null,yEndGauge=null,priceLab=null,gaugeLab=null;
+  if(priceL&&priceL.pts.length>1){
+    const pts=priceL.pts,vals=pts.map(p=>p[1]);
+    let pk=0;for(let i=1;i<vals.length;i++)if(vals[i]>vals[pk])pk=i;
+    const peak=vals[pk],last=vals[vals.length-1];
+    const yPk=YL(peak),xPk=X(dnum(pts[pk][0])),xEnd=X(dnum(pts[pts.length-1][0]));
+    const seg=a=>{const c=a.slice();c.__l=priceL;return P(c)};
+    const pre=pts.slice(0,pk+1),post=pts.slice(pk);
+    const hid="mh"+priceL.key;
+    hatch=`<defs><pattern id="${hid}" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="var(--band-2)" stroke-width="1.6"/></pattern></defs>`;
+    const dd=(last/peak-1)*100;
+    peakArt=(post.length>1
+        ?`<path d="${seg(post)} L ${xEnd.toFixed(1)} ${yPk.toFixed(1)} L ${xPk.toFixed(1)} ${yPk.toFixed(1)} Z" fill="url(#${hid})"/>`:"")+
+      `<line x1="${Lm}" y1="${yPk.toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${yPk.toFixed(1)}" stroke="var(--up)" stroke-width="1.2" stroke-dasharray="7 4"/>`+
+      `<text x="${Lm}" y="${(yPk-7).toFixed(1)}" class="svg-label" fill="var(--up)">${tx("peakMark",fmt(peak))}</text>`+
+      `<circle cx="${xPk.toFixed(1)}" cy="${yPk.toFixed(1)}" r="3.2" fill="var(--up)"/>`;
+    /* 지금 값은 그림 밖 오른쪽에 둔다. 안에 두면 선 위에 얹혀 읽기 어렵다.
+       값과 낙폭을 두 줄로 나눠 층의 폭 안에 들어오게 한다. */
+    yEndPrice=Math.min(T+ph-12,Math.max(T+8,YL(last)));
+    priceEnd=`<circle cx="${xEnd.toFixed(1)}" cy="${YL(last).toFixed(1)}" r="3.2" fill="var(--down)"/>`+
+      `<line x1="${xEnd.toFixed(1)}" y1="${YL(last).toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${YL(last).toFixed(1)}" stroke="var(--down)" stroke-width="1" stroke-dasharray="2 2" opacity=".5"/>`;
+    /* .svg-axis 가 fill 을 쥐고 있어 속성으로는 색이 안 먹는다. 인라인으로 준다. */
+    const ddCol=dd<-0.005?"var(--down)":"var(--up)";
+    priceLab=v=>`<text x="${xLab.toFixed(1)}" y="${(v+3.5).toFixed(1)}" class="svg-num" style="fill:${ddCol}">${fmt(last)}</text>`+
+      `<text x="${xLab.toFixed(1)}" y="${(v+16).toFixed(1)}" class="svg-axis" style="fill:${ddCol}">${dd>-0.005?"0.00":dd.toFixed(2)}%</text>`;
+    priceArt=
+      (pre.length>1?`<path d="${seg(pre)}" fill="none" stroke="var(--ink-2)" stroke-width="1.6" stroke-linejoin="round"${anim}/>`:"")+
+      (post.length>1?`<path d="${seg(post)}" fill="none" stroke="var(--down)" stroke-width="2.1" stroke-linejoin="round"${anim}/>`:"");
+  }
+  const gaugeArt=gl&&gl.pts.length>1
+    ?`<path d="${path(gl)}" fill="none" stroke="${gl.col}" stroke-width="${gl.wd}" stroke-linejoin="round"${anim}/>`:"";
+  if(gl&&gl.pts.length){
+    const G=GAUGE[gl.key],lv=gl.pts[gl.pts.length-1][1];
+    const gx=X(dnum(gl.pts[gl.pts.length-1][0])),gy=YR(lv);
+    const gc=zoneColor(lv,G);
+    yEndGauge=Math.min(T+ph-5,Math.max(T+8,gy));
+    gaugeEnd=`<circle cx="${gx.toFixed(1)}" cy="${gy.toFixed(1)}" r="3" fill="${gc}"/>`+
+      `<line x1="${gx.toFixed(1)}" y1="${gy.toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${gc}" stroke-width="1" stroke-dasharray="2 2" opacity=".5"/>`;
+    gaugeLab=v=>`<text x="${xLab.toFixed(1)}" y="${(v+3.5).toFixed(1)}" class="svg-num" style="fill:${gc}">${gFmt(lv,G)}</text>`;
+  }
+  /* 두 값이 같은 높이로 오면 서로 밀어낸다. 가격 쪽은 두 줄이라 자리를 더 쓴다. */
+  if(yEndPrice!=null&&yEndGauge!=null){
+    const need=22;
+    if(Math.abs(yEndPrice-yEndGauge)<need){
+      if(yEndPrice<=yEndGauge){yEndPrice=Math.max(T+8,yEndGauge-need)}
+      else{yEndGauge=Math.max(T+8,yEndPrice-need)}
+    }
+  }
+  const endLabs=(priceLab?priceLab(yEndPrice):"")+(gaugeLab?gaugeLab(yEndGauge):"");
+
   const grid=ps?ps.ticks.map(t=>`<line x1="${Lm}" y1="${YL(t).toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${YL(t).toFixed(1)}" stroke="var(--rule-2)" stroke-width="1"/>`+
     `<text x="${Lm-6}" y="${(YL(t)+3.5).toFixed(1)}" text-anchor="end" class="svg-axis">${num(t)}</text>`).join(""):"";
-  const rax=gs?gs.ticks.map(t=>`<text x="${(Lm+pw+6).toFixed(1)}" y="${(YR(t)+3.5).toFixed(1)}" class="svg-axis">${t}</text>`).join(""):"";
+  const rax=gs?gs.ticks.map(t=>`<text x="${xNum.toFixed(1)}" y="${(YR(t)+3.5).toFixed(1)}" class="svg-axis">${t}</text>`).join(""):"";
 
   /* 지수선은 오른쪽 축이라 배경처럼 깔아 두고, 가격선을 그 위에 얹는다 */
   const area=gl?(()=>{const a=gl.pts.slice();a.__l=gl;
@@ -1140,9 +1258,11 @@ function renderMain(){
 
   chart.innerHTML=`
   <svg viewBox="0 0 ${W} ${H}" class="${sm?"sm":""}" role="img" aria-label="${tx("aria").main}">
-    ${grid}${area}
-    ${drawn.slice().sort((a,b)=>(a.side==="R"?0:1)-(b.side==="R"?0:1)).map(l=>`<path d="${path(l)}" fill="none" stroke="${l.col}" stroke-width="${l.wd}" stroke-linejoin="round"${l.dash?` stroke-dasharray="${l.dash}"`:""} class="draw" style="--len:${(pw*2.4).toFixed(0)}"/>`).join("")}
-    ${rax}
+    ${hatch}
+    ${zbands}${grid}${area}${gaugeArt}
+    ${peakArt}${priceArt}
+    ${gaugeEnd}${priceEnd}${endLabs}
+    ${rax}${znames}
     <line x1="${Lm}" y1="${yBot}" x2="${(Lm+pw).toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>
     ${xt}
     <g class="cross" style="opacity:0">
@@ -1153,7 +1273,8 @@ function renderMain(){
   </svg>`;
 
   key.innerHTML=drawn.map(l=>
-    `<span><i style="border-top:${l.wd}px ${l.dash?"dashed":"solid"} ${l.col}"></i>${mainName(l.key)}</span>`).join("");
+    `<span><i style="border-top:${l.wd}px solid ${l.col}"></i>${mainName(l.key)}</span>`).join("")+
+    (priceL?`<span><i style="border-top:1.2px dashed var(--up)"></i>${tx("peak")}</span>`:"");
   mainHead(drawn.map(l=>l.key));
   mainNotes(drawn.map(l=>l.key));
 
@@ -1241,7 +1362,7 @@ function panTo(v){
   if(next===PAN)return;
   PAN=next;
   if(panRAF)return;
-  panRAF=requestAnimationFrame(()=>{panRAF=0;renderMain()});
+  panRAF=requestAnimationFrame(()=>{panRAF=0;renderMain();calibrateDraw()});
 }
 document.addEventListener("pointerdown",e=>{
   const box=e.target.closest&&e.target.closest("#main-chart");
@@ -1703,14 +1824,14 @@ document.addEventListener("click",e=>{
   const k=b.dataset.mline;
   let axChanged=false;
   if(k==="spx"||k==="ndx"){
-    MSHOW[k]=!MSHOW[k];
+    MSHOW.price=(MSHOW.price===k)?null:k;      /* 둘은 서로 배타, 켜진 것을 다시 누르면 끈다 */
   }else if(MSHOW.gauge&&btAx===k){
     MSHOW.gauge=false;
   }else{
     if(btAx!==k){btAx=k;axChanged=true}
     MSHOW.gauge=true;
   }
-  if(!MSHOW.spx&&!MSHOW.ndx&&!MSHOW.gauge)MSHOW[k==="spx"?"ndx":"spx"]=true;  /* 전부 끄면 빈 화면 */
+  if(!MSHOW.price&&!MSHOW.gauge)MSHOW.price="spx";   /* 전부 끄면 빈 화면이 된다 */
   renderMain();
   if(axChanged){ if(DATA)renderGauge(); else if(BT)renderBT(); }
   calibrateDraw();savePrefs();
@@ -1807,14 +1928,19 @@ function loadPrefs(){
   try{
     const o=JSON.parse(localStorage.getItem(PREF)||"{}");
     if(o&&typeof o==="object"){
-      if(o.show&&typeof o.show==="object")
-        ["spx","ndx","gauge"].forEach(k=>{if(typeof o.show[k]==="boolean")MSHOW[k]=o.show[k]});
+      const sh=o.show;
+      if(sh&&typeof sh==="object"){
+        if(sh.price===null||sh.price==="spx"||sh.price==="ndx")MSHOW.price=sh.price;
+        else if(typeof sh.spx==="boolean"||typeof sh.ndx==="boolean")
+          MSHOW.price=sh.spx?"spx":sh.ndx?"ndx":null;      /* 선을 둘 켜던 옛 저장값 */
+        if(typeof sh.gauge==="boolean")MSHOW.gauge=sh.gauge;
+      }
       if(MAIN_RANGES.some(r=>r[1]===o.range))state.range.main=o.range;
       if(GAUGE[o.ax])btAx=o.ax;
       if(H_ORDER.indexOf(o.hold)>=0)btH=o.hold;
     }
   }catch(e){}
-  if(!MSHOW.spx&&!MSHOW.ndx&&!MSHOW.gauge)MSHOW.spx=true;
+  if(!MSHOW.price&&!MSHOW.gauge)MSHOW.price="spx";
 }
 function savePrefs(){
   try{ localStorage.setItem(PREF,JSON.stringify(
