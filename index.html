@@ -45,7 +45,7 @@ ko:{
     "vix.verycalm":"아주 잠잠","vix.calm":"잠잠","vix.normal":"보통",
     "vix.anxious":"불안","vix.fear":"공포","vix.panic":"패닉"},
   noChart:"표본이 부족해 그릴 수 없습니다.",
-  capMed:"세로축 — 수익률 중앙값", capWin:"세로축 — 수익날 확률",
+  capMed:"수익률 중앙값", capWin:"수익날 확률",
   fewSample:"표본 부족", winRateShort:"승률", avgShort:"평균", holdWord:"보유",
   sampleDays:n=>`표본 ${n}일`,
   nowIs:(s,v)=>`지금 ${s} ${v}`,
@@ -107,7 +107,7 @@ en:{
     "vix.verycalm":"Very calm","vix.calm":"Calm","vix.normal":"Normal",
     "vix.anxious":"Anxious","vix.fear":"Fearful","vix.panic":"Panic"},
   noChart:"Not enough data to chart.",
-  capMed:"Y axis — median return", capWin:"Y axis — chance of profit",
+  capMed:"Median return", capWin:"Chance of profit",
   fewSample:"too few samples", winRateShort:"win rate", avgShort:"avg", holdWord:"hold",
   sampleDays:n=>`${n} sample days`,
   nowIs:(s,v)=>`Now ${s} ${v}`,
@@ -1044,8 +1044,8 @@ function btChart(){
     </g>`;
   }
 
-  /* 세로축이 무엇인지 각 칸 왼쪽 위에 붙인다 */
-  const cap=(y,t)=>`<text x="${L}" y="${y}" class="svg-label" fill="var(--ink-2)">${t}</text>`;
+  /* 세로축 숫자 바로 위에 얹는다. 축 위에 있으면 "세로축"이라고 쓸 필요가 없다. */
+  const cap=(y,t)=>`<text x="0" y="${y}" class="svg-label" fill="var(--ink-2)">${t}</text>`;
 
   return `<div class="chart" id="bt-c">
   <svg viewBox="0 0 ${W} ${H}" class="${G.sm?"sm":""}" role="img" aria-label="${tx("aria").bt(axLabel(a),tx("hold")[btH])}">
