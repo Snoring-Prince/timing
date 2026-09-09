@@ -8,6 +8,43 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<!-- ══ 방문자 통계 ══════════════════════════════════════════════════════
+     통계 제공사를 바꿔도 이 블록 하나만 고치면 됩니다.
+     GitHub Pages든 Cloudflare든 어디로 옮겨도 그대로 동작합니다.
+
+     쓰는 법
+       1) umami.is 에 가입하고 이 사이트를 등록합니다.
+       2) 거기서 주는 Website ID(36자리)를 아래 id 자리에 붙여넣습니다.
+       3) 끝. 비워 두면 아무 것도 실행되지 않습니다.
+
+     나중에 직접 서버에 설치(셀프호스팅)하면 src 주소만 바꾸면 되고,
+     다른 회사로 갈아타면 아래 loadStats 안쪽만 갈아끼우면 됩니다.
+     화면·데이터 코드와 완전히 분리돼 있어 여기를 통째로 지워도
+     대시보드는 그대로 돕니다.
+═════════════════════════════════════════════════════════════════════ -->
+<script>
+window.STATS={
+  id : "41e07a57-a87c-403b-bdf8-e12d911457b6",   /* Umami Website ID */
+  src: "https://cloud.umami.is/script.js"    /* 셀프호스팅하면 이 주소만 교체 */
+};
+(function loadStats(){
+  var s=window.STATS||{};
+  if(!s.id)return;                                   /* 아직 설정 전 */
+  var h=location.hostname;
+  if(h==="localhost"||h==="127.0.0.1"||h==="")return; /* 내 PC에서 연 건 안 셈 */
+  var t=document.createElement("script");
+  t.defer=true; t.src=s.src;
+  t.setAttribute("data-website-id",s.id);
+  document.head.appendChild(t);
+})();
+/* 화면에서 무엇을 눌렀는지 남긴다.
+   통계 스크립트가 없거나 차단돼도 조용히 넘어간다 — 절대 화면을 깨지 않는다. */
+window.track=function(name,data){
+  try{ if(window.umami&&typeof umami.track==="function")umami.track(name,data); }
+  catch(e){}
+};
+</script>
+
 <style>
 :root{
   --paper:#E9ECF0; --card:#FFFFFF;
@@ -553,6 +590,7 @@ document.addEventListener("click",e=>{
   if(state.range[slot]===+b.dataset.range)return;
   state.range[slot]=+b.dataset.range;
   drawSlot(slot);calibrateDraw();
+  track("range",{slot:slot,range:b.dataset.range});
 });
 
 /* ================= 구간별 성적표 ================= */
@@ -879,12 +917,14 @@ document.addEventListener("click",e=>{
   if(!b||b.dataset.bt===btH)return;
   btH=b.dataset.bt;
   renderBT();
+  track("horizon",{h:btH,axis:btAx});
 });
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-btax]");
   if(!b||b.dataset.btax===btAx)return;
   btAx=b.dataset.btax;
   renderBT();
+  track("axis",{axis:btAx});
 });
 
 async function loadBT(){
