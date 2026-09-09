@@ -290,7 +290,11 @@ body{
 
 /* controls */
 .mast-right{display:flex;flex-direction:column;align-items:flex-end;gap:9px}
-.tools{display:flex;justify-content:flex-end;padding:12px 20px 0}
+/* 선 버튼(왼쪽)과 기간 버튼(오른쪽)을 한 줄에. 좁으면 줄 전체가 옆으로 밀린다. */
+.ctl-row{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:12px 20px 0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.ctl-row::-webkit-scrollbar{display:none}
+.ctl-row>div{flex:0 0 auto;display:flex}
 /* 기간 버튼이 아홉 개까지 늘어난다. 두 줄로 접으면 지저분해지므로
    한 줄을 유지하고 좁은 화면에서는 옆으로 민다. */
 .tools.scroll{overflow-x:auto;justify-content:flex-end;scrollbar-width:none;-webkit-overflow-scrolling:touch}
@@ -298,10 +302,6 @@ body{
 .tools.scroll .seg{flex:0 0 auto;margin-left:auto}
 /* 선 켜고 끄는 버튼 — 눌린 것만 진하게, 끈 것은 흐리게 */
 .seg.mini.lines button{font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.04em}
-/* 선 버튼 줄 — 이름이 길어져 좁은 화면에서는 옆으로 민다 */
-.lines-row{display:flex;padding:12px 20px 0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.lines-row::-webkit-scrollbar{display:none}
-.lines-row .seg{flex:0 0 auto}
 /* 제목 안의 동그라미 i — 눌러도 선이 켜지고 꺼지지 않게 제목 쪽에만 둔다 */
 .ttl{display:inline-flex;align-items:center;white-space:nowrap}
 .ttl+.ttl::before{content:"/";margin:0 9px;color:var(--rule);font-weight:400}
@@ -320,10 +320,11 @@ body.dragging{user-select:none;-webkit-user-select:none}
 body.dragging #main-chart{cursor:grabbing}
 body.dragging #main-chart .cross,body.dragging #main-chart .tip{opacity:0!important}
 /* 차트 아래 자세한 설명 */
-.notes{padding:14px 20px 18px;border-top:1px solid var(--rule-2);margin-top:12px}
-.notes h3{font-family:var(--cond);font-weight:700;font-size:11.5px;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--ink-2);margin:0 0 5px}
-.notes p{margin:0 0 14px;font-size:12.5px;line-height:1.85;color:var(--ink-3)}
+.notes{padding:16px 20px 18px;border-top:1px solid var(--rule-2);margin-top:14px}
+.notes h3{font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.04em;
+  color:var(--ink);margin:0 0 6px}
+.notes h3+p{margin-top:0}
+.notes p{margin:0 0 18px;font-size:12.5px;line-height:1.85;color:var(--ink-3)}
 .notes p:last-child{margin-bottom:0}
 .seg{display:flex;border:1px solid var(--rule);background:var(--card)}
 .seg.mini button{padding:4px 8px;font-size:10.5px;color:var(--ink-3)}
@@ -358,7 +359,8 @@ body.settled .fade{animation:none;opacity:1}
 @media (prefers-reduced-motion:reduce){.mark i{animation:none}}
 
 /* chart + tooltip */
-.chart{position:relative;padding:6px 8px 0}
+/* 차트도 글자와 같은 왼쪽 선에서 시작한다. 예전에는 8px 이라 홀로 튀어나와 있었다. */
+.chart{position:relative;padding:8px 20px 0}
 .chart svg{display:block;width:100%;height:auto;touch-action:pan-y}
 .tip{position:absolute;top:10px;pointer-events:none;opacity:0;transition:opacity .12s;
   background:var(--card);border:1px solid var(--rule);border-left:2px solid var(--ink-2);
@@ -403,7 +405,7 @@ body.settled .fade{animation:none;opacity:1}
 .bt-sum b{font-weight:500;color:var(--ink)}
 .bt-sum .n{color:var(--ink-3);font-size:11.5px;margin-top:5px}
 /* 범례 — 선 두 개를 글로 풀지 않고 모양 그대로 보여준다 */
-.bt-key{display:flex;gap:18px;padding:2px 20px 0;font-family:var(--cond);
+.bt-key{display:flex;gap:18px;padding:8px 20px 0;font-family:var(--cond);
   font-weight:600;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
 .bt-key span{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
 .bt-key i{width:16px;height:0;border-top:2px solid var(--ink)}
@@ -414,9 +416,11 @@ body.settled .fade{animation:none;opacity:1}
   .bt-sum{padding:2px 14px 13px}
   .bt-sum .now{font-size:15px}
   .bt-sum .row .idx{flex:0 0 76px}
-  .bt-key{padding:2px 14px 0;gap:14px;font-size:11px}
+  .bt-key{gap:14px;font-size:11px}
   h2.name{font-size:16px}
-  .lines-row{padding:10px 14px 0}
+  .ctl-row{padding:10px 14px 0;gap:10px}
+  .chart{padding:8px 14px 0}
+  .bt-key{padding:8px 14px 0}
   .notes{padding:12px 14px 14px}
   .notes p{font-size:12px}
   .pop{max-width:240px}
@@ -447,10 +451,9 @@ svg.sm .svg-axis{font-size:11px}
   .masthead{flex-direction:column;align-items:flex-start;gap:10px}
   .mast-right{align-items:flex-start}
   .masthead h1{font-size:24px}
-  .tools{padding:12px 14px 0}
   .seg button{padding:6px 8px;font-size:11px}
   .seg.mini button{padding:4px 6px;font-size:10px}
-  .panel-head{flex-direction:column;align-items:flex-start;gap:6px}
+  .panel-head{flex-direction:column;align-items:flex-start;gap:6px;padding:14px 14px 12px}
   .tip{font-size:12px;padding:8px 11px}
   .tip .t-d{font-size:11px}
   .tip .t-v{font-size:15px}
@@ -476,8 +479,10 @@ svg.sm .svg-axis{font-size:11px}
     <div class="panel-head">
       <h2 class="name" id="main-name"></h2>
     </div>
-    <div id="main-lines"></div>
-    <div id="main-tools"></div>
+    <div class="ctl-row">
+      <div id="main-lines"></div>
+      <div id="main-tools"></div>
+    </div>
     <div class="chart" id="main-chart"></div>
     <div class="bt-key" id="main-key"></div>
     <div class="notes" id="main-notes"></div>
@@ -514,9 +519,13 @@ let state={scene:"now",range:{main:365,spx:365,ndx:365,fng:365}};
    price 는 SPY 냐 QQQ 냐(둘은 서로 배타 — 겹쳐 두면 구분이 안 된다),
    gauge 는 공포탐욕이냐 VIX 냐와 별개로 "지수선을 보이나". 그래서 선은 최대 둘. */
 let MSHOW={price:"spx",gauge:true};
-const rangeSeg=(slot,list)=>`<div class="tools${list?" scroll":""}"><div class="seg mini" role="group" aria-label="${tx("aria").range}">`+
-  (list||RANGES).map(([l,d])=>`<button type="button" data-slot="${slot}" data-range="${d}" aria-pressed="${d===state.range[slot]}">${l}</button>`).join("")+
-  `</div></div>`;
+/* bare 를 주면 .tools 껍데기 없이 버튼 묶음만 낸다 — 다른 줄에 얹을 때 쓴다. */
+const rangeSeg=(slot,list,bare)=>{
+  const seg=`<div class="seg mini" role="group" aria-label="${tx("aria").range}">`+
+    (list||RANGES).map(([l,d])=>`<button type="button" data-slot="${slot}" data-range="${d}" aria-pressed="${d===state.range[slot]}">${l}</button>`).join("")+
+    `</div>`;
+  return bare?seg:`<div class="ctl-row" style="justify-content:flex-end">${seg}</div>`;
+};
 
 /* 합친 차트의 기간 = 창의 "너비". 10년·20년 버튼 대신 창을 끌어서 옮긴다.
    1993년까지 거슬러 갈 수 있고, 세로축은 그때그때 보이는 값에 맞춰 다시 잡힌다. */
@@ -532,7 +541,14 @@ const shift=(iso,d)=>{const t=new Date(iso+"T00:00:00Z");t.setUTCDate(t.getUTCDa
    1:1로 그리면 축소가 없어 글자가 지정한 px 그대로 찍힌다. */
 function geo(el){
   const raw=(el&&el.clientWidth)||796;
-  return {W:Math.max(300,Math.round(raw-16)),sm:raw<560};
+  /* 좌우 여백을 실제로 읽는다. 예전에는 8px 을 전제로 16을 빼고 있어서
+     여백을 바꾸면 뷰박스가 어긋났다. */
+  let pad=16;
+  if(el&&window.getComputedStyle){
+    const c=getComputedStyle(el);
+    pad=(parseFloat(c.paddingLeft)||0)+(parseFloat(c.paddingRight)||0);
+  }
+  return {W:Math.max(300,Math.round(raw-pad)),sm:raw<560};
 }
 
 /* ================= JSON → 차트용 배열 ================= */
@@ -726,9 +742,7 @@ function mainHead(shown){
   const box=document.getElementById("main-lines");
   if(!box)return;
   if(!box.firstChild){
-    const seg=mainLineSeg();
-    box.className=seg?"lines-row":"";
-    box.innerHTML=seg;
+    box.innerHTML=mainLineSeg();
   }else box.querySelectorAll("button[data-mline]").forEach(b=>
     b.setAttribute("aria-pressed",String(on(b.dataset.mline))));
 }
@@ -752,7 +766,7 @@ function renderMain(){
     chart.innerHTML='<div class="empty">'+tx("loading")+'</div>';
     return;
   }
-  tools.innerHTML=rangeSeg("main",MAIN_RANGES);
+  tools.innerHTML=rangeSeg("main",MAIN_RANGES,true);
   const L2=mainLines();
   if(!L2.length){
     key.innerHTML="";
