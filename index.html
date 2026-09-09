@@ -1,13 +1,226 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Daniel's timing — 전고점 대비 현재</title>
+<title>Daniel's timing — Drawdown from the peak</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<!-- ══ 다국어 ══════════════════════════════════════════════════════════
+     언어를 추가하려면 아래 D 에 항목 하나를 통째로 복사해 옮기면 됩니다.
+     화면 코드는 t("키") 만 부르므로 이 블록 밖은 건드릴 필요가 없습니다.
+
+     언어를 고르는 순서
+       1) 주소의 ?lang=en      — 링크로 공유했을 때 그 언어로 열린다
+       2) 지난번에 고른 값     — localStorage
+       3) 브라우저(=시스템) 언어 — navigator.languages
+       4) 그래도 모르면 영어
+
+     색도 언어를 따라갑니다. 한국·중국·일본은 상승 빨강/하락 파랑,
+     그 밖에는 상승 초록/하락 빨강 — 반대로 두면 정반대로 읽힙니다.
+═════════════════════════════════════════════════════════════════════ -->
+<script>
+const D={
+ko:{
+  locale:"ko-KR", dir:"ltr", name:"한국어",
+  docTitle:"Daniel's timing — 전고점 대비 현재",
+  loading:"불러오는 중…",
+  fngName:"공포탐욕지수",
+  idx:{spx:"S&P 500",ndx:"나스닥 100"},
+  hold:{"30D":"30일","90D":"90일","180D":"180일","1Y":"1년","3Y":"3년","5Y":"5년"},
+  peak:"전고점", curIdx:"현재 지수", elapsed:"경과 일수", dayUnit:"일",
+  sincePeak:"전고점 이후", vsPeak:"전고점 대비",
+  toRecover:x=>`회복까지 +${x}%`,
+  peakMark:v=>`전고점 ${v}`,
+  elapsedDays:n=>`${n}일 경과`,
+  ddFromPeak:x=>`전고점 대비 ${x}%`,
+  weekAgo:"1주 전", monthAgo:"1개월 전",
+  lowIn:r=>`${r} 최저`, highIn:r=>`${r} 최고`,
+  fngNote:(d,df)=>`${d} 기준 · 전일 대비 ${df}`,
+  zFng:["극단적 공포","공포","중립","탐욕","극단적 탐욕"],
+  zone:{"fng.exfear":"극단적 공포","fng.fear":"공포","fng.neutral":"중립",
+    "fng.greed":"탐욕","fng.exgreed":"극단적 탐욕",
+    "vix.verycalm":"아주 잠잠","vix.calm":"잠잠","vix.normal":"보통",
+    "vix.anxious":"불안","vix.fear":"공포","vix.panic":"패닉"},
+  noChart:"표본이 부족해 그릴 수 없습니다.",
+  capMed:"세로축 — 수익률 중앙값", capWin:"세로축 — 수익날 확률",
+  fewSample:"표본 부족", winRateShort:"승률", avgShort:"평균", holdWord:"보유",
+  sampleDays:n=>`표본 ${n}일`,
+  nowIs:(s,v)=>`지금 ${s} ${v}`,
+  buyHere:h=>`— 여기서 사서 ${h} 뒤`,
+  noStats:"표본이 부족해 통계를 내지 않았습니다.",
+  winProb:"수익날 확률", medGain:"중위 수익", medLoss:"중위 손실",
+  btTitleDefault:"지수별 수익률",
+  noBt:"승률 데이터가 아직 없습니다.<br>첫 계산이 끝나면 여기에 표시됩니다.",
+  oldFmt:"데이터가 옛 형식입니다.<br>Actions에서 Update backtest를 한 번 실행하면 나옵니다.",
+  noIndex:n=>`${n} 데이터를 아직 받지 못했습니다.<br>다음 자동 갱신 때 다시 시도합니다.`,
+  loadFail:"데이터를 불러오지 못했습니다",
+  loadFailPanel:"데이터를 불러오지 못했습니다.<br>잠시 후 새로고침해 주세요.",
+  stampAs:t=>`데이터 기준 ${t}`,
+  justNow:"방금", minAgo:m=>`${m}분 전`, closed:"장 마감",
+  foot:["전고점은 기간 선택과 무관하게 최근 10년 내 최고 종가 기준. 경과일수는 달력일 기준.",
+        "지수: Yahoo Finance · 공포탐욕지수: CNN Business",
+        "종가는 미국장 마감 후 하루 한 번, 장중 시세는 10분마다 갱신됩니다.",
+        "장중 표시는 지연될 수 있습니다."],
+  btFoot:(label,short,w,n,from,to)=>
+    `가로축은 ${label}. 위 칸은 그 값에서 사서 기간을 채웠을 때의 수익률 <b>중앙값</b>`+
+    `(절반은 이 위, 절반은 아래), 아래 칸은 수익이 났던 비율입니다.<br>`+
+    `평균이 아니라 중앙값을 그립니다. 2020년 3월 바닥 같은 며칠이 평균을 크게 끌어올려 `+
+    `공포 구간을 실제보다 후하게 보이게 하기 때문입니다. 평균은 마우스를 올리면 함께 나옵니다.<br>`+
+    `눈금마다 ${short} ±${w}였던 날들을 묶었고, 표본 ${n}일 미만인 구간은 선을 끊었습니다. `+
+    `배당 재투자 기준(SPY·QQQ), 표본 기간 ${from}~${to}.<br>`+
+    `과거 성과일 뿐 미래를 보장하지 않습니다.`,
+  ax:{
+    fng:{label:"공포탐욕지수",short:"공포탐욕",title:"공포와 탐욕 지수별 수익률",
+      help:"공포탐욕지수는 CNN이 시장 분위기를 0~100 한 숫자로 나타낸 것입니다. 0에 가까울수록 다들 겁먹은 상태, 100에 가까울수록 들뜬 상태입니다. 왼쪽이 공포입니다.",
+      },
+    vix:{label:"VIX",short:"VIX",title:"VIX별 수익률",
+      help:"VIX는 앞으로 한 달 주가가 얼마나 출렁일지 시장이 내다보는 정도라서 '공포지수'라고 부릅니다. 시장에서는 보통 20을 평상시와 불안의 경계로, 30 이상을 스트레스, 40 이상을 위기로 봅니다. 다만 1990년 이후 절반이 17.6 아래였으니 20은 평균보다 조금 높은 정도입니다. 공포탐욕지수와 반대로 오른쪽이 공포입니다.",
+      }
+  },
+  aria:{range:"차트 기간",hold:"보유 기간",axis:"잣대",lang:"언어",
+    chart:n=>`${n} 전고점 대비 추이`,
+    fng:v=>`공포탐욕지수 추이, 현재 ${v}`,
+    bt:(l,h)=>`${l} 값별 ${h} 수익률과 승률`}
+},
+en:{
+  locale:"en-US", dir:"ltr", name:"English",
+  docTitle:"Daniel's timing — Drawdown from the peak",
+  loading:"Loading…",
+  fngName:"Fear & Greed Index",
+  idx:{spx:"S&P 500",ndx:"Nasdaq 100"},
+  hold:{"30D":"30 days","90D":"90 days","180D":"180 days","1Y":"1 year","3Y":"3 years","5Y":"5 years"},
+  peak:"Peak", curIdx:"Current", elapsed:"Days elapsed", dayUnit:"d",
+  sincePeak:"since the peak", vsPeak:"From peak",
+  toRecover:x=>`+${x}% to recover`,
+  peakMark:v=>`Peak ${v}`,
+  elapsedDays:n=>`${n} days`,
+  ddFromPeak:x=>`${x}% from peak`,
+  weekAgo:"1 week ago", monthAgo:"1 month ago",
+  lowIn:r=>`${r} low`, highIn:r=>`${r} high`,
+  fngNote:(d,df)=>`As of ${d} · ${df} vs. prior day`,
+  zFng:["Extreme Fear","Fear","Neutral","Greed","Extreme Greed"],
+  zone:{"fng.exfear":"Extreme Fear","fng.fear":"Fear","fng.neutral":"Neutral",
+    "fng.greed":"Greed","fng.exgreed":"Extreme Greed",
+    "vix.verycalm":"Very calm","vix.calm":"Calm","vix.normal":"Normal",
+    "vix.anxious":"Anxious","vix.fear":"Fearful","vix.panic":"Panic"},
+  noChart:"Not enough data to chart.",
+  capMed:"Y axis — median return", capWin:"Y axis — share ending in profit",
+  fewSample:"too few samples", winRateShort:"win rate", avgShort:"avg", holdWord:"hold",
+  sampleDays:n=>`${n} sample days`,
+  nowIs:(s,v)=>`Now ${s} ${v}`,
+  buyHere:h=>`— buying here, ${h} later`,
+  noStats:"Not enough samples to compute statistics.",
+  winProb:"Chance of profit", medGain:"Median gain", medLoss:"Median loss",
+  btTitleDefault:"Returns by level",
+  noBt:"No backtest data yet.<br>It will appear here after the first run.",
+  oldFmt:"This data is in an older format.<br>Run “Update backtest” once in Actions.",
+  noIndex:n=>`No data for ${n} yet.<br>It will retry on the next update.`,
+  loadFail:"Could not load the data",
+  loadFailPanel:"Could not load the data.<br>Please refresh in a moment.",
+  stampAs:t=>`Data as of ${t}`,
+  justNow:"just now", minAgo:m=>`${m} min ago`, closed:"Market closed",
+  foot:["Peak is the highest close within the last 10 years, regardless of the selected range. Elapsed days are calendar days.",
+        "Index data: Yahoo Finance · Fear &amp; Greed: CNN Business",
+        "Closing prices update once a day after the US market closes; intraday quotes every 10 minutes.",
+        "Intraday figures may be delayed."],
+  btFoot:(label,short,w,n,from,to)=>
+    `The horizontal axis is ${label}. The upper panel is the <b>median</b> return from buying at that `+
+    `level and holding the full period (half did better, half did worse); the lower panel is how often `+
+    `it ended in profit.<br>`+
+    `We plot the median, not the mean. A handful of days like the March 2020 bottom pull the mean up `+
+    `far enough to make the fear zones look better than they were. The mean is shown on hover.<br>`+
+    `Each tick groups the days when ${short} was within ±${w}, and levels with fewer than ${n} sample `+
+    `days are left blank, breaking the line. Total-return basis (SPY·QQQ), sample period ${from}–${to}.<br>`+
+    `Past performance does not guarantee future results.`,
+  ax:{
+    fng:{label:"Fear & Greed Index",short:"F&G",title:"Returns by Fear &amp; Greed level",
+      help:"The Fear &amp; Greed Index is CNN's single 0–100 read on market mood. Closer to 0 means people are frightened; closer to 100 means they are giddy. Fear is on the left.",
+      },
+    vix:{label:"VIX",short:"VIX",title:"Returns by VIX level",
+      help:"VIX is how much the market expects prices to swing over the coming month, which is why it is called the fear gauge. Convention treats 20 as the line between calm and anxious, 30 and above as stress, and 40 and above as crisis. That said, half of all days since 1990 sat below 17.6, so 20 is only a little above normal. Unlike Fear &amp; Greed, fear is on the right.",
+      }
+  },
+  aria:{range:"Chart range",hold:"Holding period",axis:"Gauge",lang:"Language",
+    chart:n=>`${n}, drawdown from the peak`,
+    fng:v=>`Fear and Greed Index trend, currently ${v}`,
+    bt:(l,h)=>`Return and win rate by ${l}, held ${h}`}
+}
+};
+
+/* 상승을 빨강으로 읽는 문화권 — 뒤집으면 정반대 의미가 된다 */
+const REDUP=new Set(["ko","ja","zh"]);
+const PAL={
+  redUp :{up:"#C4362C",down:"#1F5FA9",upRGB:"196,54,44", downRGB:"31,95,169"},
+  greenUp:{up:"#1B7F4B",down:"#C4362C",upRGB:"27,127,75", downRGB:"196,54,44"}
+};
+
+let LANG="en", L10N=D.en, LOCALE="en-US";
+
+function pickLang(){
+  const two=s=>String(s||"").slice(0,2).toLowerCase();
+  try{
+    const q=two(new URLSearchParams(location.search).get("lang"));
+    if(q&&D[q])return q;
+  }catch(e){}
+  try{ const s=localStorage.getItem("dt.lang"); if(s&&D[s])return s; }catch(e){}
+  const navs=(navigator.languages&&navigator.languages.length)
+    ?navigator.languages:[navigator.language||"en"];
+  for(const l of navs){ const k=two(l); if(D[k])return k; }
+  return "en";
+}
+/* 브라우저가 알려 준 지역까지 살린다 — en-GB 면 영국식 숫자·날짜 */
+function pickLocale(lang){
+  const navs=(navigator.languages&&navigator.languages.length)
+    ?navigator.languages:[navigator.language||""];
+  for(const l of navs) if(String(l).slice(0,2).toLowerCase()===lang) return l;
+  return D[lang].locale;
+}
+const tx=(k,...a)=>{
+  const v=(k in L10N)?L10N[k]:D.en[k];
+  return typeof v==="function"?v(...a):v;
+};
+/* 데이터 파일의 키를 화면 언어로 옮긴다. 키가 없으면 파일에 든 값을 그대로 쓴다. */
+function axText(axKey,field,fallback){
+  const a=(L10N.ax||{})[axKey]||(D.en.ax||{})[axKey];
+  return (a&&a[field])||fallback||"";
+}
+/* 구간 이름 — 데이터 파일의 key 로 찾고, 키가 없으면 파일에 든 이름을 그대로 쓴다.
+   그래서 옛 형식 backtest.json 으로도 화면이 깨지지 않는다. */
+function zoneText(z){
+  if(!z)return "";
+  const k=z.key;
+  if(k){ const m=L10N.zone||{}, e=D.en.zone||{};
+         if(m[k])return m[k]; if(e[k])return e[k]; }
+  return z.label||"";
+}
+
+const fmt=n=>n.toLocaleString(LOCALE,{minimumFractionDigits:2,maximumFractionDigits:2});
+const num=n=>Number(n||0).toLocaleString(LOCALE);
+/* 날짜 — 한국은 2026.09.04, 그 밖에는 그 지역 표기 */
+function fdate(iso){
+  if(LANG==="ko")return String(iso).replace(/-/g,".");
+  try{ return new Intl.DateTimeFormat(LOCALE,{year:"numeric",month:"short",day:"numeric"})
+        .format(new Date(iso+"T00:00:00Z")); }
+  catch(e){ return String(iso); }
+}
+function applyLang(lang,remember){
+  LANG=D[lang]?lang:"en"; L10N=D[LANG]; LOCALE=pickLocale(LANG);
+  if(remember){ try{ localStorage.setItem("dt.lang",LANG) }catch(e){} }
+  const r=document.documentElement;
+  r.setAttribute("lang",LANG); r.setAttribute("dir",L10N.dir||"ltr");
+  const p=REDUP.has(LANG)?PAL.redUp:PAL.greenUp;
+  r.style.setProperty("--up",p.up); r.style.setProperty("--down",p.down);
+  r.style.setProperty("--up-rgb",p.upRGB); r.style.setProperty("--down-rgb",p.downRGB);
+  document.title=tx("docTitle");
+}
+const upRGB  =()=>(REDUP.has(LANG)?PAL.redUp:PAL.greenUp).upRGB;
+const downRGB=()=>(REDUP.has(LANG)?PAL.redUp:PAL.greenUp).downRGB;
+applyLang(pickLang(),false);
+</script>
+
 <!-- ══ 방문자 통계 ══════════════════════════════════════════════════════
      통계 제공사를 바꿔도 이 블록 하나만 고치면 됩니다.
      GitHub Pages든 Cloudflare든 어디로 옮겨도 그대로 동작합니다.
@@ -50,8 +263,10 @@ window.track=function(name,data){
   --paper:#E9ECF0; --card:#FFFFFF;
   --ink:#0F1A24; --ink-2:#5A6B7A; --ink-3:#8B99A6;
   --rule:#D3DAE1; --rule-2:#E6EAEF;
-  --up:#C4362C; --down:#1F5FA9;
-  --band-2:rgba(31,95,169,.18);
+  /* applyLang() 이 언어에 따라 덮어쓴다 — 기본값은 서구식(상승 초록) */
+  --up:#1B7F4B; --down:#C4362C;
+  --up-rgb:27,127,75; --down-rgb:196,54,44;
+  --band-2:rgba(var(--down-rgb),.18);
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --cond:"IBM Plex Sans Condensed","Pretendard Variable",Pretendard,sans-serif;
   --body:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
@@ -83,7 +298,7 @@ body{
 .seg.kr button{font-family:var(--cond);font-weight:600;font-size:12px;letter-spacing:.06em}
 .seg button+button{border-left:1px solid var(--rule)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
-.seg button:focus-visible{outline:2px solid var(--down);outline-offset:2px}
+.seg button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 /* panel */
 .panel{background:var(--card);border:1px solid var(--rule);margin-bottom:20px}
@@ -149,6 +364,7 @@ body.settled .fade{animation:none;opacity:1}
 .bt-ctl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 /* 잣대 전환 버튼은 기간 버튼과 구분되게 한글 라벨을 쓴다 */
 .seg.mini.ax button{font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.04em}
+.seg.mini.lang button{font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.03em}
 /* 주식이 처음인 사람을 위한 한 줄 설명 */
 .bt-help{padding:0 20px 14px;font-family:var(--body);font-size:12.5px;
   line-height:1.75;color:var(--ink-3);max-width:78ch}
@@ -233,7 +449,8 @@ svg.sm .svg-axis{font-size:11px}
       <h1>Daniel's timing</h1>
     </div>
     <div class="mast-right">
-      <div class="stamp" id="stamp">불러오는 중…</div>
+      <div id="lang-seg"></div>
+      <div class="stamp" id="stamp">Loading…</div>
     </div>
   </header>
 
@@ -242,7 +459,7 @@ svg.sm .svg-axis{font-size:11px}
 
   <section class="panel">
     <div class="panel-head">
-      <div class="name"><h2>공포탐욕지수</h2><span class="ticker">CNN F&amp;G</span></div>
+      <div class="name"><h2 id="fng-name">Fear &amp; Greed Index</h2><span class="ticker">CNN F&amp;G</span></div>
     </div>
     <div class="fng-body">
       <div class="fng-headline">
@@ -260,22 +477,22 @@ svg.sm .svg-axis{font-size:11px}
     <div class="bt-sec">
       <div class="bt-head">
         <div class="bt-name">
-          <span class="bt-title" id="bt-title">공포와 탐욕 지수별 수익률</span>
+          <span class="bt-title" id="bt-title">Returns by Fear &amp; Greed level</span>
           <span class="ticker" id="bt-range">—</span>
         </div>
         <div class="bt-ctl"><div id="bt-axes"></div><div id="bt-tools"></div></div>
       </div>
       <div class="bt-sum" id="bt-sum"></div>
       <div class="bt-help" id="bt-help"></div>
-      <div id="bt-body"><div class="empty">불러오는 중…</div></div>
+      <div id="bt-body"><div class="empty">Loading…</div></div>
     </div>
   </section>
 
   <p class="foot" id="foot">
-    전고점은 기간 선택과 무관하게 최근 10년 내 최고 종가 기준. 경과일수는 달력일 기준.<br>
-    지수: Yahoo Finance · 공포탐욕지수: CNN Business<br>
-    종가는 미국장 마감 후 하루 한 번, 장중 시세는 10분마다 갱신됩니다.<br>
-    장중 표시는 지연될 수 있습니다.
+    Peak is the highest close within the last 10 years, regardless of the selected range.<br>
+    Index data: Yahoo Finance · Fear &amp; Greed: CNN Business<br>
+    Closing prices update once a day after the US market closes.<br>
+    Intraday figures may be delayed.
   </p>
 </div>
 
@@ -284,13 +501,11 @@ svg.sm .svg-axis{font-size:11px}
 let DATA=null;
 const RANGES=[["30D",30],["90D",90],["180D",180],["1Y",365],["3Y",1095],["5Y",1825]];
 let state={scene:"now",range:{spx:365,ndx:365,fng:365}};
-const rangeSeg=slot=>`<div class="tools"><div class="seg mini" role="group" aria-label="차트 기간">`+
+const rangeSeg=slot=>`<div class="tools"><div class="seg mini" role="group" aria-label="${tx("aria").range}">`+
   RANGES.map(([l,d])=>`<button type="button" data-slot="${slot}" data-range="${d}" aria-pressed="${d===state.range[slot]}">${l}</button>`).join("")+
   `</div></div>`;
 
 /* ================= 유틸 ================= */
-const fmt=n=>n.toLocaleString("ko-KR",{minimumFractionDigits:2,maximumFractionDigits:2});
-const dot=s=>s.replace(/-/g,".");
 const dayDiff=(a,b)=>Math.round((new Date(b)-new Date(a))/864e5);
 const shift=(iso,d)=>{const t=new Date(iso+"T00:00:00Z");t.setUTCDate(t.getUTCDate()+d);return t.toISOString().slice(0,10)};
 /* 뷰박스 폭을 패널의 실제 폭에 맞춘다.
@@ -368,6 +583,9 @@ function attachHover(box,meta){
 }
 
 /* ================= 지수 패널 ================= */
+/* 지수 이름 — 사전이 우선, 모르는 지수면 데이터 파일에 든 이름을 쓴다 */
+function idxName(slot,cfg){ return (tx("idx")||{})[slot]||(cfg&&cfg.name)||slot; }
+
 function renderPanel(id,cfg,slot){
   const S=prepIndex(cfg),{dates,v,run}=S,N=dates.length;
   const from=shift(cfg.curDate,-state.range[slot]);
@@ -406,17 +624,17 @@ function renderPanel(id,cfg,slot){
 
   document.getElementById(id).innerHTML=`
   <div class="panel-head">
-    <div class="name"><h2>${cfg.name}</h2><span class="ticker">${cfg.ticker}</span></div>
+    <div class="name"><h2>${idxName(slot,cfg)}</h2><span class="ticker">${cfg.ticker}</span></div>
     <div class="now"><span class="now-val">${fmt(cfg.cur)}</span><span class="now-chg dn">${pct.toFixed(2)}%</span>${liveTag(cfg)}</div>
   </div>
   ${rangeSeg(slot)}
   <div class="chart" id="${id}-c">
-  <svg viewBox="0 0 ${W} ${H}" class="${sm?"sm":""}" role="img" aria-label="${cfg.name} 전고점 대비 추이">
+  <svg viewBox="0 0 ${W} ${H}" class="${sm?"sm":""}" role="img" aria-label="${tx("aria").chart(idxName(slot,cfg))}">
     <defs><pattern id="h${cfg.ticker}" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
       <line x1="0" y1="0" x2="0" y2="6" stroke="var(--band-2)" stroke-width="1.6"/></pattern></defs>
     <path d="${band}" fill="url(#h${cfg.ticker})" class="fade d1"/>
     <line x1="${L}" y1="${yPeak.toFixed(1)}" x2="${(xEnd+8).toFixed(1)}" y2="${yPeak.toFixed(1)}" stroke="var(--up)" stroke-width="1.2" stroke-dasharray="7 4" class="fade d1"/>
-    <text x="${L}" y="${(yPeak-9).toFixed(1)}" class="svg-label" fill="var(--up)">전고점 ${fmt(cfg.peak)}</text>
+    <text x="${L}" y="${(yPeak-9).toFixed(1)}" class="svg-label" fill="var(--up)">${tx("peakMark",fmt(cfg.peak))}</text>
     ${pre.length>1?`<path d="${P(pre)}" fill="none" stroke="var(--ink-2)" stroke-width="1.5" stroke-linejoin="round" class="draw" style="--len:${(pw*2).toFixed(0)}"/>`:""}
     <path d="${P(post)}" fill="none" stroke="var(--down)" stroke-width="2.1" stroke-linejoin="round" class="draw d1" style="--len:${(pw*2).toFixed(0)}"/>
     ${inWin?`<circle cx="${xPk.toFixed(1)}" cy="${yPeak.toFixed(1)}" r="3.4" fill="var(--up)" class="fade d2"/>`:""}
@@ -438,7 +656,7 @@ function renderPanel(id,cfg,slot){
           <line x1="${L+9}" y1="${yDim-5}" x2="${L+5}" y2="${yDim+5}" stroke="var(--ink-3)" stroke-width="1.2"/>`}
       <line x1="${xEnd.toFixed(1)}" y1="${yDim-5}" x2="${xEnd.toFixed(1)}" y2="${yDim+5}" stroke="var(--ink-3)" stroke-width="1.2"/>
       <line x1="${xPk.toFixed(1)}" y1="${yDim}" x2="${xEnd.toFixed(1)}" y2="${yDim}" stroke="var(--ink-3)" stroke-width="1"/>
-      <text x="${narrow?(xPk-8).toFixed(1):((xPk+xEnd)/2).toFixed(1)}" y="${yDim-9}" text-anchor="${narrow?"end":"middle"}" class="svg-num" fill="var(--ink-2)">${el}일 경과</text>
+      <text x="${narrow?(xPk-8).toFixed(1):((xPk+xEnd)/2).toFixed(1)}" y="${yDim-9}" text-anchor="${narrow?"end":"middle"}" class="svg-num" fill="var(--ink-2)">${tx("elapsedDays",el)}</text>
     </g>
 
     <line x1="${L}" y1="${yAx-11}" x2="${xEnd.toFixed(1)}" y2="${yAx-11}" stroke="var(--rule-2)" stroke-width="1"/>
@@ -450,10 +668,10 @@ function renderPanel(id,cfg,slot){
     <rect x="${L}" y="${T}" width="${pw}" height="${ph}" fill="transparent"/>
   </svg></div>
   <dl class="readout">
-    <div><dt>전고점</dt><dd class="num">${fmt(cfg.peak)}</dd><dd class="sub">${dot(cfg.peakDate)}</dd></div>
-    <div><dt>현재 지수</dt><dd class="num">${fmt(cfg.cur)}</dd><dd class="sub">${dot(cfg.curDate)}</dd></div>
-    <div><dt>경과 일수</dt><dd class="num">${el}<span class="unit">일</span></dd><dd class="sub">전고점 이후</dd></div>
-    <div class="cell-dd"><dt>전고점 대비</dt><dd class="num">${pct.toFixed(2)}<span class="unit">%</span></dd><dd class="sub">회복까지 +${back.toFixed(2)}%</dd></div>
+    <div><dt>${tx("peak")}</dt><dd class="num">${fmt(cfg.peak)}</dd><dd class="sub">${fdate(cfg.peakDate)}</dd></div>
+    <div><dt>${tx("curIdx")}</dt><dd class="num">${fmt(cfg.cur)}</dd><dd class="sub">${fdate(cfg.curDate)}</dd></div>
+    <div><dt>${tx("elapsed")}</dt><dd class="num">${el}<span class="unit">${tx("dayUnit")}</span></dd><dd class="sub">${tx("sincePeak")}</dd></div>
+    <div class="cell-dd"><dt>${tx("vsPeak")}</dt><dd class="num">${pct.toFixed(2)}<span class="unit">%</span></dd><dd class="sub">${tx("toRecover",back.toFixed(2))}</dd></div>
   </dl>`;
 
   attachHover(document.getElementById(id+"-c"),{
@@ -461,16 +679,18 @@ function renderPanel(id,cfg,slot){
     X:k=>X(i0+k),Y,val:k=>v[i0+k],
     html:k=>{
       const i=i0+k,d=(v[i]/run[i]-1)*100;
-      return `<div class="t-d">${dot(dates[i])}</div>
+      return `<div class="t-d">${fdate(dates[i])}</div>
         <div class="t-v">${fmt(v[i])}</div>
-        <div class="t-x" style="color:${d<-.005?"var(--down)":"var(--ink-3)"}">전고점 대비 ${d.toFixed(2)}%</div>`;
+        <div class="t-x" style="color:${d<-.005?"var(--down)":"var(--ink-3)"}">${tx("ddFromPeak",d.toFixed(2))}</div>`;
     }
   });
 }
 
 /* ================= 공포탐욕 ================= */
-const ZONES=[[0,25,"극단적 공포"],[25,45,"공포"],[45,55,"중립"],[55,75,"탐욕"],[75,100,"극단적 탐욕"]];
-const zoneOf=v=>(ZONES.find(z=>v>=z[0]&&v<z[1])||ZONES[4])[2];
+/* 구간 경계만 두고 이름은 사전에서 가져온다 */
+const ZONES=[[0,25],[25,45],[45,55],[55,75],[75,100]];
+const zoneIdx=v=>{const i=ZONES.findIndex(z=>v>=z[0]&&v<z[1]);return i<0?4:i};
+const zoneOf=v=>tx("zFng")[zoneIdx(v)];
 const zoneColor=v=>v<45?"var(--down)":v>55?"var(--up)":"var(--ink-2)";
 
 function renderFng(f){
@@ -491,12 +711,12 @@ function renderFng(f){
   const P=a=>a.map((p,j)=>(j?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
   const xEnd=X(i1),yCur=Y(f.value),col=zoneColor(f.value),yBot=T+ph,yAx=yBot+g.ax;
 
-  const tint=i=>i<2?"31,95,169":i>2?"196,54,44":"120,135,150";
+  const tint=i=>i<2?downRGB():i>2?upRGB():"120,135,150";
   const bands=ZONES.map(([a,b],i)=>`<rect x="${L}" y="${Y(b).toFixed(1)}" width="${pw}" height="${(Y(a)-Y(b)).toFixed(1)}" fill="rgba(${tint(i)},${[.07,.04,.025,.04,.07][i]})"/>`).join("");
   const sx=W-R+g.so,sw=g.sw;
   const strip=ZONES.map(([a,b],i)=>`<rect x="${sx}" y="${Y(b).toFixed(1)}" width="${sw}" height="${(Y(a)-Y(b)).toFixed(1)}" fill="rgba(${tint(i)},${[.20,.11,.06,.11,.20][i]})"/>`).join("");
   const yt=[0,25,50,75,100].map(t=>`<line x1="${sx+sw}" y1="${Y(t).toFixed(1)}" x2="${sx+sw+4}" y2="${Y(t).toFixed(1)}" stroke="var(--rule)" stroke-width="1"/><text x="${sx+sw+7}" y="${(Y(t)+3.5).toFixed(1)}" class="svg-axis">${t}</text>`).join("");
-  const zn=g.names?ZONES.map(([a,b,nm])=>`<text x="${sx-7}" y="${((Y(a)+Y(b))/2+3).toFixed(1)}" text-anchor="end" class="svg-label" fill="var(--ink-3)">${nm}</text>`).join(""):"";
+  const zn=g.names?ZONES.map(([a,b],i)=>`<text x="${sx-7}" y="${((Y(a)+Y(b))/2+3).toFixed(1)}" text-anchor="end" class="svg-label" fill="var(--ink-3)">${tx("zFng")[i]}</text>`).join(""):"";
   const ticks=xTicks(dates,i0,i1,g.ticks).map((t,j,arr)=>{
     const x=X(t.i),anc=j===0?"start":j===arr.length-1?"end":"middle";
     return `<line x1="${x.toFixed(1)}" y1="${yAx-11}" x2="${x.toFixed(1)}" y2="${yAx-6}" stroke="var(--rule)" stroke-width="1"/>
@@ -504,7 +724,7 @@ function renderFng(f){
   }).join("");
 
   document.getElementById("fng-chart").innerHTML=`
-  <svg viewBox="0 0 ${W} ${H}" class="${sm?"sm":""}" role="img" aria-label="공포탐욕지수 추이, 현재 ${f.value}">
+  <svg viewBox="0 0 ${W} ${H}" class="${sm?"sm":""}" role="img" aria-label="${tx("aria").fng(f.value)}">
     ${bands}
     <line x1="${L}" y1="${Y(50).toFixed(1)}" x2="${sx+sw}" y2="${Y(50).toFixed(1)}" stroke="var(--rule)" stroke-width="1" stroke-dasharray="2 4"/>
     <path d="${P(pts)}" fill="none" stroke="var(--ink-2)" stroke-width="1.6" stroke-linejoin="round" class="draw" style="--len:${(pw*2.4).toFixed(0)}"/>
@@ -532,21 +752,21 @@ function renderFng(f){
   const lab=document.getElementById("fng-label");
   lab.textContent=zoneOf(f.value);lab.style.color=col;
   const df=f.value-f.prev;
-  document.getElementById("fng-note").textContent=`${dot(f.date)} 기준 · 전일 대비 ${df>0?"+":""}${df}`;
+  document.getElementById("fng-note").textContent=tx("fngNote",fdate(f.date),(df>0?"+":"")+df);
 
   const win=v.slice(i0,i1+1),lo=Math.min(...win),hi=Math.max(...win);
-  const rl=RANGES.find(r=>r[1]===state.range.fng)[0].replace("D","일").replace("Y","년");
+  const rl=tx("hold")[RANGES.find(r=>r[1]===state.range.fng)[0]];
   const at=k=>v[Math.max(0,N-1-k)];
   const cell=(t,val,sub,tone)=>`<div><dt>${t}</dt><dd class="num"${tone?` style="color:${tone}"`:""}>${val}</dd><dd class="sub">${sub}</dd></div>`;
   document.getElementById("fng-readout").innerHTML=
-    cell("1주 전",at(5),zoneOf(at(5)))+
-    cell("1개월 전",at(21),zoneOf(at(21)))+
-    cell(rl+" 최저",lo,dot(dates[i0+win.indexOf(lo)]),"var(--down)")+
-    cell(rl+" 최고",hi,dot(dates[i0+win.indexOf(hi)]),"var(--up)");
+    cell(tx("weekAgo"),at(5),zoneOf(at(5)))+
+    cell(tx("monthAgo"),at(21),zoneOf(at(21)))+
+    cell(tx("lowIn",rl),lo,fdate(dates[i0+win.indexOf(lo)]),"var(--down)")+
+    cell(tx("highIn",rl),hi,fdate(dates[i0+win.indexOf(hi)]),"var(--up)");
 
   attachHover(document.getElementById("fng-chart"),{
     W,L,pw,n,X:k=>X(i0+k),Y,val:k=>v[i0+k],
-    html:k=>{const i=i0+k;return `<div class="t-d">${dot(dates[i])}</div>
+    html:k=>{const i=i0+k;return `<div class="t-d">${fdate(dates[i])}</div>
       <div class="t-v" style="color:${zoneColor(v[i])}">${v[i]}</div>
       <div class="t-x">${zoneOf(v[i])}</div>`;}
   });
@@ -571,8 +791,7 @@ function drawSlot(slot){
   const cfg=DATA.indices&&DATA.indices[slot];
   const box=document.getElementById("panel-"+slot);
   if(!cfg||!cfg.series||!cfg.series.length){
-    box.innerHTML='<div class="empty">'+(slot==="spx"?"S&P 500":"나스닥 100")+
-      ' 데이터를 아직 받지 못했습니다.<br>다음 자동 갱신 때 다시 시도합니다.</div>';
+    box.innerHTML='<div class="empty">'+tx("noIndex",idxName(slot,cfg))+'</div>';
     return;
   }
   renderPanel("panel-"+slot,cfg,slot);
@@ -581,6 +800,48 @@ function render(){
   ["spx","ndx","fng"].forEach(drawSlot);
   calibrateDraw();
 }
+
+/* ================= 언어 전환 =================
+   사전(D)에 언어를 추가하면 버튼이 저절로 하나 늘어난다.
+   .seg.mini 를 쓰지만 data-slot/data-bt 가 없어서 다른 핸들러와 겹치지 않는다. */
+function langSeg(){
+  const box=document.getElementById("lang-seg");
+  if(!box)return;
+  box.innerHTML='<div class="seg mini lang" role="group" aria-label="'+tx("aria").lang+'">'+
+    Object.keys(D).map(k=>'<button type="button" data-lang="'+k+'" aria-pressed="'+
+      (k===LANG)+'" lang="'+k+'">'+D[k].name+'</button>').join("")+'</div>';
+}
+/* JS 로만 그리는 화면 밖의 고정 문구들 */
+function paintStatic(){
+  const put=(id,html)=>{const e=document.getElementById(id);if(e)e.innerHTML=html};
+  put("foot",tx("foot").join("<br>"));
+  put("fng-name",tx("fngName"));
+  const st=document.getElementById("stamp");
+  if(st)st.textContent=STAMP_ISO?stamp(STAMP_ISO):tx("loading");
+  if(!BT){ put("bt-body",'<div class="empty">'+tx("loading")+'</div>');
+           put("bt-title",tx("btTitleDefault")); }
+  langSeg();
+}
+function setLang(l){
+  if(!D[l]||l===LANG)return;
+  applyLang(l,true);
+  /* 주소에도 남긴다 — 링크로 보내면 그 언어로 열린다 */
+  try{ const u=new URL(location.href);
+       u.searchParams.set("lang",LANG);
+       history.replaceState(null,"",u.toString()); }catch(e){}
+  paintStatic();
+  /* 버튼 묶음은 언어가 바뀌면 글자도 바뀌므로 다시 그린다 */
+  const ax=document.getElementById("bt-axes"),tl=document.getElementById("bt-tools");
+  if(ax)ax.innerHTML=""; if(tl)tl.innerHTML="";
+  if(DATA)render();
+  if(BT)renderBT();
+  calibrateDraw();
+  track("lang",{lang:LANG});
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-lang]");
+  if(b)setLang(b.dataset.lang);
+});
 
 /* 기간 버튼 — 눌린 차트만 다시 그린다 */
 document.addEventListener("click",e=>{
@@ -599,8 +860,7 @@ document.addEventListener("click",e=>{
    데이터는 data/backtest.json — 주 1회 GitHub Actions가 다시 계산한다. */
 let BT=null,btH="1Y",btAx="fng";
 /* 버튼 글자는 위 지수 패널과 같은 30D·1Y 꼴, 문장에서는 한글로 푼다 */
-const H_LABEL={"30D":"30일","90D":"90일","180D":"180일",
-               "1Y":"1년","3Y":"3년","5Y":"5년"};
+/* 보유기간 이름표는 사전에서 온다 — tx("hold")[btH] */
 const H_ORDER=["30D","90D","180D","1Y","3Y","5Y"];
 
 function sign(x){return (x>0?"+":"")+x.toFixed(1)+"%"}
@@ -616,28 +876,34 @@ function axNow(){
   const src=btAx==="vix"?DATA.vix:DATA.fng;
   return src&&typeof src.value==="number"?src.value:null;
 }
+/* 축 문구 — 사전이 우선, 없으면 데이터 파일에 든 한국어를 그대로 쓴다(옛 형식 대비) */
+const axLabel=a=>a?axText(a.key,"label",a.label):"";
+const axShort=a=>a?axText(a.key,"short",a.short):"";
+const axTitle=a=>a?axText(a.key,"title",a.title):"";
+const axHelp =a=>a?axText(a.key,"help", a.help ):"";
+
 function axZone(v){
   const a=axMeta();
   return a?(a.zones||[]).find(z=>v>=z.lo&&v<z.hi)||null:null;
 }
 const toneColor=t=>t<0?"var(--down)":t>0?"var(--up)":"var(--ink-2)";
 /* 색 띠 — 음수 tone 이 공포(파랑), 양수가 탐욕(빨강) */
-const TONE={"-2":["31,95,169",.075],"-1":["31,95,169",.045],
-            "0":["120,135,150",.025],"1":["196,54,44",.045],"2":["196,54,44",.075]};
+const tone=()=>({"-2":[downRGB(),.075],"-1":[downRGB(),.045],
+                 "0":["120,135,150",.025],"1":[upRGB(),.045],"2":[upRGB(),.075]});
 
 function btTools(){
   /* .tools 래퍼 없이 세그먼트만 — 카드 안쪽 소제목 줄에 얹힌다 */
   const hs=(BT.horizons&&BT.horizons.length?BT.horizons:H_ORDER);
-  return '<div class="seg mini" role="group" aria-label="보유 기간">'+
+  return '<div class="seg mini" role="group" aria-label="'+tx("aria").hold+'">'+
     hs.map(h=>'<button type="button" data-bt="'+h+'" aria-pressed="'+
       (h===btH)+'">'+h+'</button>').join("")+'</div>';
 }
 function btAxTools(){
   const A=(BT.axes||[]).filter(a=>btHas(a.key));
   if(A.length<2)return "";
-  return '<div class="seg mini ax" role="group" aria-label="잣대">'+
+  return '<div class="seg mini ax" role="group" aria-label="'+tx("aria").axis+'">'+
     A.map(a=>'<button type="button" data-btax="'+a.key+'" aria-pressed="'+
-      (a.key===btAx)+'">'+a.short+'</button>').join("")+'</div>';
+      (a.key===btAx)+'">'+axShort(a)+'</button>').join("")+'</div>';
 }
 /* 그 잣대로 계산된 곡선이 실제로 들어 있는가 */
 function btHas(key){
@@ -649,7 +915,7 @@ function btSeries(){
   return Object.keys(BT.indices).map((k,i)=>{
     const cv=(BT.indices[k].curve||{})[btAx]||{};
     const c=(cv.h||{})[btH]||{};
-    return {k,name:BT.indices[k].name,win:c.win||[],med:c.med||[],avg:c.avg||[],n:c.n||[],
+    return {k,name:idxName(k,BT.indices[k]),win:c.win||[],med:c.med||[],avg:c.avg||[],n:c.n||[],
             col:i?"var(--ink-3)":"var(--ink)",wd:i?1.5:2.1,dash:i?"4 3":""};
   });
 }
@@ -710,14 +976,14 @@ function btGeo(){
 
 function btChart(){
   const G=BTGEO=btGeo();
-  if(!G)return '<div class="empty">표본이 부족해 그릴 수 없습니다.</div>';
+  if(!G)return '<div class="empty">'+tx("noChart")+'</div>';
   const {a,S,W,L,pw,T1,B1,T2,B2,H,X,Y1,Y2,r,w,v0,v1}=G;
 
   /* 화면 밖으로 나가는 구간은 잘라서 칠한다 */
   const clip=z=>[Math.max(z.lo,a.lo),Math.min(z.hi,a.hi)];
   const vis=(a.zones||[]).map(z=>({z,c:clip(z)})).filter(o=>o.c[1]>o.c[0]);
   const bands=vis.map(({z,c})=>{
-    const x=X(c[0]),wd=X(c[1])-x,t=TONE[String(z.tone)]||TONE["0"];
+    const TN=tone(),x=X(c[0]),wd=X(c[1])-x,t=TN[String(z.tone)]||TN["0"];
     const f=`rgba(${t[0]},${t[1]})`;
     return `<rect x="${x.toFixed(1)}" y="${T1}" width="${wd.toFixed(1)}" height="${(B1-T1).toFixed(1)}" fill="${f}"/>`+
            `<rect x="${x.toFixed(1)}" y="${T2}" width="${wd.toFixed(1)}" height="${(B2-T2).toFixed(1)}" fill="${f}"/>`;
@@ -725,8 +991,9 @@ function btChart(){
   /* 구간 이름은 위쪽 줄, 세로축 이름은 그 아래 줄. 띠가 좁으면 이름을 뺀다. */
   const zn=G.names?vis.map(({z,c})=>{
     const wd=X(c[1])-X(c[0]);
-    if(wd<z.label.length*9+6)return "";
-    return `<text x="${((X(c[0])+X(c[1]))/2).toFixed(1)}" y="${T1-27}" text-anchor="middle" class="svg-label" fill="var(--ink-3)">${z.label}</text>`;
+    const nm=zoneText(z);
+    if(wd<nm.length*9+6)return "";
+    return `<text x="${((X(c[0])+X(c[1]))/2).toFixed(1)}" y="${T1-27}" text-anchor="middle" class="svg-label" fill="var(--ink-3)">${nm}</text>`;
   }).join(""):"";
 
   /* 수익률 축만 + 부호를 붙인다. 승률에 +90% 라고 쓰면 안 된다. */
@@ -781,13 +1048,13 @@ function btChart(){
   const cap=(y,t)=>`<text x="${L}" y="${y}" class="svg-label" fill="var(--ink-2)">${t}</text>`;
 
   return `<div class="chart" id="bt-c">
-  <svg viewBox="0 0 ${W} ${H}" class="${G.sm?"sm":""}" role="img" aria-label="${a.label} 값별 ${H_LABEL[btH]} 수익률과 승률">
+  <svg viewBox="0 0 ${W} ${H}" class="${G.sm?"sm":""}" role="img" aria-label="${tx("aria").bt(axLabel(a),tx("hold")[btH])}">
     ${bands}
     ${grid(r.ticks,Y1,true)}${zero}
     ${grid(w.ticks,Y2,false)}${half}
     <rect x="${L}" y="${T1}" width="${pw}" height="${(B1-T1).toFixed(1)}" fill="none" stroke="var(--rule)" stroke-width="1"/>
     <rect x="${L}" y="${T2}" width="${pw}" height="${(B2-T2).toFixed(1)}" fill="none" stroke="var(--rule)" stroke-width="1"/>
-    ${zn}${cap(T1-9,"세로축 — 수익률 중앙값")}${cap(T2-9,"세로축 — 수익날 확률")}
+    ${zn}${cap(T1-9,tx("capMed"))}${cap(T2-9,tx("capWin"))}
     ${paths}${mark}
     ${xt}
     <g class="cross" style="opacity:0">
@@ -813,10 +1080,11 @@ function btHover(){
             .concat(S.map(s=>s.win[v0+k]==null?null:G.Y2(s.win[v0+k]))),
     html:k=>{
       const v=v0+k,z=axZone(v);
-      const rows=S.map(s=>s.med[v]==null?`<div class="t-x">${s.name} 표본 부족</div>`
-        :`<div class="t-x">${s.name} <b>${sign(s.med[v])}</b> · 승률 ${s.win[v].toFixed(0)}% <span style="color:var(--ink-3)">(평균 ${sign(s.avg[v])})</span></div>`).join("");
-      return `<div class="t-d">${a.short} ${v}${z?" · "+z.label:""} · ${H_LABEL[btH]} 보유</div>${rows}`+
-        `<div class="t-d">표본 ${(S[0].n[v]||0).toLocaleString("ko-KR")}일</div>`;
+      const rows=S.map(s=>s.med[v]==null?`<div class="t-x">${s.name} ${tx("fewSample")}</div>`
+        :`<div class="t-x">${s.name} <b>${sign(s.med[v])}</b> · ${tx("winRateShort")} ${s.win[v].toFixed(0)}% <span style="color:var(--ink-3)">(${tx("avgShort")} ${sign(s.avg[v])})</span></div>`).join("");
+      const zn2=zoneText(z);
+      return `<div class="t-d">${axShort(a)} ${v}${zn2?" · "+zn2:""} · ${tx("hold")[btH]} ${tx("holdWord")}</div>${rows}`+
+        `<div class="t-d">${tx("sampleDays",num(S[0].n[v]||0))}</div>`;
     }
   });
 }
@@ -831,24 +1099,25 @@ function btSummary(){
   const v=Math.max(0,Math.min(100,Math.round(cur)));
   const z=axZone(cur);
   const zc=z?` style="color:${toneColor(z.tone)}"`:"";
-  const head='<div class="now">지금 '+a.short+' '+cur.toFixed(a.dec||0)+
-    (z?' · <b'+zc+'>'+z.label+'</b>':'')+
-    ' <span class="hz">— 여기서 사서 '+H_LABEL[btH]+' 뒤</span></div>';
+  const zn2=zoneText(z);
+  const head='<div class="now">'+tx("nowIs",axShort(a),cur.toFixed(a.dec||0))+
+    (zn2?' · <b'+zc+'>'+zn2+'</b>':'')+
+    ' <span class="hz">'+tx("buyHere",tx("hold")[btH])+'</span></div>';
   const S=btSeries();
   if(!S.length||S[0].med[v]==null){
-    el.innerHTML=head+'<div class="row">표본이 부족해 통계를 내지 않았습니다.</div>';
+    el.innerHTML=head+'<div class="row">'+tx("noStats")+'</div>';
     return;
   }
   const body=S.map(s=>{
     if(s.med[v]==null)
-      return `<div class="row"><span class="idx">${s.name}</span> 표본 부족</div>`;
+      return `<div class="row"><span class="idx">${s.name}</span> ${tx("fewSample")}</div>`;
     const m=s.med[v];
     return `<div class="row"><span class="idx">${s.name}</span>`+
-      `<span>수익날 확률 <b>${s.win[v].toFixed(0)}%</b> · `+
-      `중위 ${m>=0?"수익":"손실"} <b class="${m>=0?"up":"dn"}">${m>0?"+":""}${m.toFixed(2)}%</b></span></div>`;
+      `<span>${tx("winProb")} <b>${s.win[v].toFixed(0)}%</b> · `+
+      `${m>=0?tx("medGain"):tx("medLoss")} <b class="${m>=0?"up":"dn"}">${m>0?"+":""}${m.toFixed(2)}%</b></span></div>`;
   }).join("");
   el.innerHTML=head+body+
-    `<div class="n">표본 ${(S[0].n[v]||0).toLocaleString("ko-KR")}일</div>`;
+    `<div class="n">${tx("sampleDays",num(S[0].n[v]||0))}</div>`;
 }
 
 function renderBT(){
@@ -864,11 +1133,11 @@ function renderBT(){
     body.innerHTML='<div class="empty">'+msg+'</div>';
   };
   if(!BT||!BT.indices){
-    blank('승률 데이터가 아직 없습니다.<br>첫 계산이 끝나면 여기에 표시됩니다.');
+    blank(tx("noBt"));
     return;
   }
   if(!BT.axes||!BT.axes.length){
-    blank('데이터가 옛 형식입니다.<br>Actions에서 Update backtest를 한 번 실행하면 나옵니다.');
+    blank(tx("oldFmt"));
     return;
   }
   /* 잣대별 곡선이 없는 옛 데이터면 그릴 수 없다.
@@ -876,14 +1145,14 @@ function renderBT(){
   if(!btHas(btAx)){
     const alt=(BT.axes||[]).map(a=>a.key).find(btHas);
     if(!alt){
-      blank('데이터가 옛 형식입니다.<br>Actions에서 Update backtest를 한 번 실행하면 나옵니다.');
+      blank(tx("oldFmt"));
       return;
     }
     btAx=alt;                        /* 고른 잣대가 없으면 있는 쪽으로 넘어간다 */
   }
   const a=axMeta();
-  document.getElementById("bt-title").textContent=a.title||"지수별 수익률";
-  document.getElementById("bt-help").textContent=a.help||"";
+  document.getElementById("bt-title").innerHTML=axTitle(a)||tx("btTitleDefault");
+  document.getElementById("bt-help").innerHTML=axHelp(a)||"";
   /* 버튼은 한 번만 만들고 이후에는 눌린 표시만 옮긴다(포커스 보존) */
   if(!axes.firstChild)axes.innerHTML=btAxTools();
   else axes.querySelectorAll("button[data-btax]").forEach(b=>
@@ -899,14 +1168,8 @@ function renderBT(){
     b.setAttribute("aria-pressed",String(b.dataset.bt===btH)));
   btSummary();
   body.innerHTML=btChart()+
-    '<div class="bt-foot">가로축은 '+a.label+'. 위 칸은 그 값에서 사서 기간을 채웠을 때의 '+
-    '수익률 <b>중앙값</b>(절반은 이 위, 절반은 아래), 아래 칸은 수익이 났던 비율입니다.<br>'+
-    '평균이 아니라 중앙값을 그립니다. 2020년 3월 바닥 같은 며칠이 평균을 크게 끌어올려 '+
-    '공포 구간을 실제보다 후하게 보이게 하기 때문입니다. 평균은 마우스를 올리면 함께 나옵니다.<br>'+
-    '눈금마다 '+a.short+' ±'+(a.window||5)+'였던 날들을 묶었고, 표본 '+(BT.min_n||30)+
-    '일 미만인 구간은 선을 끊었습니다. 배당 재투자 기준(SPY·QQQ), 표본 기간 '+
-    (cv?cv.from+'~'+cv.to:'—')+'.<br>'+
-    '과거 성과일 뿐 미래를 보장하지 않습니다.</div>';
+    '<div class="bt-foot">'+tx("btFoot",axLabel(a),axShort(a),(a.window||5),
+      (BT.min_n||30),(cv?cv.from:"—"),(cv?cv.to:"—"))+'</div>';
   btHover();
   calibrateDraw();
 }
@@ -952,9 +1215,9 @@ function liveTag(cfg){
   const q=cfg.live;
   if(!q)return "";
   const m=minsAgo(q.time);
-  const age=m===null?"":`<span class="ago">${m<1?"방금":m+"분 전"}</span>`;
+  const age=m===null?"":`<span class="ago">${m<1?tx("justNow"):tx("minAgo",m)}</span>`;
   return q.open?`<span class="mark on"><i></i>Live</span>${age}`
-               :`<span class="mark off">장 마감</span>${age}`;
+               :`<span class="mark off">${tx("closed")}</span>${age}`;
 }
 function refreshTags(){
   for(const k of ["spx","ndx"]){
@@ -998,13 +1261,15 @@ async function pollQuote(){
 }
 
 /* ================= 데이터 불러오기 ================= */
+/* 보는 사람의 시간대로 보여 준다 — 서울에서 보면 KST, 뉴욕에서 보면 EST */
+let STAMP_ISO=null;
 function stamp(iso){
   try{
-    const d=new Date(iso);
-    const t=new Intl.DateTimeFormat("ko-KR",{timeZone:"Asia/Seoul",dateStyle:"medium",
-      timeStyle:"short"}).format(d);
-    return "데이터 기준 "+t+" KST";
-  }catch(e){return "데이터 기준 "+iso}
+    /* dateStyle/timeStyle 은 timeZoneName 과 같이 못 쓴다(TypeError). 항목을 하나씩 준다. */
+    const s2=new Intl.DateTimeFormat(LOCALE,{year:"numeric",month:"short",day:"numeric",
+      hour:"numeric",minute:"2-digit",timeZoneName:"short"}).format(new Date(iso));
+    return tx("stampAs",s2);
+  }catch(e){return tx("stampAs",iso)}
 }
 async function load(){
   /* 시간 단위 캐시 무력화 — 갱신 직후에도 옛 파일이 잡히지 않도록 */
@@ -1014,16 +1279,17 @@ async function load(){
     if(!r.ok)throw new Error("HTTP "+r.status);
     DATA=await r.json();
   }catch(err){
-    document.getElementById("stamp").textContent="데이터를 불러오지 못했습니다";
+    document.getElementById("stamp").textContent=tx("loadFail");
     ["spx","ndx"].forEach(k=>{
       document.getElementById("panel-"+k).innerHTML=
-        '<div class="empty">데이터를 불러오지 못했습니다.<br>잠시 후 새로고침해 주세요.</div>';
+        '<div class="empty">'+tx("loadFailPanel")+'</div>';
     });
     document.getElementById("fng-chart").innerHTML="";
     console.error(err);
     return;                       /* 성적표는 아래 loadBT() 가 따로 챙긴다 */
   }
-  document.getElementById("stamp").textContent=stamp(DATA.updated);
+  STAMP_ISO=DATA.updated;
+  document.getElementById("stamp").textContent=stamp(STAMP_ISO);
   render();
   lastW=(document.getElementById("panel-spx")||{}).clientWidth||0;
   setTimeout(()=>document.body.classList.add("settled"),1600);  /* 애니메이션은 첫 회만 */
@@ -1043,6 +1309,7 @@ function onResize(){
 }
 window.addEventListener("resize",onResize);
 if(window.ResizeObserver)new ResizeObserver(onResize).observe(document.querySelector(".wrap"));
+paintStatic();          /* 방문자 언어로 고정 문구부터 칠하고 시작한다 */
 /* 종가가 실패해도 성적표는 뜨도록 이어서 부른다 */
 load().then(loadBT);
 </script>
