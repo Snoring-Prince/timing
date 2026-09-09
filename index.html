@@ -27,7 +27,6 @@ ko:{
   locale:"ko-KR", dir:"ltr", name:"한국어",
   docTitle:"Daniel's timing — 전고점 대비 현재",
   loading:"불러오는 중…",
-  fngName:"공포탐욕지수",
   idx:{spx:"S&P 500",ndx:"나스닥 100"},
   hold:{"30D":"30일","90D":"90일","180D":"180일","1Y":"1년","3Y":"3년","5Y":"5년"},
   peak:"전고점", curIdx:"현재 지수", elapsed:"경과 일수", dayUnit:"일",
@@ -39,13 +38,13 @@ ko:{
   weekAgo:"1주 전", monthAgo:"1개월 전",
   lowIn:r=>`${r} 최저`, highIn:r=>`${r} 최고`,
   fngNote:(d,df)=>`${d} 기준 · 전일 대비 ${df}`,
-  zFng:["극단적 공포","공포","중립","탐욕","극단적 탐욕"],
   zone:{"fng.exfear":"극단적 공포","fng.fear":"공포","fng.neutral":"중립",
     "fng.greed":"탐욕","fng.exgreed":"극단적 탐욕",
     "vix.verycalm":"아주 잠잠","vix.calm":"잠잠","vix.normal":"보통",
     "vix.anxious":"불안","vix.fear":"공포","vix.panic":"패닉"},
   noChart:"표본이 부족해 그릴 수 없습니다.",
-  capMed:"세로축 — 수익률 중앙값", capWin:"세로축 — 수익날 확률",
+  noGauge:n=>`${n} 시계열이 아직 없습니다.<br>다음 갱신 때 채워집니다.`,
+  capMed:"수익률 중앙값", capWin:"수익날 확률",
   fewSample:"표본 부족", winRateShort:"승률", avgShort:"평균", holdWord:"보유",
   sampleDays:n=>`표본 ${n}일`,
   nowIs:(s,v)=>`지금 ${s} ${v}`,
@@ -81,15 +80,14 @@ ko:{
       }
   },
   aria:{range:"차트 기간",hold:"보유 기간",axis:"잣대",lang:"언어",
+    gauge:(l,v)=>`${l} 추이, 현재 ${v}`,
     chart:n=>`${n} 전고점 대비 추이`,
-    fng:v=>`공포탐욕지수 추이, 현재 ${v}`,
     bt:(l,h)=>`${l} 값별 ${h} 수익률과 승률`}
 },
 en:{
   locale:"en-US", dir:"ltr", name:"English",
   docTitle:"Daniel's timing — Drawdown from the peak",
   loading:"Loading…",
-  fngName:"Fear & Greed Index",
   idx:{spx:"S&P 500",ndx:"Nasdaq 100"},
   hold:{"30D":"30 days","90D":"90 days","180D":"180 days","1Y":"1 year","3Y":"3 years","5Y":"5 years"},
   peak:"Peak", curIdx:"Current", elapsed:"Days elapsed", dayUnit:"d",
@@ -101,13 +99,13 @@ en:{
   weekAgo:"1 week ago", monthAgo:"1 month ago",
   lowIn:r=>`${r} low`, highIn:r=>`${r} high`,
   fngNote:(d,df)=>`As of ${d} · ${df} vs. prior day`,
-  zFng:["Extreme Fear","Fear","Neutral","Greed","Extreme Greed"],
   zone:{"fng.exfear":"Extreme Fear","fng.fear":"Fear","fng.neutral":"Neutral",
     "fng.greed":"Greed","fng.exgreed":"Extreme Greed",
     "vix.verycalm":"Very calm","vix.calm":"Calm","vix.normal":"Normal",
     "vix.anxious":"Anxious","vix.fear":"Fearful","vix.panic":"Panic"},
   noChart:"Not enough data to chart.",
-  capMed:"Y axis — median return", capWin:"Y axis — chance of profit",
+  noGauge:n=>`No ${n} history yet.<br>It will appear after the next update.`,
+  capMed:"Median return", capWin:"Chance of profit",
   fewSample:"too few samples", winRateShort:"win rate", avgShort:"avg", holdWord:"hold",
   sampleDays:n=>`${n} sample days`,
   nowIs:(s,v)=>`Now ${s} ${v}`,
@@ -144,8 +142,8 @@ en:{
       }
   },
   aria:{range:"Chart range",hold:"Holding period",axis:"Gauge",lang:"Language",
+    gauge:(l,v)=>`${l} trend, currently ${v}`,
     chart:n=>`${n}, drawdown from the peak`,
-    fng:v=>`Fear and Greed Index trend, currently ${v}`,
     bt:(l,h)=>`Return and win rate by ${l}, held ${h}`}
 }
 };
@@ -459,7 +457,8 @@ svg.sm .svg-axis{font-size:11px}
 
   <section class="panel">
     <div class="panel-head">
-      <div class="name"><h2 id="fng-name">Fear &amp; Greed Index</h2><span class="ticker">CNN F&amp;G</span></div>
+      <div class="name"><h2 id="fng-name">Fear &amp; Greed Index</h2><span class="ticker" id="fng-ticker">CNN F&amp;G</span></div>
+      <div id="fng-axes"></div>
     </div>
     <div class="fng-body">
       <div class="fng-headline">
@@ -527,9 +526,10 @@ function prepIndex(cfg){
   if(cfg.peakDate>=dates[0])for(let i=0;i<dates.length;i++)if(dates[i]<=cfg.peakDate)pk=i;
   return CACHE[cfg.ticker]={dates,v,run,peakIdx:pk};
 }
-function prepFng(f){
-  if(CACHE.fng)return CACHE.fng;
-  return CACHE.fng={dates:f.series.map(p=>p[0]),v:f.series.map(p=>p[1])};
+function prepGauge(key,f){
+  const ck="g:"+key;
+  if(CACHE[ck])return CACHE[ck];
+  return CACHE[ck]={dates:f.series.map(p=>p[0]),v:f.series.map(p=>p[1])};
 }
 
 /* ================= X축 눈금 ================= */
@@ -687,14 +687,72 @@ function renderPanel(id,cfg,slot){
 }
 
 /* ================= 공포탐욕 ================= */
-/* 구간 경계만 두고 이름은 사전에서 가져온다 */
-const ZONES=[[0,25],[25,45],[45,55],[55,75],[75,100]];
-const zoneIdx=v=>{const i=ZONES.findIndex(z=>v>=z[0]&&v<z[1]);return i<0?4:i};
-const zoneOf=v=>tx("zFng")[zoneIdx(v)];
-const zoneColor=v=>v<45?"var(--down)":v>55?"var(--up)":"var(--ink-2)";
+/* 게이지(위 차트)의 잣대별 표시 규칙.
+   [lo,hi] 는 기본 표시 범위, step 은 눈금 간격, dec 는 소수점 자리.
+   구간은 [아래, 위, tone, 사전 key] 이고 이름은 사전에서 가져온다.
+   경계 숫자는 backtest.py 와 같지만 여기 것은 화면 표시용으로 따로 둔다 —
+   backtest.json 을 못 받아도 게이지는 그려져야 하기 때문이다. */
+const GAUGE={
+  fng:{src:"fng",lo:0,hi:100,step:25,dec:0,ticker:"CNN F&G",
+       zones:[[0,25,-2,"fng.exfear"],[25,45,-1,"fng.fear"],[45,55,0,"fng.neutral"],
+              [55,75,1,"fng.greed"],[75,101,2,"fng.exgreed"]]},
+  vix:{src:"vix",lo:10,hi:45,step:10,dec:2,ticker:"CBOE VIX",
+       zones:[[0,12,2,"vix.verycalm"],[12,15,1,"vix.calm"],[15,20,0,"vix.normal"],
+              [20,30,-1,"vix.anxious"],[30,40,-2,"vix.fear"],[40,200,-2,"vix.panic"]]}
+};
+const gauge=()=>GAUGE[btAx]||GAUGE.fng;
+const gZone=(v,G)=>((G||gauge()).zones.find(z=>v>=z[0]&&v<z[1]))||null;
+const zoneOf=(v,G)=>{const z=gZone(v,G);return z?(tx("zone")||{})[z[3]]||"":""};
+const zoneColor=(v,G)=>{const z=gZone(v,G);return z?toneColor(z[2]):"var(--ink-2)"};
+const gFmt=(v,G)=>(G||gauge()).dec?(+v).toFixed((G||gauge()).dec):String(Math.round(v));
+/* 잣대 이름 — 사전이 먼저, 없으면 key 를 그대로 */
+const axName=k=>axText(k,"label",k);
+const axAbbr=k=>axText(k,"short",k);
+/* 눈금은 범위 안에서 step 배수로. 범위가 늘어나면 눈금도 따라 는다 */
+function gTicks(lo,hi,step){
+  const out=[];for(let t=Math.ceil(lo/step)*step;t<=hi+1e-9;t+=step)out.push(+t.toFixed(4));
+  return out;
+}
 
-function renderFng(f){
-  const S=prepFng(f),{dates,v}=S,N=dates.length;
+/* 패널 머리 — 잣대에 따라 제목·티커·토글이 바뀐다 */
+function gaugeHead(){
+  const G=gauge();
+  const nm=document.getElementById("fng-name"),tk=document.getElementById("fng-ticker");
+  if(nm)nm.textContent=axName(btAx);
+  if(tk)tk.textContent=G.ticker;
+  const box=document.getElementById("fng-axes");
+  if(!box)return;
+  const A=Object.keys(GAUGE).filter(k=>gaugeHas(k)||btHas(k));
+  if(A.length<2){box.innerHTML="";return}
+  /* 버튼은 한 번만 만들고 이후엔 눌린 표시만 옮긴다(포커스 보존) */
+  if(!box.firstChild)
+    box.innerHTML='<div class="seg mini ax" role="group" aria-label="'+tx("aria").axis+'">'+
+      A.map(k=>'<button type="button" data-btax="'+k+'" aria-pressed="'+
+        (k===btAx)+'">'+axAbbr(k)+'</button>').join("")+'</div>';
+  else box.querySelectorAll("button[data-btax]").forEach(b=>
+    b.setAttribute("aria-pressed",String(b.dataset.btax===btAx)));
+}
+/* 그 잣대의 시계열이 실제로 들어 있는가 */
+function gaugeHas(key){
+  const G=GAUGE[key],f=G&&DATA&&DATA[G.src];
+  return !!(f&&f.series&&f.series.length);
+}
+
+function renderGauge(){
+  const G=gauge(),f=DATA&&DATA[G.src];
+  gaugeHead();
+  const chart=document.getElementById("fng-chart");
+  const setTxt=(id,t)=>{const e=document.getElementById(id);if(e)e.textContent=t};
+  if(!f||!f.series||!f.series.length){
+    /* 잣대는 골랐는데 그 시계열이 아직 없는 경우 — 아래 성적표는 그대로 돈다 */
+    document.getElementById("fng-tools").innerHTML="";
+    chart.innerHTML='<div class="empty">'+tx("noGauge",axName(btAx))+'</div>';
+    document.getElementById("fng-readout").innerHTML="";
+    setTxt("fng-val","—");setTxt("fng-label","");setTxt("fng-note","");
+    if(BT)renderBT();
+    return;
+  }
+  const S=prepGauge(btAx,f),{dates,v}=S,N=dates.length;
   document.getElementById("fng-tools").innerHTML=rangeSeg("fng");
   const from=shift(f.date,-state.range.fng);
   let i0=0;for(let i=0;i<N;i++)if(dates[i]<from)i0=i+1;
@@ -706,27 +764,50 @@ function renderFng(f){
             :{L:12,R:104,T:26,ph:176,B:46,sw:20,so:22,ax:30,ticks:5,names:true};
   const L=g.L,R=g.R,T=g.T,ph=g.ph,H=T+ph+g.B;
   const pw=W-L-R;
-  const X=i=>L+pw*(i-i0)/(n-1),Y=val=>T+ph*(1-val/100);
+
+  /* 표시 범위는 기본값에서 시작하되 실제 값이 밖으로 나가면 넓힌다.
+     잘라내면 VIX 급등처럼 중요한 장면이 통째로 사라진다. */
+  const win0=v.slice(i0,i1+1).concat([f.value]);
+  const step=G.step;
+  const lo=Math.min(G.lo,Math.floor(Math.min(...win0)/step)*step);
+  const hi=Math.max(G.hi,Math.ceil(Math.max(...win0)/step)*step);
+  const span=hi-lo||1;
+
+  const X=i=>L+pw*(i-i0)/(n-1),Y=val=>T+ph*(1-(val-lo)/span);
   const pts=[];for(let i=i0;i<=i1;i++)pts.push([X(i),Y(v[i])]);
   const P=a=>a.map((p,j)=>(j?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
-  const xEnd=X(i1),yCur=Y(f.value),col=zoneColor(f.value),yBot=T+ph,yAx=yBot+g.ax;
+  const xEnd=X(i1),yCur=Y(f.value),col=zoneColor(f.value,G),yBot=T+ph,yAx=yBot+g.ax;
 
-  const tint=i=>i<2?downRGB():i>2?upRGB():"120,135,150";
-  const bands=ZONES.map(([a,b],i)=>`<rect x="${L}" y="${Y(b).toFixed(1)}" width="${pw}" height="${(Y(a)-Y(b)).toFixed(1)}" fill="rgba(${tint(i)},${[.07,.04,.025,.04,.07][i]})"/>`).join("");
+  /* 구간 띠 — 표시 범위 밖으로 나간 부분은 잘라서 그린다 */
+  const vis=G.zones.map(z=>[Math.max(z[0],lo),Math.min(z[1],hi),z[2],z[3]])
+                   .filter(z=>z[1]>z[0]);
+  const tint=t=>t<0?downRGB():t>0?upRGB():"120,135,150";
+  const soft={"-2":.07,"-1":.04,"0":.025,"1":.04,"2":.07};
+  const hard={"-2":.20,"-1":.11,"0":.06,"1":.11,"2":.20};
+  const bands=vis.map(([a,b,t])=>`<rect x="${L}" y="${Y(b).toFixed(1)}" width="${pw}" height="${(Y(a)-Y(b)).toFixed(1)}" fill="rgba(${tint(t)},${soft[t]})"/>`).join("");
   const sx=W-R+g.so,sw=g.sw;
-  const strip=ZONES.map(([a,b],i)=>`<rect x="${sx}" y="${Y(b).toFixed(1)}" width="${sw}" height="${(Y(a)-Y(b)).toFixed(1)}" fill="rgba(${tint(i)},${[.20,.11,.06,.11,.20][i]})"/>`).join("");
-  const yt=[0,25,50,75,100].map(t=>`<line x1="${sx+sw}" y1="${Y(t).toFixed(1)}" x2="${sx+sw+4}" y2="${Y(t).toFixed(1)}" stroke="var(--rule)" stroke-width="1"/><text x="${sx+sw+7}" y="${(Y(t)+3.5).toFixed(1)}" class="svg-axis">${t}</text>`).join("");
-  const zn=g.names?ZONES.map(([a,b],i)=>`<text x="${sx-7}" y="${((Y(a)+Y(b))/2+3).toFixed(1)}" text-anchor="end" class="svg-label" fill="var(--ink-3)">${tx("zFng")[i]}</text>`).join(""):"";
+  const strip=vis.map(([a,b,t])=>`<rect x="${sx}" y="${Y(b).toFixed(1)}" width="${sw}" height="${(Y(a)-Y(b)).toFixed(1)}" fill="rgba(${tint(t)},${hard[t]})"/>`).join("");
+  const yt=gTicks(lo,hi,step).map(t=>`<line x1="${sx+sw}" y1="${Y(t).toFixed(1)}" x2="${sx+sw+4}" y2="${Y(t).toFixed(1)}" stroke="var(--rule)" stroke-width="1"/><text x="${sx+sw+7}" y="${(Y(t)+3.5).toFixed(1)}" class="svg-axis">${t}</text>`).join("");
+  /* 띠가 얇으면 이름을 뺀다 — 글자가 겹쳐 읽히느니 없는 편이 낫다 */
+  const zn=g.names?vis.map(([a,b,t,k])=>{
+    const nm=(tx("zone")||{})[k]||"";
+    if(!nm||Y(a)-Y(b)<14)return "";
+    return `<text x="${sx-7}" y="${((Y(a)+Y(b))/2+3).toFixed(1)}" text-anchor="end" class="svg-label" fill="var(--ink-3)">${nm}</text>`;
+  }).join(""):"";
   const ticks=xTicks(dates,i0,i1,g.ticks).map((t,j,arr)=>{
     const x=X(t.i),anc=j===0?"start":j===arr.length-1?"end":"middle";
     return `<line x1="${x.toFixed(1)}" y1="${yAx-11}" x2="${x.toFixed(1)}" y2="${yAx-6}" stroke="var(--rule)" stroke-width="1"/>
       <text x="${x.toFixed(1)}" y="${yAx}" text-anchor="${anc}" class="svg-axis">${t.t}</text>`;
   }).join("");
+  /* 가운데 기준선 — 공포탐욕은 50, VIX 는 평상시와 불안을 가르는 20 */
+  const midv=btAx==="vix"?20:50;
+  const mid=(midv>lo&&midv<hi)
+    ?`<line x1="${L}" y1="${Y(midv).toFixed(1)}" x2="${sx+sw}" y2="${Y(midv).toFixed(1)}" stroke="var(--rule)" stroke-width="1" stroke-dasharray="2 4"/>`:"";
 
   document.getElementById("fng-chart").innerHTML=`
-  <svg viewBox="0 0 ${W} ${H}" class="${sm?"sm":""}" role="img" aria-label="${tx("aria").fng(f.value)}">
+  <svg viewBox="0 0 ${W} ${H}" class="${sm?"sm":""}" role="img" aria-label="${tx("aria").gauge(axName(btAx),gFmt(f.value,G))}">
     ${bands}
-    <line x1="${L}" y1="${Y(50).toFixed(1)}" x2="${sx+sw}" y2="${Y(50).toFixed(1)}" stroke="var(--rule)" stroke-width="1" stroke-dasharray="2 4"/>
+    ${mid}
     <path d="${P(pts)}" fill="none" stroke="var(--ink-2)" stroke-width="1.6" stroke-linejoin="round" class="draw" style="--len:${(pw*2.4).toFixed(0)}"/>
     <g class="fade d2">
       <line x1="${xEnd.toFixed(1)}" y1="${yCur.toFixed(1)}" x2="${sx}" y2="${yCur.toFixed(1)}" stroke="${col}" stroke-width="1" stroke-dasharray="3 3"/>
@@ -748,27 +829,28 @@ function renderFng(f){
     <rect x="${L}" y="${T}" width="${pw}" height="${ph}" fill="transparent"/>
   </svg>`;
 
-  document.getElementById("fng-val").textContent=f.value;
+  document.getElementById("fng-val").textContent=gFmt(f.value,G);
   const lab=document.getElementById("fng-label");
-  lab.textContent=zoneOf(f.value);lab.style.color=col;
+  lab.textContent=zoneOf(f.value,G);lab.style.color=col;
   const df=f.value-f.prev;
-  document.getElementById("fng-note").textContent=tx("fngNote",fdate(f.date),(df>0?"+":"")+df);
+  document.getElementById("fng-note").textContent=
+    tx("fngNote",fdate(f.date),(df>0?"+":"")+gFmt(df,G));
 
-  const win=v.slice(i0,i1+1),lo=Math.min(...win),hi=Math.max(...win);
+  const win=v.slice(i0,i1+1),wlo=Math.min(...win),whi=Math.max(...win);
   const rl=tx("hold")[RANGES.find(r=>r[1]===state.range.fng)[0]];
   const at=k=>v[Math.max(0,N-1-k)];
-  const cell=(t,val,sub,tone)=>`<div><dt>${t}</dt><dd class="num"${tone?` style="color:${tone}"`:""}>${val}</dd><dd class="sub">${sub}</dd></div>`;
+  const cell=(t,val,sub,tn)=>`<div><dt>${t}</dt><dd class="num"${tn?` style="color:${tn}"`:""}>${val}</dd><dd class="sub">${sub}</dd></div>`;
   document.getElementById("fng-readout").innerHTML=
-    cell(tx("weekAgo"),at(5),zoneOf(at(5)))+
-    cell(tx("monthAgo"),at(21),zoneOf(at(21)))+
-    cell(tx("lowIn",rl),lo,fdate(dates[i0+win.indexOf(lo)]),"var(--down)")+
-    cell(tx("highIn",rl),hi,fdate(dates[i0+win.indexOf(hi)]),"var(--up)");
+    cell(tx("weekAgo"),gFmt(at(5),G),zoneOf(at(5),G))+
+    cell(tx("monthAgo"),gFmt(at(21),G),zoneOf(at(21),G))+
+    cell(tx("lowIn",rl),gFmt(wlo,G),fdate(dates[i0+win.indexOf(wlo)]),zoneColor(wlo,G))+
+    cell(tx("highIn",rl),gFmt(whi,G),fdate(dates[i0+win.indexOf(whi)]),zoneColor(whi,G));
 
   attachHover(document.getElementById("fng-chart"),{
     W,L,pw,n,X:k=>X(i0+k),Y,val:k=>v[i0+k],
     html:k=>{const i=i0+k;return `<div class="t-d">${fdate(dates[i])}</div>
-      <div class="t-v" style="color:${zoneColor(v[i])}">${v[i]}</div>
-      <div class="t-x">${zoneOf(v[i])}</div>`;}
+      <div class="t-v" style="color:${zoneColor(v[i],G)}">${gFmt(v[i],G)}</div>
+      <div class="t-x">${zoneOf(v[i],G)}</div>`;}
   });
 
   /* 지수가 바뀌면 성적표의 '지금' 표시도 따라가야 한다 */
@@ -787,7 +869,7 @@ function calibrateDraw(){
 }
 function drawSlot(slot){
   if(!DATA)return;
-  if(slot==="fng"){ if(DATA.fng&&DATA.fng.series)renderFng(DATA.fng); return; }
+  if(slot==="fng"){ renderGauge(); return; }
   const cfg=DATA.indices&&DATA.indices[slot];
   const box=document.getElementById("panel-"+slot);
   if(!cfg||!cfg.series||!cfg.series.length){
@@ -815,7 +897,7 @@ function langSeg(){
 function paintStatic(){
   const put=(id,html)=>{const e=document.getElementById(id);if(e)e.innerHTML=html};
   put("foot",tx("foot").join("<br>"));
-  put("fng-name",tx("fngName"));
+  put("fng-name",axName(btAx));
   const st=document.getElementById("stamp");
   if(st)st.textContent=STAMP_ISO?stamp(STAMP_ISO):tx("loading");
   if(!BT){ put("bt-body",'<div class="empty">'+tx("loading")+'</div>');
@@ -831,8 +913,9 @@ function setLang(l){
        history.replaceState(null,"",u.toString()); }catch(e){}
   paintStatic();
   /* 버튼 묶음은 언어가 바뀌면 글자도 바뀌므로 다시 그린다 */
-  const ax=document.getElementById("bt-axes"),tl=document.getElementById("bt-tools");
-  if(ax)ax.innerHTML=""; if(tl)tl.innerHTML="";
+  const ax=document.getElementById("bt-axes"),tl=document.getElementById("bt-tools"),
+        fx=document.getElementById("fng-axes");
+  if(ax)ax.innerHTML=""; if(tl)tl.innerHTML=""; if(fx)fx.innerHTML="";
   if(DATA)render();
   if(BT)renderBT();
   calibrateDraw();
@@ -953,8 +1036,9 @@ function btGeo(){
 
   /* T 는 머리 여백. 구간 이름 줄과 세로축 이름 줄, 두 줄이 들어간다. */
   const {W,sm}=geo(document.getElementById("bt-body"));
-  const g=sm?{L:36,R:10,T:38,ph1:180,gap:26,ph2:62,B:30,names:false}
-            :{L:48,R:16,T:46,ph1:230,gap:30,ph2:78,B:38,names:true};
+  /* 아래 칸(승률)은 값이 70~100%에 몰려 선이 납작해 보인다. 위 칸 대비 높이를 1.5배로 준다. */
+  const g=sm?{L:36,R:10,T:38,ph1:180,gap:26,ph2:93,B:30,names:false}
+            :{L:48,R:16,T:46,ph1:230,gap:30,ph2:117,B:38,names:true};
   const L=g.L,pw=W-L-g.R;
   const T1=g.T,B1=T1+g.ph1,T2=B1+g.gap,B2=T2+g.ph2,H=B2+g.B;
 
@@ -1044,8 +1128,8 @@ function btChart(){
     </g>`;
   }
 
-  /* 세로축이 무엇인지 각 칸 왼쪽 위에 붙인다 */
-  const cap=(y,t)=>`<text x="${L}" y="${y}" class="svg-label" fill="var(--ink-2)">${t}</text>`;
+  /* 세로축 숫자 바로 위에 얹는다. 축 위에 있으면 "세로축"이라고 쓸 필요가 없다. */
+  const cap=(y,t)=>`<text x="0" y="${y}" class="svg-label" fill="var(--ink-2)">${t}</text>`;
 
   return `<div class="chart" id="bt-c">
   <svg viewBox="0 0 ${W} ${H}" class="${G.sm?"sm":""}" role="img" aria-label="${tx("aria").bt(axLabel(a),tx("hold")[btH])}">
@@ -1157,6 +1241,7 @@ function renderBT(){
   if(!axes.firstChild)axes.innerHTML=btAxTools();
   else axes.querySelectorAll("button[data-btax]").forEach(b=>
     b.setAttribute("aria-pressed",String(b.dataset.btax===btAx)));
+  gaugeHead();                 /* 위쪽 토글도 같은 상태로 */
   const holder=Object.values(BT.indices).find(x=>x&&x.curve&&x.curve[btAx]);
   const cv=holder?holder.curve[btAx]:null;
   document.getElementById("bt-range").textContent=
@@ -1182,11 +1267,14 @@ document.addEventListener("click",e=>{
   renderBT();
   track("horizon",{h:btH,axis:btAx});
 });
+/* 잣대는 위 게이지와 아래 성적표가 함께 쓴다. 어느 쪽 토글을 눌러도 둘 다 바뀐다. */
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-btax]");
   if(!b||b.dataset.btax===btAx)return;
   btAx=b.dataset.btax;
-  renderBT();
+  if(DATA)renderGauge();      /* 안에서 renderBT 까지 부른다 */
+  else if(BT)renderBT();
+  calibrateDraw();
   track("axis",{axis:btAx});
 });
 
