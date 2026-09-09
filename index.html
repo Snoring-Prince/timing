@@ -1089,8 +1089,9 @@ function renderMain(){
   }
 
   const {W,sm}=geo(document.getElementById("main-chart"));
-  const g=sm?{L:40,R:34,T:26,ph:172,B:38,ticks:3}
-            :{L:56,R:48,T:30,ph:236,B:44,ticks:5};
+  const hasG=drawn.some(l=>l.side==="R");
+  const g=sm?{L:40,R:34,T:26,ph:172,B:38,ticks:3,names:false}
+            :{L:56,R:hasG?104:48,T:30,ph:236,B:44,ticks:5,names:hasG};
   const Lm=g.L,Rm=g.R,T=g.T,ph=g.ph,H=T+ph+g.B;
   const pw=W-Lm-Rm,yBot=T+ph,yAx=yBot+26;
   const X=t=>Lm+pw*(t-t0)/((t1-t0)||1);
@@ -1113,6 +1114,24 @@ function renderMain(){
   }
   const Yof=l=>l.side==="L"?YL:YR;
 
+  /* 공포탐욕·VIX 구간을 색 띠로 깐다. 아래 게이지와 같은 색 규칙이라
+     한국어는 공포가 파랑, 영어는 공포가 빨강으로 함께 뒤집힌다. */
+  let zbands="",znames="";
+  if(gl&&gs){
+    const G=gs.G;
+    const vis=G.zones.map(z=>[Math.max(z[0],gs.lo),Math.min(z[1],gs.hi),z[2],z[3]])
+                     .filter(z=>z[1]>z[0]);
+    const tint=t=>t<0?downRGB():t>0?upRGB():"120,135,150";
+    const soft={"-2":.085,"-1":.05,"0":.028,"1":.05,"2":.085};
+    zbands=vis.map(([a,bb,t])=>
+      `<rect x="${Lm}" y="${YR(bb).toFixed(1)}" width="${pw}" height="${(YR(a)-YR(bb)).toFixed(1)}" fill="rgba(${tint(t)},${soft[t]})"/>`).join("");
+    if(g.names)znames=vis.map(([a,bb,t,k])=>{
+      const nm=(tx("zone")||{})[k]||"";
+      if(!nm||YR(a)-YR(bb)<14)return "";     /* 띠가 얇으면 이름을 뺀다 */
+      return `<text x="${(Lm+pw+30).toFixed(1)}" y="${((YR(a)+YR(bb))/2+3).toFixed(1)}" class="svg-label" fill="var(--ink-3)">${nm}</text>`;
+    }).join("");
+  }
+
   /* 기간이 길수록 지수선은 뒤로 물린다. 10년치 0~100 등락을 진하게 그리면
      선이 아니라 빗금이 되어 가격선을 덮는다. */
   if(gl){
@@ -1133,7 +1152,7 @@ function renderMain(){
      보이는 구간 안에서 가장 높았던 종가를 기준으로 삼는다.
      색은 --up/--down 이라 언어를 바꾸면 함께 뒤집힌다. */
   const priceL=drawn.find(l=>l.side==="L");
-  let peakArt="",priceArt="",hatch="";
+  let peakArt="",priceArt="",hatch="",priceEnd="",gaugeEnd="";
   if(priceL&&priceL.pts.length>1){
     const pts=priceL.pts,vals=pts.map(p=>p[1]);
     let pk=0;for(let i=1;i<vals.length;i++)if(vals[i]>vals[pk])pk=i;
@@ -1149,14 +1168,27 @@ function renderMain(){
         ?`<path d="${seg(post)} L ${xEnd.toFixed(1)} ${yPk.toFixed(1)} L ${xPk.toFixed(1)} ${yPk.toFixed(1)} Z" fill="url(#${hid})"/>`:"")+
       `<line x1="${Lm}" y1="${yPk.toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${yPk.toFixed(1)}" stroke="var(--up)" stroke-width="1.2" stroke-dasharray="7 4"/>`+
       `<text x="${Lm}" y="${(yPk-7).toFixed(1)}" class="svg-label" fill="var(--up)">${tx("peakMark",fmt(peak))}</text>`+
-      `<circle cx="${xPk.toFixed(1)}" cy="${yPk.toFixed(1)}" r="3.2" fill="var(--up)"/>`+
-      (dd<-0.05?`<text x="${(Lm+pw-2).toFixed(1)}" y="${Math.min(T+ph-4,Math.max(T+11,YL(last)-9)).toFixed(1)}" text-anchor="end" class="svg-num" fill="var(--down)">${dd.toFixed(2)}%</text>`:"");
+      `<circle cx="${xPk.toFixed(1)}" cy="${yPk.toFixed(1)}" r="3.2" fill="var(--up)"/>`;
+    /* 선이 끝나는 자리에 지금 값을 적는다. 끌면 그 시점의 값이 된다.
+       전고점 점선 바로 옆이면 겹치므로 아래로 내려 단다. */
+    const yUp=YL(last)-9,yDn=YL(last)+17;
+    const yl=Math.min(T+ph-5,Math.max(T+11,Math.abs(yUp-yPk)<15?yDn:yUp));
+    priceEnd=`<circle cx="${xEnd.toFixed(1)}" cy="${YL(last).toFixed(1)}" r="3.2" fill="var(--down)"/>`+
+      `<text x="${(xEnd-6).toFixed(1)}" y="${yl.toFixed(1)}" text-anchor="end" class="svg-num" fill="var(--down)">`+
+      `${fmt(last)}${dd<-0.05?"  "+dd.toFixed(2)+"%":""}</text>`;
     priceArt=
       (pre.length>1?`<path d="${seg(pre)}" fill="none" stroke="var(--ink-2)" stroke-width="1.6" stroke-linejoin="round"${anim}/>`:"")+
       (post.length>1?`<path d="${seg(post)}" fill="none" stroke="var(--down)" stroke-width="2.1" stroke-linejoin="round"${anim}/>`:"");
   }
   const gaugeArt=gl&&gl.pts.length>1
     ?`<path d="${path(gl)}" fill="none" stroke="${gl.col}" stroke-width="${gl.wd}" stroke-linejoin="round"${anim}/>`:"";
+  if(gl&&gl.pts.length){
+    const G=GAUGE[gl.key],lv=gl.pts[gl.pts.length-1][1];
+    const gx=X(dnum(gl.pts[gl.pts.length-1][0])),gy=YR(lv);
+    const gc=zoneColor(lv,G);
+    gaugeEnd=`<circle cx="${gx.toFixed(1)}" cy="${gy.toFixed(1)}" r="3" fill="${gc}"/>`+
+      `<text x="${(gx-6).toFixed(1)}" y="${Math.min(T+ph-5,Math.max(T+11,gy+14)).toFixed(1)}" text-anchor="end" class="svg-num" fill="${gc}">${gFmt(lv,G)}</text>`;
+  }
 
   const grid=ps?ps.ticks.map(t=>`<line x1="${Lm}" y1="${YL(t).toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${YL(t).toFixed(1)}" stroke="var(--rule-2)" stroke-width="1"/>`+
     `<text x="${Lm-6}" y="${(YL(t)+3.5).toFixed(1)}" text-anchor="end" class="svg-axis">${num(t)}</text>`).join(""):"";
@@ -1179,9 +1211,10 @@ function renderMain(){
   chart.innerHTML=`
   <svg viewBox="0 0 ${W} ${H}" class="${sm?"sm":""}" role="img" aria-label="${tx("aria").main}">
     ${hatch}
-    ${grid}${area}${gaugeArt}
+    ${zbands}${grid}${area}${gaugeArt}
     ${peakArt}${priceArt}
-    ${rax}
+    ${gaugeEnd}${priceEnd}
+    ${rax}${znames}
     <line x1="${Lm}" y1="${yBot}" x2="${(Lm+pw).toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>
     ${xt}
     <g class="cross" style="opacity:0">
