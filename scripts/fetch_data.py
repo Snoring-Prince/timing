@@ -206,7 +206,8 @@ def build_fng(previous):
 
 # ------------------------------------------------------------------ VIX
 
-# 승률 차트의 두 번째 가로축. 화면에는 현재 값만 쓰므로 이력은 담지 않는다
+# 승률 차트의 두 번째 가로축이자 위 게이지 차트의 두 번째 잣대.
+# 게이지가 공포탐욕과 같은 방식으로 이력을 그리므로 fng 와 같은 5년치를 담는다
 # (구간별 통계는 backtest.py 가 따로 20년치를 받아 계산한다).
 
 def build_vix():
@@ -225,8 +226,17 @@ def build_vix():
     hist = sorted(set(hist))
     cur_date, cur = hist[-1]
     prev = hist[-2][1] if len(hist) > 1 else cur
-    print(f"  → 현재 {cur:.2f} ({cur_date}), 전일 {prev:.2f}")
-    return {"value": round(cur, 2), "date": cur_date, "prev": round(prev, 2)}
+
+    cutoff = (datetime.now(timezone.utc)
+              - timedelta(days=365 * YEARS)).strftime("%Y-%m-%d")
+    series = [[d, round(v, 2)] for d, v in hist if d >= cutoff]
+    print(f"  → 현재 {cur:.2f} ({cur_date}), 전일 {prev:.2f}, {len(series)}행")
+    return {
+        "value": round(cur, 2),
+        "date": cur_date,
+        "prev": round(prev, 2),
+        "series": series,
+    }
 
 
 # ---------------------------------------------------------------- 실행
