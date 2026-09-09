@@ -1090,12 +1090,26 @@ function renderMain(){
 
   const {W,sm}=geo(document.getElementById("main-chart"));
   const hasG=drawn.some(l=>l.side==="R");
-  const g=sm?{L:40,R:34,T:26,ph:172,B:38,ticks:3,names:false}
-            :{L:56,R:hasG?104:48,T:30,ph:236,B:44,ticks:5,names:hasG};
+  /* 오른쪽 여백은 세 층이다 — 선 끝의 현재값, 축 숫자, 구간 이름.
+     현재값을 그림 안에 두면 선 위에 얹혀 읽기 어렵다. */
+  const labW=sm?44:52, numW=sm?24:26;
+  /* 구간 이름 자리는 실제 이름 길이로 잡는다. 영어 "EXTREME GREED" 는
+     한글 "극단적 탐욕" 보다 훨씬 길어서 고정폭으로 두면 차트 밖으로 나간다. */
+  const zNm=hasG?(GAUGE[btAx]||GAUGE.fng).zones
+        .map(z=>(tx("zone")||{})[z[3]]||"").filter(Boolean):[];
+  const nameW=zNm.length
+    ?Math.min(104,Math.max(...zNm.map(n=>n.length*(/[가-힣]/.test(n)?10.5:7.6)))+4):0;
+  const g=sm?{L:40,T:26,ph:172,B:38,ticks:3,names:false,
+              R:6+labW+(hasG?5+numW:0)}
+            :{L:56,T:30,ph:236,B:44,ticks:5,names:hasG,
+              R:7+labW+(hasG?7+numW+10+nameW:0)};
   const Lm=g.L,Rm=g.R,T=g.T,ph=g.ph,H=T+ph+g.B;
   const pw=W-Lm-Rm,yBot=T+ph,yAx=yBot+26;
   const X=t=>Lm+pw*(t-t0)/((t1-t0)||1);
   MAINGEO={span:t1-t0,W,pw,tEnd,tMin};
+  const xLab=Lm+pw+(sm?6:7);                 /* 선 끝의 현재값 */
+  const xNum=xLab+labW+(sm?5:7);             /* 오른쪽 축 숫자 */
+  const xName=xNum+numW+10;                  /* 구간 이름 */
 
   /* 왼쪽 — 가격. 켜진 가격선들의 실제 범위에 맞춘다. */
   const pv=[].concat(...drawn.filter(l=>l.side==="L").map(l=>l.pts.map(p=>p[1])));
@@ -1128,7 +1142,7 @@ function renderMain(){
     if(g.names)znames=vis.map(([a,bb,t,k])=>{
       const nm=(tx("zone")||{})[k]||"";
       if(!nm||YR(a)-YR(bb)<14)return "";     /* 띠가 얇으면 이름을 뺀다 */
-      return `<text x="${(Lm+pw+30).toFixed(1)}" y="${((YR(a)+YR(bb))/2+3).toFixed(1)}" class="svg-label" fill="var(--ink-3)">${nm}</text>`;
+      return `<text x="${xName.toFixed(1)}" y="${((YR(a)+YR(bb))/2+3).toFixed(1)}" class="svg-label" fill="var(--ink-3)">${nm}</text>`;
     }).join("");
   }
 
@@ -1153,6 +1167,7 @@ function renderMain(){
      색은 --up/--down 이라 언어를 바꾸면 함께 뒤집힌다. */
   const priceL=drawn.find(l=>l.side==="L");
   let peakArt="",priceArt="",hatch="",priceEnd="",gaugeEnd="";
+  let yEndPrice=null,yEndGauge=null,priceLab=null,gaugeLab=null;
   if(priceL&&priceL.pts.length>1){
     const pts=priceL.pts,vals=pts.map(p=>p[1]);
     let pk=0;for(let i=1;i<vals.length;i++)if(vals[i]>vals[pk])pk=i;
@@ -1169,13 +1184,13 @@ function renderMain(){
       `<line x1="${Lm}" y1="${yPk.toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${yPk.toFixed(1)}" stroke="var(--up)" stroke-width="1.2" stroke-dasharray="7 4"/>`+
       `<text x="${Lm}" y="${(yPk-7).toFixed(1)}" class="svg-label" fill="var(--up)">${tx("peakMark",fmt(peak))}</text>`+
       `<circle cx="${xPk.toFixed(1)}" cy="${yPk.toFixed(1)}" r="3.2" fill="var(--up)"/>`;
-    /* 선이 끝나는 자리에 지금 값을 적는다. 끌면 그 시점의 값이 된다.
-       전고점 점선 바로 옆이면 겹치므로 아래로 내려 단다. */
-    const yUp=YL(last)-9,yDn=YL(last)+17;
-    const yl=Math.min(T+ph-5,Math.max(T+11,Math.abs(yUp-yPk)<15?yDn:yUp));
+    /* 지금 값은 그림 밖 오른쪽에 둔다. 안에 두면 선 위에 얹혀 읽기 어렵다.
+       값과 낙폭을 두 줄로 나눠 층의 폭 안에 들어오게 한다. */
+    yEndPrice=Math.min(T+ph-12,Math.max(T+8,YL(last)));
     priceEnd=`<circle cx="${xEnd.toFixed(1)}" cy="${YL(last).toFixed(1)}" r="3.2" fill="var(--down)"/>`+
-      `<text x="${(xEnd-6).toFixed(1)}" y="${yl.toFixed(1)}" text-anchor="end" class="svg-num" fill="var(--down)">`+
-      `${fmt(last)}${dd<-0.05?"  "+dd.toFixed(2)+"%":""}</text>`;
+      `<line x1="${xEnd.toFixed(1)}" y1="${YL(last).toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${YL(last).toFixed(1)}" stroke="var(--down)" stroke-width="1" stroke-dasharray="2 2" opacity=".5"/>`;
+    priceLab=v=>`<text x="${xLab.toFixed(1)}" y="${(v+3.5).toFixed(1)}" class="svg-num" fill="var(--down)">${fmt(last)}</text>`+
+      (dd<-0.05?`<text x="${xLab.toFixed(1)}" y="${(v+16).toFixed(1)}" class="svg-axis" fill="var(--down)">${dd.toFixed(2)}%</text>`:"");
     priceArt=
       (pre.length>1?`<path d="${seg(pre)}" fill="none" stroke="var(--ink-2)" stroke-width="1.6" stroke-linejoin="round"${anim}/>`:"")+
       (post.length>1?`<path d="${seg(post)}" fill="none" stroke="var(--down)" stroke-width="2.1" stroke-linejoin="round"${anim}/>`:"");
@@ -1186,13 +1201,24 @@ function renderMain(){
     const G=GAUGE[gl.key],lv=gl.pts[gl.pts.length-1][1];
     const gx=X(dnum(gl.pts[gl.pts.length-1][0])),gy=YR(lv);
     const gc=zoneColor(lv,G);
+    yEndGauge=Math.min(T+ph-5,Math.max(T+8,gy));
     gaugeEnd=`<circle cx="${gx.toFixed(1)}" cy="${gy.toFixed(1)}" r="3" fill="${gc}"/>`+
-      `<text x="${(gx-6).toFixed(1)}" y="${Math.min(T+ph-5,Math.max(T+11,gy+14)).toFixed(1)}" text-anchor="end" class="svg-num" fill="${gc}">${gFmt(lv,G)}</text>`;
+      `<line x1="${gx.toFixed(1)}" y1="${gy.toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${gc}" stroke-width="1" stroke-dasharray="2 2" opacity=".5"/>`;
+    gaugeLab=v=>`<text x="${xLab.toFixed(1)}" y="${(v+3.5).toFixed(1)}" class="svg-num" fill="${gc}">${gFmt(lv,G)}</text>`;
   }
+  /* 두 값이 같은 높이로 오면 서로 밀어낸다. 가격 쪽은 두 줄이라 자리를 더 쓴다. */
+  if(yEndPrice!=null&&yEndGauge!=null){
+    const need=22;
+    if(Math.abs(yEndPrice-yEndGauge)<need){
+      if(yEndPrice<=yEndGauge){yEndPrice=Math.max(T+8,yEndGauge-need)}
+      else{yEndGauge=Math.max(T+8,yEndPrice-need)}
+    }
+  }
+  const endLabs=(priceLab?priceLab(yEndPrice):"")+(gaugeLab?gaugeLab(yEndGauge):"");
 
   const grid=ps?ps.ticks.map(t=>`<line x1="${Lm}" y1="${YL(t).toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${YL(t).toFixed(1)}" stroke="var(--rule-2)" stroke-width="1"/>`+
     `<text x="${Lm-6}" y="${(YL(t)+3.5).toFixed(1)}" text-anchor="end" class="svg-axis">${num(t)}</text>`).join(""):"";
-  const rax=gs?gs.ticks.map(t=>`<text x="${(Lm+pw+6).toFixed(1)}" y="${(YR(t)+3.5).toFixed(1)}" class="svg-axis">${t}</text>`).join(""):"";
+  const rax=gs?gs.ticks.map(t=>`<text x="${xNum.toFixed(1)}" y="${(YR(t)+3.5).toFixed(1)}" class="svg-axis">${t}</text>`).join(""):"";
 
   /* 지수선은 오른쪽 축이라 배경처럼 깔아 두고, 가격선을 그 위에 얹는다 */
   const area=gl?(()=>{const a=gl.pts.slice();a.__l=gl;
@@ -1213,7 +1239,7 @@ function renderMain(){
     ${hatch}
     ${zbands}${grid}${area}${gaugeArt}
     ${peakArt}${priceArt}
-    ${gaugeEnd}${priceEnd}
+    ${gaugeEnd}${priceEnd}${endLabs}
     ${rax}${znames}
     <line x1="${Lm}" y1="${yBot}" x2="${(Lm+pw).toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>
     ${xt}
