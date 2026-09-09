@@ -998,6 +998,15 @@ function tTicks(t0,t1,c){
   return out;
 }
 
+/* 구간 이름이 길면 두 줄로 접는다. '극단적 공포', 'Extreme Greed' 처럼
+   띄어쓰기가 있는 것만 대상이고, 짧은 이름은 그대로 한 줄. */
+const zW=n=>String(n).length*(/[가-힣]/.test(n)?10.5:7.6);
+function zSplit(nm){
+  if(!nm)return [];
+  if(zW(nm)<=46||nm.indexOf(" ")<0)return [nm];
+  const i=nm.lastIndexOf(" ");
+  return [nm.slice(0,i),nm.slice(i+1)];
+}
 const mainOn=k=>(k==="spx"||k==="ndx")?MSHOW.price===k:(MSHOW.gauge&&btAx===k);
 const mainLines=()=>{
   if(!LONG||!LONG.series)return [];
@@ -1097,8 +1106,9 @@ function renderMain(){
      한글 "극단적 탐욕" 보다 훨씬 길어서 고정폭으로 두면 차트 밖으로 나간다. */
   const zNm=hasG?(GAUGE[btAx]||GAUGE.fng).zones
         .map(z=>(tx("zone")||{})[z[3]]||"").filter(Boolean):[];
-  const nameW=zNm.length
-    ?Math.min(104,Math.max(...zNm.map(n=>n.length*(/[가-힣]/.test(n)?10.5:7.6)))+4):0;
+  const zLines=zNm.length?[].concat(...zNm.map(zSplit)):[];
+  const nameW=zLines.length
+    ?Math.min(96,Math.max(...zLines.map(zW))+4):0;
   const g=sm?{L:40,T:26,ph:172,B:38,ticks:3,names:false,
               R:6+labW+(hasG?5+numW:0)}
             :{L:56,T:30,ph:236,B:44,ticks:5,names:hasG,
@@ -1139,11 +1149,21 @@ function renderMain(){
     const soft={"-2":.085,"-1":.05,"0":.028,"1":.05,"2":.085};
     zbands=vis.map(([a,bb,t])=>
       `<rect x="${Lm}" y="${YR(bb).toFixed(1)}" width="${pw}" height="${(YR(a)-YR(bb)).toFixed(1)}" fill="rgba(${tint(t)},${soft[t]})"/>`).join("");
-    if(g.names)znames=vis.map(([a,bb,t,k])=>{
-      const nm=(tx("zone")||{})[k]||"";
-      if(!nm||YR(a)-YR(bb)<14)return "";     /* 띠가 얇으면 이름을 뺀다 */
-      return `<text x="${xName.toFixed(1)}" y="${((YR(a)+YR(bb))/2+3).toFixed(1)}" class="svg-label" fill="var(--ink-3)">${nm}</text>`;
-    }).join("");
+    if(g.names){
+      /* 띠가 얇으면 이름을 뺀다(아래 게이지와 같은 규칙) */
+      const rows=vis.map(([a,bb,t,k])=>({lo:YR(bb),hi:YR(a),nm:(tx("zone")||{})[k]||""}))
+                    .filter(r=>r.nm&&r.hi-r.lo>=14);
+      const n=rows.length;
+      znames=rows.map((r,i)=>{
+        const ls=zSplit(r.nm),h=(ls.length-1)*11;
+        /* 위아래로 고르게 벌린다. 띠 높이가 제각각이라 띠 한가운데에 두면
+           극단 쪽이 안으로 들어와 보인다. 다만 제 띠 밖으로는 나가지 않게 붙든다. */
+        const even=n>1?(T+ph-12)-((ph-24)*i/(n-1)):T+ph/2;
+        const y=Math.max(r.lo+h/2+5,Math.min(r.hi-h/2-4,even));
+        return `<text x="${xName.toFixed(1)}" y="${(y-h/2+3).toFixed(1)}" class="svg-label" fill="var(--ink-3)">`+
+          ls.map((t2,j)=>`<tspan x="${xName.toFixed(1)}"${j?' dy="11"':''}>${t2}</tspan>`).join("")+`</text>`;
+      }).join("");
+    }
   }
 
   /* 기간이 길수록 지수선은 뒤로 물린다. 10년치 0~100 등락을 진하게 그리면
@@ -1189,8 +1209,10 @@ function renderMain(){
     yEndPrice=Math.min(T+ph-12,Math.max(T+8,YL(last)));
     priceEnd=`<circle cx="${xEnd.toFixed(1)}" cy="${YL(last).toFixed(1)}" r="3.2" fill="var(--down)"/>`+
       `<line x1="${xEnd.toFixed(1)}" y1="${YL(last).toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${YL(last).toFixed(1)}" stroke="var(--down)" stroke-width="1" stroke-dasharray="2 2" opacity=".5"/>`;
-    priceLab=v=>`<text x="${xLab.toFixed(1)}" y="${(v+3.5).toFixed(1)}" class="svg-num" fill="var(--down)">${fmt(last)}</text>`+
-      (dd<-0.05?`<text x="${xLab.toFixed(1)}" y="${(v+16).toFixed(1)}" class="svg-axis" fill="var(--down)">${dd.toFixed(2)}%</text>`:"");
+    /* .svg-axis 가 fill 을 쥐고 있어 속성으로는 색이 안 먹는다. 인라인으로 준다. */
+    const ddCol=dd<-0.005?"var(--down)":"var(--up)";
+    priceLab=v=>`<text x="${xLab.toFixed(1)}" y="${(v+3.5).toFixed(1)}" class="svg-num" style="fill:${ddCol}">${fmt(last)}</text>`+
+      `<text x="${xLab.toFixed(1)}" y="${(v+16).toFixed(1)}" class="svg-axis" style="fill:${ddCol}">${dd>-0.005?"0.00":dd.toFixed(2)}%</text>`;
     priceArt=
       (pre.length>1?`<path d="${seg(pre)}" fill="none" stroke="var(--ink-2)" stroke-width="1.6" stroke-linejoin="round"${anim}/>`:"")+
       (post.length>1?`<path d="${seg(post)}" fill="none" stroke="var(--down)" stroke-width="2.1" stroke-linejoin="round"${anim}/>`:"");
@@ -1204,7 +1226,7 @@ function renderMain(){
     yEndGauge=Math.min(T+ph-5,Math.max(T+8,gy));
     gaugeEnd=`<circle cx="${gx.toFixed(1)}" cy="${gy.toFixed(1)}" r="3" fill="${gc}"/>`+
       `<line x1="${gx.toFixed(1)}" y1="${gy.toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${gc}" stroke-width="1" stroke-dasharray="2 2" opacity=".5"/>`;
-    gaugeLab=v=>`<text x="${xLab.toFixed(1)}" y="${(v+3.5).toFixed(1)}" class="svg-num" fill="${gc}">${gFmt(lv,G)}</text>`;
+    gaugeLab=v=>`<text x="${xLab.toFixed(1)}" y="${(v+3.5).toFixed(1)}" class="svg-num" style="fill:${gc}">${gFmt(lv,G)}</text>`;
   }
   /* 두 값이 같은 높이로 오면 서로 밀어낸다. 가격 쪽은 두 줄이라 자리를 더 쓴다. */
   if(yEndPrice!=null&&yEndGauge!=null){
