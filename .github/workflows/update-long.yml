@@ -1,0 +1,40 @@
+name: Update long history
+
+on:
+  # 주 1회면 충분하다. 10년·20년 그래프에서 며칠 늦은 것은 눈에 띄지 않고,
+  # 큰 파일을 매일 커밋하면 저장소가 무거워진다.
+  # 백테스트와 30분 띄워 둔다 — 야후를 같은 시각에 두 번 두드리지 않게.
+  schedule:
+    - cron: "30 23 * * 6"
+  # Actions 탭에서 손으로 실행할 수 있게 하는 버튼
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  long:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 내려받기
+        uses: actions/checkout@v4
+
+      - name: 파이썬 준비
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 장기 이력 받기
+        run: python scripts/fetch_long.py
+
+      - name: 결과 저장
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/market-long.json
+          if git diff --staged --quiet; then
+            echo "바뀐 내용 없음"
+          else
+            git commit -m "장기 이력 갱신 $(date -u +%Y-%m-%d)"
+            git push
+          fi
