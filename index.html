@@ -52,13 +52,9 @@ ko:{
   },
   infoLabel:"설명 보기",
   noLine:"볼 선을 하나 이상 골라 주세요.",
-  vsAvg:(w,m)=>`전체 평균은 승률 ${w}% · 중위 ${m}% 입니다 —`,
-  verdict:{better:"지금이 나은 편입니다.",same:"지금은 비슷한 자리입니다.",worse:"지금이 못한 편입니다."},
-  thinHere:"— 표본이 적어 흔들릴 수 있습니다",
-  thinNote:"빗금 친 구간은 표본이 100일 미만이라 숫자가 크게 흔들립니다.",
   capMed:"수익률 중앙값", capWin:"수익날 확률",
   fewSample:"표본 부족", winRateShort:"승률", avgShort:"평균", holdWord:"보유",
-  sampleDays:n=>`표본 ${n}일`,
+  sampleDays:(n,all)=>`표본 ${n}일 / 전체 ${all}일`,
   nowIs:(s,v)=>`지금 ${s} ${v}`,
   buyHere:h=>`— 여기서 사서 ${h} 뒤`,
   noStats:"표본이 부족해 통계를 내지 않았습니다.",
@@ -73,15 +69,7 @@ ko:{
         "지수: Yahoo Finance · 공포탐욕지수: CNN Business",
         "종가는 미국장 마감 후 하루 한 번, 장중 시세는 10분마다 갱신됩니다.",
         "장중 표시는 지연될 수 있습니다."],
-  btFoot:(label,short,w,n,from,to)=>
-    `가로축은 ${label}. 위 칸은 그 값에서 사서 기간을 채웠을 때의 수익률 <b>중앙값</b>`+
-    `(절반은 이 위, 절반은 아래), 아래 칸은 수익이 났던 비율입니다.<br>`+
-    `평균이 아니라 중앙값을 그립니다. 2020년 3월 바닥 같은 며칠이 평균을 크게 끌어올려 `+
-    `공포 구간을 실제보다 후하게 보이게 하기 때문입니다. 평균은 마우스를 올리면 함께 나옵니다.<br>`+
-    `눈금마다 ${short} ±${w}였던 날들을 묶었고, 표본 ${n}일 미만인 구간은 선을 끊었습니다. `+
-    `배당 재투자 기준(SPY·QQQ), 표본 기간 ${from}~${to}.<br>`+
-    `${tx("thinNote")}<br>`+
-    `과거 성과일 뿐 미래를 보장하지 않습니다.`,
+  btFoot:()=>`과거 성과일 뿐 미래를 보장하지 않습니다.`,
   ax:{
     fng:{label:"공포탐욕지수",short:"공포탐욕",title:"공포와 탐욕 지수별 수익률",
       help:"공포탐욕지수는 CNN이 시장 분위기를 0~100 한 숫자로 나타낸 것입니다. 0에 가까울수록 다들 겁먹은 상태, 100에 가까울수록 들뜬 상태입니다. 왼쪽이 공포입니다.",
@@ -125,13 +113,9 @@ en:{
   },
   infoLabel:"About this",
   noLine:"Pick at least one line to show.",
-  vsAvg:(w,m)=>`Across every level: ${w}% and a median of ${m}% —`,
-  verdict:{better:"this level has done better.",same:"this level is about average.",worse:"this level has done worse."},
-  thinHere:"— few samples, so this moves around",
-  thinNote:"Hatched levels rest on fewer than 100 days, so their numbers swing.",
   capMed:"Median return", capWin:"Chance of profit",
   fewSample:"too few samples", winRateShort:"win rate", avgShort:"avg", holdWord:"hold",
-  sampleDays:n=>`${n} sample days`,
+  sampleDays:(n,all)=>`${n} of ${all} sample days`,
   nowIs:(s,v)=>`Now ${s} ${v}`,
   buyHere:h=>`— buy here, hold ${h}`,
   noStats:"Not enough samples to compute statistics.",
@@ -146,16 +130,7 @@ en:{
         "Index data: Yahoo Finance · Fear &amp; Greed: CNN Business",
         "Closing prices update once a day after the US market closes; intraday quotes every 10 minutes.",
         "Intraday figures may be delayed."],
-  btFoot:(label,short,w,n,from,to)=>
-    `The horizontal axis is ${label}. The upper panel is the <b>median</b> return from buying at that `+
-    `level and holding the full period (half did better, half did worse); the lower panel is how often `+
-    `it ended in profit.<br>`+
-    `We plot the median, not the mean. A handful of days like the March 2020 bottom pull the mean up `+
-    `far enough to make the fear zones look better than they were. The mean is shown on hover.<br>`+
-    `Each tick groups the days when ${short} was within ±${w}, and levels with fewer than ${n} sample `+
-    `days are left blank, breaking the line. Total-return basis (SPY·QQQ), sample period ${from}–${to}.<br>`+
-    `${tx("thinNote")}<br>`+
-    `Past performance does not guarantee future results.`,
+  btFoot:()=>`Past performance does not guarantee future results.`,
   ax:{
     fng:{label:"Fear & Greed Index",short:"F&G",title:"Returns by Fear &amp; Greed level",
       help:"The Fear &amp; Greed Index is CNN's single 0–100 read on market mood. Closer to 0 means people are frightened; closer to 100 means they are giddy. Fear is on the left.",
@@ -412,8 +387,6 @@ body.settled .fade{animation:none;opacity:1}
 .seg.mini.ax button{font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.04em}
 .seg.mini.lang button{font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.03em}
 /* 주식이 처음인 사람을 위한 한 줄 설명 */
-.bt-help{padding:0 20px 14px;font-family:var(--body);font-size:12.5px;
-  line-height:1.75;color:var(--ink-3);max-width:78ch}
 /* 지금 지수에서의 성적 요약 — 버튼을 누르면 같이 바뀐다.
    글꼴은 전부 mono 하나로 두고 크기·색으로만 층을 나눈다. */
 .bt-sum{padding:2px 20px 15px;font-family:var(--mono);font-size:13px;
@@ -431,26 +404,18 @@ body.settled .fade{animation:none;opacity:1}
 .bt-key span{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
 .bt-key i{width:16px;height:0;border-top:2px solid var(--ink)}
 .bt-key i.d{border-top:1.5px dashed var(--ink-3)}
-.bt-verdict{padding:2px 20px 0;font-size:12.5px;line-height:1.7;color:var(--ink-3)}
-.bt-verdict b{font-weight:600}
-.bt-verdict .v-better{color:var(--up)}
-.bt-verdict .v-worse{color:var(--down)}
-.bt-verdict .v-same{color:var(--ink-2)}
-.bt-sum .warn{color:var(--ink-3)}
 .bt-foot{padding:10px 20px 16px;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);line-height:1.7}
 @media (max-width:640px){
   .bt-head{padding:13px 14px 8px}
   .bt-sum{padding:2px 14px 13px}
   .bt-sum .now{font-size:15px}
   .bt-sum .row .idx{flex:0 0 76px}
-  .bt-help{padding:0 14px 12px}
   .bt-key{padding:2px 14px 0;gap:14px;font-size:11px}
   h2.name{font-size:16px}
   .lines-row{padding:10px 14px 0}
   .notes{padding:12px 14px 14px}
   .notes p{font-size:12px}
   .pop{max-width:240px}
-  .bt-verdict{padding:2px 14px 0;font-size:12px}
   .bt-foot{padding:10px 14px 14px}
 }
 
@@ -524,7 +489,6 @@ svg.sm .svg-axis{font-size:11px}
         <div class="bt-ctl"><div id="bt-axes"></div><div id="bt-tools"></div></div>
       </div>
       <div class="bt-sum" id="bt-sum"></div>
-      <div class="bt-help" id="bt-help"></div>
       <div id="bt-body"><div class="empty">Loading…</div></div>
     </div>
   </section>
@@ -1182,7 +1146,6 @@ function axNow(){
 const axLabel=a=>a?axText(a.key,"label",a.label):"";
 const axShort=a=>a?axText(a.key,"short",a.short):"";
 const axTitle=a=>a?axText(a.key,"title",a.title):"";
-const axHelp =a=>a?axText(a.key,"help", a.help ):"";
 
 function axZone(v){
   const a=axMeta();
@@ -1350,28 +1313,9 @@ function btChart(){
   /* 세로축 숫자 바로 위에 얹는다. 축 위에 있으면 "세로축"이라고 쓸 필요가 없다. */
   const cap=(y,t)=>`<text x="0" y="${y}" class="svg-label" fill="var(--ink-2)">${t}</text>`;
 
-  /* 표본이 얇은 눈금은 빗금으로 덮는다. 42일짜리 95%와 1,871일짜리 92%가
-     똑같은 굵기로 그려지면 끝쪽이 실제보다 미덥게 보인다. */
-  const THIN=100;
-  const runs=[];
-  for(let v=v0;v<=v1;v++){
-    const n=S[0]&&S[0].n[v],has=S[0]&&S[0].med[v]!=null;
-    if(has&&n&&n<THIN){
-      if(runs.length&&runs[runs.length-1][1]===v-1)runs[runs.length-1][1]=v;
-      else runs.push([v,v]);
-    }
-  }
-  const thinArt=runs.map(([p0,p1])=>{
-    const x=X(p0),wd=Math.max(2,X(p1)-x);
-    return `<rect x="${x.toFixed(1)}" y="${T1}" width="${wd.toFixed(1)}" height="${(B1-T1).toFixed(1)}" fill="url(#thinPat)"/>`+
-      `<rect x="${x.toFixed(1)}" y="${T2}" width="${wd.toFixed(1)}" height="${(B2-T2).toFixed(1)}" fill="url(#thinPat)"/>`;
-  }).join("");
-  const thinDef=runs.length?`<defs><pattern id="thinPat" width="5" height="5" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-3)" stroke-width="1" opacity=".22"/></pattern></defs>`:"";
-
   return `<div class="chart" id="bt-c">
   <svg viewBox="0 0 ${W} ${H}" class="${G.sm?"sm":""}" role="img" aria-label="${tx("aria").bt(axLabel(a),tx("hold")[btH])}">
-    ${thinDef}${bands}${thinArt}
+    ${bands}
     ${grid(r.ticks,Y1,true)}${zero}
     ${grid(w.ticks,Y2,false)}${half}
     <rect x="${L}" y="${T1}" width="${pw}" height="${(B1-T1).toFixed(1)}" fill="none" stroke="var(--rule)" stroke-width="1"/>
@@ -1438,32 +1382,12 @@ function btSummary(){
       `<span>${tx("winProb")} <b>${s.win[v].toFixed(0)}%</b> · `+
       `${m>=0?tx("medGain"):tx("medLoss")} <b class="${m>=0?"up":"dn"}">${m>0?"+":""}${m.toFixed(2)}%</b></span></div>`;
   }).join("");
-  /* 곡선이 U자라 "높을수록 좋다"로 요약이 안 된다. 대신 지금 자리를
-     전체 평균과 견줘 한 줄로 알려 준다. 평균은 눈금별 표본 수로 가중한다. */
-  const base=(()=>{
-    const s0=S[0],lo=Math.ceil(a.lo),hi=Math.floor(a.hi);
-    let W=0,M=0,N=0;
-    for(let i=lo;i<=hi;i++){
-      const n=s0.n[i];
-      if(s0.med[i]==null||!n)continue;
-      W+=s0.win[i]*n; M+=s0.med[i]*n; N+=n;
-    }
-    return N?{win:W/N,med:M/N}:null;
-  })();
-  let verdict="";
-  if(base){
-    /* 기준은 비율로 잡는다. 1Y 중위 +15% 에서의 1.5%p 와
-       5Y 중위 +89% 에서의 1.5%p 는 전혀 다른 크기다. */
-    const m=S[0].med[v],d=m-base.med;
-    const tol=Math.max(1.5,Math.abs(base.med)*0.08);
-    const how=d>tol?"better":d<-tol?"worse":"same";
-    verdict=`<div class="bt-verdict">${tx("vsAvg",base.win.toFixed(0),
-      (base.med>0?"+":"")+base.med.toFixed(1))} <b class="v-${how}">${tx("verdict")[how]}</b></div>`;
-  }
-  const thin=(S[0].n[v]||0)<100;
+  /* 이 눈금의 표본이 전체에서 얼마나 되는지 함께 보인다.
+     1,616 이라는 숫자만으로는 많은지 적은지 알 수 없다. */
+  const holder=Object.values(BT.indices).find(x=>x&&x.curve&&x.curve[a.key]);
+  const all=(holder&&holder.curve[a.key]&&holder.curve[a.key].days)||0;
   el.innerHTML=head+body+
-    `<div class="n">${tx("sampleDays",num(S[0].n[v]||0))}`+
-    (thin?` <span class="warn">${tx("thinHere")}</span>`:"")+`</div>`+verdict;
+    `<div class="n">${tx("sampleDays",num(S[0].n[v]||0),num(all))}</div>`;
 }
 
 function renderBT(){
@@ -1474,7 +1398,6 @@ function renderBT(){
   const blank=msg=>{
     tools.innerHTML="";axes.innerHTML="";
     document.getElementById("bt-sum").innerHTML="";
-    document.getElementById("bt-help").innerHTML="";
     document.getElementById("bt-range").textContent="—";
     body.innerHTML='<div class="empty">'+msg+'</div>';
   };
@@ -1498,7 +1421,6 @@ function renderBT(){
   }
   const a=axMeta();
   document.getElementById("bt-title").innerHTML=axTitle(a)||tx("btTitleDefault");
-  document.getElementById("bt-help").innerHTML=axHelp(a)||"";
   /* 버튼은 한 번만 만들고 이후에는 눌린 표시만 옮긴다(포커스 보존) */
   if(!axes.firstChild)axes.innerHTML=btAxTools();
   else axes.querySelectorAll("button[data-btax]").forEach(b=>
