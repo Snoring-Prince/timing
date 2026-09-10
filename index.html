@@ -26,6 +26,7 @@ const D={
 ko:{
   locale:"ko-KR", dir:"ltr", name:"한국어",
   docTitle:"Daniel's timing — 전고점 대비 현재",
+  eyebrow:"전고점 대비 현재",
   loading:"불러오는 중…",
   idx:{spx:"S&P 500",ndx:"나스닥 100"},
   hold:{"30D":"30일","90D":"90일","180D":"180일","1Y":"1년","3Y":"3년","5Y":"5년"},
@@ -52,13 +53,10 @@ ko:{
   },
   infoLabel:"설명 보기",
   noLine:"볼 선을 하나 이상 골라 주세요.",
-  vsAvg:(w,m)=>`전체 평균은 승률 ${w}% · 중위 ${m}% 입니다 —`,
-  verdict:{better:"지금이 나은 편입니다.",same:"지금은 비슷한 자리입니다.",worse:"지금이 못한 편입니다."},
-  thinHere:"— 표본이 적어 흔들릴 수 있습니다",
-  thinNote:"빗금 친 구간은 표본이 100일 미만이라 숫자가 크게 흔들립니다.",
   capMed:"수익률 중앙값", capWin:"수익날 확률",
   fewSample:"표본 부족", winRateShort:"승률", avgShort:"평균", holdWord:"보유",
-  sampleDays:n=>`표본 ${n}일`,
+  sampleDays:(n,all)=>`표본 ${n}일 / 전체 ${all}일`,
+  samplePeriod:"표본 기간",
   nowIs:(s,v)=>`지금 ${s} ${v}`,
   buyHere:h=>`— 여기서 사서 ${h} 뒤`,
   noStats:"표본이 부족해 통계를 내지 않았습니다.",
@@ -69,19 +67,10 @@ ko:{
   loadFail:"데이터를 불러오지 못했습니다",
   loadFailPanel:"데이터를 불러오지 못했습니다.<br>잠시 후 새로고침해 주세요.",
   stampAs:t=>`데이터 기준 ${t}`,
-  foot:["전고점은 기간 선택과 무관하게 최근 10년 내 최고 종가 기준. 경과일수는 달력일 기준.",
-        "지수: Yahoo Finance · 공포탐욕지수: CNN Business",
-        "종가는 미국장 마감 후 하루 한 번, 장중 시세는 10분마다 갱신됩니다.",
-        "장중 표시는 지연될 수 있습니다."],
-  btFoot:(label,short,w,n,from,to)=>
-    `가로축은 ${label}. 위 칸은 그 값에서 사서 기간을 채웠을 때의 수익률 <b>중앙값</b>`+
-    `(절반은 이 위, 절반은 아래), 아래 칸은 수익이 났던 비율입니다.<br>`+
-    `평균이 아니라 중앙값을 그립니다. 2020년 3월 바닥 같은 며칠이 평균을 크게 끌어올려 `+
-    `공포 구간을 실제보다 후하게 보이게 하기 때문입니다. 평균은 마우스를 올리면 함께 나옵니다.<br>`+
-    `눈금마다 ${short} ±${w}였던 날들을 묶었고, 표본 ${n}일 미만인 구간은 선을 끊었습니다. `+
-    `배당 재투자 기준(SPY·QQQ), 표본 기간 ${from}~${to}.<br>`+
-    `${tx("thinNote")}<br>`+
-    `과거 성과일 뿐 미래를 보장하지 않습니다.`,
+  foot:["전고점은 화면에 보이는 기간 안의 최고 종가입니다. 옆으로 끌면 그 구간의 전고점으로 바뀝니다.",
+        "SPY·QQQ 배당 재투자 기준 · 출처: Yahoo Finance · 공포탐욕지수: CNN Business · VIX: CBOE",
+        "종가는 미국장 마감 후 하루 한 번 갱신됩니다. 최근 5년은 하루 단위, 그 이전은 주 단위입니다."],
+  btFoot:()=>`과거 성과일 뿐 미래를 보장하지 않습니다.`,
   ax:{
     fng:{label:"공포탐욕지수",short:"공포탐욕",title:"공포와 탐욕 지수별 수익률",
       help:"공포탐욕지수는 CNN이 시장 분위기를 0~100 한 숫자로 나타낸 것입니다. 0에 가까울수록 다들 겁먹은 상태, 100에 가까울수록 들뜬 상태입니다. 왼쪽이 공포입니다.",
@@ -99,6 +88,7 @@ ko:{
 en:{
   locale:"en-US", dir:"ltr", name:"English",
   docTitle:"Daniel's timing — Drawdown from the peak",
+  eyebrow:"Drawdown from the peak",
   loading:"Loading…",
   idx:{spx:"S&P 500",ndx:"Nasdaq 100"},
   hold:{"30D":"30 days","90D":"90 days","180D":"180 days","1Y":"1 year","3Y":"3 years","5Y":"5 years"},
@@ -125,13 +115,10 @@ en:{
   },
   infoLabel:"About this",
   noLine:"Pick at least one line to show.",
-  vsAvg:(w,m)=>`Across every level: ${w}% and a median of ${m}% —`,
-  verdict:{better:"this level has done better.",same:"this level is about average.",worse:"this level has done worse."},
-  thinHere:"— few samples, so this moves around",
-  thinNote:"Hatched levels rest on fewer than 100 days, so their numbers swing.",
   capMed:"Median return", capWin:"Chance of profit",
   fewSample:"too few samples", winRateShort:"win rate", avgShort:"avg", holdWord:"hold",
-  sampleDays:n=>`${n} sample days`,
+  sampleDays:(n,all)=>`${n} of ${all} sample days`,
+  samplePeriod:"Sample",
   nowIs:(s,v)=>`Now ${s} ${v}`,
   buyHere:h=>`— buy here, hold ${h}`,
   noStats:"Not enough samples to compute statistics.",
@@ -142,20 +129,10 @@ en:{
   loadFail:"Could not load the data",
   loadFailPanel:"Could not load the data.<br>Please refresh in a moment.",
   stampAs:t=>`Data as of ${t}`,
-  foot:["Peak is the highest close within the last 10 years, regardless of the selected range. Elapsed days are calendar days.",
-        "Index data: Yahoo Finance · Fear &amp; Greed: CNN Business",
-        "Closing prices update once a day after the US market closes; intraday quotes every 10 minutes.",
-        "Intraday figures may be delayed."],
-  btFoot:(label,short,w,n,from,to)=>
-    `The horizontal axis is ${label}. The upper panel is the <b>median</b> return from buying at that `+
-    `level and holding the full period (half did better, half did worse); the lower panel is how often `+
-    `it ended in profit.<br>`+
-    `We plot the median, not the mean. A handful of days like the March 2020 bottom pull the mean up `+
-    `far enough to make the fear zones look better than they were. The mean is shown on hover.<br>`+
-    `Each tick groups the days when ${short} was within ±${w}, and levels with fewer than ${n} sample `+
-    `days are left blank, breaking the line. Total-return basis (SPY·QQQ), sample period ${from}–${to}.<br>`+
-    `${tx("thinNote")}<br>`+
-    `Past performance does not guarantee future results.`,
+  foot:["The peak is the highest close inside the window on screen. Drag sideways and it becomes that stretch's peak.",
+        "Total return on SPY and QQQ · Source: Yahoo Finance · Fear &amp; Greed: CNN Business · VIX: CBOE",
+        "Closing prices update once a day after the US market closes. Daily for the last five years, weekly before that."],
+  btFoot:()=>`Past performance does not guarantee future results.`,
   ax:{
     fng:{label:"Fear & Greed Index",short:"F&G",title:"Returns by Fear &amp; Greed level",
       help:"The Fear &amp; Greed Index is CNN's single 0–100 read on market mood. Closer to 0 means people are frightened; closer to 100 means they are giddy. Fear is on the left.",
@@ -283,8 +260,10 @@ window.track=function(name,data){
 <style>
 :root{
   --paper:#E9ECF0; --card:#FFFFFF;
-  --ink:#0F1A24; --ink-2:#5A6B7A; --ink-3:#8B99A6;
-  --rule:#D3DAE1; --rule-2:#E6EAEF;
+  /* 흰 카드 위 대비: ink 17.6 · ink-2 7.5 · ink-3 4.7 (WCAG AA 4.5 이상).
+     예전 ink-3 #8B99A6 은 2.91 이라 작은 글자가 흐려 보였다. */
+  --ink:#0F1A24; --ink-2:#475765; --ink-3:#68767F;
+  --rule:#BCC6D0; --rule-2:#DDE3E9;
   /* applyLang() 이 언어에 따라 덮어쓴다 — 기본값은 서구식(상승 초록) */
   --up:#1B7F4B; --down:#C4362C;
   --up-rgb:27,127,75; --down-rgb:196,54,44;
@@ -311,7 +290,11 @@ body{
 
 /* controls */
 .mast-right{display:flex;flex-direction:column;align-items:flex-end;gap:9px}
-.tools{display:flex;justify-content:flex-end;padding:12px 20px 0}
+/* 선 버튼(왼쪽)과 기간 버튼(오른쪽)을 한 줄에. 좁으면 줄 전체가 옆으로 밀린다. */
+.ctl-row{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:12px 20px 0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.ctl-row::-webkit-scrollbar{display:none}
+.ctl-row>div{flex:0 0 auto;display:flex}
 /* 기간 버튼이 아홉 개까지 늘어난다. 두 줄로 접으면 지저분해지므로
    한 줄을 유지하고 좁은 화면에서는 옆으로 민다. */
 .tools.scroll{overflow-x:auto;justify-content:flex-end;scrollbar-width:none;-webkit-overflow-scrolling:touch}
@@ -319,10 +302,6 @@ body{
 .tools.scroll .seg{flex:0 0 auto;margin-left:auto}
 /* 선 켜고 끄는 버튼 — 눌린 것만 진하게, 끈 것은 흐리게 */
 .seg.mini.lines button{font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.04em}
-/* 선 버튼 줄 — 이름이 길어져 좁은 화면에서는 옆으로 민다 */
-.lines-row{display:flex;padding:12px 20px 0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.lines-row::-webkit-scrollbar{display:none}
-.lines-row .seg{flex:0 0 auto}
 /* 제목 안의 동그라미 i — 눌러도 선이 켜지고 꺼지지 않게 제목 쪽에만 둔다 */
 .ttl{display:inline-flex;align-items:center;white-space:nowrap}
 .ttl+.ttl::before{content:"/";margin:0 9px;color:var(--rule);font-weight:400}
@@ -341,10 +320,11 @@ body.dragging{user-select:none;-webkit-user-select:none}
 body.dragging #main-chart{cursor:grabbing}
 body.dragging #main-chart .cross,body.dragging #main-chart .tip{opacity:0!important}
 /* 차트 아래 자세한 설명 */
-.notes{padding:14px 20px 18px;border-top:1px solid var(--rule-2);margin-top:12px}
-.notes h3{font-family:var(--cond);font-weight:700;font-size:11.5px;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--ink-2);margin:0 0 5px}
-.notes p{margin:0 0 14px;font-size:12.5px;line-height:1.85;color:var(--ink-3)}
+.notes{padding:16px 20px 18px;border-top:1px solid var(--rule-2);margin-top:14px}
+.notes h3{font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.04em;
+  color:var(--ink);margin:0 0 6px}
+.notes h3+p{margin-top:0}
+.notes p{margin:0 0 18px;font-size:12.5px;line-height:1.85;color:var(--ink-3)}
 .notes p:last-child{margin-bottom:0}
 .seg{display:flex;border:1px solid var(--rule);background:var(--card)}
 .seg.mini button{padding:4px 8px;font-size:10.5px;color:var(--ink-3)}
@@ -379,7 +359,8 @@ body.settled .fade{animation:none;opacity:1}
 @media (prefers-reduced-motion:reduce){.mark i{animation:none}}
 
 /* chart + tooltip */
-.chart{position:relative;padding:6px 8px 0}
+/* 차트도 글자와 같은 왼쪽 선에서 시작한다. 예전에는 8px 이라 홀로 튀어나와 있었다. */
+.chart{position:relative;padding:8px 20px 0}
 .chart svg{display:block;width:100%;height:auto;touch-action:pan-y}
 .tip{position:absolute;top:10px;pointer-events:none;opacity:0;transition:opacity .12s;
   background:var(--card);border:1px solid var(--rule);border-left:2px solid var(--ink-2);
@@ -412,8 +393,6 @@ body.settled .fade{animation:none;opacity:1}
 .seg.mini.ax button{font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.04em}
 .seg.mini.lang button{font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.03em}
 /* 주식이 처음인 사람을 위한 한 줄 설명 */
-.bt-help{padding:0 20px 14px;font-family:var(--body);font-size:12.5px;
-  line-height:1.75;color:var(--ink-3);max-width:78ch}
 /* 지금 지수에서의 성적 요약 — 버튼을 누르면 같이 바뀐다.
    글꼴은 전부 mono 하나로 두고 크기·색으로만 층을 나눈다. */
 .bt-sum{padding:2px 20px 15px;font-family:var(--mono);font-size:13px;
@@ -426,31 +405,25 @@ body.settled .fade{animation:none;opacity:1}
 .bt-sum b{font-weight:500;color:var(--ink)}
 .bt-sum .n{color:var(--ink-3);font-size:11.5px;margin-top:5px}
 /* 범례 — 선 두 개를 글로 풀지 않고 모양 그대로 보여준다 */
-.bt-key{display:flex;gap:18px;padding:2px 20px 0;font-family:var(--cond);
+.bt-key{display:flex;gap:18px;padding:8px 20px 0;font-family:var(--cond);
   font-weight:600;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
 .bt-key span{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
 .bt-key i{width:16px;height:0;border-top:2px solid var(--ink)}
 .bt-key i.d{border-top:1.5px dashed var(--ink-3)}
-.bt-verdict{padding:2px 20px 0;font-size:12.5px;line-height:1.7;color:var(--ink-3)}
-.bt-verdict b{font-weight:600}
-.bt-verdict .v-better{color:var(--up)}
-.bt-verdict .v-worse{color:var(--down)}
-.bt-verdict .v-same{color:var(--ink-2)}
-.bt-sum .warn{color:var(--ink-3)}
 .bt-foot{padding:10px 20px 16px;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);line-height:1.7}
 @media (max-width:640px){
   .bt-head{padding:13px 14px 8px}
   .bt-sum{padding:2px 14px 13px}
   .bt-sum .now{font-size:15px}
   .bt-sum .row .idx{flex:0 0 76px}
-  .bt-help{padding:0 14px 12px}
-  .bt-key{padding:2px 14px 0;gap:14px;font-size:11px}
+  .bt-key{gap:14px;font-size:11px}
   h2.name{font-size:16px}
-  .lines-row{padding:10px 14px 0}
+  .ctl-row{padding:10px 14px 0;gap:10px}
+  .chart{padding:8px 14px 0}
+  .bt-key{padding:8px 14px 0}
   .notes{padding:12px 14px 14px}
   .notes p{font-size:12px}
   .pop{max-width:240px}
-  .bt-verdict{padding:2px 14px 0;font-size:12px}
   .bt-foot{padding:10px 14px 14px}
 }
 
@@ -478,10 +451,9 @@ svg.sm .svg-axis{font-size:11px}
   .masthead{flex-direction:column;align-items:flex-start;gap:10px}
   .mast-right{align-items:flex-start}
   .masthead h1{font-size:24px}
-  .tools{padding:12px 14px 0}
   .seg button{padding:6px 8px;font-size:11px}
   .seg.mini button{padding:4px 6px;font-size:10px}
-  .panel-head{flex-direction:column;align-items:flex-start;gap:6px}
+  .panel-head{flex-direction:column;align-items:flex-start;gap:6px;padding:14px 14px 12px}
   .tip{font-size:12px;padding:8px 11px}
   .tip .t-d{font-size:11px}
   .tip .t-v{font-size:15px}
@@ -494,7 +466,7 @@ svg.sm .svg-axis{font-size:11px}
 
   <header class="masthead">
     <div>
-      <p class="eyebrow">Drawdown from all-time high</p>
+      <p class="eyebrow" id="eyebrow">Drawdown from the peak</p>
       <h1>Daniel's timing</h1>
     </div>
     <div class="mast-right">
@@ -507,8 +479,10 @@ svg.sm .svg-axis{font-size:11px}
     <div class="panel-head">
       <h2 class="name" id="main-name"></h2>
     </div>
-    <div id="main-lines"></div>
-    <div id="main-tools"></div>
+    <div class="ctl-row">
+      <div id="main-lines"></div>
+      <div id="main-tools"></div>
+    </div>
     <div class="chart" id="main-chart"></div>
     <div class="bt-key" id="main-key"></div>
     <div class="notes" id="main-notes"></div>
@@ -524,7 +498,6 @@ svg.sm .svg-axis{font-size:11px}
         <div class="bt-ctl"><div id="bt-axes"></div><div id="bt-tools"></div></div>
       </div>
       <div class="bt-sum" id="bt-sum"></div>
-      <div class="bt-help" id="bt-help"></div>
       <div id="bt-body"><div class="empty">Loading…</div></div>
     </div>
   </section>
@@ -546,9 +519,13 @@ let state={scene:"now",range:{main:365,spx:365,ndx:365,fng:365}};
    price 는 SPY 냐 QQQ 냐(둘은 서로 배타 — 겹쳐 두면 구분이 안 된다),
    gauge 는 공포탐욕이냐 VIX 냐와 별개로 "지수선을 보이나". 그래서 선은 최대 둘. */
 let MSHOW={price:"spx",gauge:true};
-const rangeSeg=(slot,list)=>`<div class="tools${list?" scroll":""}"><div class="seg mini" role="group" aria-label="${tx("aria").range}">`+
-  (list||RANGES).map(([l,d])=>`<button type="button" data-slot="${slot}" data-range="${d}" aria-pressed="${d===state.range[slot]}">${l}</button>`).join("")+
-  `</div></div>`;
+/* bare 를 주면 .tools 껍데기 없이 버튼 묶음만 낸다 — 다른 줄에 얹을 때 쓴다. */
+const rangeSeg=(slot,list,bare)=>{
+  const seg=`<div class="seg mini" role="group" aria-label="${tx("aria").range}">`+
+    (list||RANGES).map(([l,d])=>`<button type="button" data-slot="${slot}" data-range="${d}" aria-pressed="${d===state.range[slot]}">${l}</button>`).join("")+
+    `</div>`;
+  return bare?seg:`<div class="ctl-row" style="justify-content:flex-end">${seg}</div>`;
+};
 
 /* 합친 차트의 기간 = 창의 "너비". 10년·20년 버튼 대신 창을 끌어서 옮긴다.
    1993년까지 거슬러 갈 수 있고, 세로축은 그때그때 보이는 값에 맞춰 다시 잡힌다. */
@@ -564,7 +541,14 @@ const shift=(iso,d)=>{const t=new Date(iso+"T00:00:00Z");t.setUTCDate(t.getUTCDa
    1:1로 그리면 축소가 없어 글자가 지정한 px 그대로 찍힌다. */
 function geo(el){
   const raw=(el&&el.clientWidth)||796;
-  return {W:Math.max(300,Math.round(raw-16)),sm:raw<560};
+  /* 좌우 여백을 실제로 읽는다. 예전에는 8px 을 전제로 16을 빼고 있어서
+     여백을 바꾸면 뷰박스가 어긋났다. */
+  let pad=16;
+  if(el&&window.getComputedStyle){
+    const c=getComputedStyle(el);
+    pad=(parseFloat(c.paddingLeft)||0)+(parseFloat(c.paddingRight)||0);
+  }
+  return {W:Math.max(300,Math.round(raw-pad)),sm:raw<560};
 }
 
 /* ================= JSON → 차트용 배열 ================= */
@@ -673,18 +657,39 @@ function niceScale(lo,hi,n){
   return {lo:l,hi:h,ticks};
 }
 /* 가로축 눈금 — 기간이 길면 연도만, 짧으면 월·일까지 */
+/* 가로축 눈금은 달력 경계에 찍는다 — 연은 1월 1일, 월은 1일.
+   창을 균등 분할한 자리에 연도를 붙이면 3월과 12월에 "2025"가 두 번 찍히고,
+   끌 때도 눈금이 날짜를 따라가지 않는다. */
 function tTicks(t0,t1,c){
-  const span=t1-t0,out=[];
-  const label=t=>{
-    const d=new Date(t*864e5);
-    const y=d.getUTCFullYear(),m=d.getUTCMonth()+1,dd=d.getUTCDate();
-    if(span<=120)return m+"."+dd;
-    if(span<=800)return "'"+String(y).slice(2)+"."+m;
-    return String(y);
-  };
-  for(let k=0;k<c;k++){
-    const t=Math.round(t0+span*k/(c-1));
-    out.push({t,x:span?(t-t0)/span:0,lab:label(t)});
+  const span=(t1-t0)||1,out=[];
+  const U=t=>new Date(t*864e5);
+  const key=(y,m,d)=>Math.round(Date.UTC(y,m,d)/864e5);
+  const push=(t,lab)=>{ if(t>=t0&&t<=t1)out.push({t,x:(t-t0)/span,lab}) };
+  const yrs=span/365.25;
+
+  if(yrs>=2.2){                                   /* 연 단위 */
+    const step=[1,2,5,10,20,25,50].find(v=>yrs/v<=c)||50;
+    const y0=U(t0).getUTCFullYear(),y1=U(t1).getUTCFullYear();
+    for(let y=Math.ceil(y0/step)*step;y<=y1;y+=step)push(key(y,0,1),String(y));
+  }else if(span>=100){                            /* 월 단위 */
+    const step=[1,2,3,6,12].find(v=>(span/30.44)/v<=c)||12;
+    const d0=U(t0);
+    let y=d0.getUTCFullYear(),m=Math.ceil(d0.getUTCMonth()/step)*step;
+    for(let g=0;g<80;g++){
+      const yy=y+Math.floor(m/12),mm=((m%12)+12)%12,t=key(yy,mm,1);
+      if(t>t1)break;
+      push(t,mm===0?String(yy):"'"+String(yy).slice(2)+"."+(mm+1));
+      m+=step;
+    }
+  }else{                                          /* 일 단위 */
+    const step=Math.max(1,Math.round(span/Math.max(1,c-1)));
+    for(let t=t1;t>=t0;t-=step){const d=U(t);push(t,(d.getUTCMonth()+1)+"."+d.getUTCDate())}
+    out.sort((a,b)=>a.t-b.t);
+  }
+  if(!out.length){                                /* 경계가 하나도 안 걸리면 양 끝이라도 */
+    const f=t=>{const d=U(t);return yrs>=2.2?String(d.getUTCFullYear())
+      :(d.getUTCMonth()+1)+"."+d.getUTCDate()};
+    push(t0,f(t0)); if(t1>t0)push(t1,f(t1));
   }
   return out;
 }
@@ -737,9 +742,7 @@ function mainHead(shown){
   const box=document.getElementById("main-lines");
   if(!box)return;
   if(!box.firstChild){
-    const seg=mainLineSeg();
-    box.className=seg?"lines-row":"";
-    box.innerHTML=seg;
+    box.innerHTML=mainLineSeg();
   }else box.querySelectorAll("button[data-mline]").forEach(b=>
     b.setAttribute("aria-pressed",String(on(b.dataset.mline))));
 }
@@ -763,7 +766,7 @@ function renderMain(){
     chart.innerHTML='<div class="empty">'+tx("loading")+'</div>';
     return;
   }
-  tools.innerHTML=rangeSeg("main",MAIN_RANGES);
+  tools.innerHTML=rangeSeg("main",MAIN_RANGES,true);
   const L2=mainLines();
   if(!L2.length){
     key.innerHTML="";
@@ -800,9 +803,9 @@ function renderMain(){
   const zLines=zNm.length?[].concat(...zNm.map(zSplit)):[];
   const nameW=zLines.length
     ?Math.min(96,Math.max(...zLines.map(zW))+4):0;
-  const g=sm?{L:40,T:26,ph:172,B:38,ticks:3,names:false,
+  const g=sm?{L:40,T:26,ph:215,B:38,ticks:3,names:false,
               R:6+labW+(hasG?5+numW:0)}
-            :{L:56,T:30,ph:236,B:44,ticks:5,names:hasG,
+            :{L:56,T:30,ph:295,B:44,ticks:5,names:hasG,
               R:7+labW+(hasG?7+numW+10+nameW:0)};
   const Lm=g.L,Rm=g.R,T=g.T,ph=g.ph,H=T+ph+g.B;
   const pw=W-Lm-Rm,yBot=T+ph,yAx=yBot+26;
@@ -841,16 +844,20 @@ function renderMain(){
     zbands=vis.map(([a,bb,t])=>
       `<rect x="${Lm}" y="${YR(bb).toFixed(1)}" width="${pw}" height="${(YR(a)-YR(bb)).toFixed(1)}" fill="rgba(${tint(t)},${soft[t]})"/>`).join("");
     if(g.names){
-      /* 띠가 얇으면 이름을 뺀다(아래 게이지와 같은 규칙) */
+      /* 띠가 얇으면 이름을 뺀다. 기준을 픽셀로 고정하면 그림이 커질 때
+         'VIX 아주 잠잠'(10~12, 두 눈금)처럼 원래 안 보이던 이름이 튀어나와
+         나머지 간격을 무너뜨린다. 그래서 높이에 비례해 잡는다. */
+      const MINH=Math.max(16,ph*0.075);
       const rows=vis.map(([a,bb,t,k])=>({lo:YR(bb),hi:YR(a),nm:(tx("zone")||{})[k]||""}))
-                    .filter(r=>r.nm&&r.hi-r.lo>=14);
+                    .filter(r=>r.nm&&r.hi-r.lo>=MINH);
       const n=rows.length;
       znames=rows.map((r,i)=>{
         const ls=zSplit(r.nm),h=(ls.length-1)*11;
         /* 위아래로 고르게 벌린다. 띠 높이가 제각각이라 띠 한가운데에 두면
            극단 쪽이 안으로 들어와 보인다. 다만 제 띠 밖으로는 나가지 않게 붙든다. */
         const even=n>1?(T+ph-12)-((ph-24)*i/(n-1)):T+ph/2;
-        const y=Math.max(r.lo+h/2+5,Math.min(r.hi-h/2-4,even));
+        /* 글자 상자(10px 기준 위 9px·아래 5px)까지 띠 안에 들어오게 붙든다 */
+        const y=Math.max(r.lo+h/2+10,Math.min(r.hi-h/2-6,even));
         return `<text x="${xName.toFixed(1)}" y="${(y-h/2+3).toFixed(1)}" class="svg-label" fill="var(--ink-3)">`+
           ls.map((t2,j)=>`<tspan x="${xName.toFixed(1)}"${j?' dy="11"':''}>${t2}</tspan>`).join("")+`</text>`;
       }).join("");
@@ -937,8 +944,8 @@ function renderMain(){
   const area=gl?(()=>{const a=gl.pts.slice();a.__l=gl;
     return `<path d="${P(a)} L ${X(dnum(gl.pts[gl.pts.length-1][0])).toFixed(1)} ${yBot} L ${X(dnum(gl.pts[0][0])).toFixed(1)} ${yBot} Z" fill="rgba(120,135,150,.10)"/>`})():"";
 
-  const xt=tTicks(t0,t1,g.ticks).map((t,j,arr)=>{
-    const x=Lm+pw*t.x,anc=j===0?"start":j===arr.length-1?"end":"middle";
+  const xt=tTicks(t0,t1,g.ticks).map(t=>{
+    const x=Lm+pw*t.x,anc=t.x<0.04?"start":t.x>0.96?"end":"middle";
     return `<line x1="${x.toFixed(1)}" y1="${yBot}" x2="${x.toFixed(1)}" y2="${yBot+5}" stroke="var(--rule)" stroke-width="1"/>`+
       `<text x="${x.toFixed(1)}" y="${yAx}" text-anchor="${anc}" class="svg-axis">${t.lab}</text>`;
   }).join("");
@@ -1109,6 +1116,7 @@ function langSeg(){
 function paintStatic(){
   const put=(id,html)=>{const e=document.getElementById(id);if(e)e.innerHTML=html};
   put("foot",tx("foot").join("<br>"));
+  put("eyebrow",tx("eyebrow"));
   put("fng-name",axName(btAx));
   const st=document.getElementById("stamp");
   if(st)st.textContent=STAMP_ISO?stamp(STAMP_ISO):tx("loading");
@@ -1182,7 +1190,6 @@ function axNow(){
 const axLabel=a=>a?axText(a.key,"label",a.label):"";
 const axShort=a=>a?axText(a.key,"short",a.short):"";
 const axTitle=a=>a?axText(a.key,"title",a.title):"";
-const axHelp =a=>a?axText(a.key,"help", a.help ):"";
 
 function axZone(v){
   const a=axMeta();
@@ -1350,28 +1357,9 @@ function btChart(){
   /* 세로축 숫자 바로 위에 얹는다. 축 위에 있으면 "세로축"이라고 쓸 필요가 없다. */
   const cap=(y,t)=>`<text x="0" y="${y}" class="svg-label" fill="var(--ink-2)">${t}</text>`;
 
-  /* 표본이 얇은 눈금은 빗금으로 덮는다. 42일짜리 95%와 1,871일짜리 92%가
-     똑같은 굵기로 그려지면 끝쪽이 실제보다 미덥게 보인다. */
-  const THIN=100;
-  const runs=[];
-  for(let v=v0;v<=v1;v++){
-    const n=S[0]&&S[0].n[v],has=S[0]&&S[0].med[v]!=null;
-    if(has&&n&&n<THIN){
-      if(runs.length&&runs[runs.length-1][1]===v-1)runs[runs.length-1][1]=v;
-      else runs.push([v,v]);
-    }
-  }
-  const thinArt=runs.map(([p0,p1])=>{
-    const x=X(p0),wd=Math.max(2,X(p1)-x);
-    return `<rect x="${x.toFixed(1)}" y="${T1}" width="${wd.toFixed(1)}" height="${(B1-T1).toFixed(1)}" fill="url(#thinPat)"/>`+
-      `<rect x="${x.toFixed(1)}" y="${T2}" width="${wd.toFixed(1)}" height="${(B2-T2).toFixed(1)}" fill="url(#thinPat)"/>`;
-  }).join("");
-  const thinDef=runs.length?`<defs><pattern id="thinPat" width="5" height="5" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-3)" stroke-width="1" opacity=".22"/></pattern></defs>`:"";
-
   return `<div class="chart" id="bt-c">
   <svg viewBox="0 0 ${W} ${H}" class="${G.sm?"sm":""}" role="img" aria-label="${tx("aria").bt(axLabel(a),tx("hold")[btH])}">
-    ${thinDef}${bands}${thinArt}
+    ${bands}
     ${grid(r.ticks,Y1,true)}${zero}
     ${grid(w.ticks,Y2,false)}${half}
     <rect x="${L}" y="${T1}" width="${pw}" height="${(B1-T1).toFixed(1)}" fill="none" stroke="var(--rule)" stroke-width="1"/>
@@ -1438,32 +1426,12 @@ function btSummary(){
       `<span>${tx("winProb")} <b>${s.win[v].toFixed(0)}%</b> · `+
       `${m>=0?tx("medGain"):tx("medLoss")} <b class="${m>=0?"up":"dn"}">${m>0?"+":""}${m.toFixed(2)}%</b></span></div>`;
   }).join("");
-  /* 곡선이 U자라 "높을수록 좋다"로 요약이 안 된다. 대신 지금 자리를
-     전체 평균과 견줘 한 줄로 알려 준다. 평균은 눈금별 표본 수로 가중한다. */
-  const base=(()=>{
-    const s0=S[0],lo=Math.ceil(a.lo),hi=Math.floor(a.hi);
-    let W=0,M=0,N=0;
-    for(let i=lo;i<=hi;i++){
-      const n=s0.n[i];
-      if(s0.med[i]==null||!n)continue;
-      W+=s0.win[i]*n; M+=s0.med[i]*n; N+=n;
-    }
-    return N?{win:W/N,med:M/N}:null;
-  })();
-  let verdict="";
-  if(base){
-    /* 기준은 비율로 잡는다. 1Y 중위 +15% 에서의 1.5%p 와
-       5Y 중위 +89% 에서의 1.5%p 는 전혀 다른 크기다. */
-    const m=S[0].med[v],d=m-base.med;
-    const tol=Math.max(1.5,Math.abs(base.med)*0.08);
-    const how=d>tol?"better":d<-tol?"worse":"same";
-    verdict=`<div class="bt-verdict">${tx("vsAvg",base.win.toFixed(0),
-      (base.med>0?"+":"")+base.med.toFixed(1))} <b class="v-${how}">${tx("verdict")[how]}</b></div>`;
-  }
-  const thin=(S[0].n[v]||0)<100;
+  /* 이 눈금의 표본이 전체에서 얼마나 되는지 함께 보인다.
+     1,616 이라는 숫자만으로는 많은지 적은지 알 수 없다. */
+  const holder=Object.values(BT.indices).find(x=>x&&x.curve&&x.curve[a.key]);
+  const all=(holder&&holder.curve[a.key]&&holder.curve[a.key].days)||0;
   el.innerHTML=head+body+
-    `<div class="n">${tx("sampleDays",num(S[0].n[v]||0))}`+
-    (thin?` <span class="warn">${tx("thinHere")}</span>`:"")+`</div>`+verdict;
+    `<div class="n">${tx("sampleDays",num(S[0].n[v]||0),num(all))}</div>`;
 }
 
 function renderBT(){
@@ -1474,7 +1442,6 @@ function renderBT(){
   const blank=msg=>{
     tools.innerHTML="";axes.innerHTML="";
     document.getElementById("bt-sum").innerHTML="";
-    document.getElementById("bt-help").innerHTML="";
     document.getElementById("bt-range").textContent="—";
     body.innerHTML='<div class="empty">'+msg+'</div>';
   };
@@ -1498,7 +1465,6 @@ function renderBT(){
   }
   const a=axMeta();
   document.getElementById("bt-title").innerHTML=axTitle(a)||tx("btTitleDefault");
-  document.getElementById("bt-help").innerHTML=axHelp(a)||"";
   /* 버튼은 한 번만 만들고 이후에는 눌린 표시만 옮긴다(포커스 보존) */
   if(!axes.firstChild)axes.innerHTML=btAxTools();
   else axes.querySelectorAll("button[data-btax]").forEach(b=>
@@ -1506,7 +1472,7 @@ function renderBT(){
   const holder=Object.values(BT.indices).find(x=>x&&x.curve&&x.curve[btAx]);
   const cv=holder?holder.curve[btAx]:null;
   document.getElementById("bt-range").textContent=
-    cv?cv.from.slice(0,4)+"–"+cv.to.slice(0,4):"—";
+    cv?tx("samplePeriod")+" "+cv.from.slice(0,4)+"–"+cv.to.slice(0,4):"—";
   /* 버튼은 한 번만 만들고 이후에는 눌린 표시만 옮긴다.
      매번 다시 그리면 방금 누른 버튼이 사라져 키보드 포커스를 잃는다. */
   if(!tools.firstChild)tools.innerHTML=btTools();
