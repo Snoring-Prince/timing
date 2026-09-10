@@ -803,9 +803,9 @@ function renderMain(){
   const zLines=zNm.length?[].concat(...zNm.map(zSplit)):[];
   const nameW=zLines.length
     ?Math.min(96,Math.max(...zLines.map(zW))+4):0;
-  const g=sm?{L:40,T:26,ph:172,B:38,ticks:3,names:false,
+  const g=sm?{L:40,T:26,ph:215,B:38,ticks:3,names:false,
               R:6+labW+(hasG?5+numW:0)}
-            :{L:56,T:30,ph:236,B:44,ticks:5,names:hasG,
+            :{L:56,T:30,ph:295,B:44,ticks:5,names:hasG,
               R:7+labW+(hasG?7+numW+10+nameW:0)};
   const Lm=g.L,Rm=g.R,T=g.T,ph=g.ph,H=T+ph+g.B;
   const pw=W-Lm-Rm,yBot=T+ph,yAx=yBot+26;
@@ -844,16 +844,20 @@ function renderMain(){
     zbands=vis.map(([a,bb,t])=>
       `<rect x="${Lm}" y="${YR(bb).toFixed(1)}" width="${pw}" height="${(YR(a)-YR(bb)).toFixed(1)}" fill="rgba(${tint(t)},${soft[t]})"/>`).join("");
     if(g.names){
-      /* 띠가 얇으면 이름을 뺀다(아래 게이지와 같은 규칙) */
+      /* 띠가 얇으면 이름을 뺀다. 기준을 픽셀로 고정하면 그림이 커질 때
+         'VIX 아주 잠잠'(10~12, 두 눈금)처럼 원래 안 보이던 이름이 튀어나와
+         나머지 간격을 무너뜨린다. 그래서 높이에 비례해 잡는다. */
+      const MINH=Math.max(16,ph*0.075);
       const rows=vis.map(([a,bb,t,k])=>({lo:YR(bb),hi:YR(a),nm:(tx("zone")||{})[k]||""}))
-                    .filter(r=>r.nm&&r.hi-r.lo>=14);
+                    .filter(r=>r.nm&&r.hi-r.lo>=MINH);
       const n=rows.length;
       znames=rows.map((r,i)=>{
         const ls=zSplit(r.nm),h=(ls.length-1)*11;
         /* 위아래로 고르게 벌린다. 띠 높이가 제각각이라 띠 한가운데에 두면
            극단 쪽이 안으로 들어와 보인다. 다만 제 띠 밖으로는 나가지 않게 붙든다. */
         const even=n>1?(T+ph-12)-((ph-24)*i/(n-1)):T+ph/2;
-        const y=Math.max(r.lo+h/2+5,Math.min(r.hi-h/2-4,even));
+        /* 글자 상자(10px 기준 위 9px·아래 5px)까지 띠 안에 들어오게 붙든다 */
+        const y=Math.max(r.lo+h/2+10,Math.min(r.hi-h/2-6,even));
         return `<text x="${xName.toFixed(1)}" y="${(y-h/2+3).toFixed(1)}" class="svg-label" fill="var(--ink-3)">`+
           ls.map((t2,j)=>`<tspan x="${xName.toFixed(1)}"${j?' dy="11"':''}>${t2}</tspan>`).join("")+`</text>`;
       }).join("");
