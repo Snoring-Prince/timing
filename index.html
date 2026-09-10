@@ -1537,14 +1537,6 @@ async function loadBT(){
   renderBT();
 }
 
-/* ================= 장중 시세 ================= */
-/* 시세 파일은 별도 브랜치에 있다. raw 는 브라우저 접근을 허용하고,
-   비기본 브랜치라 Pages 빌드가 일어나지 않는다. */
-const OWNER=location.hostname.split(".")[0];
-const REPO=location.pathname.split("/").filter(Boolean)[0]||(OWNER+".github.io");
-/* 장중 시세(quote.json)는 지수 패널에서만 쓰던 것이라 패널과 함께 걷어냈다.
-   .github/workflows/update-quote.yml 과 scripts/fetch_quote.py 는 아직 남아 있다. */
-
 function stamp(iso){
   try{
     /* dateStyle/timeStyle 은 timeZoneName 과 같이 못 쓴다(TypeError). 항목을 하나씩 준다. */
