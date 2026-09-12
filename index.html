@@ -67,6 +67,7 @@ ko:{
   loadFail:"데이터를 불러오지 못했습니다",
   loadFailPanel:"데이터를 불러오지 못했습니다.<br>잠시 후 새로고침해 주세요.",
   stampAs:t=>`데이터 기준 ${t}`,
+  stampLive:t=>`실시간 ${t}`,
   foot:["전고점은 화면에 보이는 기간 안의 최고 종가입니다. 옆으로 끌면 그 구간의 전고점으로 바뀝니다.",
         "SPY·QQQ 배당 재투자 기준 · 출처: Yahoo Finance · 공포탐욕지수: CNN Business · VIX: CBOE",
         "종가는 미국장 마감 후 하루 한 번 갱신됩니다. 최근 5년은 하루 단위, 그 이전은 주 단위입니다."],
@@ -129,6 +130,7 @@ en:{
   loadFail:"Could not load the data",
   loadFailPanel:"Could not load the data.<br>Please refresh in a moment.",
   stampAs:t=>`Data as of ${t}`,
+  stampLive:t=>`Live ${t}`,
   foot:["The peak is the highest close inside the window on screen. Drag sideways and it becomes that stretch's peak.",
         "Total return on SPY and QQQ · Source: Yahoo Finance · Fear &amp; Greed: CNN Business · VIX: CBOE",
         "Closing prices update once a day after the US market closes. Daily for the last five years, weekly before that."],
@@ -235,6 +237,12 @@ applyLang(pickLang(),false);
      대시보드는 그대로 돕니다.
 ═════════════════════════════════════════════════════════════════════ -->
 <script>
+/* ══ 실시간 중계 ═══════════════════════════════════════════════════
+   비워 두면 아무 일도 일어나지 않습니다. 종가만으로 화면은 완전히 돕니다.
+   workers/live.js 를 클라우드플레어에 올리고 그 주소를 여기 넣으면 켜집니다.
+   통계 블록과 마찬가지로 화면·데이터 코드와 분리돼 있습니다. */
+window.LIVE={ url: "" };
+
 window.STATS={
   id : "41e07a57-a87c-403b-bdf8-e12d911457b6",   /* Umami Website ID */
   src: "https://cloud.umami.is/script.js"    /* 셀프호스팅하면 이 주소만 교체 */
@@ -641,6 +649,7 @@ function gTicks(lo,hi,step){
 
 let STAMP_ISO=null;                              /* market.json 의 갱신 시각 */
 let LONG=null;                                   /* market-long.json */
+let LIVE=null;                                   /* 중계소 응답 (꺼져 있으면 null) */
 let MAINGEO=null;                                /* 끌기에 필요한 마지막 좌표계 */
 const dnum=iso=>Math.round(Date.parse(iso+"T00:00:00Z")/864e5);
 
@@ -1183,6 +1192,8 @@ function axMeta(){
 /* 그 잣대의 오늘 값. 공포탐욕은 fng, VIX는 vix 에서 온다. */
 function axNow(){
   if(!DATA)return null;
+  const lq=(LIVE&&LIVE.quotes)?LIVE.quotes[btAx]:null;
+  if(lq&&typeof lq.v==="number")return lq.v;   /* 중계가 켜져 있으면 지금 값 */
   const src=btAx==="vix"?DATA.vix:DATA.fng;
   return src&&typeof src.value==="number"?src.value:null;
 }
@@ -1537,13 +1548,13 @@ async function loadBT(){
   renderBT();
 }
 
-function stamp(iso){
+function stamp(iso,live){
   try{
     /* dateStyle/timeStyle 은 timeZoneName 과 같이 못 쓴다(TypeError). 항목을 하나씩 준다. */
     const s2=new Intl.DateTimeFormat(LOCALE,{year:"numeric",month:"short",day:"numeric",
       hour:"numeric",minute:"2-digit",timeZoneName:"short"}).format(new Date(iso));
-    return tx("stampAs",s2);
-  }catch(e){return tx("stampAs",iso)}
+    return tx(live?"stampLive":"stampAs",s2);
+  }catch(e){return tx(live?"stampLive":"stampAs",iso)}
 }
 /* ── 지난번 화면 기억 ────────────────────────────────────────────
    언어(dt.lang)와 같은 방식이다. 이 브라우저 안에만 남고 서버로 가지 않아
@@ -1573,6 +1584,84 @@ function savePrefs(){
     {show:MSHOW,range:state.range.main,ax:btAx,hold:btH})) }catch(e){}
 }
 
+/* ── 두 파일 이어 붙이기 ─────────────────────────────────────────
+   긴 이력(market-long.json)은 주 1회, 토요일에만 갱신된다. 그래서
+   금요일 종가가 다음 토요일까지 화면에 안 나왔다 — 최대 6일이 밀렸다.
+   뒤쪽 며칠은 매일 갱신되는 market.json 이 갖고 있으므로 여기서 잇는다.
+
+   **가격선은 ticker 가 같을 때만 잇는다.** 2026-09-12 이전의
+   market.json 은 지수(SPX 7,656)를, 긴 이력은 ETF(SPY 765.96)를
+   담고 있었다. 그대로 이으면 선이 하늘로 솟는다. ticker 표식이
+   그 사고를 막는다 — 옛 파일이면 조용히 안 잇고 예전처럼 그린다.
+   VIX·공포탐욕은 두 파일이 늘 같은 출처라 표식 없이 잇는다. */
+function mergeDaily(){
+  if(!LONG||!LONG.series||!DATA)return false;
+  const idx=DATA.indices||{};
+  const tail={spx:idx.spx,ndx:idx.ndx,vix:DATA.vix,fng:DATA.fng};
+  let grew=false;
+  for(const k in tail){
+    const s=LONG.series[k],t=tail[k];
+    if(!s||!s.series||!s.series.length||!t||!t.series||!t.series.length)continue;
+    if((k==="spx"||k==="ndx")&&t.ticker!==s.ticker)continue;   /* 기준이 다르면 잇지 않는다 */
+    const last=s.series[s.series.length-1][0];
+    const add=t.series.filter(p=>p&&p[0]>last&&typeof p[1]==="number");
+    if(!add.length)continue;
+    s.series=s.series.concat(add.map(p=>[p[0],p[1]]));
+    s.to=s.series[s.series.length-1][0];
+    s.n=s.series.length;
+    grew=true;
+  }
+  return grew;
+}
+
+/* ── 실시간 중계 ─────────────────────────────────────────────────
+   window.LIVE.url 이 비어 있으면 통째로 잠들어 있다. 실패해도 조용히
+   넘어간다 — 종가만으로도 화면은 이미 맞기 때문에 오류를 띄울 이유가 없다. */
+function applyLive(){
+  if(!LIVE||!LIVE.quotes||!LONG||!LONG.series)return false;
+  let ch=false;
+  for(const k in LIVE.quotes){
+    const q=LIVE.quotes[k],s=LONG.series[k];
+    if(!s||!s.series||!s.series.length)continue;
+    if(!q||typeof q.v!=="number"||!q.d)continue;
+    const arr=s.series,last=arr[arr.length-1];
+    if(q.d<last[0])continue;                 /* 종가가 더 새것이면 그대로 둔다 */
+    if(q.d===last[0]){                       /* 같은 날이면 장중값으로 덮는다 */
+      if(last[1]===q.v)continue;
+      arr[arr.length-1]=[q.d,q.v];
+    }else{
+      arr.push([q.d,q.v]); s.to=q.d; s.n=arr.length;
+    }
+    ch=true;
+  }
+  return ch;
+}
+async function loadLive(){
+  const u=(window.LIVE||{}).url;
+  if(!u)return;
+  try{
+    const r=await fetch(u,{cache:"no-store"});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const j=await r.json();
+    if(!j||!j.quotes)throw new Error("quotes 없음");
+    LIVE=j;
+  }catch(e){console.error(e);return}
+  const el=document.getElementById("stamp");
+  if(el&&LIVE.fetched)el.textContent=stamp(LIVE.fetched,true);
+  if(applyLive()){renderMain();calibrateDraw()}
+  renderBT();                                /* 성적표의 '지금 값'도 함께 */
+}
+/* 장이 열려 있고 탭을 보고 있을 때만 다시 부른다. 무료 한도를 아낀다. */
+function liveLoop(){
+  if(!(window.LIVE||{}).url)return;
+  setInterval(()=>{
+    if(document.hidden)return;
+    if(LIVE&&LIVE.open===false)return;
+    loadLive();
+  },60000);
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden)loadLive() });
+}
+
 /* 장기 이력은 따로 받는다. 실패해도 나머지 화면은 그대로 돈다. */
 async function loadLong(){
   const v=new Date().toISOString().slice(0,10).replace(/-/g,"");
@@ -1587,6 +1676,7 @@ async function loadLong(){
     document.getElementById("main-tools").innerHTML="";
     return;
   }
+  mergeDaily();                   /* 먼저 도착했으면 최근 며칠을 붙이고 그린다 */
   renderMain();calibrateDraw();
 }
 
@@ -1607,6 +1697,7 @@ async function load(){
   STAMP_ISO=DATA.updated;
   document.getElementById("stamp").textContent=stamp(STAMP_ISO);
   if(BT)renderBT();               /* 지금 값이 들어왔으니 성적표를 다시 */
+  if(mergeDaily()){renderMain();calibrateDraw()}   /* 긴 이력이 먼저 왔으면 여기서 붙는다 */
   lastW=(document.getElementById("panel-main")||{}).clientWidth||0;
   setTimeout(()=>document.body.classList.add("settled"),1600);  /* 애니메이션은 첫 회만 */
 }
@@ -1627,6 +1718,7 @@ paintStatic();          /* 방문자 언어로 고정 문구부터 칠하고 시
 /* 셋을 나란히 받는다. 하나가 실패해도 나머지 화면은 뜬다. */
 loadLong();
 load().then(loadBT);
+loadLive().then(liveLoop);      /* url 이 비어 있으면 둘 다 즉시 끝난다 */
 </script>
 </body>
 </html>

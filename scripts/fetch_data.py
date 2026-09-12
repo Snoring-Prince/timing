@@ -1,7 +1,9 @@
 """
 Daniel's timing — 데이터 수집 스크립트 (v3)
 
-지수와 공포탐욕지수, VIX를 받아 data/market.json 하나로 저장한다.
+SPY·QQQ·공포탐욕지수·VIX를 받아 data/market.json 하나로 저장한다.
+화면은 이 파일에서 (1) 갱신 시각 (2) 공포탐욕·VIX 현재값 (3) 위 차트의
+최근 며칠치를 가져간다. 긴 이력은 market-long.json 이 주 1회 따로 받는다.
 GitHub Actions가 매일 실행한다. 표준 라이브러리만 사용한다.
 
 출처를 하나만 믿지 않는다. 여러 곳을 순서대로 시도하고,
@@ -69,35 +71,24 @@ def src_stooq(symbol):
     return out
 
 
-def src_fred(series):
-    """FRED 그래프 CSV. API 키가 필요 없는 경로."""
-    url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}"
-    raw = fetch(url).decode("utf-8", "replace")
-    rows = list(csv.reader(io.StringIO(raw)))
-    if not rows:
-        raise RuntimeError(f"빈 응답 ({peek(raw)})")
-    out = []
-    for r in rows[1:]:
-        if len(r) < 2 or r[1] in (".", "", "NA"):
-            continue
-        try:
-            out.append((r[0].strip(), float(r[1])))
-        except ValueError:
-            continue
-    if len(out) < 100:
-        raise RuntimeError(f"행이 부족 (받은 내용: {peek(raw)})")
-    return out
-
-
 def src_yahoo(symbol):
-    """야후 차트 API."""
-    url = (f"https://query1.finance.yahoo.com/v8/finance/chart/%5E{symbol}"
+    """야후 차트 API. 심볼은 받은 그대로 쓴다 — 지수는 `%5E` 를 붙여 넘긴다.
+
+    ETF 는 분배금을 지급하면 그만큼 가격이 떨어지므로(배당락) 종가 대신
+    배당 반영가(adjclose)를 쓴다. fetch_long.py 가 같은 기준이라,
+    화면에서 두 파일을 이어 붙여도 이음매에서 값이 튀지 않는다.
+    """
+    url = (f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
            "?range=10y&interval=1d")
-    raw = fetch(url)
-    j = json.loads(raw)
+    j = json.loads(fetch(url))
     res = j["chart"]["result"][0]
     stamps = res["timestamp"]
-    closes = res["indicators"]["quote"][0]["close"]
+    ind = res["indicators"]
+    closes = None
+    if ind.get("adjclose"):
+        closes = ind["adjclose"][0].get("adjclose")
+    if not closes:
+        closes = ind["quote"][0]["close"]
     out = []
     for t, c in zip(stamps, closes):
         if c is None:
@@ -109,20 +100,26 @@ def src_yahoo(symbol):
     return out
 
 
-# 지수별로 시도할 순서: (출처 이름, 함수, 그 출처에서 쓰는 기호)
-INDEX_SOURCES = {
-    "spx": [("Stooq", src_stooq, "spx"),
-            ("FRED", src_fred, "SP500"),
-            ("Yahoo", src_yahoo, "GSPC")],
-    "ndx": [("Stooq", src_stooq, "ndx"),
-            ("FRED", src_fred, "NASDAQ100"),
-            ("Yahoo", src_yahoo, "NDX")],
+# 지수가 아니라 ETF 를 받는다 (2026-09-12).
+#
+# 화면의 위 차트는 market-long.json 이 그리는데 그 파일은 주 1회만 갱신된다.
+# 그래서 금요일 종가가 다음 토요일까지 화면에 안 나왔다 — 최대 6일이 밀렸다.
+# 이 파일은 매일 갱신되므로 화면이 뒤쪽 며칠을 여기서 이어 붙이면 해결되는데,
+# 예전에는 이 파일이 지수(SPX 7,656)를 담고 저 파일이 ETF(SPY 765.96)를 담아
+# 기준이 서로 달라서 이어 붙일 수가 없었다. 여기서 기준을 맞춘다.
+#
+# 그 대신 Stooq·FRED 는 빠졌다. 둘 다 지수만 주지 SPY·QQQ 를 주지 않는다.
+# (Stooq 의 spy.us 는 배당 미반영이라 이어 붙이면 이음매가 생긴다.)
+# 야후가 실패하면 아래 main() 이 기존 값을 그대로 유지한다.
+QUOTE_SOURCES = {
+    "spx": [("Yahoo", src_yahoo, "SPY")],
+    "ndx": [("Yahoo", src_yahoo, "QQQ")],
 }
 
 
 def build_index(key, name, ticker):
     hist = None
-    for label, fn, sym in INDEX_SOURCES[key]:
+    for label, fn, sym in QUOTE_SOURCES[key]:
         try:
             hist = fn(sym)
             print(f"  {label} 성공 ({len(hist)}행)")
@@ -213,7 +210,7 @@ def build_fng(previous):
 def build_vix():
     hist = None
     for label, fn, sym in [("Stooq", src_stooq, "vix"),
-                           ("Yahoo", src_yahoo, "VIX")]:
+                           ("Yahoo", src_yahoo, "%5EVIX")]:
         try:
             hist = fn(sym)
             print(f"  {label} 성공 ({len(hist)}행)")
@@ -258,8 +255,10 @@ def main():
     }
     failed = []
 
-    for key, name, ticker in [("spx", "S&P 500", "SPX"),
-                              ("ndx", "나스닥 100", "NDX")]:
+    # ticker 는 화면이 "이어 붙여도 되는 파일인가"를 판단하는 표식이기도 하다.
+    # market-long.json 의 ticker 와 같을 때만 이어 붙인다.
+    for key, name, ticker in [("spx", "S&P 500", "SPY"),
+                              ("ndx", "나스닥 100", "QQQ")]:
         print(f"\n[{ticker}]")
         try:
             result["indices"][key] = build_index(key, name, ticker)
