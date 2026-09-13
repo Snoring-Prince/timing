@@ -87,8 +87,10 @@ ko:{
   idx:{spx:"S&P 500",ndx:"나스닥 100"},
   hold:{"30D":"30일","90D":"90일","180D":"180일","1Y":"1년","3Y":"3년","5Y":"5년"},
   peak:"전고점", peakMark:v=>`전고점 ${v}`,
-  curVal:"현재값", elapsed:"경과 일수", dayUnit:"일", sincePeak:"전고점 이후",
-  vsPeak:"전고점 대비", toRecover:x=>`회복까지 +${x}%`, atPeak:"지금이 전고점",
+  curVal:"현재값", winEnd:"구간 끝값",
+  elapsed:"경과 일수", dayUnit:"일", sincePeak:"전고점 이후",
+  vsPeak:"전고점 대비", toRecover:x=>`회복까지 +${x}%`,
+  toPeak:x=>`전고점까지 +${x}%`, atPeak:"지금이 전고점",
   zone:{"fng.exfear":"극단적 공포","fng.fear":"공포","fng.neutral":"중립",
     "fng.greed":"탐욕","fng.exgreed":"극단적 탐욕",
     "vix.verycalm":"아주 잠잠","vix.calm":"잠잠","vix.normal":"보통",
@@ -154,8 +156,10 @@ en:{
   idx:{spx:"S&P 500",ndx:"Nasdaq 100"},
   hold:{"30D":"30 days","90D":"90 days","180D":"180 days","1Y":"1 year","3Y":"3 years","5Y":"5 years"},
   peak:"Peak", peakMark:v=>`Peak ${v}`,
-  curVal:"Current", elapsed:"Days elapsed", dayUnit:"d", sincePeak:"since the peak",
-  vsPeak:"From the peak", toRecover:x=>`+${x}% to recover`, atPeak:"at the peak",
+  curVal:"Current", winEnd:"Window end",
+  elapsed:"Days elapsed", dayUnit:"d", sincePeak:"since the peak",
+  vsPeak:"From the peak", toRecover:x=>`+${x}% to recover`,
+  toPeak:x=>`+${x}% back to the peak`, atPeak:"at the peak",
   zone:{"fng.exfear":"Extreme Fear","fng.fear":"Fear","fng.neutral":"Neutral",
     "fng.greed":"Greed","fng.exgreed":"Extreme Greed",
     "vix.verycalm":"Very calm","vix.calm":"Calm","vix.normal":"Normal",
@@ -401,7 +405,11 @@ body{
   border-radius:50%;background:transparent;color:var(--ink-3);cursor:pointer;flex:0 0 auto;
   font-family:var(--cond);font-weight:700;font-size:10px;line-height:1;
   display:inline-flex;align-items:center;justify-content:center}
-.info:hover,.info:focus-visible{border-color:var(--ink-2);color:var(--ink);outline:none}
+/* hover 와 focus 를 한 줄에 묶어 두면 키보드 초점이 마우스 hover 와 똑같아 보인다.
+   다른 버튼은 전부 2px 테두리를 두르는데 여기만 1px 색 변화뿐이었다. */
+.info:hover{border-color:var(--ink-2);color:var(--ink)}
+.info:focus-visible{border-color:var(--ink-2);color:var(--ink);
+  outline:2px solid var(--ink);outline-offset:2px}
 .pop{position:absolute;z-index:30;max-width:300px;background:var(--card);border:1px solid var(--rule);
   padding:10px 12px;font-size:11.5px;line-height:1.7;color:var(--ink-2);
   box-shadow:0 6px 20px rgba(0,0,0,.12);opacity:0;pointer-events:none;transition:opacity .12s}
@@ -1140,7 +1148,11 @@ function renderMain(){
   PAN=Math.max(0,Math.min(PAN,(tEnd-tMin)-span));   /* 가진 데이터 밖으로는 못 나간다 */
   const t1=tEnd-PAN,t0=t1-span;
 
-  const cut=l=>l.s.series.filter(p=>{const t=dnum(p[0]);return t>=t0&&t<=t1});
+  /* 값이 숫자가 아닌 점은 여기서 걸러 낸다. 파이썬이 null 을 빼고 쓰므로
+     지금은 들어올 일이 없지만, 마지막 점 하나만 null 이어도 선 끝의
+     현재값(fmt)에서 통째로 터진다 — 중간의 null 은 무해한데 끝만 치명적이다. */
+  const cut=l=>l.s.series.filter(p=>{const t=dnum(p[0]);
+    return typeof p[1]==="number"&&isFinite(p[1])&&t>=t0&&t<=t1});
   L2.forEach(l=>{l.pts=cut(l)});
   const drawn=L2.filter(l=>l.pts.length>1);
   if(!drawn.length){
@@ -1277,17 +1289,22 @@ function renderMain(){
     const pkDay=pts[pk][0],curDay=pts[pts.length-1][0];
     const atTop=dd>-0.005;                       /* 지금이 곧 그 구간의 전고점 */
     const back=atTop?0:(peak/last-1)*100;        /* 전고점까지 되돌아가려면 몇 % */
+    /* 옆으로 끌어 과거를 보고 있으면 마지막 점은 "지금"이 아니다.
+       2003년 값에 "현재값"이라고 붙이면 날짜와 이름표가 서로 어긋난다.
+       같은 이유로 "회복까지"도 과거 구간에서는 이미 끝난 이야기다. */
+    const past=PAN>=1;
     readout=
       `<div><dt>${tx("peak")}</dt><dd class="num">${fmt(peak)}</dd>`+
         `<dd class="sub">${fdate(pkDay)}</dd></div>`+
-      `<div><dt>${tx("curVal")}</dt><dd class="num">${fmt(last)}</dd>`+
+      `<div><dt>${past?tx("winEnd"):tx("curVal")}</dt><dd class="num">${fmt(last)}</dd>`+
         `<dd class="sub">${fdate(curDay)}</dd></div>`+
       `<div><dt>${tx("elapsed")}</dt><dd class="num">${num(dayDiff(pkDay,curDay))}`+
         `<span class="unit">${tx("dayUnit")}</span></dd>`+
         `<dd class="sub">${tx("sincePeak")}</dd></div>`+
       `<div class="${atTop?"cell-top":"cell-dd"}"><dt>${tx("vsPeak")}</dt>`+
         `<dd class="num">${atTop?"0.00":dd.toFixed(2)}<span class="unit">%</span></dd>`+
-        `<dd class="sub">${atTop?tx("atPeak"):tx("toRecover",back.toFixed(2))}</dd></div>`;
+        `<dd class="sub">${atTop?tx("atPeak")
+          :(past?tx("toPeak",back.toFixed(2)):tx("toRecover",back.toFixed(2)))}</dd></div>`;
   }
   const gaugeArt=gl&&gl.pts.length>1
     ?`<path d="${path(gl)}" fill="none" stroke="${gl.col}" stroke-width="${gl.wd}" stroke-linejoin="round"${anim}/>`:"";
