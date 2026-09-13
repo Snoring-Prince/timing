@@ -9,6 +9,11 @@ on:
       - "data/backtest.json"
       - "scripts/check_about.py"
   workflow_dispatch:
+    inputs:
+      telegram_test:
+        description: "텔레그램 시험 발송 (설정이 됐는지 확인용)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -21,5 +26,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      # PR 에서는 텔레그램을 안 씁니다 — 실패가 PR 화면에 빨간 X 로 바로 보입니다.
       - name: 설명 글 숫자 대조
+        if: ${{ !inputs.telegram_test }}
         run: python scripts/check_about.py
+
+      # Actions 탭에서 손으로 눌러 보는 시험 발송. 실패를 기다릴 필요가 없습니다.
+      - name: 텔레그램 시험 발송
+        if: ${{ inputs.telegram_test }}
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT }}
+        run: python scripts/notify.py --test
