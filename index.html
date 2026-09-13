@@ -3,7 +3,58 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Daniel's timing — Drawdown from the peak</title>
+<title>S&amp;P 500 returns by Fear &amp; Greed and VIX — Daniel's timing</title>
+
+<!-- ══ 검색엔진·공유 ═══════════════════════════════════════════════════
+     JS 가 안 도는 크롤러가 읽는 것은 여기 적힌 글자가 전부입니다.
+     그래서 **영어를 기본으로 둡니다** — 이 사이트의 기본 언어이고
+     <html lang="en"> 과도 맞습니다. 한국어 방문자에게는 applyLang() 이
+     제목·설명·og:* 를 한국어로 갈아끼웁니다(사전의 docTitle·metaDesc).
+
+     og:image 는 언어별로 두 장입니다. 크롤러 대부분은 정적 HTML 만 읽으므로
+     기본은 영어판이고, ?lang=ko 로 열면 한국어판으로 바뀝니다.
+═════════════════════════════════════════════════════════════════════ -->
+<meta name="description" content="What the S&amp;P 500 and Nasdaq 100 did after each Fear &amp; Greed and VIX level, from real closing prices since 1993. Drawdown, median returns and win rates.">
+<link rel="canonical" href="https://itpaidoff.com/">
+<link rel="alternate" hreflang="en" href="https://itpaidoff.com/?lang=en">
+<link rel="alternate" hreflang="ko" href="https://itpaidoff.com/?lang=ko">
+<link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Daniel's timing">
+<meta property="og:url" content="https://itpaidoff.com/">
+<meta property="og:title" content="S&amp;P 500 returns by Fear &amp; Greed and VIX — Daniel's timing">
+<meta property="og:description" content="What the S&amp;P 500 and Nasdaq 100 actually did after each Fear &amp; Greed and VIX level, measured from 1993 onward.">
+<meta property="og:image" content="https://itpaidoff.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- 파비콘은 무채색입니다. 상승·하락 색은 언어에 따라 뒤집히는데(6번)
+     아이콘은 한 장뿐이라 어느 쪽으로 칠해도 절반은 반대로 읽힙니다. -->
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#F7F9FB">
+
+<!-- 구조화 데이터. 검색엔진에 "이게 무엇인지"를 한 번 더 알려 줍니다.
+     사실만 적습니다 — 무료이고, 언어는 둘이고, 금융 자료를 보여 준다는 것. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Daniel's timing",
+  "url": "https://itpaidoff.com/",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Any",
+  "inLanguage": ["en", "ko"],
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "What the S&P 500 and Nasdaq 100 did after each Fear & Greed and VIX level, from real closing prices since 1993.",
+  "image": "https://itpaidoff.com/og.png"
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
@@ -25,7 +76,8 @@
 const D={
 ko:{
   locale:"ko-KR", dir:"ltr", name:"한국어",
-  docTitle:"Daniel's timing — 전고점 대비 현재",
+  docTitle:"공포탐욕지수·VIX로 본 S&P 500 수익률 — Daniel's timing",
+  metaDesc:"공포와 탐욕 지수·VIX가 어느 수준일 때 샀으면 그 뒤 어떻게 됐는지, 1993년부터의 실제 종가로 계산합니다. 전고점 대비 낙폭과 구간별 수익률·승률을 한 화면에서.",
   eyebrow:"전고점 대비 현재",
   loading:"불러오는 중…",
   idx:{spx:"S&P 500",ndx:"나스닥 100"},
@@ -88,7 +140,8 @@ ko:{
 },
 en:{
   locale:"en-US", dir:"ltr", name:"English",
-  docTitle:"Daniel's timing — Drawdown from the peak",
+  docTitle:"S&P 500 returns by Fear & Greed and VIX — Daniel's timing",
+  metaDesc:"What the S&P 500 and Nasdaq 100 did after each Fear & Greed and VIX level, from real closing prices since 1993. Drawdown, median returns and win rates.",
   eyebrow:"Drawdown from the peak",
   loading:"Loading…",
   idx:{spx:"S&P 500",ndx:"Nasdaq 100"},
@@ -216,6 +269,27 @@ function applyLang(lang,remember){
   r.style.setProperty("--up",p.up); r.style.setProperty("--down",p.down);
   r.style.setProperty("--up-rgb",p.upRGB); r.style.setProperty("--down-rgb",p.downRGB);
   document.title=tx("docTitle");
+  paintHead();
+}
+/* 크롤러가 JS 를 돌리는 경우와, 사람이 언어 탭을 누른 경우 둘 다를 위해
+   머리글을 지금 언어에 맞춘다. 없는 태그는 조용히 건너뛴다. */
+function paintHead(){
+  const set=(sel,attr,val)=>{const e=document.head.querySelector(sel);if(e)e.setAttribute(attr,val)};
+  const t=tx("docTitle"),d=tx("metaDesc");
+  set('meta[name="description"]',"content",d);
+  set('meta[property="og:title"]',"content",t);
+  set('meta[property="og:description"]',"content",d);
+  set('meta[property="og:locale"]',"content",LANG==="ko"?"ko_KR":"en_US");
+  set('meta[property="og:locale:alternate"]',"content",LANG==="ko"?"en_US":"ko_KR");
+  set('meta[property="og:image"]',"content",
+      "https://itpaidoff.com/"+(LANG==="ko"?"og-ko.png":"og.png"));
+  /* 주소에 ?lang= 이 있으면 그 주소가 자기 자신의 정본이다.
+     없으면 뿌리 주소가 정본 — hreflang 의 x-default 와 맞춘다. */
+  const hasParam=new URLSearchParams(location.search).get("lang");
+  set('link[rel="canonical"]',"href",
+      hasParam?"https://itpaidoff.com/?lang="+LANG:"https://itpaidoff.com/");
+  const og=document.head.querySelector('meta[property="og:url"]');
+  if(og)og.setAttribute("content",hasParam?"https://itpaidoff.com/?lang="+LANG:"https://itpaidoff.com/");
 }
 const upRGB  =()=>(REDUP.has(LANG)?PAL.redUp:PAL.greenUp).upRGB;
 const downRGB=()=>(REDUP.has(LANG)?PAL.redUp:PAL.greenUp).downRGB;
