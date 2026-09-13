@@ -490,8 +490,10 @@ body.settled .fade{animation:none;opacity:1}
    글꼴은 전부 mono 하나로 두고 크기·색으로만 층을 나눈다. */
 .bt-sum{padding:2px 20px 15px;font-family:var(--mono);font-size:13px;
   color:var(--ink-2);line-height:1.7}
-/* 계기판 읽기 — 캡션은 작게 위, 값은 크게 아래. */
-.bt-sum .now{padding-bottom:11px;margin-bottom:12px;border-bottom:1px solid var(--rule-2)}
+/* 계기판 읽기 — 캡션은 작게 위, 값은 크게 아래.
+   구분선은 뺐다. 카드가 이미 흰 칸으로 떠 있어서 안에 가로줄을 하나 더 그으면
+   한 장이 두 장처럼 읽히고, 그 줄의 위아래 여백 24px 만큼 표가 내려앉는다. */
+.bt-sum .now{margin-bottom:4px}
 .bt-sum .now .cap{font-family:var(--cond);font-weight:600;font-size:10.5px;
   letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
 .bt-sum .now .val{display:flex;align-items:baseline;gap:10px;margin-top:2px;flex-wrap:wrap}
@@ -514,9 +516,15 @@ body.settled .fade{animation:none;opacity:1}
    카드 가장자리(20px)까지 밀면 표만 그래프보다 튀어나와 보인다. */
 .bt-sum .grid{display:grid;grid-template-columns:auto auto auto;
   justify-content:end;gap:2px 40px;align-items:baseline;padding-right:15px}
+/* 숫자 칸은 오른쪽 맞춤이다. 왼쪽으로 맞추면 글자 폭이 제각각이라
+   («수익날 확률» 56px vs «80%» 41px) 오른쪽이 들쭉날쭉해 보인다.
+   오른쪽으로 맞추면 자릿수가 같은 값끼리 소수점까지 줄이 선다. */
 .bt-sum .grid .hd{font-family:var(--cond);font-weight:600;font-size:10.5px;
   letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);
-  padding-bottom:3px;white-space:nowrap}
+  padding-bottom:3px;white-space:nowrap;text-align:right}
+.bt-sum .grid .q{text-align:right}
+/* 첫 칸(지수 이름)만 왼쪽 맞춤 — 이름은 숫자가 아니다. */
+.bt-sum .grid .idx,.bt-sum .grid .hd:first-child{text-align:left}
 /* 줄 간격은 카드 전체의 1.7 이 아니라 여기서 다시 잡는다. 23px 글자에
    1.7 을 곱하면 줄 상자가 39px 이 되어 S&P 500 과 나스닥 100 이 멀어진다. */
 .bt-sum .grid .idx{color:var(--ink-2);font-size:12.5px;white-space:nowrap;
@@ -1457,7 +1465,9 @@ document.addEventListener("click",e=>{
   }
   state.range[slot]=+b.dataset.range;
   if(slot==="main")PAN=0;            /* 너비를 바꾸면 오른쪽 끝(오늘)으로 돌아온다 */
+  const moved=(slot==="main")&&syncHold(+b.dataset.range);
   drawSlot(slot);calibrateDraw();
+  if(moved&&BT)renderBT();
   if(slot==="main")savePrefs();
   track("range",{slot:slot,range:b.dataset.range});
 });
@@ -1470,6 +1480,19 @@ let BT=null,btH="1Y",btAx="fng";
 /* 버튼 글자는 위 지수 패널과 같은 30D·1Y 꼴, 문장에서는 한글로 푼다 */
 /* 보유기간 이름표는 사전에서 온다 — tx("hold")[btH] */
 const H_ORDER=["30D","90D","180D","1Y","3Y","5Y"];
+/* 위 차트의 기간 버튼과 아래 성적표의 보유기간 버튼은 칸이 같고 모양도 같다.
+   뜻은 다르다 — 위는 "얼마나 거슬러 볼까", 아래는 "사서 얼마나 들고 있을까".
+   그래도 나란히 놓인 똑같은 버튼 두 줄이 따로 노는 편이 더 혼란스러워서,
+   어느 쪽을 눌러도 둘 다 옮긴다. 값을 하나로 합치지는 않았다 — 아래 성적표는
+   데이터에 있는 보유기간만 가질 수 있어서(BT.horizons), 없는 칸이면 위만 움직인다. */
+const H_DAYS={"30D":30,"90D":90,"180D":180,"1Y":365,"3Y":1095,"5Y":1825};
+function syncHold(days){
+  const h=H_ORDER.find(k=>H_DAYS[k]===days);
+  if(!h||h===btH)return false;
+  const hs=(BT&&BT.horizons&&BT.horizons.length)?BT.horizons:H_ORDER;
+  if(hs.indexOf(h)<0)return false;
+  btH=h;return true;
+}
 
 function sign(x){return (x>0?"+":"")+x.toFixed(1)+"%"}
 
@@ -1804,7 +1827,10 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("[data-bt]");
   if(!b||b.dataset.bt===btH)return;
   btH=b.dataset.bt;
-  renderBT();savePrefs();
+  /* 아래를 눌러도 위 차트가 같은 기간으로 간다 */
+  const d=H_DAYS[btH];
+  if(d&&state.range.main!==d){state.range.main=d;PAN=0;renderMain()}
+  renderBT();calibrateDraw();savePrefs();
   track("horizon",{h:btH,axis:btAx});
 });
 /* 잣대는 위 게이지와 아래 성적표가 함께 쓴다. 어느 쪽 토글을 눌러도 둘 다 바뀐다. */
@@ -1877,6 +1903,9 @@ function loadPrefs(){
       if(MAIN_RANGES.some(r=>r[1]===o.range))state.range.main=o.range;
       if(GAUGE[o.ax])btAx=o.ax;
       if(H_ORDER.indexOf(o.hold)>=0)btH=o.hold;
+      /* 둘이 연동되기 전에 저장된 값은 서로 어긋날 수 있다. 보유기간을 따라간다 —
+         두 버튼 줄이 서로 다른 칸을 눌러 놓은 채로 첫 화면이 그려지면 안 된다. */
+      if(H_DAYS[btH])state.range.main=H_DAYS[btH];
     }
   }catch(e){}
   if(!MSHOW.price&&!MSHOW.gauge)MSHOW.price="spx";
