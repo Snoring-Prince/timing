@@ -39,5 +39,19 @@ jobs:
       # 새 숫자를 저장한 *뒤에* 본다. 설명 글이 낡았다고 해서 데이터까지
       # 안 올라가면 곤란하다 — 글은 사람이 고쳐야 하고, 데이터는 그대로 맞다.
       # 여기서 실패하면 Actions 가 빨갛게 뜨고 저장소 주인에게 메일이 간다.
+      # 대조 결과를 파일로도 남긴다 — 어긋났을 때 텔레그램에 그대로 실어 보낸다.
+      # pipefail 이 없으면 tee 의 종료코드가 잡혀서 실패가 성공으로 보인다.
       - name: 설명 글 숫자 대조
-        run: python scripts/check_about.py
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/check_about.py 2>&1 | tee /tmp/about.txt
+
+      # 위에서 실패했을 때만. 알림을 못 보내는 것이 실행을 실패시키지는 않는다
+      # (이미 실패해서 불려 온 참이다). 비밀값이 없으면 조용히 넘어간다.
+      - name: 어긋나면 텔레그램으로
+        if: failure()
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT }}
+        run: python scripts/notify.py --title "설명 글의 숫자가 낡았습니다" --body-file /tmp/about.txt

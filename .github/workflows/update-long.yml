@@ -38,3 +38,13 @@ jobs:
             git commit -m "장기 이력 갱신 $(date -u +%Y-%m-%d)"
             git push
           fi
+
+      # 실패하면 텔레그램으로. 이 프로젝트에서 진짜 위험한 것은 터지는 것이 아니라
+      # **데이터가 조용히 끊기는 것**입니다(Stooq 차단, CNN 418 — 둘 다 겪었습니다).
+      # 비밀값이 없으면 조용히 넘어가고, 알림 실패가 실행을 실패시키지도 않습니다.
+      - name: 실패하면 텔레그램으로
+        if: failure()
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT }}
+        run: python scripts/notify.py --title "장기 이력 받기가 실패했습니다"
