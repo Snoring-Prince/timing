@@ -497,12 +497,19 @@ body.settled .fade{animation:none;opacity:1}
 .bt-sum .now .val{display:flex;align-items:baseline;gap:10px;margin-top:2px;flex-wrap:wrap}
 .bt-sum .now .v{font-size:38px;font-weight:500;letter-spacing:-.03em;
   line-height:1.05;color:var(--ink)}
-.bt-sum .now .zn{font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:.02em}
-.bt-sum .now .hz{margin-top:5px;font-size:12.5px;color:var(--ink-3)}
+.bt-sum .now .zn{font-family:var(--cond);font-weight:700;font-size:19px;letter-spacing:.02em}
+
+/* 조건 문장과 표를 한 줄에 놓는다. 표는 오른쪽 끝에 붙어 아래 그래프의
+   오른쪽 끝과 맞고, 왼쪽에 남던 빈자리를 조건 문장이 채운다. */
+.bt-sum .tbl{display:flex;align-items:flex-start;justify-content:space-between;
+  gap:20px;flex-wrap:wrap}
+/* 열 머리글 높이만큼 내려서 표의 첫 줄(S&P 500)과 눈높이를 맞춘다.
+   위로 붙이면 머리글과 나란히 서서 저도 머리글처럼 읽힌다. */
+.bt-sum .cond{font-size:15px;color:var(--ink-2);padding-top:21px}
 
 /* 이름 / 수익날 확률 / 중위 수익률 세 칸. 열 머리는 한 번만 쓴다. */
 .bt-sum .grid{display:grid;grid-template-columns:auto auto auto;
-  justify-content:start;gap:2px 40px;align-items:baseline}
+  justify-content:end;gap:2px 40px;align-items:baseline}
 .bt-sum .grid .hd{font-family:var(--cond);font-weight:600;font-size:10.5px;
   letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);
   padding-bottom:3px;white-space:nowrap}
@@ -527,7 +534,10 @@ body.settled .fade{animation:none;opacity:1}
   .bt-head{padding:13px 14px 8px}
   .bt-sum{padding:2px 14px 13px}
   .bt-sum .now .v{font-size:32px}
-  .bt-sum .grid{gap:2px 14px}
+  .bt-sum .tbl{display:block}
+  /* 세로로 쌓이면 표 첫 줄에 맞출 이유가 없다. 위 여백을 지운다. */
+  .bt-sum .cond{padding-top:0;padding-bottom:10px;font-size:14px}
+  .bt-sum .grid{gap:2px 14px;justify-content:start}
   .bt-sum .grid .q{font-size:20px}
   /* 영어 열 머리글(CHANCE OF PROFIT)은 한글보다 훨씬 길다. 좁은 화면에서는
      줄을 바꾸게 둔다 — 안 그러면 320px 에서 화면 밖으로 51px 나간다.
@@ -1257,7 +1267,10 @@ function renderMain(){
     html:k=>{const day=allDays[k];
       return `<div class="t-d">${fdate(day)}</div>`+drawn.map(l=>{
         const v=at(l,day);
-        return v==null?"":`<div class="t-r"><span>${mainName(l.key)}</span><b>${l.side==="L"?fmt(v):gFmt(v,GAUGE[l.key])}</b></div>`;
+        /* 가격선에는 티커를 병기한다 — 여기 찍히는 764.29 는 S&P 500 지수(7,656)가
+           아니라 SPY 값이다. 심리선은 숫자가 곧 그 지수라 짧은 이름으로 둔다. */
+        const nm=(l.side==="L")?mainFull(l.key):mainName(l.key);
+        return v==null?"":`<div class="t-r"><span>${nm}</span><b>${l.side==="L"?fmt(v):gFmt(v,GAUGE[l.key])}</b></div>`;
       }).join("")}
   });
 }
@@ -1691,8 +1704,10 @@ function btSummary(){
   const head='<div class="now">'+
     '<div class="cap">'+tx("nowOf",axShort(a))+'</div>'+
     '<div class="val"><span class="v">'+cur.toFixed(a.dec||0)+'</span>'+
-    (zn2?'<span class="zn"'+zc+'>'+zn2+'</span>':'')+'</div>'+
-    '<div class="hz">'+tx("buyHere",tx("hold")[btH])+'</div></div>';
+    (zn2?'<span class="zn"'+zc+'>'+zn2+'</span>':'')+'</div></div>';
+  /* 이 문장은 현재값의 꼬리가 아니라 아래 표가 성립하는 조건이다.
+     그래서 구분선 아래, 표 옆에 둔다. */
+  const cond='<div class="cond">'+tx("buyHere",tx("hold")[btH])+'</div>';
   const S=btSeries();
   if(!S.length||S[0].med[v]==null){
     el.innerHTML=head+'<div class="row">'+tx("noStats")+'</div>';
@@ -1701,7 +1716,7 @@ function btSummary(){
   /* 지수 2개 × 잣대 2개는 원래 표다. 줄글로 쓰면 "수익날 확률"·"중위 수익"이
      줄마다 되풀이되면서 정작 숫자를 덮는다. 이름은 열 머리에 한 번만 쓴다. */
   const cell=(x,cls)=>`<span class="q ${cls||""}">${x}</span>`;
-  const body='<div class="grid">'+
+  const body='<div class="tbl">'+cond+'<div class="grid">'+
     `<div class="hd"></div><div class="hd">${tx("winProb")}</div><div class="hd">${tx("medHead")}</div>`+
     S.map(s=>{
       if(s.med[v]==null)
@@ -1710,7 +1725,7 @@ function btSummary(){
       return `<div class="idx">${s.name}</div>`+
         cell(s.win[v].toFixed(0)+"%")+
         cell((m>0?"+":"")+m.toFixed(2)+"%", m>=0?"up":"dn");
-    }).join("")+'</div>';
+    }).join("")+'</div></div>';
   /* 이 눈금의 표본이 전체에서 얼마나 되는지 함께 보인다.
      1,616 이라는 숫자만으로는 많은지 적은지 알 수 없다. */
   const holder=Object.values(BT.indices).find(x=>x&&x.curve&&x.curve[a.key]);
