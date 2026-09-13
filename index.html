@@ -428,7 +428,12 @@ body.dragging #main-chart .cross,body.dragging #main-chart .tip{opacity:0!import
 h2.name{margin:0;font-family:var(--cond);font-weight:700;font-size:19px;
   flex-wrap:wrap;gap:0 4px;line-height:1.35}
 .ticker{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink-3);border:1px solid var(--rule);padding:2px 5px}
-.now{display:flex;align-items:baseline;gap:10px;white-space:nowrap}
+/* 성적표 첫 줄("지금 공포탐욕 33 · 공포 — 여기서 사서 1년 뒤")은 숫자가 아니라
+   문장이다. 좁은 화면에서는 줄이 바뀌어야 한다.
+   예전에는 지운 낙폭 패널의 숫자 표시(값 + 등락률)도 이 클래스를 같이 썼고,
+   거기서는 한 줄로 붙어 있어야 해서 flex + nowrap 이었다. 패널은 3단계에서
+   사라졌는데 규칙만 남아, 320px 화면에서 이 문장 하나가 58px 을 밀어냈다. */
+.now{white-space:normal}
 .dn{color:var(--down)} .up{color:var(--up)}
 .mark{display:inline-flex;align-items:center;gap:5px;font-family:var(--cond);font-weight:700;
   font-size:10px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
@@ -483,7 +488,10 @@ body.settled .fade{animation:none;opacity:1}
   padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--rule-2)}
 .bt-sum .now .hz{color:var(--ink-3);font-weight:400}
 .bt-sum .row{display:flex;flex-wrap:wrap;gap:0 10px}
-.bt-sum .row .idx{flex:0 0 82px;color:var(--ink-3)}
+/* 지수 이름 칸. 고정폭이면 좁은 화면 영어에서 "Nasdaq 100" 이 둘로 쪼개진다.
+   폭은 유지하되 이름이 길면 늘어나게 두고, 이름 안에서는 줄을 안 바꾼다. */
+.bt-sum .row .idx{flex:0 0 auto;min-width:82px;padding-right:10px;
+  white-space:nowrap;color:var(--ink-3)}
 .bt-sum b{font-weight:500;color:var(--ink)}
 .bt-sum .n{color:var(--ink-3);font-size:11.5px;margin-top:5px}
 /* 범례 — 선 두 개를 글로 풀지 않고 모양 그대로 보여준다 */
@@ -497,7 +505,7 @@ body.settled .fade{animation:none;opacity:1}
   .bt-head{padding:13px 14px 8px}
   .bt-sum{padding:2px 14px 13px}
   .bt-sum .now{font-size:15px}
-  .bt-sum .row .idx{flex:0 0 76px}
+  .bt-sum .row .idx{min-width:76px}
   .bt-key{gap:14px;font-size:11px}
   h2.name{font-size:16px}
   .ctl-row{padding:10px 14px 0;gap:10px}
@@ -510,6 +518,47 @@ body.settled .fade{animation:none;opacity:1}
 }
 
 .empty{padding:44px 20px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--ink-3);line-height:1.9}
+/* ---------- 설명 글 (검색엔진이 읽는 유일한 본문) ----------
+   숫자와 차트는 전부 JS 로 그려집니다. 크롤러는 JS 를 안 돌리므로
+   이 글이 **HTML 에 직접 박혀 있어야** 합니다. 사전(D)에 넣으면
+   구글이 받는 페이지는 다시 빈 페이지가 됩니다. 옮기지 마세요.
+
+   두 언어를 다 넣어 두고 CSS 로 한쪽만 보입니다. 네이버처럼 JS 를
+   안 돌리는 크롤러에게도 한국어가 그대로 보이게 하려는 것입니다. */
+.about{margin-top:26px}
+.about details{border:0}
+.about summary{list-style:none;cursor:pointer;display:flex;align-items:center;
+  justify-content:space-between;gap:12px;padding:15px 20px;
+  font-family:var(--cond);font-weight:700;font-size:15px;color:var(--ink)}
+.about summary::-webkit-details-marker{display:none}
+.about summary:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.about summary:hover{background:rgba(15,26,36,.02)}
+/* 여닫이 표시 — 더하기에서 빼기로. 계측기 느낌에 맞춰 선 두 개로만 */
+.about .mk{position:relative;width:11px;height:11px;flex:0 0 11px}
+.about .mk::before,.about .mk::after{content:"";position:absolute;background:var(--ink-3)}
+.about .mk::before{left:0;top:5px;width:11px;height:1.5px}
+.about .mk::after{left:5px;top:0;width:1.5px;height:11px;transition:opacity .15s}
+.about details[open] .mk::after{opacity:0}
+.about .prose{padding:2px 20px 20px;border-top:1px solid var(--rule-2);margin-top:-1px}
+.about .prose h3{font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.04em;
+  color:var(--ink);margin:20px 0 6px}
+.about .prose h3:first-child{margin-top:16px}
+.about .prose p{margin:0;font-size:12.5px;line-height:1.85;color:var(--ink-2)}
+/* 면책 문구는 본문과 같은 글꼴·크기로 둡니다. 고정폭으로 뒀더니
+   한글 자간이 벌어지고 색도 흐려서, 제일 중요한 문장이 제일 읽기
+   어려워졌습니다. 작게 흘려 쓰면 안 되는 문장입니다. */
+.about .prose .fine{margin-top:22px;padding-top:15px;border-top:1px solid var(--rule);
+  font-size:12.5px;line-height:1.85;color:var(--ink-2)}
+.about .prose b{font-weight:600;color:var(--ink)}
+/* 지금 언어가 아닌 쪽은 감춥니다 — 글자는 HTML 에 그대로 남습니다. */
+html[lang="ko"] .about [data-lang="en"]{display:none}
+html:not([lang="ko"]) .about [data-lang="ko"]{display:none}
+@media (max-width:640px){
+  .about summary{padding:13px 14px;font-size:14px}
+  .about .prose{padding:2px 14px 16px}
+  .about .prose p{font-size:12px}
+}
+
 .foot{margin-top:26px;padding-top:14px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.8}
 .foot b{color:var(--ink-2);font-weight:500}
 
@@ -583,6 +632,121 @@ svg.sm .svg-axis{font-size:11px}
       <div id="bt-body"><div class="empty">Loading…</div></div>
     </div>
   </section>
+
+
+<!-- ══ 설명 글 ═══════════════════════════════════════════════════════
+     **이 글은 JS 로 그리면 안 됩니다.** 구글이 2026-09-13 에 이 사이트를
+     "크롤링됨 - 현재 색인이 생성되지 않음" 으로 판정했는데, 크롤러가 받는
+     본문이 304자(그중 "Loading…" 두 개)뿐이었던 것이 원인입니다.
+     숫자는 전부 그날 backtest.json(일봉 기준)으로 다시 계산한 값입니다.
+═════════════════════════════════════════════════════════════════════ -->
+<section class="panel about">
+  <details>
+    <summary>
+      <span data-lang="en">How these numbers are worked out</span>
+      <span data-lang="ko">이 숫자들은 어떻게 계산했나</span>
+      <span class="mk" aria-hidden="true"></span>
+    </summary>
+
+    <div class="prose" data-lang="ko">
+      <h3>무엇을 보여주는 화면인가</h3>
+      <p>S&amp;P 500(SPY)과 나스닥 100(QQQ)이 전고점에서 얼마나 내려와 있는지, 그리고
+      CNN 공포와 탐욕 지수·VIX 가 지금 수준이던 날에 샀다면 그 뒤 어떻게 됐는지를
+      실제 종가로 계산해 보여 줍니다. <b>예측이 아니라 기록입니다.</b></p>
+
+      <h3>평균이 아니라 중앙값으로 긋습니다</h3>
+      <p>공포탐욕이 0 근처일 때 사서 1년 들고 있던 44일을 보면, 평균 수익률은
+      <b>+26.78%</b> 인데 중앙값은 <b>+11.44%</b> 입니다. 2020년 3월 바닥에서 산 며칠이
+      +100% 씩 나오며 평균을 끌어올린 결과입니다. 평균만 보면 "극단적 공포에 사면
+      27% 번다"로 읽히지만 실제로는 절반이 11% 아래였습니다. 그래서 선은 중앙값으로
+      긋고, 평균은 점에 마우스를 올리면 함께 보여 줍니다.</p>
+
+      <h3>구간을 덩어리로 묶지 않습니다</h3>
+      <p>'극단적 공포'를 0~24 한 칸으로 묶으면 그 안이 뭉개집니다. 지수가 5 이던 날
+      산 경우 1년 뒤 수익이 났을 확률이 <b>98%</b> 인데, 같은 칸의 24 는 <b>80%</b> 입니다.
+      전혀 다른 이야기를 한 숫자로 덮는 셈입니다. 그래서 눈금마다 그 값 ±5 인 날들만
+      따로 모아 계산하고, 표본이 30일도 안 되는 눈금은 비워서 선을 끊습니다.
+      화면의 색 띠와 이름표는 보기 편하라고 붙인 것일 뿐 계산에는 쓰이지 않습니다.</p>
+
+      <h3>VIX 구간은 남들이 쓰는 숫자에 맞췄습니다</h3>
+      <p>12 미만 아주 잠잠, 12~15 잠잠, 15~20 보통, 20~30 불안, 30~40 공포, 40 이상 패닉.
+      <b>CBOE 는 공식 구간 분류를 내놓지 않습니다</b> — 정의와 계산식만 공개합니다.
+      검색하면 "공식"이라며 표가 나오는데 출처가 개인이 만든 차트 스크립트입니다.
+      다만 1990년 이후 하루 종가의 절반이 <b>17.6</b> 아래였으니, 20 은 평균보다 조금
+      높은 정도지 그 자체로 위험 신호는 아닙니다.</p>
+
+      <h3>전고점은 사상 최고점이 아닙니다</h3>
+      <p>점선으로 그은 전고점은 <b>화면에 보이는 구간 안에서의</b> 최고 종가입니다.
+      차트를 옆으로 끌어 구간을 옮기면 그 구간의 전고점으로 바뀝니다.</p>
+
+      <h3>표본이 닿는 곳까지만</h3>
+      <p>공포탐욕 잣대는 <b>2011년 1월 3일부터 3,854일</b>입니다. 지수 자체가 2012년에
+      나왔고 소급할 수 있는 값이 2011년까지뿐이라 <b>2008년 금융위기가 통째로
+      빠져 있습니다.</b> 남은 기간이 대체로 상승장이라 승률이 실제보다 좋아 보일 수
+      있습니다. VIX 를 두 번째 잣대로 넣은 이유가 이것입니다 — S&amp;P 500 기준
+      1993년 1월 29일부터 <b>8,462일</b>이라 2008년이 들어갑니다.</p>
+
+      <h3>데이터</h3>
+      <p>가격은 SPY·QQQ 배당 재투자 기준(Yahoo Finance), 공포와 탐욕 지수는 CNN Business,
+      VIX 는 CBOE 입니다. 미국장이 열려 있는 동안은 실시간, 닫혀 있으면 마지막 종가를
+      보여 줍니다. 차트의 최근 5년은 하루 단위, 그 이전은 주 단위입니다.</p>
+
+      <p class="fine">여기 있는 숫자는 전부 과거 기록이고 미래를 보장하지 않습니다.
+      투자 판단과 그 결과는 보는 사람의 몫입니다.</p>
+    </div>
+
+    <div class="prose" data-lang="en">
+      <h3>What this page shows</h3>
+      <p>How far the S&amp;P 500 (SPY) and Nasdaq 100 (QQQ) have fallen from their peak,
+      and what happened next on the days when CNN's Fear &amp; Greed index or the VIX
+      stood where it stands now — computed from real closing prices.
+      <b>A record, not a forecast.</b></p>
+
+      <h3>The line is the median, not the mean</h3>
+      <p>Across the 44 days when Fear &amp; Greed sat near 0 and the position was held
+      a year, the mean return was <b>+26.78%</b> and the median <b>+11.44%</b>. A handful
+      of days at the March 2020 bottom returned over +100% and dragged the mean up.
+      The mean alone reads as "buy in extreme fear and make 27%", when in fact half of
+      those days came in under 11%. So the line is drawn from the median, and the mean
+      appears alongside it when you hover a point.</p>
+
+      <h3>Levels are not lumped into bands</h3>
+      <p>Treating "extreme fear" as one 0–24 bucket flattens what is inside it. Buying
+      at a reading of 5 was up a year later <b>98%</b> of the time; at 24, in the same
+      bucket, <b>80%</b>. That is a different story hidden under one number. So each
+      tick is computed from only the days within ±5 of it, and any tick with fewer
+      than 30 days is left empty and the line breaks. The coloured bands and their
+      labels are there to read by — they play no part in the arithmetic.</p>
+
+      <h3>The VIX bands follow common usage</h3>
+      <p>Under 12 very calm, 12–15 calm, 15–20 normal, 20–30 uneasy, 30–40 fearful,
+      above 40 panic. <b>CBOE publishes no official banding</b> — only the definition
+      and the formula. Tables presented online as "official" trace back to a personal
+      charting script. Worth knowing: half of all daily closes since 1990 were below
+      <b>17.6</b>, so 20 is a little above ordinary rather than a warning in itself.</p>
+
+      <h3>The peak is not the all-time high</h3>
+      <p>The dashed peak line is the highest close <b>inside the window on screen</b>.
+      Drag the chart sideways and it becomes that stretch's peak.</p>
+
+      <h3>As far back as the sample reaches</h3>
+      <p>The Fear &amp; Greed measure covers <b>3,854 days from 3 January 2011</b>. The
+      index itself launched in 2012 and cannot be reconstructed further back than 2011,
+      so <b>2008 is missing entirely</b>. What remains is mostly a rising market, which
+      can make the win rates look better than they would otherwise. That is why VIX is
+      offered as a second measure — against the S&amp;P 500 it covers <b>8,462 days</b>
+      from 29 January 1993, which includes 2008.</p>
+
+      <h3>Data</h3>
+      <p>Prices are SPY and QQQ with dividends reinvested (Yahoo Finance), Fear &amp;
+      Greed from CNN Business, VIX from CBOE. Live while the US market is open, last
+      close when it is shut. The last five years are daily; before that, weekly.</p>
+
+      <p class="fine">Every figure here is a past record and guarantees nothing about
+      the future. What you do with it, and what follows, is yours.</p>
+    </div>
+  </details>
+</section>
 
   <p class="foot" id="foot">
     Peak is the highest close inside the window on screen.<br>
