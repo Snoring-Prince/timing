@@ -127,7 +127,7 @@ ko:{
   stampLive:t=>`실시간 ${t}`,
   foot:["전고점은 화면에 보이는 기간 안의 최고 종가입니다. 옆으로 끌면 그 구간의 전고점으로 바뀝니다.",
         "SPY·QQQ 배당 재투자 기준 · 출처: Yahoo Finance · 공포탐욕지수: CNN Business · VIX: CBOE",
-        "미국장이 열려 있는 동안은 실시간, 닫혀 있으면 마지막 종가입니다. 최근 5년은 하루 단위, 그 이전은 주 단위입니다."],
+        "미국장이 열려 있는 동안은 실시간, 닫혀 있으면 마지막 종가입니다. 위 차트는 최근 5년이 하루 단위, 그 이전은 주 단위입니다. 아래 수익률 계산은 전 기간 하루 단위입니다."],
   btFoot:()=>`과거 성과일 뿐 미래를 보장하지 않습니다.`,
   ax:{
     fng:{label:"공포탐욕지수",short:"공포탐욕",title:"공포와 탐욕 지수별 수익률",
@@ -192,7 +192,7 @@ en:{
   stampLive:t=>`Live ${t}`,
   foot:["The peak is the highest close inside the window on screen. Drag sideways and it becomes that stretch's peak.",
         "Total return on SPY and QQQ · Source: Yahoo Finance · Fear &amp; Greed: CNN Business · VIX: CBOE",
-        "Live while the US market is open, last close when it is shut. Daily for the last five years, weekly before that."],
+        "Live while the US market is open, last close when it is shut. The chart above is daily for the last five years and weekly before that; the returns below are daily throughout."],
   btFoot:()=>`Past performance does not guarantee future results.`,
   ax:{
     fng:{label:"Fear & Greed Index",short:"F&G",title:"Returns by Fear &amp; Greed level",
@@ -505,16 +505,24 @@ body.settled .fade{animation:none;opacity:1}
   gap:20px;flex-wrap:wrap}
 /* 열 머리글 높이만큼 내려서 표의 첫 줄(S&P 500)과 눈높이를 맞춘다.
    위로 붙이면 머리글과 나란히 서서 저도 머리글처럼 읽힌다. */
-.bt-sum .cond{font-size:15px;color:var(--ink-2);padding-top:21px}
+.bt-sum .lead{padding-top:25px}
+.bt-sum .cond{font-size:16.5px;color:var(--ink-2);line-height:1.45}
+.bt-sum .lead .n{margin-top:3px}
 
-/* 이름 / 수익날 확률 / 중위 수익률 세 칸. 열 머리는 한 번만 쓴다. */
+/* 이름 / 수익날 확률 / 중위 수익률 세 칸. 열 머리는 한 번만 쓴다.
+   오른쪽 여백은 아래 그래프의 그리는 영역 오른쪽 끝과 맞춘 값이다 —
+   카드 가장자리(20px)까지 밀면 표만 그래프보다 튀어나와 보인다. */
 .bt-sum .grid{display:grid;grid-template-columns:auto auto auto;
-  justify-content:end;gap:2px 40px;align-items:baseline}
+  justify-content:end;gap:2px 40px;align-items:baseline;padding-right:15px}
 .bt-sum .grid .hd{font-family:var(--cond);font-weight:600;font-size:10.5px;
   letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);
   padding-bottom:3px;white-space:nowrap}
-.bt-sum .grid .idx{color:var(--ink-2);font-size:12.5px;white-space:nowrap;padding-right:4px}
-.bt-sum .grid .q{font-size:23px;font-weight:500;letter-spacing:-.02em;color:var(--ink)}
+/* 줄 간격은 카드 전체의 1.7 이 아니라 여기서 다시 잡는다. 23px 글자에
+   1.7 을 곱하면 줄 상자가 39px 이 되어 S&P 500 과 나스닥 100 이 멀어진다. */
+.bt-sum .grid .idx{color:var(--ink-2);font-size:12.5px;white-space:nowrap;
+  padding-right:4px;line-height:1.25}
+.bt-sum .grid .q{font-size:23px;font-weight:500;letter-spacing:-.02em;
+  color:var(--ink);line-height:1.25}
 .bt-sum .grid .few{color:var(--ink-3);font-size:12.5px}
 .bt-sum .row{display:flex;flex-wrap:wrap;gap:0 10px}
 /* 지수 이름 칸. 고정폭이면 좁은 화면 영어에서 "Nasdaq 100" 이 둘로 쪼개진다.
@@ -536,8 +544,9 @@ body.settled .fade{animation:none;opacity:1}
   .bt-sum .now .v{font-size:32px}
   .bt-sum .tbl{display:block}
   /* 세로로 쌓이면 표 첫 줄에 맞출 이유가 없다. 위 여백을 지운다. */
-  .bt-sum .cond{padding-top:0;padding-bottom:10px;font-size:14px}
-  .bt-sum .grid{gap:2px 14px;justify-content:start}
+  .bt-sum .lead{padding-top:0;padding-bottom:10px}
+  .bt-sum .cond{font-size:15px}
+  .bt-sum .grid{gap:2px 14px;justify-content:start;padding-right:0}
   .bt-sum .grid .q{font-size:20px}
   /* 영어 열 머리글(CHANCE OF PROFIT)은 한글보다 훨씬 길다. 좁은 화면에서는
      줄을 바꾸게 둔다 — 안 그러면 320px 에서 화면 밖으로 51px 나간다.
@@ -727,7 +736,8 @@ svg.sm .svg-axis{font-size:11px}
       <h3>데이터</h3>
       <p>가격은 SPY·QQQ 배당 재투자 기준(Yahoo Finance), 공포와 탐욕 지수는 CNN Business,
       VIX 는 CBOE 입니다. 미국장이 열려 있는 동안은 실시간, 닫혀 있으면 마지막 종가를
-      보여 줍니다. 차트의 최근 5년은 하루 단위, 그 이전은 주 단위입니다.</p>
+      보여 줍니다. 차트는 최근 5년이 하루 단위, 그 이전은 주 단위입니다.
+      아래 수익률은 전 기간 하루 단위로 계산합니다.</p>
 
       <p class="fine">여기 있는 숫자는 전부 과거 기록이고 미래를 보장하지 않습니다.
       투자 판단과 그 결과는 보는 사람의 몫입니다.</p>
@@ -778,7 +788,8 @@ svg.sm .svg-axis{font-size:11px}
       <h3>Data</h3>
       <p>Prices are SPY and QQQ with dividends reinvested (Yahoo Finance), Fear &amp;
       Greed from CNN Business, VIX from CBOE. Live while the US market is open, last
-      close when it is shut. The last five years are daily; before that, weekly.</p>
+      close when it is shut. The chart is daily for the last five years and weekly
+      before that; the return figures below are computed from daily data throughout.</p>
 
       <p class="fine">Every figure here is a past record and guarantees nothing about
       the future. What you do with it, and what follows, is yours.</p>
@@ -1705,18 +1716,25 @@ function btSummary(){
     '<div class="cap">'+tx("nowOf",axShort(a))+'</div>'+
     '<div class="val"><span class="v">'+cur.toFixed(a.dec||0)+'</span>'+
     (zn2?'<span class="zn"'+zc+'>'+zn2+'</span>':'')+'</div></div>';
-  /* 이 문장은 현재값의 꼬리가 아니라 아래 표가 성립하는 조건이다.
-     그래서 구분선 아래, 표 옆에 둔다. */
-  const cond='<div class="cond">'+tx("buyHere",tx("hold")[btH])+'</div>';
   const S=btSeries();
   if(!S.length||S[0].med[v]==null){
     el.innerHTML=head+'<div class="row">'+tx("noStats")+'</div>';
     return;
   }
+  /* 이 눈금의 표본이 전체에서 얼마나 되는지 함께 보인다.
+     1,616 이라는 숫자만으로는 많은지 적은지 알 수 없다. */
+  const holder=Object.values(BT.indices).find(x=>x&&x.curve&&x.curve[a.key]);
+  const all=(holder&&holder.curve[a.key]&&holder.curve[a.key].days)||0;
+  /* 조건 문장과 표본 줄은 한 덩이다 — 표본 줄은 그 문장이 며칠을 근거로
+     하는지 말한다. 표 아래에 떼어 두면 세 칸 중 어느 칸 이야기인지 흐려진다.
+     둘을 묶어 구분선 아래 왼쪽에 놓고, 오른쪽을 표가 쓴다. */
+  const lead='<div class="lead">'+
+    '<div class="cond">'+tx("buyHere",tx("hold")[btH])+'</div>'+
+    '<div class="n">'+tx("sampleDays",num(S[0].n[v]||0),num(all))+'</div></div>';
   /* 지수 2개 × 잣대 2개는 원래 표다. 줄글로 쓰면 "수익날 확률"·"중위 수익"이
      줄마다 되풀이되면서 정작 숫자를 덮는다. 이름은 열 머리에 한 번만 쓴다. */
   const cell=(x,cls)=>`<span class="q ${cls||""}">${x}</span>`;
-  const body='<div class="tbl">'+cond+'<div class="grid">'+
+  const body='<div class="tbl">'+lead+'<div class="grid">'+
     `<div class="hd"></div><div class="hd">${tx("winProb")}</div><div class="hd">${tx("medHead")}</div>`+
     S.map(s=>{
       if(s.med[v]==null)
@@ -1726,12 +1744,7 @@ function btSummary(){
         cell(s.win[v].toFixed(0)+"%")+
         cell((m>0?"+":"")+m.toFixed(2)+"%", m>=0?"up":"dn");
     }).join("")+'</div></div>';
-  /* 이 눈금의 표본이 전체에서 얼마나 되는지 함께 보인다.
-     1,616 이라는 숫자만으로는 많은지 적은지 알 수 없다. */
-  const holder=Object.values(BT.indices).find(x=>x&&x.curve&&x.curve[a.key]);
-  const all=(holder&&holder.curve[a.key]&&holder.curve[a.key].days)||0;
-  el.innerHTML=head+body+
-    `<div class="n">${tx("sampleDays",num(S[0].n[v]||0),num(all))}</div>`;
+  el.innerHTML=head+body;
 }
 
 function renderBT(){
