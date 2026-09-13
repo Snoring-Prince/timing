@@ -70,7 +70,7 @@ ko:{
   stampLive:t=>`실시간 ${t}`,
   foot:["전고점은 화면에 보이는 기간 안의 최고 종가입니다. 옆으로 끌면 그 구간의 전고점으로 바뀝니다.",
         "SPY·QQQ 배당 재투자 기준 · 출처: Yahoo Finance · 공포탐욕지수: CNN Business · VIX: CBOE",
-        "종가는 미국장 마감 후 하루 한 번 갱신됩니다. 최근 5년은 하루 단위, 그 이전은 주 단위입니다."],
+        "미국장이 열려 있는 동안은 실시간, 닫혀 있으면 마지막 종가입니다. 최근 5년은 하루 단위, 그 이전은 주 단위입니다."],
   btFoot:()=>`과거 성과일 뿐 미래를 보장하지 않습니다.`,
   ax:{
     fng:{label:"공포탐욕지수",short:"공포탐욕",title:"공포와 탐욕 지수별 수익률",
@@ -133,7 +133,7 @@ en:{
   stampLive:t=>`Live ${t}`,
   foot:["The peak is the highest close inside the window on screen. Drag sideways and it becomes that stretch's peak.",
         "Total return on SPY and QQQ · Source: Yahoo Finance · Fear &amp; Greed: CNN Business · VIX: CBOE",
-        "Closing prices update once a day after the US market closes. Daily for the last five years, weekly before that."],
+        "Live while the US market is open, last close when it is shut. Daily for the last five years, weekly before that."],
   btFoot:()=>`Past performance does not guarantee future results.`,
   ax:{
     fng:{label:"Fear & Greed Index",short:"F&G",title:"Returns by Fear &amp; Greed level",
@@ -241,7 +241,7 @@ applyLang(pickLang(),false);
    비워 두면 아무 일도 일어나지 않습니다. 종가만으로 화면은 완전히 돕니다.
    workers/live.js 를 클라우드플레어에 올리고 그 주소를 여기 넣으면 켜집니다.
    통계 블록과 마찬가지로 화면·데이터 코드와 분리돼 있습니다. */
-window.LIVE={ url: "" };
+window.LIVE={ url: "https://yellow-salad-ec67.dysan1000.workers.dev/" };
 
 window.STATS={
   id : "41e07a57-a87c-403b-bdf8-e12d911457b6",   /* Umami Website ID */
@@ -511,10 +511,9 @@ svg.sm .svg-axis{font-size:11px}
   </section>
 
   <p class="foot" id="foot">
-    Peak is the highest close within the last 10 years, regardless of the selected range.<br>
-    Index data: Yahoo Finance · Fear &amp; Greed: CNN Business<br>
-    Closing prices update once a day after the US market closes.<br>
-    Intraday figures may be delayed.
+    Peak is the highest close inside the window on screen.<br>
+    SPY and QQQ, dividends reinvested · Yahoo Finance · Fear &amp; Greed: CNN Business · VIX: CBOE<br>
+    Live while the US market is open, last close when it is shut.
   </p>
 </div>
 
@@ -1647,7 +1646,7 @@ async function loadLive(){
     LIVE=j;
   }catch(e){console.error(e);return}
   const el=document.getElementById("stamp");
-  if(el&&LIVE.fetched)el.textContent=stamp(LIVE.fetched,true);
+  if(el&&LIVE.fetched&&LIVE.open)el.textContent=stamp(LIVE.fetched,true);
   if(applyLive()){renderMain();calibrateDraw()}
   renderBT();                                /* 성적표의 '지금 값'도 함께 */
 }
