@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- 사이트의 디자인 언어 그대로: 전고점은 수위선(점선), 그 아래로 떨어졌다가
+       다시 수위선 위로 올라오는 선. 이름(itpaidoff)이 그림 하나에 들어간다.
+       색은 언어에 따라 뒤집히므로(상승 빨강/초록) 아이콘은 무채색으로 둔다. -->
+  <rect width="32" height="32" rx="7" fill="#0F1A24"/>
+  <line x1="5" y1="10.5" x2="27" y2="10.5" stroke="#9AA7B2" stroke-width="2"
+        stroke-dasharray="4.6 3.4" stroke-linecap="round"/>
+  <path d="M5 12.5 L10 17.5 L14 22 L19 15 L23.5 11.5 L27 7"
+        fill="none" stroke="#F7F9FB" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="27" cy="7" r="2.6" fill="#F7F9FB"/>
+</svg>

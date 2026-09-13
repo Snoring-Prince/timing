@@ -1,0 +1,5 @@
+# itpaidoff.com — 다 읽어 가도 됩니다. 막을 것이 없습니다.
+User-agent: *
+Allow: /
+
+Sitemap: https://itpaidoff.com/sitemap.xml
