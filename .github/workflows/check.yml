@@ -8,12 +8,8 @@ on:
       - "index.html"
       - "data/backtest.json"
       - "scripts/check_about.py"
+      - "scripts/notify.py"
   workflow_dispatch:
-    inputs:
-      telegram_test:
-        description: "텔레그램 시험 발송 (설정이 됐는지 확인용)"
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -27,14 +23,14 @@ jobs:
         with:
           python-version: "3.12"
 
-      # PR 에서는 텔레그램을 안 씁니다 — 실패가 PR 화면에 빨간 X 로 바로 보입니다.
       - name: 설명 글 숫자 대조
-        if: ${{ !inputs.telegram_test }}
         run: python scripts/check_about.py
 
-      # Actions 탭에서 손으로 눌러 보는 시험 발송. 실패를 기다릴 필요가 없습니다.
+      # 손으로 돌렸다면 알림 경로까지 확인하고 싶다는 뜻이다. 켜고 끄는 체크박스를
+      # 뒀더니 안 켜고 돌려서, 초록불인데 아무것도 안 오는 일이 실제로 있었다.
+      # PR 에서는 안 보낸다 — 화면에 빨간 X 로 바로 보이고, 리뷰마다 울릴 이유가 없다.
       - name: 텔레그램 시험 발송
-        if: ${{ inputs.telegram_test }}
+        if: github.event_name == 'workflow_dispatch'
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT }}
