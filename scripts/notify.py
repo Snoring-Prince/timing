@@ -16,9 +16,13 @@ GitHub 의 실패 메일은 계정 알림 설정에 걸려 있고, 예약 워크
                      **봇이 달라도 같은 번호**입니다(단, 새 봇에게는 말을
                      한 번 걸어 둬야 봇이 나에게 보낼 수 있습니다).
 
-**둘 중 하나라도 없으면 조용히 넘어갑니다(종료코드 0).** 알림을 못 보내는 것이
-워크플로를 실패시킬 이유는 아닙니다 — 이미 실패해서 불려 온 참이니까요.
-같은 이유로 텔레그램이 죽어 있어도 실패로 만들지 않습니다.
+**실패 알림일 때는 둘 중 하나가 없어도 조용히 넘어갑니다(종료코드 0).** 알림을 못
+보내는 것이 워크플로를 실패시킬 이유는 아닙니다 — 이미 실패해서 불려 온 참이니까요.
+텔레그램이 죽어 있어도 마찬가지입니다.
+
+**`--test` 는 반대입니다. 못 보내면 실패(종료코드 1)로 끝냅니다.** 시험 발송은
+"되는지 확인해 달라"는 뜻인데 조용히 넘어가면 **초록색인데 아무것도 안 온** 상태가
+되어, 설정이 된 것인지 아닌지 알 수가 없습니다. 실제로 그렇게 한 번 헛돌았습니다.
 
     python scripts/notify.py --title "제목" --body-file out.txt
     python scripts/notify.py --test
@@ -89,7 +93,12 @@ def compose(title: str, body: str, run_url: str, project: str = "") -> str:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--title", default="알림")
-    ap.add_argument("--body-file", help="본문으로 쓸 파일 (없으면 표준입력)")
+    ap.add_argument("--body-file", help="본문으로 쓸 파일")
+    # 표준입력은 **달라고 할 때만** 읽는다. 예전에는 --body-file 이 없으면
+    # 알아서 읽었는데, 표준입력이 열린 파이프면 EOF 를 기다리며 영영 멈춘다.
+    # 러너에서는 보통 /dev/null 이라 지나갔지만, 알림 한 줄 때문에 실행이
+    # 6시간 걸려 죽을 수 있는 자리였다(시험 중에 실제로 멈춰서 찾았다).
+    ap.add_argument("--body-stdin", action="store_true", help="본문을 표준입력에서 읽는다")
     ap.add_argument("--test", action="store_true", help="시험 발송")
     a = ap.parse_args()
 
@@ -98,6 +107,12 @@ def main() -> int:
     if not token or not chat:
         missing = " · ".join(n for n, v in
                              (("TELEGRAM_TOKEN", token), ("TELEGRAM_CHAT", chat)) if not v)
+        if a.test:
+            print(f"시험 발송을 할 수 없습니다 — 비밀값이 없습니다: {missing}")
+            print("  저장소 Settings → Secrets and variables → Actions 에서 넣어 주세요.")
+            print("  TELEGRAM_TOKEN  BotFather 가 준 토큰 (어느 봇이든 됩니다)")
+            print("  TELEGRAM_CHAT   받을 chat id (@userinfobot 이 알려 줍니다)")
+            return 1
         print(f"텔레그램 설정이 없어 건너뜁니다 (없는 값: {missing})")
         print("  저장소 Settings → Secrets and variables → Actions 에 넣으면 켜집니다.")
         return 0
@@ -114,8 +129,10 @@ def main() -> int:
         title = a.title
         if a.body_file and os.path.exists(a.body_file):
             body = open(a.body_file, encoding="utf-8").read()
+        elif a.body_stdin:
+            body = sys.stdin.read()
         else:
-            body = "" if sys.stdin.isatty() else sys.stdin.read()
+            body = ""
 
     run = ""
     srv, repo, rid = (os.environ.get(k, "") for k in
@@ -125,7 +142,13 @@ def main() -> int:
     project = repo.split("/")[-1] if repo else ""
 
     ok = send(token, chat, compose(title, body, run, project))
-    print("보냈습니다." if ok else "못 보냈습니다. (워크플로는 이것 때문에 실패시키지 않습니다)")
+    if ok:
+        print("보냈습니다. 텔레그램을 확인해 보세요.")
+        return 0
+    if a.test:
+        print("시험 발송이 실패했습니다. 위의 이유를 보고 고쳐 주세요.")
+        return 1
+    print("못 보냈습니다. (실패 알림이므로 이것 때문에 실행을 실패시키지는 않습니다)")
     return 0
 
 
