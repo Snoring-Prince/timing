@@ -198,7 +198,7 @@ en:{
   loadFailPanel:"Could not load the data.<br>Please refresh in a moment.",
   stampAs:t=>`Data as of ${t}`,
   stampLive:t=>`Live ${t}`,
-  foot:["The peak is the highest close inside the window on screen. Drag sideways and it becomes that stretch's peak.",
+  foot:["The peak is the highest close inside the window on screen. Drag sideways and it becomes that window's peak.",
         "Total return on SPY and QQQ · Source: Yahoo Finance · Fear &amp; Greed: CNN Business · VIX: CBOE",
         "Live while the US market is open, last close when it is shut. The chart above is daily for the last five years and weekly before that; the returns below are daily throughout."],
   btFoot:()=>`Past performance does not guarantee future results.`,
@@ -816,28 +816,30 @@ svg.sm .svg-axis{font-size:11px}
     <div class="prose" data-lang="en">
       <h3>What this page shows</h3>
       <p>How far the S&amp;P 500 (SPY) and Nasdaq 100 (QQQ) have fallen from their peak,
-      and what happened next on the days when CNN's Fear &amp; Greed index or the VIX
-      stood where it stands now — computed from real closing prices.
+      and what happened next on days when CNN's Fear &amp; Greed index or the VIX was
+      at its current level — computed from actual closing prices.
       <b>A record, not a forecast.</b></p>
 
       <h3>The line is the median, not the mean</h3>
       <p>Across the 44 days when Fear &amp; Greed sat near 0 and the position was held
-      a year, the mean return was <b>+26.78%</b> and the median <b>+11.44%</b>. A handful
+      for a year, the mean return was <b>+26.78%</b> and the median <b>+11.44%</b>. A handful
       of days at the March 2020 bottom returned over +100% and dragged the mean up.
       The mean alone reads as "buy in extreme fear and make 27%", when in fact half of
       those days came in under 11%. So the line is drawn from the median, and the mean
-      appears alongside it when you hover a point.</p>
+      appears alongside it when you hover over a point.</p>
 
       <h3>Levels are not lumped into bands</h3>
-      <p>Treating "extreme fear" as one 0–24 bucket flattens what is inside it. Buying
-      at a reading of 5 was up a year later <b>98%</b> of the time; at 24, in the same
-      bucket, <b>80%</b>. That is a different story hidden under one number. So each
+      <p>Treating "extreme fear" as one 0–24 bucket flattens what is inside it. A reading
+      of 5 was followed by a positive return a year later <b>98%</b> of the time; at 24,
+      in the same bucket, it was <b>80%</b>. That is an entirely different story hidden
+      under one number. So each
       tick is computed from only the days within ±5 of it, and any tick with fewer
-      than 30 days is left empty and the line breaks. The coloured bands and their
-      labels are there to read by — they play no part in the arithmetic.</p>
+      than 30 days is left empty and the line breaks. The colored bands and their
+      labels are there to make the chart easier to read — they play no part in the
+      arithmetic.</p>
 
       <h3>The VIX bands follow common usage</h3>
-      <p>Under 12 very calm, 12–15 calm, 15–20 normal, 20–30 uneasy, 30–40 fearful,
+      <p>Under 12 very calm, 12–15 calm, 15–20 normal, 20–30 anxious, 30–40 fearful,
       above 40 panic. <b>CBOE publishes no official banding</b> — only the definition
       and the formula. Tables presented online as "official" trace back to a personal
       charting script. Worth knowing: half of all daily closes since 1990 were below
@@ -845,7 +847,7 @@ svg.sm .svg-axis{font-size:11px}
 
       <h3>The peak is not the all-time high</h3>
       <p>The dashed peak line is the highest close <b>inside the window on screen</b>.
-      Drag the chart sideways and it becomes that stretch's peak.</p>
+      Drag the chart sideways and it becomes that window's peak.</p>
 
       <h3>As far back as the sample reaches</h3>
       <p>The Fear &amp; Greed measure covers <b>3,854 days from 3 January 2011</b>. The
@@ -862,7 +864,7 @@ svg.sm .svg-axis{font-size:11px}
       before that; the return figures below are computed from daily data throughout.</p>
 
       <p class="fine">Every figure here is a past record and guarantees nothing about
-      the future. What you do with it, and what follows, is yours.</p>
+      the future. Investment decisions and their results are the responsibility of the reader.</p>
     </div>
   </details>
 </section>
