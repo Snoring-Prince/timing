@@ -114,9 +114,10 @@ ko:{
   sampleDays:(n,all)=>`표본 ${n}일 / 전체 ${all}일`,
   samplePeriod:"표본 기간",
   nowIs:(s,v)=>`지금 ${s} ${v}`,
-  buyHere:h=>`— 여기서 사서 ${h} 뒤`,
+  buyHere:h=>`여기서 사서 ${h} 뒤`,
   noStats:"표본이 부족해 통계를 내지 않았습니다.",
   winProb:"수익날 확률", medGain:"중위 수익", medLoss:"중위 손실",
+  medHead:"중위 수익률", nowOf:s=>`지금 ${s}`,
   btTitleDefault:"지수별 수익률",
   noBt:"승률 데이터가 아직 없습니다.<br>첫 계산이 끝나면 여기에 표시됩니다.",
   oldFmt:"데이터가 옛 형식입니다.<br>Actions에서 Update backtest를 한 번 실행하면 나옵니다.",
@@ -178,9 +179,10 @@ en:{
   sampleDays:(n,all)=>`${n} of ${all} sample days`,
   samplePeriod:"Sample",
   nowIs:(s,v)=>`Now ${s} ${v}`,
-  buyHere:h=>`— buy here, hold ${h}`,
+  buyHere:h=>`bought here, held ${h}`,
   noStats:"Not enough samples to compute statistics.",
   winProb:"Chance of profit", medGain:"Median gain", medLoss:"Median loss",
+  medHead:"Median return", nowOf:s=>`${s} now`,
   btTitleDefault:"Returns by level",
   noBt:"No backtest data yet.<br>It will appear here after the first run.",
   oldFmt:"This data is in an older format.<br>Run “Update backtest” once in Actions.",
@@ -488,9 +490,25 @@ body.settled .fade{animation:none;opacity:1}
    글꼴은 전부 mono 하나로 두고 크기·색으로만 층을 나눈다. */
 .bt-sum{padding:2px 20px 15px;font-family:var(--mono);font-size:13px;
   color:var(--ink-2);line-height:1.7}
-.bt-sum .now{font-size:16px;font-weight:500;letter-spacing:-.01em;color:var(--ink);
-  padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--rule-2)}
-.bt-sum .now .hz{color:var(--ink-3);font-weight:400}
+/* 계기판 읽기 — 캡션은 작게 위, 값은 크게 아래. */
+.bt-sum .now{padding-bottom:11px;margin-bottom:12px;border-bottom:1px solid var(--rule-2)}
+.bt-sum .now .cap{font-family:var(--cond);font-weight:600;font-size:10.5px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.bt-sum .now .val{display:flex;align-items:baseline;gap:10px;margin-top:2px;flex-wrap:wrap}
+.bt-sum .now .v{font-size:38px;font-weight:500;letter-spacing:-.03em;
+  line-height:1.05;color:var(--ink)}
+.bt-sum .now .zn{font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:.02em}
+.bt-sum .now .hz{margin-top:5px;font-size:12.5px;color:var(--ink-3)}
+
+/* 이름 / 수익날 확률 / 중위 수익률 세 칸. 열 머리는 한 번만 쓴다. */
+.bt-sum .grid{display:grid;grid-template-columns:auto auto auto;
+  justify-content:start;gap:2px 40px;align-items:baseline}
+.bt-sum .grid .hd{font-family:var(--cond);font-weight:600;font-size:10.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);
+  padding-bottom:3px;white-space:nowrap}
+.bt-sum .grid .idx{color:var(--ink-2);font-size:12.5px;white-space:nowrap;padding-right:4px}
+.bt-sum .grid .q{font-size:23px;font-weight:500;letter-spacing:-.02em;color:var(--ink)}
+.bt-sum .grid .few{color:var(--ink-3);font-size:12.5px}
 .bt-sum .row{display:flex;flex-wrap:wrap;gap:0 10px}
 /* 지수 이름 칸. 고정폭이면 좁은 화면 영어에서 "Nasdaq 100" 이 둘로 쪼개진다.
    폭은 유지하되 이름이 길면 늘어나게 두고, 이름 안에서는 줄을 안 바꾼다. */
@@ -508,8 +526,14 @@ body.settled .fade{animation:none;opacity:1}
 @media (max-width:640px){
   .bt-head{padding:13px 14px 8px}
   .bt-sum{padding:2px 14px 13px}
-  .bt-sum .now{font-size:15px}
-  .bt-sum .row .idx{min-width:76px}
+  .bt-sum .now .v{font-size:32px}
+  .bt-sum .grid{gap:2px 14px}
+  .bt-sum .grid .q{font-size:20px}
+  /* 영어 열 머리글(CHANCE OF PROFIT)은 한글보다 훨씬 길다. 좁은 화면에서는
+     줄을 바꾸게 둔다 — 안 그러면 320px 에서 화면 밖으로 51px 나간다.
+     지수 이름은 계속 한 줄이어야 한다(Nasdaq 100 이 쪼개지면 안 된다). */
+  .bt-sum .grid .hd{white-space:normal;line-height:1.35}
+
   .bt-key{gap:14px;font-size:11px}
   h2.name{font-size:16px}
   .ctl-row{padding:10px 14px 0;gap:10px}
@@ -1662,22 +1686,31 @@ function btSummary(){
   const z=axZone(cur);
   const zc=z?` style="color:${toneColor(z.tone)}"`:"";
   const zn2=zoneText(z);
-  const head='<div class="now">'+tx("nowIs",axShort(a),cur.toFixed(a.dec||0))+
-    (zn2?' · <b'+zc+'>'+zn2+'</b>':'')+
-    ' <span class="hz">'+tx("buyHere",tx("hold")[btH])+'</span></div>';
+  /* 계기판 읽듯이 — 작은 캡션 위, 큰 값 아래. 예전에는 캡션과 값이 같은 13px
+     한 줄이라 "지금 공포탐욕 33"에서 33이 문장 속에 묻혔다. */
+  const head='<div class="now">'+
+    '<div class="cap">'+tx("nowOf",axShort(a))+'</div>'+
+    '<div class="val"><span class="v">'+cur.toFixed(a.dec||0)+'</span>'+
+    (zn2?'<span class="zn"'+zc+'>'+zn2+'</span>':'')+'</div>'+
+    '<div class="hz">'+tx("buyHere",tx("hold")[btH])+'</div></div>';
   const S=btSeries();
   if(!S.length||S[0].med[v]==null){
     el.innerHTML=head+'<div class="row">'+tx("noStats")+'</div>';
     return;
   }
-  const body=S.map(s=>{
-    if(s.med[v]==null)
-      return `<div class="row"><span class="idx">${s.name}</span> ${tx("fewSample")}</div>`;
-    const m=s.med[v];
-    return `<div class="row"><span class="idx">${s.name}</span>`+
-      `<span>${tx("winProb")} <b>${s.win[v].toFixed(0)}%</b> · `+
-      `${m>=0?tx("medGain"):tx("medLoss")} <b class="${m>=0?"up":"dn"}">${m>0?"+":""}${m.toFixed(2)}%</b></span></div>`;
-  }).join("");
+  /* 지수 2개 × 잣대 2개는 원래 표다. 줄글로 쓰면 "수익날 확률"·"중위 수익"이
+     줄마다 되풀이되면서 정작 숫자를 덮는다. 이름은 열 머리에 한 번만 쓴다. */
+  const cell=(x,cls)=>`<span class="q ${cls||""}">${x}</span>`;
+  const body='<div class="grid">'+
+    `<div class="hd"></div><div class="hd">${tx("winProb")}</div><div class="hd">${tx("medHead")}</div>`+
+    S.map(s=>{
+      if(s.med[v]==null)
+        return `<div class="idx">${s.name}</div><div class="few" style="grid-column:2/4">${tx("fewSample")}</div>`;
+      const m=s.med[v];
+      return `<div class="idx">${s.name}</div>`+
+        cell(s.win[v].toFixed(0)+"%")+
+        cell((m>0?"+":"")+m.toFixed(2)+"%", m>=0?"up":"dn");
+    }).join("")+'</div>';
   /* 이 눈금의 표본이 전체에서 얼마나 되는지 함께 보인다.
      1,616 이라는 숫자만으로는 많은지 적은지 알 수 없다. */
   const holder=Object.values(BT.indices).find(x=>x&&x.curve&&x.curve[a.key]);
