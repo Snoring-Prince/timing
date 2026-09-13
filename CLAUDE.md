@@ -5,13 +5,17 @@
 몇 개는 추측으로 진단했다가 틀렸던 기록입니다.
 
 ```
-사이트   https://snoring-prince.github.io/timing/
+사이트   https://itpaidoff.com          ← 2026-09-13 부터
+옛 주소   https://snoring-prince.github.io/timing/  (자동으로 새 주소로 넘어감)
 저장소   https://github.com/Snoring-Prince/timing  (Public)
-호스팅   GitHub Pages (main 브랜치 루트)
+호스팅   GitHub Pages (main 브랜치 루트) · 도메인은 Namecheap
+실시간    Cloudflare Worker · 9-2
 통계     Umami Cloud (Hobby) · dysan1000@gmail.com
 ```
 
-최종 갱신: 2026-09-13
+**`CNAME` 파일(저장소 루트)이 도메인 연결의 전부입니다.** 지우면 옛 주소로 돌아갑니다.
+
+최종 갱신: 2026-09-13 (도메인 연결)
 
 ---
 
@@ -96,6 +100,7 @@
 
 ```
 timing/
+├── CNAME                            itpaidoff.com — 이 한 줄이 도메인 연결
 ├── CLAUDE.md                        이 문서
 ├── 다음에 할 일.md                   바로 할 일
 ├── index.html                       대시보드 전체 (단일 파일, HTML+CSS+JS)
@@ -607,14 +612,37 @@ spx 764.29  ndx 714.88  vix 15.84  fng 33      (2026-09-13 02:34, 장 닫힘)
 5. 다른 지수 추가 — `fetch_data.py` 의 `INDEX_SOURCES`, `fetch_long.py` 의 `QUOTES` 에 항목 추가.
 6. 후원 버튼 — GitHub Pages 약관이 기부·크라우드펀딩 링크는 **명시적으로 허용**합니다.
 
-### 도메인에 대해 (2026-09-09 논의)
+### 도메인 — `itpaidoff.com` (2026-09-13 구입)
 
-메인이 "대가들의 선택"이 될 수 있으므로 **이 대시보드 이름에 묶이지 않는 도메인**이 낫습니다.
-추천은 `itpaidoff.com` ("그 선택이 결실을 맺었다" — 결과 추적이라는 차별점이 그대로 들어감).
-후보: `whattheykept.com`, `thelongview.com`.
+Namecheap. 첫해 $11.28, **갱신은 $14.98**. 자동 갱신 켜 둠 —
+만료되면 검색 이력이 통째로 날아가므로 끄지 마세요.
+WHOIS 비공개(Domain Privacy) 켜 둠 — 끄면 이름·집주소·전화번호가 공개됩니다.
+
+이름을 이렇게 고른 이유: 메인이 "대가들의 선택"(9-3)이 될 수 있으므로
+**이 대시보드 이름에 묶이지 않아야** 했고, "그 선택이 결실을 맺었다"는 뜻이라
+결과 추적이라는 차별점이 이름에 그대로 들어갑니다. 탈락 후보는
+`whattheykept.com`, `thelongview.com`(차별점이 안 드러남).
 
 **살아 있는 투자자의 이름을 도메인에 넣지 마세요.** 퍼블리시티권·상표 문제가 생깁니다.
 13F 데이터를 쓰는 것과 그 사람 이름을 간판에 거는 것은 완전히 다른 이야기입니다.
+
+### DNS (Namecheap → Advanced DNS)
+
+```
+A      @     185.199.108.153
+A      @     185.199.109.153
+A      @     185.199.110.153
+A      @     185.199.111.153
+CNAME  www   snoring-prince.github.io.
+```
+
+**이 네 주소는 추측이 아니라 실측입니다** — `snoring-prince.github.io` 가 실제로
+물려 있는 IPv4 를 조회해서 확인했습니다. 개발 환경에서 GitHub 문서 사이트는 막혀 있으니
+(`docs.github.com` egress 차단) 다시 확인할 일이 있으면 같은 방법을 쓰세요.
+
+```
+getent ahostsv4 snoring-prince.github.io
+```
 
 ---
 
@@ -711,7 +739,7 @@ Polygon(현 Massive) 무료~$199 가 **전부 "Individual use only"** 입니다.
 ## 12. 참고 URL
 
 ```
-사이트      https://snoring-prince.github.io/timing/
+사이트      https://itpaidoff.com
 저장소      https://github.com/Snoring-Prince/timing
 장기 이력    https://raw.githubusercontent.com/Snoring-Prince/timing/main/data/market-long.json
 현재값      https://raw.githubusercontent.com/Snoring-Prince/timing/main/data/market.json
