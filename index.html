@@ -496,11 +496,15 @@ body.settled .fade{animation:none;opacity:1}
   color:var(--ink-2);line-height:1.7}
 /* 계기판 읽기 — 캡션은 작게 위, 값은 크게 아래.
    구분선은 뺐다. 카드가 이미 흰 칸으로 떠 있어서 안에 가로줄을 하나 더 그으면
-   한 장이 두 장처럼 읽히고, 그 줄의 위아래 여백 24px 만큼 표가 내려앉는다. */
-.bt-sum .now{margin-bottom:4px}
+   한 장이 두 장처럼 읽히고, 그 줄의 위아래 여백 24px 만큼 표가 내려앉는다.
+
+   **여백은 글자 상자가 아니라 잉크로 재야 한다.** 38px 숫자의 줄 상자는 글자보다
+   8px 쯤 아래로 더 내려온다("33" 에는 내려긋는 획이 없다). 그래서 상자 사이를
+   4px 로 붙여 놔도 눈에는 14px 로 보였다. 음수 여백으로 그 몫을 도로 먹는다. */
+.bt-sum .now{margin-bottom:-3px}
 .bt-sum .now .cap{font-family:var(--cond);font-weight:600;font-size:10.5px;
-  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
-.bt-sum .now .val{display:flex;align-items:baseline;gap:10px;margin-top:2px;flex-wrap:wrap}
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);line-height:1.35}
+.bt-sum .now .val{display:flex;align-items:baseline;gap:10px;margin-top:1px;flex-wrap:wrap}
 .bt-sum .now .v{font-size:38px;font-weight:500;letter-spacing:-.03em;
   line-height:1.05;color:var(--ink)}
 .bt-sum .now .zn{font-family:var(--cond);font-weight:700;font-size:19px;letter-spacing:.02em}
@@ -511,7 +515,7 @@ body.settled .fade{animation:none;opacity:1}
   gap:20px;flex-wrap:wrap}
 /* 열 머리글 높이만큼 내려서 표의 첫 줄(S&P 500)과 눈높이를 맞춘다.
    위로 붙이면 머리글과 나란히 서서 저도 머리글처럼 읽힌다. */
-.bt-sum .lead{padding-top:25px}
+.bt-sum .lead{padding-top:20px}
 .bt-sum .cond{font-size:16.5px;color:var(--ink-2);line-height:1.45}
 .bt-sum .lead .n{margin-top:3px}
 
@@ -523,8 +527,10 @@ body.settled .fade{animation:none;opacity:1}
 /* 숫자 칸은 오른쪽 맞춤이다. 왼쪽으로 맞추면 글자 폭이 제각각이라
    («수익날 확률» 56px vs «80%» 41px) 오른쪽이 들쭉날쭉해 보인다.
    오른쪽으로 맞추면 자릿수가 같은 값끼리 소수점까지 줄이 선다. */
+/* 머리글도 줄간격을 다시 잡는다 — 카드의 1.7 이면 10.5px 글자가 18px 상자를
+   차지해서, 표 전체가 그만큼 아래에서 시작한다. */
 .bt-sum .grid .hd{font-family:var(--cond);font-weight:600;font-size:10.5px;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);line-height:1.25;
   padding-bottom:3px;white-space:nowrap;text-align:right}
 .bt-sum .grid .q{text-align:right}
 /* 첫 칸(지수 이름)만 왼쪽 맞춤 — 이름은 숫자가 아니다. */
