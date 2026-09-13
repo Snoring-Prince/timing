@@ -87,6 +87,8 @@ ko:{
   idx:{spx:"S&P 500",ndx:"나스닥 100"},
   hold:{"30D":"30일","90D":"90일","180D":"180일","1Y":"1년","3Y":"3년","5Y":"5년"},
   peak:"전고점", peakMark:v=>`전고점 ${v}`,
+  curVal:"현재값", elapsed:"경과 일수", dayUnit:"일", sincePeak:"전고점 이후",
+  vsPeak:"전고점 대비", toRecover:x=>`회복까지 +${x}%`, atPeak:"지금이 전고점",
   zone:{"fng.exfear":"극단적 공포","fng.fear":"공포","fng.neutral":"중립",
     "fng.greed":"탐욕","fng.exgreed":"극단적 탐욕",
     "vix.verycalm":"아주 잠잠","vix.calm":"잠잠","vix.normal":"보통",
@@ -152,6 +154,8 @@ en:{
   idx:{spx:"S&P 500",ndx:"Nasdaq 100"},
   hold:{"30D":"30 days","90D":"90 days","180D":"180 days","1Y":"1 year","3Y":"3 years","5Y":"5 years"},
   peak:"Peak", peakMark:v=>`Peak ${v}`,
+  curVal:"Current", elapsed:"Days elapsed", dayUnit:"d", sincePeak:"since the peak",
+  vsPeak:"From the peak", toRecover:x=>`+${x}% to recover`, atPeak:"at the peak",
   zone:{"fng.exfear":"Extreme Fear","fng.fear":"Fear","fng.neutral":"Neutral",
     "fng.greed":"Greed","fng.exgreed":"Extreme Greed",
     "vix.verycalm":"Very calm","vix.calm":"Calm","vix.normal":"Normal",
@@ -539,6 +543,30 @@ body.settled .fade{animation:none;opacity:1}
   white-space:nowrap;color:var(--ink-3)}
 .bt-sum b{font-weight:500;color:var(--ink)}
 .bt-sum .n{color:var(--ink-3);font-size:11.5px;margin-top:5px}
+/* 네 칸 계기판 — 전고점 / 현재값 / 경과 일수 / 전고점 대비.
+   차트가 그림으로 말하는 것을 숫자로 한 번 더 적는다. 눈금을 읽어 어림하는
+   대신 값을 그대로 보여 주는 것이 이 사이트의 디자인 언어(계측기)에 맞다. */
+.readout{display:grid;grid-template-columns:repeat(4,1fr);margin:0;
+  border-top:1px solid var(--rule-2)}
+.readout>div{padding:14px 20px 16px}
+.readout>div+div{border-left:1px solid var(--rule-2)}
+.readout dt{font-family:var(--cond);font-weight:600;font-size:10.5px;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px}
+.readout dd{margin:0}
+.readout .num{font-family:var(--mono);font-weight:500;font-size:20px;
+  letter-spacing:-.02em;line-height:1.1;color:var(--ink)}
+.readout .unit{font-size:12px;font-weight:400;color:var(--ink-2);margin-left:1px}
+.readout .sub{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-top:5px}
+/* 낙폭 칸만 색을 입힌다. 옛 판은 파랑(rgba(31,95,169,…))을 박아 둬서
+   영어 화면에서 글자는 빨강인데 바탕만 파랑이었다. --down-rgb 를 쓰면
+   언어를 바꿀 때 글자와 바탕이 같이 뒤집힌다(6번 색 규칙). */
+.readout .cell-dd{background:rgba(var(--down-rgb),.05)}
+.readout .cell-dd .num{color:var(--down)}
+.readout .cell-dd .sub{color:var(--down);opacity:.75}
+/* 지금이 곧 전고점이면 낙폭이 아니다 — 색을 빼고 바탕도 깐다. */
+.readout .cell-top .num{color:var(--up)}
+.readout:empty{border-top:0}
+
 /* 범례 — 선 두 개를 글로 풀지 않고 모양 그대로 보여준다 */
 .bt-key{display:flex;gap:18px;padding:8px 20px 0;font-family:var(--cond);
   font-weight:600;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
@@ -560,6 +588,15 @@ body.settled .fade{animation:none;opacity:1}
      줄을 바꾸게 둔다 — 안 그러면 320px 에서 화면 밖으로 51px 나간다.
      지수 이름은 계속 한 줄이어야 한다(Nasdaq 100 이 쪼개지면 안 된다). */
   .bt-sum .grid .hd{white-space:normal;line-height:1.35}
+
+  /* 좁은 화면에서는 2×2. 가운데 세로줄은 홀수 칸에서 지우고,
+     아래 두 칸에는 가로줄을 얹어 격자를 만든다. */
+  .readout{grid-template-columns:1fr 1fr}
+  .readout>div{padding:13px 14px 15px}
+  .readout dt{font-size:10px;letter-spacing:.1em}
+  .readout .num{font-size:19px}
+  .readout>div:nth-child(3),.readout>div:nth-child(4){border-top:1px solid var(--rule-2)}
+  .readout>div:nth-child(odd){border-left:0}
 
   .bt-key{gap:14px;font-size:11px}
   h2.name{font-size:16px}
@@ -671,6 +708,7 @@ svg.sm .svg-axis{font-size:11px}
     </div>
     <div class="chart" id="main-chart"></div>
     <div class="bt-key" id="main-key"></div>
+    <dl class="readout" id="main-readout"></dl>
     <div class="notes" id="main-notes"></div>
   </section>
 
@@ -1064,15 +1102,16 @@ function renderMain(){
   mainNotes([]);
   const chart=document.getElementById("main-chart"),key=document.getElementById("main-key");
   const tools=document.getElementById("main-tools");
+  const rdo=document.getElementById("main-readout");
   if(!LONG||!LONG.series){
-    tools.innerHTML="";key.innerHTML="";
+    tools.innerHTML="";key.innerHTML="";if(rdo)rdo.innerHTML="";
     chart.innerHTML='<div class="empty">'+tx("loading")+'</div>';
     return;
   }
   tools.innerHTML=rangeSeg("main",MAIN_RANGES,true);
   const L2=mainLines();
   if(!L2.length){
-    key.innerHTML="";
+    key.innerHTML="";if(rdo)rdo.innerHTML="";
     chart.innerHTML='<div class="empty">'+tx("noLine")+'</div>';
     return;
   }
@@ -1187,7 +1226,7 @@ function renderMain(){
      보이는 구간 안에서 가장 높았던 종가를 기준으로 삼는다.
      색은 --up/--down 이라 언어를 바꾸면 함께 뒤집힌다. */
   const priceL=drawn.find(l=>l.side==="L");
-  let peakArt="",priceArt="",hatch="",priceEnd="",gaugeEnd="";
+  let peakArt="",priceArt="",hatch="",priceEnd="",gaugeEnd="",readout="";
   let yEndPrice=null,yEndGauge=null,priceLab=null,gaugeLab=null;
   if(priceL&&priceL.pts.length>1){
     const pts=priceL.pts,vals=pts.map(p=>p[1]);
@@ -1217,6 +1256,22 @@ function renderMain(){
     priceArt=
       (pre.length>1?`<path d="${seg(pre)}" fill="none" stroke="var(--ink-2)" stroke-width="1.6" stroke-linejoin="round"${anim}/>`:"")+
       (post.length>1?`<path d="${seg(post)}" fill="none" stroke="var(--down)" stroke-width="2.1" stroke-linejoin="round"${anim}/>`:"");
+    /* 차트 아래 네 칸 계기판. 그림에서 눈금을 읽어 어림하는 대신 값을 그대로 적는다.
+       전고점은 "보이는 구간 안"의 최고 종가라서, 끌면 이 숫자들도 같이 움직인다. */
+    const pkDay=pts[pk][0],curDay=pts[pts.length-1][0];
+    const atTop=dd>-0.005;                       /* 지금이 곧 그 구간의 전고점 */
+    const back=atTop?0:(peak/last-1)*100;        /* 전고점까지 되돌아가려면 몇 % */
+    readout=
+      `<div><dt>${tx("peak")}</dt><dd class="num">${fmt(peak)}</dd>`+
+        `<dd class="sub">${fdate(pkDay)}</dd></div>`+
+      `<div><dt>${tx("curVal")}</dt><dd class="num">${fmt(last)}</dd>`+
+        `<dd class="sub">${fdate(curDay)}</dd></div>`+
+      `<div><dt>${tx("elapsed")}</dt><dd class="num">${num(dayDiff(pkDay,curDay))}`+
+        `<span class="unit">${tx("dayUnit")}</span></dd>`+
+        `<dd class="sub">${tx("sincePeak")}</dd></div>`+
+      `<div class="${atTop?"cell-top":"cell-dd"}"><dt>${tx("vsPeak")}</dt>`+
+        `<dd class="num">${atTop?"0.00":dd.toFixed(2)}<span class="unit">%</span></dd>`+
+        `<dd class="sub">${atTop?tx("atPeak"):tx("toRecover",back.toFixed(2))}</dd></div>`;
   }
   const gaugeArt=gl&&gl.pts.length>1
     ?`<path d="${path(gl)}" fill="none" stroke="${gl.col}" stroke-width="${gl.wd}" stroke-linejoin="round"${anim}/>`:"";
@@ -1276,6 +1331,8 @@ function renderMain(){
   key.innerHTML=drawn.map(l=>
     `<span><i style="border-top:${l.wd}px solid ${l.col}"></i>${mainName(l.key)}</span>`).join("")+
     (priceL?`<span><i style="border-top:1.2px dashed var(--up)"></i>${tx("peak")}</span>`:"");
+  /* 가격선을 껐으면 전고점도 없다 — 칸을 비우면 CSS 가 위 경계선까지 지운다. */
+  if(rdo)rdo.innerHTML=readout;
   mainHead(drawn.map(l=>l.key));
   mainNotes(drawn.map(l=>l.key));
 
