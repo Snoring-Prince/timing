@@ -35,3 +35,9 @@ jobs:
             git commit -m "백테스트 갱신 $(date -u +%Y-%m-%d)"
             git push
           fi
+
+      # 새 숫자를 저장한 *뒤에* 본다. 설명 글이 낡았다고 해서 데이터까지
+      # 안 올라가면 곤란하다 — 글은 사람이 고쳐야 하고, 데이터는 그대로 맞다.
+      # 여기서 실패하면 Actions 가 빨갛게 뜨고 저장소 주인에게 메일이 간다.
+      - name: 설명 글 숫자 대조
+        run: python scripts/check_about.py

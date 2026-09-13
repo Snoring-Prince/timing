@@ -1,0 +1,25 @@
+# 설명 글(.about)의 숫자를 고칠 때 한쪽 언어만 고치는 실수를 PR 에서 잡습니다.
+# 주 1회 백테스트 워크플로도 같은 검사를 돌리지만, 그때는 이미 머지된 뒤입니다.
+name: Check
+
+on:
+  pull_request:
+    paths:
+      - "index.html"
+      - "data/backtest.json"
+      - "scripts/check_about.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  about:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 설명 글 숫자 대조
+        run: python scripts/check_about.py
