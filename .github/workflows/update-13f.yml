@@ -66,6 +66,10 @@ jobs:
       # 아래 알림은 이제 진짜 13F 실패일 때만 울립니다.
       - name: 티커 받기 (로고용)
         continue-on-error: true
+        # SEC 는 이름 없는 요청을 거절합니다. 없으면 SEC 대조만 건너뛰고
+        # OpenFIGI 쪽은 그대로 돕니다(13F 받기와 같은 비밀값입니다).
+        env:
+          SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
         # -u 로 버퍼링을 끕니다. 없으면 표준출력이 뭉쳐 나와서 **오류 줄이
         # 결과 목록보다 먼저 찍힙니다** — 첫 실행 로그가 실제로 그랬습니다.
         run: python -u scripts/fetch_tickers.py
