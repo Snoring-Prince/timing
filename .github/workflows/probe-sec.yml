@@ -1,0 +1,58 @@
+# 대가들의 선택 — SEC 13F 정찰
+#
+# 개발 환경에서는 SEC 에 닿지 않습니다(프록시가 403 으로 끊습니다 — 야후와 같은
+# 상황입니다). 러너에서는 됩니다. 그래서 **응답이 어떻게 생겼는지를 짐작해서
+# 파서를 짜지 않고**, 여기서 한 번 받아 원본을 아티팩트로 올려 둡니다.
+# 그것을 읽은 뒤에 JSON 구조를 설계합니다.
+#
+# 예약 실행은 없습니다. Actions 탭에서 손으로 누를 때만 돕니다.
+name: Probe SEC
+
+on:
+  workflow_dispatch:
+    inputs:
+      cik:
+        description: "CIK (기본: 버크셔 해서웨이)"
+        required: false
+        default: "0001067983"
+      form:
+        description: "서식 (기본: 13F-HR)"
+        required: false
+        default: "13F-HR"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 내려받기
+        uses: actions/checkout@v4
+
+      - name: 파이썬 준비
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # 비밀값이 없으면 여기서 종료코드 1 로 끝납니다. notify.py --test 와 같은
+      # 이유입니다 — 손으로 돌린 것은 "되는지 확인해 달라"는 뜻이라, 조용히
+      # 넘어가면 초록불인데 아무것도 안 받아온 상태가 됩니다.
+      - name: 정찰
+        env:
+          SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
+          # 입력값을 명령줄에 바로 끼워 넣지 않습니다. 손으로 적는 칸이라
+          # 따옴표 하나로 셸 명령이 되는 자리입니다.
+          CIK: ${{ inputs.cik }}
+          FORM: ${{ inputs.form }}
+        run: python scripts/probe_sec.py --cik "$CIK" --form "$FORM"
+
+      # 실패해도 받아 온 데까지는 올립니다. 무엇을 받다 막혔는지가 곧 답입니다.
+      - name: 원본 올리기
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sec-probe
+          path: sec-probe/
+          if-no-files-found: warn
+          retention-days: 14

@@ -6,8 +6,11 @@
 > conversation with the owner is Korean.** Owner is a non-developer: no terminal,
 > no git. See `/CLAUDE.md` §0.
 
-STATUS as of 2026-09-14: **design phase, nothing built, no code written.**
-Blocked on one owner decision (§6). Everything below §4 is decided, not speculative.
+STATUS as of 2026-09-14: **probe built and merged-ready; it has never been run.**
+Step 2 of §11 exists in code (`scripts/probe_sec.py`, `.github/workflows/probe-sec.yml`).
+It cannot run until the owner adds the `SEC_CONTACT` secret (§6) — still the one
+blocker, though the address question behind it is now answered. Nothing is parsed, no schema exists, no page exists. Everything below §4
+is decided, not speculative.
 
 ---
 
@@ -128,9 +131,39 @@ diagnoses (`/CLAUDE.md` §0).
 
 Berkshire CIK: `0001067983`.
 
+**Re-measured 2026-09-14 in a second session: identical.** `www.sec.gov:443` and
+`data.sec.gov:443` both `connect_rejected` / gateway 403. Do not spend time
+looking for a way around it from here — build for the runner.
+
+### The probe now exists
+
+```
+scripts/probe_sec.py                fetch → measure → save raw. NOT a parser.
+.github/workflows/probe-sec.yml     workflow_dispatch only, uploads sec-probe/
+```
+
+What it does, in order, saving every raw response:
+
+```
+A  data.sec.gov/submissions/CIK0001067983.json
+B  the newest 13F-HR's folder index.json  (file names come from SEC, not from us)
+C  every file in that folder under 8MB
+```
+
+Plus `manifest.json`: status codes, byte counts, content types, JSON top-level
+keys, and a **tag census** for XML (tag name → count). The census is how the
+position count and the field names arrive without anyone writing a parser first.
+`--cik` / `--form` inputs make it reusable for investor #2.
+
+**Tested against a local fixture server, not against SEC** (unreachable). Verified:
+the happy path, a 404 on step A, a form that is not in `filings.recent`, an
+oversized file being skipped, and that the contact address appears in **no** saved
+file (`user_agent` in the manifest is written as the literal `<SEC_CONTACT>`).
+The real shape is still unknown — that is the entire point of running it.
+
 ---
 
-## 6. OPEN — needs the owner's answer before the probe can run
+## 6. ANSWERED — owner picked the address; secret still not set
 
 SEC rejects anonymous requests; it requires a declared contact email in the
 `User-Agent` header. **This repo is public**, so hardcoding the address exposes it
@@ -143,10 +176,28 @@ Settings → Secrets and variables → Actions
   SEC_CONTACT   contact email declared to SEC
 ```
 
-**Asked the owner on 2026-09-14 whether to use dysan1000@gmail.com or a different
-address. Not yet answered.** Do not put any email address in code before they
-answer — the global rule is that their email is used only to identify them, never
-sent to an unrelated service unless they explicitly ask.
+**ANSWERED 2026-09-14: the owner chose their own existing address** — the one
+already on their GitHub/Umami account — over creating a project-specific one.
+That is the explicit permission the global rule requires before their address
+goes to an unrelated service, and it covers the SEC User-Agent, nothing else.
+
+**Do not add it to the probe, a workflow, a default argument, or a doc example.**
+It lives only in the `SEC_CONTACT` secret, which only the owner can set.
+
+Honest caveat, found while writing this: **the address is already in the public
+repo twice** — `/CLAUDE.md` §0 header and §5 (Umami account). So "nowhere in the
+repo" is not true today. That does not change the rule for new code (a
+User-Agent on every SEC request is a different exposure from one line in a doc,
+and more instances is strictly worse), but nobody should claim the address is
+unpublished. Told the owner 2026-09-14; removing those two lines is their call,
+not ours. Nothing in `probe_sec.py` contains an address; it reads
+`SEC_CONTACT` and refuses to run without it.
+
+**The probe exits 1, not 0, when the secret is missing** — deliberately unlike
+`notify.py`'s failure path and deliberately like its `--test` path. A probe is
+run by hand, which means "confirm this works"; exiting 0 would leave a green run
+that fetched nothing, and `/CLAUDE.md` §6-2 records that exact confusion actually
+happening once.
 
 Probe must exit with a clear message (not a crash) when `SEC_CONTACT` is empty,
 matching `notify.py`'s behavior for missing secrets.
@@ -176,6 +227,25 @@ the repo → the page reads only its own files. Browsers cannot call these APIs
 directly (CORS).
 
 ---
+
+## 7-2. URL: this page lives at `/titans/`, not at the site root
+
+Owner decided 2026-09-14. One repo, one Pages site, three screens under one domain:
+
+```
+itpaidoff.com/            hub (not built yet — do NOT build it yet, see /CLAUDE.md §2)
+itpaidoff.com/timing/     the existing dashboard (not moved yet)
+itpaidoff.com/titans/     THIS project            ← build here from the start
+itpaidoff.com/samuel/     DCA curves (rough idea)
+```
+
+**`titans`, not `masters`** — owner's word, chosen to avoid colliding with other sites
+(and the golf tournament). **Lowercase**: paths are case-sensitive on Pages.
+
+Building here costs nothing in SEO because the root is untouched. Do not move the
+dashboard or create the hub as part of this project — the root page is currently the
+only substantial content Google has, and it is still unindexed. Full reasoning in
+`/CLAUDE.md` §2 "앞으로의 주소 구조".
 
 ## 8. Design — non-negotiable
 
@@ -221,16 +291,20 @@ Burry's page needs the staleness line more prominently (§3).
 ## 11. Next actions, in order
 
 ```
-1. Get the SEC_CONTACT answer from the owner            ← BLOCKING
-2. workflow_dispatch probe: fetch Berkshire 13F on a runner,
-   upload raw response as an artifact, print shape
-   (position count, fields, sizes). No parsing yet.
-3. Read the artifact. THEN design the JSON schema.
-4. Build the fetch script + weekly/quarterly workflow.
-5. Reconcile against Berkshire's annual report. Do not proceed until it matches.
-6. Build the page against /docs/design-system.md.
-7. Only then, investor #2.
+1. Owner adds the SEC_CONTACT secret (address decided)   ← STILL BLOCKING
+2. DONE (built, never run): workflow_dispatch probe
+3. Owner runs Actions → Probe SEC → Run workflow.
+   Download the sec-probe artifact. Read manifest.json first.
+4. THEN design the JSON schema, from what the artifact actually shows.
+5. Build the fetch script + quarterly workflow.
+6. Reconcile against Berkshire's annual report. Do not proceed until it matches.
+7. Build the page at /titans/ against /docs/design-system.md.
+8. Only then, investor #2.
 ```
+
+Step 3 is the owner's click, not ours — assistants here cannot run Actions. When
+handing it over, say exactly which buttons: **Actions → Probe SEC → Run workflow**,
+then the artifact at the bottom of the finished run.
 
 ## 12. Working conventions for this repo
 

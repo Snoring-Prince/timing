@@ -1,0 +1,308 @@
+"""
+대가들의 선택 — SEC 13F 정찰(probe)
+
+이 스크립트는 **파서가 아닙니다.** 받아서 재고 원본을 그대로 저장할 뿐입니다.
+
+왜 이런 것이 따로 필요한가:
+
+  1) 개발 환경에서는 SEC 에 닿지 않습니다. 야후와 같은 상황입니다
+     (`CLAUDE.md` 3번). 실측 — www.sec.gov:443 / data.sec.gov:443 둘 다
+     프록시가 403 으로 끊습니다(2026-09-14). **GitHub Actions 러너는 됩니다.**
+  2) 그래서 응답이 어떻게 생겼는지를 **기억으로 짐작해서 파서를 짜면 안 됩니다.**
+     이 프로젝트에는 추측 진단이 틀린 기록이 여러 번 있습니다(`CLAUDE.md` 0번).
+     러너에서 한 번 받아 원본을 아티팩트로 올려 두고, 그것을 읽은 뒤에
+     JSON 구조를 설계합니다.
+
+받는 순서 (셋 다 원본을 저장합니다)
+
+  A  data.sec.gov/submissions/CIK##########.json   제출 목록
+  B  그 목록에서 가장 최근 13F-HR 를 찾아 그 폴더의 index.json
+  C  폴더 안의 파일들 (크기 제한 안쪽)
+
+SEC 는 이름 없는 요청을 거절합니다. User-Agent 에 연락처를 밝혀야 합니다.
+이 저장소는 공개라 주소를 코드에 박으면 긁힙니다. 그래서 비밀값으로 받습니다.
+
+    저장소 Settings → Secrets and variables → Actions
+      SEC_CONTACT   SEC 에 밝힐 연락처 메일 주소
+
+**비밀값이 없으면 종료코드 1 로 끝냅니다.** `notify.py --test` 와 같은 이유입니다 —
+손으로 돌리는 것은 "되는지 확인해 달라"는 뜻이라, 조용히 넘어가면 **초록불인데
+아무것도 안 받아온** 상태가 되어 설정이 된 건지 아닌지 알 수가 없습니다.
+
+저장 위치: scripts/probe_sec.py
+"""
+
+import argparse
+import json
+import os
+import re
+import sys
+import time
+import urllib.error
+import urllib.request
+from datetime import datetime, timezone
+
+# 버크셔 해서웨이. 첫 번째로 만드는 이유는 `docs/masters-13f.md` 4번에 있습니다 —
+# 연차보고서에 보유 종목과 취득원가가 함께 나오는 유일한 곳이라, 우리 계산이
+# 맞는지 대조할 수 있습니다.
+CIK_DEFAULT = "0001067983"
+FORM_DEFAULT = "13F-HR"
+
+OUT_DIR = "sec-probe"
+
+# SEC 는 초당 10건을 넘지 말라고 합니다. 넉넉히 띄웁니다 — 이 정찰은
+# 스무 건 안쪽이라 느려져도 상관없습니다.
+PAUSE = 0.25
+
+# 한 파일이 이보다 크면 받지 않고 크기만 적습니다. 13F 정보표는 보통
+# 수십 KB 라 걸릴 일이 없지만, 무엇이 들었는지 모르는 폴더를 훑는 중입니다.
+MAX_BYTES = 8 * 1024 * 1024
+
+
+def ua(contact: str) -> str:
+    """SEC 가 요구하는 형식: 누가 쓰는지 + 연락처."""
+    return f"itpaidoff.com 13F research probe ({contact})"
+
+
+def get(url: str, contact: str, tries: int = 3) -> dict:
+    """한 번 받아서 기록을 돌려줍니다. HTTP 오류로 죽지 않습니다."""
+    rec = {"url": url, "ok": False, "status": None, "bytes": 0,
+           "headers": {}, "error": None}
+    body = b""
+    last = None
+    for i in range(tries):
+        try:
+            req = urllib.request.Request(url, headers={
+                "User-Agent": ua(contact),
+                "Accept": "application/json,text/html,application/xml,*/*",
+                # gzip 을 요청하면 urllib 은 풀어 주지 않습니다. 크기가 작아
+                # 압축이 필요 없으므로 아예 요청하지 않습니다.
+                "Accept-Encoding": "identity",
+            })
+            with urllib.request.urlopen(req, timeout=45) as r:
+                body = r.read()
+                rec["ok"] = True
+                rec["status"] = r.status
+                rec["headers"] = {k: v for k, v in r.headers.items()
+                                  if k.lower() in ("content-type", "content-length",
+                                                   "last-modified", "etag")}
+            break
+        except urllib.error.HTTPError as e:            # noqa: PERF203
+            rec["status"] = e.code
+            rec["error"] = f"HTTP {e.code} {e.reason}"
+            try:
+                body = e.read()[:4096]
+            except Exception:                          # noqa: BLE001
+                body = b""
+            # 429(너무 잦음)·5xx 는 기다렸다 다시 걸어 볼 값어치가 있습니다.
+            # 403 은 User-Agent 를 거절한 것이라 다시 걸어도 같습니다.
+            if e.code in (429, 500, 502, 503, 504) and i < tries - 1:
+                time.sleep(3.0 * (i + 1))
+                continue
+            break
+        except Exception as e:                         # noqa: BLE001
+            last = e
+            time.sleep(1.5 * (i + 1))
+    else:
+        rec["error"] = f"{type(last).__name__}: {last}"
+
+    rec["bytes"] = len(body)
+    rec["_body"] = body
+    time.sleep(PAUSE)
+    return rec
+
+
+def safe(name: str) -> str:
+    """목차가 준 이름을 그대로 경로에 쓰지 않습니다.
+
+    SEC 가 그럴 리는 없지만, 남이 준 문자열로 경로를 만드는 자리입니다.
+    폴더를 거슬러 올라가는 이름은 납작하게 폅니다."""
+    name = name.replace("\\", "/").lstrip("/")
+    if ".." in name.split("/"):
+        return name.replace("/", "_")
+    return name
+
+
+def save(rec: dict, name: str) -> dict:
+    """원본을 그대로 저장합니다. 아티팩트로 올라가는 것이 이것입니다."""
+    path = os.path.join(OUT_DIR, safe(name))
+    os.makedirs(os.path.dirname(path) or OUT_DIR, exist_ok=True)
+    with open(path, "wb") as f:
+        f.write(rec.get("_body", b""))
+    out = {k: v for k, v in rec.items() if k != "_body"}
+    out["saved"] = path
+    return out
+
+
+TAG = re.compile(rb"<\s*([A-Za-z_][\w.:-]*)")
+
+
+def census(body: bytes) -> dict:
+    """무엇이 들었는지만 셉니다. **파싱이 아닙니다** — 태그 이름과 개수뿐입니다.
+
+    구조를 여기서 해석하지 않는 것이 요점입니다. 이 숫자를 보고 나서
+    사람이 스키마를 설계합니다."""
+    head = body[:400]
+    kind = "unknown"
+    if head.lstrip()[:1] in (b"{", b"["):
+        kind = "json"
+    elif b"<?xml" in head or b"<" in head:
+        kind = "xml/html"
+
+    out = {"kind": kind, "head": head[:200].decode("utf-8", "replace")}
+
+    if kind == "json":
+        try:
+            v = json.loads(body)
+        except Exception as e:                         # noqa: BLE001
+            out["json_error"] = str(e)
+            return out
+        if isinstance(v, dict):
+            out["keys"] = sorted(v.keys())
+            # 제출 목록이면 최근 목록의 열 이름과 줄 수가 궁금합니다.
+            recent = (v.get("filings") or {}).get("recent")
+            if isinstance(recent, dict):
+                out["filings.recent.keys"] = sorted(recent.keys())
+                out["filings.recent.rows"] = len(recent.get("form") or [])
+                out["filings.older_files"] = len((v.get("filings") or {}).get("files") or [])
+        elif isinstance(v, list):
+            out["list_len"] = len(v)
+        return out
+
+    counts = {}
+    for m in TAG.finditer(body):
+        t = m.group(1).decode("ascii", "replace")
+        counts[t] = counts.get(t, 0) + 1
+    out["tags"] = dict(sorted(counts.items(), key=lambda kv: -kv[1])[:40])
+    out["tag_kinds"] = len(counts)
+    return out
+
+
+def newest_filing(sub: dict, form: str) -> dict | None:
+    """제출 목록에서 그 서식의 가장 최근 건을 찾습니다.
+
+    `filings.recent` 만 봅니다. 오래된 것은 별도 파일로 쪼개져 있는데,
+    정찰에는 최신 한 건이면 충분합니다."""
+    recent = (sub.get("filings") or {}).get("recent") or {}
+    forms = recent.get("form") or []
+    for i, f in enumerate(forms):
+        if f != form:
+            continue
+        return {k: (recent.get(k) or [None] * len(forms))[i]
+                for k in ("form", "filingDate", "reportDate", "accessionNumber",
+                          "primaryDocument", "primaryDocDescription", "size")}
+    return None
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="SEC 13F 정찰 — 받아서 재고 원본을 저장합니다")
+    ap.add_argument("--cik", default=CIK_DEFAULT, help="10자리 CIK (기본: 버크셔)")
+    ap.add_argument("--form", default=FORM_DEFAULT, help="서식 이름 (기본: 13F-HR)")
+    a = ap.parse_args()
+
+    contact = os.environ.get("SEC_CONTACT", "").strip()
+    if not contact:
+        print("정찰을 할 수 없습니다 — 비밀값 SEC_CONTACT 가 없습니다.")
+        print("  SEC 는 이름 없는 요청을 거절합니다. 연락처 메일 주소를 밝혀야 합니다.")
+        print("  저장소 Settings → Secrets and variables → Actions 에서 넣어 주세요.")
+        print("  SEC_CONTACT   SEC 에 밝힐 메일 주소")
+        print("  (이 저장소는 공개라 코드에 주소를 박으면 긁힙니다. 그래서 비밀값입니다.)")
+        return 1
+
+    cik = re.sub(r"\D", "", a.cik).zfill(10)
+    cik_int = str(int(cik))
+    os.makedirs(OUT_DIR, exist_ok=True)
+
+    man = {
+        "probed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "cik": cik, "form": a.form,
+        "user_agent": ua("<SEC_CONTACT>"),   # 주소는 어디에도 적지 않습니다
+        "steps": [],
+    }
+
+    # ── A. 제출 목록 ─────────────────────────────────────────────
+    url = f"https://data.sec.gov/submissions/CIK{cik}.json"
+    print(f"[A] 제출 목록  {url}")
+    rec = get(url, contact)
+    body = rec.get("_body", b"")
+    stepA = save(rec, "A-submissions.json")
+    stepA["census"] = census(body)
+    man["steps"].append(stepA)
+    print(f"    {rec['status']}  {rec['bytes']:,} bytes  {rec['error'] or ''}")
+    if not rec["ok"]:
+        print("    → 여기서 멈춥니다. 위 상태 코드를 보고 판단하세요.")
+        print("      403 이면 SEC 가 User-Agent 를 거절한 것입니다.")
+        json.dump(man, open(os.path.join(OUT_DIR, "manifest.json"), "w"),
+                  ensure_ascii=False, indent=2)
+        return 1
+    print(f"    {json.dumps(stepA['census'], ensure_ascii=False)[:400]}")
+
+    sub = json.loads(body)
+    filing = newest_filing(sub, a.form)
+    man["newest_filing"] = filing
+    if not filing:
+        print(f"    → {a.form} 을 최근 목록에서 못 찾았습니다. 오래된 목록은 "
+              f"filings.files 에 따로 있습니다.")
+        json.dump(man, open(os.path.join(OUT_DIR, "manifest.json"), "w"),
+                  ensure_ascii=False, indent=2)
+        return 1
+    print(f"    가장 최근 {a.form}: {json.dumps(filing, ensure_ascii=False)}")
+
+    acc = re.sub(r"\D", "", filing["accessionNumber"] or "")
+
+    # ── B. 그 제출 폴더의 목차 ───────────────────────────────────
+    base = f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{acc}"
+    url = f"{base}/index.json"
+    print(f"[B] 제출 폴더  {url}")
+    rec = get(url, contact)
+    body = rec.get("_body", b"")
+    stepB = save(rec, "B-index.json")
+    stepB["census"] = census(body)
+    man["steps"].append(stepB)
+    print(f"    {rec['status']}  {rec['bytes']:,} bytes  {rec['error'] or ''}")
+    if not rec["ok"]:
+        json.dump(man, open(os.path.join(OUT_DIR, "manifest.json"), "w"),
+                  ensure_ascii=False, indent=2)
+        return 1
+
+    items = ((json.loads(body).get("directory") or {}).get("item") or [])
+    print(f"    파일 {len(items)}개")
+    for it in items:
+        print(f"      {it.get('name'):<44} {str(it.get('size')):>10}  {it.get('type')}")
+
+    # ── C. 폴더 안의 파일들 ──────────────────────────────────────
+    print("[C] 파일 내려받기")
+    files = []
+    for it in items:
+        name = it.get("name") or ""
+        try:
+            size = int(it.get("size") or 0)
+        except (TypeError, ValueError):
+            size = 0
+        if size > MAX_BYTES:
+            print(f"    건너뜀 {name} — {size:,} bytes (제한 {MAX_BYTES:,})")
+            files.append({"name": name, "size": size, "skipped": "too large"})
+            continue
+        r = get(f"{base}/{name}", contact)
+        b = r.get("_body", b"")
+        f = save(r, os.path.join("C-files", name))
+        f["name"] = name
+        f["census"] = census(b)
+        files.append(f)
+        c = f["census"]
+        extra = (f"{c.get('tag_kinds', '')} tag kinds" if c["kind"] != "json"
+                 else f"keys={c.get('keys', [])[:8]}")
+        print(f"    {name:<44} {r['status']} {r['bytes']:>10,} bytes  {c['kind']}  {extra}")
+    man["files"] = files
+
+    with open(os.path.join(OUT_DIR, "manifest.json"), "w", encoding="utf-8") as f:
+        json.dump(man, f, ensure_ascii=False, indent=2)
+
+    print()
+    print(f"원본을 {OUT_DIR}/ 에 저장했습니다. 아티팩트로 내려받아 읽은 뒤에")
+    print("JSON 구조를 설계합니다. 이 스크립트는 아무것도 해석하지 않았습니다.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
