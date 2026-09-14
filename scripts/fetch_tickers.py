@@ -38,7 +38,7 @@ OpenFIGI 로 직접 나가지 않으므로 IP 도 안 새고 화면이 그쪽에
 **`_` 로 시작하는 키는 화면이 무시합니다.** 파일에 언제 물어봤는지를 같이 둡니다.
 """
 import datetime as dt
-import json, os, sys, time, urllib.request, urllib.error
+import json, sys, time, urllib.request, urllib.error
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -67,15 +67,29 @@ def load_json(path, default):
 
 
 def ask(cusips):
-    """OpenFIGI 에 한 묶음을 묻는다. 돌려주는 것은 {cusip: ticker}."""
+    """OpenFIGI 에 한 묶음을 묻는다. 돌려주는 것은 ({cusip: ticker}, 원본 조각).
+
+    **원본을 같이 돌려줍니다.** 첫 실행에서 17개가 전부 '못 찾음' 으로 나왔는데
+    로그에는 우리가 해석한 결과만 찍혀서 **저쪽이 실제로 뭐라고 했는지 알 수가
+    없었습니다.** 개발 환경에서 OpenFIGI 가 막혀 있으니(`000`) 응답 모양을
+    짐작해서 파서를 짠 셈이고, 그건 이 프로젝트가 `probe_sec.py` 를 만들면서
+    하지 않기로 한 일입니다(CLAUDE.md 9-3). 이제 원본을 로그에 남깁니다.
+    """
     body = json.dumps([{"idType": "ID_CUSIP", "idValue": c} for c in cusips]).encode()
     req = urllib.request.Request(
         API, data=body,
         headers={"Content-Type": "application/json",
                  "User-Agent": "itpaidoff.com titans (github.com/Snoring-Prince/timing)"},
     )
-    with urllib.request.urlopen(req, timeout=30) as r:
-        rows = json.loads(r.read().decode())
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            status, text = r.status, r.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as e:
+        # 오류 본문에 이유가 적혀 있는 경우가 많다. 삼키지 않는다.
+        raise RuntimeError(f"HTTP {e.code} · {e.read().decode('utf-8','replace')[:300]}") from None
+
+    raw = f"HTTP {status} · {text[:400]}"
+    rows = json.loads(text)
 
     out = {}
     # 응답은 보낸 순서대로 온다. 항목마다 data(성공) 또는 warning(못 찾음).
@@ -89,7 +103,7 @@ def ask(cusips):
         t = (pick.get("ticker") or "").strip().upper()
         if t:
             out[cusip] = t
-    return out
+    return out, raw
 
 
 def main():
@@ -129,22 +143,27 @@ def main():
         print("새로 물어볼 것이 없습니다.")
         return 0
 
-    got, failed = {}, []
+    got, failed, first_raw = {}, [], None
     for i in range(0, len(todo), BATCH):
         chunk = todo[i:i + BATCH]
         try:
-            got.update(ask(chunk))
-        except urllib.error.HTTPError as e:
-            print(f"  HTTP {e.code} — {chunk[0]} 외 {len(chunk)-1}건")
-            failed += chunk
+            hits, raw = ask(chunk)
+            got.update(hits)
+            if first_raw is None:
+                first_raw = raw
         except Exception as e:
-            print(f"  실패 {type(e).__name__}: {e}")
+            print(f"  실패 {type(e).__name__}: {e}", flush=True)
             failed += chunk
         if i + BATCH < len(todo):
             time.sleep(PAUSE)
 
     for c in todo:
         print(f"  {c}  {name.get(c,'')[:30]:<30} → {got.get(c) or '못 찾음'}")
+
+    # 하나도 못 받았으면 **저쪽이 실제로 보낸 것**을 보여 준다. 우리가 해석한
+    # 결과만 찍으면 왜 비었는지 알 수 없다 — 첫 실행에서 실제로 그랬다.
+    if not got and first_raw:
+        print(f"\n첫 응답 원본: {first_raw}", flush=True)
 
     # **처음 물어본 것이 있는데 그중 하나도 못 받았으면** OpenFIGI 가 막힌 것이다.
     # 옛 종목이 계속 안 잡히는 것은 실패가 아니다 — 그건 원래 없는 것이다.
