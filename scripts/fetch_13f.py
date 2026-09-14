@@ -164,7 +164,7 @@ def fold(rows: list[dict], scale: int) -> list[dict]:
     return out
 
 
-def list_filings(contact: str) -> list[dict]:
+def list_filings(contact: str) -> tuple[list[dict], list[dict]]:
     """13F-HR 을 전부 모읍니다 — 최근 목록 + 쪼개진 옛 목록까지.
 
     최근 목록(filings.recent)만 보면 2016년까지밖에 안 올라갑니다(실측:
@@ -200,48 +200,72 @@ def list_filings(contact: str) -> list[dict]:
     # 되거나 통째로 사라집니다. 실물을 한 번도 못 봤으므로 짐작해서 짜지 않고,
     # **있는지 없는지만 여기서 알립니다.** 나오면 그때 한 건을 열어 보고 넣습니다.
     amend = [x for x in amend if x["accession"] and x["period"]]
-    if amend:
-        print(f"※ 정정 공시({FORM}/A) {len(amend)}건이 있습니다 — 아직 안 받습니다:")
-        for x in sorted(amend, key=lambda x: x["period"]):
-            print(f"    {x['filed']} 제출 · {x['period']} 기준  {x['accession']}")
-        print("  docs/masters-13f.md 의 '정정 공시' 항목을 보세요.")
-    else:
-        print(f"정정 공시({FORM}/A) 없음")
-
     out = [x for x in out if x["accession"] and x["period"]]
     out.sort(key=lambda x: x["period"])
-    return out
+    amend.sort(key=lambda x: x["period"])
+    return out, amend
 
 
-def holdings_xml(acc: str, contact: str) -> bytes | None:
-    """그 제출 폴더에서 **보유 목록 XML** 을 찾아 받습니다.
+# 목차를 못 받은 것과, 목차는 받았는데 XML 이 아예 없는 것은 **다른 일**입니다.
+NO_XML = "no-xml"
 
-    이름을 짐작하지 않습니다. 목차가 주는 목록에서 primary_doc.xml 이
-    아닌 .xml 을 고릅니다 — 실측으로 이름이 분기마다 달랐습니다."""
+
+def filing_docs(acc: str, contact: str):
+    """제출 폴더에서 **보유 목록 XML** 과 **표지** 를 함께 받습니다.
+
+    이름을 짐작하지 않습니다. 목차가 주는 목록에서 primary_doc.xml 이 아닌
+    .xml 중 가장 큰 것을 고릅니다 — 실측으로 이름이 분기마다 달랐습니다
+    (56757.xml / form13fInfoTable.xml).
+
+    XML 이 하나도 없으면 NO_XML 을 돌려줍니다. **고장이 아니라 옛 형식**입니다 —
+    EDGAR 가 13F 에 XML 을 요구하기 전(2013년 중반 이전)에는 텍스트 문서였고,
+    실측으로 1998-12-31 ~ 2013-03-31 의 58건이 전부 여기 해당합니다.
+    이것을 '실패'로 세면 매주 58건이 찍혀서 **진짜 실패가 그 속에 묻힙니다.**"""
     a = re.sub(r"\D", "", acc)
     base = f"https://www.sec.gov/Archives/edgar/data/{int(CIK)}/{a}"
     body = get(f"{base}/index.json", contact)
     if not body:
-        return None
+        return None, None
     items = ((json.loads(body).get("directory") or {}).get("item") or [])
-    best = None
+    best, cover = None, None
     for it in items:
         nm = (it.get("name") or "")
-        if not nm.lower().endswith(".xml") or nm.lower() == "primary_doc.xml":
+        low = nm.lower()
+        if not low.endswith(".xml"):
             continue
         try:
             size = int(it.get("size") or 0)
         except (TypeError, ValueError):
             size = 0
+        if low == "primary_doc.xml":
+            cover = nm
+            continue
         if size > MAX_BYTES:
             continue
-        # 후보가 여럿이면 큰 쪽이 정보표입니다(표지는 6KB 안쪽).
         if best is None or size > best[1]:
             best = (nm, size)
     if not best:
-        print(f"    보유 목록 XML 을 목차에서 못 찾았습니다: {base}/index.json")
-        return None
-    return get(f"{base}/{best[0]}", contact)
+        return NO_XML, None
+    return get(f"{base}/{best[0]}", contact), (get(f"{base}/{cover}", contact)
+                                               if cover else None)
+
+
+def cover_totals(xml: bytes | None) -> tuple[int | None, int | None]:
+    """표지가 스스로 밝힌 총액과 줄 수. 우리 계산을 맞춰 볼 잣대입니다."""
+    if not xml:
+        return None, None
+    try:
+        root = ET.fromstring(xml)
+    except ET.ParseError:
+        return None, None
+    tot = ent = None
+    for el in root.iter():
+        t = local(el.tag)
+        if t == "tableValueTotal":
+            tot = num(el.text)
+        elif t == "tableEntryTotal":
+            ent = num(el.text)
+    return tot, ent
 
 
 def main() -> int:
@@ -264,19 +288,32 @@ def main() -> int:
         except Exception as e:                         # noqa: BLE001
             print(f"옛 파일을 읽지 못해 처음부터 받습니다 — {e}")
 
-    filings = list_filings(contact)
+    filings, amends = list_filings(contact)
     if not filings:
         print("제출 목록을 받지 못했습니다. 아무것도 쓰지 않습니다.")
         return 1
     print(f"{FORM} {len(filings)}건 ({filings[0]['period']} ~ {filings[-1]['period']})")
 
-    quarters, got, failed = [], 0, 0
+    # 정정 공시가 난 분기는 **원본만으로는 불완전할 수 있습니다.** 아직 합치지
+    # 않으므로, 어느 분기가 그런지 데이터에 표시해 두고 화면에서 밝힐 수 있게
+    # 합니다. 조용히 넘어가면 그 분기만 소리 없이 틀립니다.
+    amend_by = {}
+    for x in amends:
+        amend_by.setdefault(x["period"], []).append(x["accession"])
+    print(f"정정 공시({FORM}/A) {len(amends)}건 · {len(amend_by)}개 분기")
+
+    quarters, got, failed, prexml = [], 0, 0, []
     for f in filings:
         keep = old.get(f["accession"])
         if keep:
             quarters.append(keep)
             continue
-        xml = holdings_xml(f["accession"], contact)
+        xml, cover = filing_docs(f["accession"], contact)
+        if xml is NO_XML:
+            # 고장이 아니라 옛 형식입니다. 따로 셉니다 — 실패로 세면
+            # 매주 수십 건이 찍혀 진짜 실패가 묻힙니다.
+            prexml.append(f["period"])
+            continue
         if not xml:
             failed += 1
             continue
@@ -292,17 +329,44 @@ def main() -> int:
             continue
         scale, ratio = unit_scale(rows)
         held = fold(rows, scale)
-        quarters.append({
-            "period": f["period"], "filed": f["filed"],
-            "accession": f["accession"],
-            "lines": len(rows), "unit": "thousands" if scale == 1000 else "usd",
-            "total": sum(h["value"] for h in held),
-            "holdings": held,
-        })
+        total = sum(h["value"] for h in held)
+
+        q = {"period": f["period"], "filed": f["filed"],
+             "accession": f["accession"], "lines": len(rows),
+             "unit": "thousands" if scale == 1000 else "usd",
+             "total": total, "holdings": held}
+
+        # 우리 합계를 **공시가 스스로 밝힌 총액**과 맞춰 봅니다. 이게 맞으면
+        # 줄을 빠뜨리지도, 단위를 잘못 잡지도 않았다는 뜻입니다. 화면을 만들기
+        # 전에 이 검산이 통과해야 합니다.
+        ctot, cent = cover_totals(cover)
+        mark = ""
+        if ctot:
+            want = ctot * scale
+            off = abs(total - want) / want if want else 0
+            if off > 0.005:
+                q["total_mismatch"] = want
+                mark = f"  ※ 공시 총액과 {off:.1%} 차이 (${want/1e9:,.1f}B)"
+            else:
+                mark = "  ✓"
+        if cent and cent != len(rows):
+            q["lines_mismatch"] = cent
+            mark += f"  ※ 공시 줄 수 {cent} ≠ {len(rows)}"
+        if f["period"] in amend_by:
+            q["amended_by"] = amend_by[f["period"]]
+            mark += "  ※ 정정 공시 있음"
+
+        quarters.append(q)
         got += 1
         print(f"  {f['period']}  줄 {len(rows):>4} → 종목 {len(held):>3}  "
               f"금액÷주식수 {ratio:>8.2f} ({'천달러' if scale == 1000 else '달러'})  "
-              f"합계 ${sum(h['value'] for h in held)/1e9:,.1f}B")
+              f"합계 ${total/1e9:,.1f}B{mark}")
+
+    if prexml:
+        print(f"\nXML 이전 형식이라 건너뛴 분기 {len(prexml)}개 "
+              f"({prexml[0]} ~ {prexml[-1]}) — 고장이 아닙니다.")
+        print("  EDGAR 가 13F 에 XML 을 요구하기 전이라 텍스트 문서입니다.")
+        print("  docs/masters-13f.md 의 'XML 이전' 항목을 보세요.")
 
     if not quarters:
         print("받은 분기가 하나도 없습니다. 파일을 쓰지 않습니다.")
@@ -328,8 +392,15 @@ def main() -> int:
         json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
 
     size = os.path.getsize(OUT)
+    bad = [q for q in quarters if "total_mismatch" in q or "lines_mismatch" in q]
+    amended = [q for q in quarters if "amended_by" in q]
     print(f"\n{OUT}  분기 {len(quarters)}개 · 새로 받은 것 {got}개 · "
-          f"실패 {failed}개 · {size:,} bytes")
+          f"실패 {failed}개 · XML 이전 {len(prexml)}개 · {size:,} bytes")
+    print(f"공시 총액과 어긋나는 분기: {len(bad)}개" +
+          (f" — {', '.join(q['period'] for q in bad)}" if bad else " (전부 일치)"))
+    if amended:
+        print(f"정정 공시가 있는 분기 {len(amended)}개 (원본 숫자를 쓰는 중): "
+              f"{', '.join(q['period'] for q in amended)}")
     last = quarters[-1]
     print(f"가장 최근 {last['period']}: 종목 {len(last['holdings'])}개 · "
           f"${last['total']/1e9:,.1f}B")

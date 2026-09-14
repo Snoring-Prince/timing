@@ -6,7 +6,7 @@
 > conversation with the owner is Korean.** Owner is a non-developer: no terminal,
 > no git. See `/CLAUDE.md` §0.
 
-STATUS as of 2026-09-14: **three probe runs done; the fetcher is written and unit-tested.**
+STATUS as of 2026-09-14: **the fetcher has run for real. 53 quarters are committed.**
 `SEC_CONTACT` is set; run #1 (2026-09-14, 12s) came back **200 on every request**.
 What it found is in §5-2 — read that before anything else. Nothing is parsed yet,
 no schema exists, no page exists. Everything below §4 is decided, not speculative.
@@ -408,6 +408,75 @@ clean state.
 **Not yet run against real SEC.** Next: one `Run workflow`, read the log, check
 the printed totals per quarter against Berkshire's annual report (§4).
 
+### 5-8. First real run (2026-09-14) — what actually came back
+
+```
+13F-HR found          111, 1998-12-31 … 2026-06-30
+saved                  53, 2013-06-30 … 2026-06-30     data/titans/berkshire.json, 273 KB
+13F-HR/A found        100  ← not 0. See below.
+```
+
+**The unit switch is real and lands on exactly one boundary:**
+
+```
+2022-09-30   value/shares 0.06   thousands
+2022-12-31   value/shares 63.61  dollars     ← one clean cutover, no mixed quarter
+```
+
+Totals look right across the whole range ($89B in 2013 → $299B in 2026), and
+2016-12-31 came out at **$148.0B**, matching what §5-6 predicted from that
+filing's own `tableValueTotal`. Folding is lossless: summing each holding's
+`lines` equals the raw row count in **all 53 quarters**.
+
+#### Two things the run exposed
+
+**(a) 58 "failures" were not failures.** Every 13F-HR from 1998-12-31 through
+2013-03-31 has **no XML in its folder at all** — EDGAR did not require XML for
+13F until mid-2013, so those filings are text documents in a different format.
+Counting them as failures means every weekly run prints 58 errors forever, and
+**a real failure would be invisible inside that noise.** They are now counted
+separately (`NO_XML`) and reported as "XML 이전 형식이라 건너뛴 분기".
+
+Pre-2013 history would need a separate text parser for a format that varies.
+**Not worth it now** — 2013 onward is 13 years, which is plenty for "그래서
+어떻게 됐나". Revisit only if the screen actually wants the 2008 crash.
+
+**(b) 100 amendments exist, and ~7 fall inside the saved range:**
+
+```
+2013-06-30  2014-09-30  2015-06-30  2020-09-30
+2023-09-30 (two)  2023-12-31  2025-03-31
+```
+
+These are almost certainly confidential-treatment releases — Berkshire routinely
+asks the SEC to withhold a position while it is still building it, then files an
+amendment once the position is complete. **That means those quarters' original
+filings are genuinely incomplete**, not merely restated. This is no longer a
+theoretical gap.
+
+Still not merged, because the merge rule is still unknown (restate vs. add,
+§5-7). Quarters with an amendment now carry `amended_by: [accession]` in the JSON
+so the screen can mark them rather than quietly showing short numbers.
+`probe_sec.py --accession` (and the workflow input) exists to open one:
+**`0000950123-25-008361`** (2025-03-31, filed 2025-08-14) is the freshest sample.
+
+#### (c) A self-check that beats eyeballing
+
+Our summed total is now compared against the filing's own `tableValueTotal`
+(scaled by the same factor), and the row count against `tableEntryTotal`. A
+quarter off by more than 0.5% gets `total_mismatch` in the JSON and a `※` in the
+log. This is the check that proves no rows were dropped and the unit call was
+right — **it is not an independent check against the annual report**, since both
+numbers come from the same filing. A true outside check still needs the annual
+report, which is not reachable from this environment.
+
+#### (d) Same issuer, two rows, both correct
+
+`ALPHABET INC` appears twice in 2026-06-30 — CUSIP `02079K305` (CAP STK CL A,
+$28.16B) and `02079K107` (CAP STK CL C, $9.61B). Different share classes are
+different securities and must not be folded together. **The screen has to show
+`class`, not just `name`**, or it will look like a duplicate row.
+
 ---
 
 ## 6. ANSWERED — owner picked the address; secret still not set
@@ -545,11 +614,11 @@ Burry's page needs the staleness line more prominently (§3).
 5. DONE  run #3 — 39 quarters in recent + 1 older chunk; units change confirmed
 6. DONE  schema designed (§5-7) — folded by CUSIP, units self-checked
 7. DONE  fetch script + weekly workflow, unit-tested on fixtures
-8. Owner clicks Actions → Update 13F → Run workflow. Read the log.
-9. Reconcile the printed totals against Berkshire's annual report. Do not proceed
-   until it matches.
-10. CUSIP→ticker, then prices, then the page at /titans/ (see /docs/design-system.md)
-11. Only then, investor #2
+8. DONE  first real run — 53 quarters committed (§5-8)
+9. Owner re-runs Update 13F after the self-check lands; confirm 0 mismatches
+10. Probe accession 0000950123-25-008361 to learn the amendment merge rule
+11. CUSIP→ticker, then prices, then the page at /titans/ (see /docs/design-system.md)
+12. Only then, investor #2
 ```
 
 Steps needing a click are the owner's — assistants here cannot run Actions. Say

@@ -300,6 +300,10 @@ def main() -> int:
     ap.add_argument("--show", type=int, default=3, help="되풀이되는 기록을 몇 개나 찍을지 (0=안 찍음)")
     ap.add_argument("--no-old", dest="old", action="store_false",
                     help="가장 오래된 건은 받지 않는다 (기본: 받아서 단위를 비교)")
+    # 특정 한 건만 열어 보고 싶을 때. 정정 공시(13F-HR/A)처럼 모양을 모르는
+    # 것을 볼 때 씁니다 — 접수번호를 주면 목록을 건너뛰고 그것만 훑습니다.
+    ap.add_argument("--accession", default="",
+                    help="이 접수번호 하나만 훑는다 (예: 0000950123-25-008361)")
     a = ap.parse_args()
 
     contact = os.environ.get("SEC_CONTACT", "").strip()
@@ -340,6 +344,16 @@ def main() -> int:
     print(f"    {json.dumps(stepA['census'], ensure_ascii=False)[:400]}")
 
     sub = json.loads(body)
+
+    # 접수번호를 준 경우: 목록을 건너뛰고 그것만. 서식이 무엇이든 상관없습니다.
+    if a.accession:
+        one = {"filingDate": "?", "reportDate": "?", "accessionNumber": a.accession}
+        man["filings_found"] = [one]
+        ok = one_filing(cik_int, one, contact, "one", a.show, man)
+        with open(os.path.join(OUT_DIR, "manifest.json"), "w", encoding="utf-8") as f:
+            json.dump(man, f, ensure_ascii=False, indent=2)
+        return 0 if ok else 1
+
     got = all_filings(sub, a.form)
     older = len((sub.get("filings") or {}).get("files") or [])
     man["filings_found"] = got

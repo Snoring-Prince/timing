@@ -19,6 +19,10 @@ on:
         description: "서식 (기본: 13F-HR)"
         required: false
         default: "13F-HR"
+      accession:
+        description: "이 접수번호 하나만 훑기 (비워 두면 최신·최고령 두 건)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -45,7 +49,8 @@ jobs:
           # 따옴표 하나로 셸 명령이 되는 자리입니다.
           CIK: ${{ inputs.cik }}
           FORM: ${{ inputs.form }}
-        run: python scripts/probe_sec.py --cik "$CIK" --form "$FORM"
+          ACC: ${{ inputs.accession }}
+        run: python scripts/probe_sec.py --cik "$CIK" --form "$FORM" --accession "$ACC"
 
       # 실패해도 받아 온 데까지는 올립니다. 무엇을 받다 막혔는지가 곧 답입니다.
       - name: 원본 올리기
