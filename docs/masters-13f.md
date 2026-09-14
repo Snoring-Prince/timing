@@ -472,6 +472,43 @@ table past that window — `table_peek()` finds the first CUSIP-shaped token and
 prints from just before it. Measured: on a fixture with an 11KB header it lands
 on the table. That is locating, not parsing.
 
+#### DECIDED 2026-09-14: this is a one-shot conversion, not a parser
+
+Owner: **"어차피 한번만 할건데, 파서까지 만들 일이야? 그냥 니가 요즘 형식으로
+정리해주면 되잖아."** Correct, and it reframes the job. These 58 filings are
+frozen forever. Nothing needs to run weekly, recover from errors, or handle a
+format we have not seen. **Write throwaway code, verify it, commit the JSON,
+delete the code.** Do not build a maintained pre-2013 pipeline.
+
+The obstacle was never the parsing, it was *seeing* the files:
+
+```
+SEC blocked from the dev environment       → cannot fetch directly
+58 × ~90KB ≈ 5MB                           → too large to read through job logs
+artifact download on blob.core.windows.net → proxy 403
+```
+
+**Solution: the runner pushes the raw filings to a scratch branch**
+(`scripts/dump_13f_raw.py` + `.github/workflows/dump-13f-raw.yml`, branch
+`raw-13f`). The assistant then fetches that branch and reads the documents
+locally, at full fidelity, with no click-and-wait loop. 13F is public domain, so
+a public branch is fine. Amendments are dumped too — ~90 of the 100 are in this
+era, so their shape gets settled in the same pass.
+
+The branch is an **orphan** branch: it carries only `sec-raw/`, never main's
+files. Verified on a scratch repo — `raw-13f` contains only the dump and `main`
+is untouched.
+
+**The conversion has a built-in answer key.** Each filing states its own
+`Form 13F Information Table Value Total` and entry count. Crude extraction is
+fine as long as every quarter reconciles against its own stated total — the same
+check `fetch_13f.py` already does for the XML era (§5-8c). 58/58 matching means
+done, regardless of how ugly the code was.
+
+**Cleanup is part of the job**: once `berkshire.json` carries the old quarters,
+delete `dump_13f_raw.py`, `dump-13f-raw.yml`, and the `raw-13f` branch. Leaving
+them makes the next session think there is a pipeline to maintain.
+
 **(b) 100 amendments exist, and ~7 fall inside the saved range:**
 
 ```
