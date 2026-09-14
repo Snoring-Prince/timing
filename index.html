@@ -87,6 +87,7 @@ ko:{
   idx:{spx:"S&P 500",ndx:"나스닥 100"},
   hold:{"30D":"30일","90D":"90일","180D":"180일","1Y":"1년","3Y":"3년","5Y":"5년"},
   peak:"전고점", peakMark:v=>`전고점 ${v}`,
+  support:"이 화면이 도움이 됐다면", supportCta:"커피 한 잔 사 주기",
   curVal:"현재값", winEnd:"구간 끝값",
   elapsed:"경과 일수", dayUnit:"일", sincePeak:"전고점 이후",
   vsPeak:"전고점 대비", toRecover:x=>`회복까지 +${x}%`,
@@ -156,6 +157,7 @@ en:{
   idx:{spx:"S&P 500",ndx:"Nasdaq 100"},
   hold:{"30D":"30 days","90D":"90 days","180D":"180 days","1Y":"1 year","3Y":"3 years","5Y":"5 years"},
   peak:"Peak", peakMark:v=>`Peak ${v}`,
+  support:"If this page helped,", supportCta:"buy me a coffee",
   curVal:"Current", winEnd:"Window end",
   elapsed:"Days elapsed", dayUnit:"d", sincePeak:"since the peak",
   vsPeak:"From the peak", toRecover:x=>`+${x}% to recover`,
@@ -330,6 +332,14 @@ applyLang(pickLang(),false);
    workers/live.js 를 클라우드플레어에 올리고 그 주소를 여기 넣으면 켜집니다.
    통계 블록과 마찬가지로 화면·데이터 코드와 분리돼 있습니다. */
 window.LIVE={ url: "https://yellow-salad-ec67.dysan1000.workers.dev/" };
+
+/* ══ 후원 ═══════════════════════════════════════════════════════════
+   주소를 넣으면 각주 위에 조용한 한 줄이 생깁니다. 비워 두면 줄 자체가
+   아예 안 생깁니다 — 빈 자리도 안 남습니다.
+   Buy Me a Coffee 나 Ko-fi 에서 계정을 만들고 받은 주소를 그대로 넣으세요.
+     예: "https://buymeacoffee.com/아이디"  또는  "https://ko-fi.com/아이디"
+   GitHub Pages 약관은 기부·크라우드펀딩 링크를 명시적으로 허용합니다(11번). */
+window.SUPPORT={ url: "https://buymeacoffee.com/snoringprince" };
 
 window.STATS={
   id : "41e07a57-a87c-403b-bdf8-e12d911457b6",   /* Umami Website ID */
@@ -668,6 +678,16 @@ html:not([lang="ko"]) .about [data-lang="ko"]{display:none}
   .about .prose p{font-size:12px}
 }
 
+/* 후원 한 줄. 이 화면의 디자인 언어는 계측기·측량 도면이라 색 버튼을 놓으면
+   혼자 튄다. 각주와 같은 고정폭·같은 크기로 두고 링크에만 밑줄을 남긴다.
+   주소가 없으면 hidden 이라 줄도 여백도 생기지 않는다. */
+.support{margin:26px 0 0;font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.8}
+.support a{color:var(--ink-2);text-decoration:underline;text-underline-offset:2px;
+  text-decoration-color:var(--rule)}
+.support a:hover{color:var(--ink);text-decoration-color:var(--ink-2)}
+.support a:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:2px}
+/* 후원 줄이 있으면 각주의 위 여백은 그 줄이 이미 벌려 놓았다. */
+.support:not([hidden])+.foot{margin-top:12px}
 .foot{margin-top:26px;padding-top:14px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.8}
 .foot b{color:var(--ink-2);font-weight:500}
 
@@ -868,6 +888,8 @@ svg.sm .svg-axis{font-size:11px}
     </div>
   </details>
 </section>
+
+  <p class="support" id="support" hidden></p>
 
   <p class="foot" id="foot">
     Peak is the highest close inside the window on screen.<br>
@@ -1514,6 +1536,7 @@ function langSeg(){
 function paintStatic(){
   const put=(id,html)=>{const e=document.getElementById(id);if(e)e.innerHTML=html};
   put("foot",tx("foot").join("<br>"));
+  paintSupport();
   put("tagline",tx("tagline"));
   put("fng-name",axName(btAx));
   const st=document.getElementById("stamp");
@@ -1522,6 +1545,29 @@ function paintStatic(){
            put("bt-title",tx("btTitleDefault")); }
   langSeg();
 }
+/* 후원 한 줄. 주소가 없으면 아무 것도 그리지 않고 줄을 숨긴 채로 둔다 —
+   빈 <p> 가 남으면 각주 위에 설명 없는 여백만 생긴다.
+   바깥 링크이므로 rel 에 noopener 를 붙인다(새 탭이 이 창을 건드리지 못하게). */
+function paintSupport(){
+  const el=document.getElementById("support");
+  if(!el)return;
+  const u=((window.SUPPORT||{}).url||"").trim();
+  if(!u){ el.hidden=true; el.innerHTML=""; return }
+  el.hidden=false;
+  /* 문장과 링크 글자를 사전에서 따로 받아 붙인다. 한 문장을 정규식으로 쪼개면
+     언어마다 쉼표가 있고 없고가 달라서 엉뚱한 데가 링크가 된다. */
+  el.textContent=tx("support")+" ";
+  const a=document.createElement("a");
+  a.href=u; a.target="_blank"; a.rel="noopener noreferrer";
+  a.dataset.support=""; a.textContent=tx("supportCta");
+  el.appendChild(a);
+}
+/* 눌렀는지만 셉니다. 후원이 0건일 때 "아무도 안 좋아해서"인지
+   "본 사람이 없어서"인지 구분하려면 이 숫자가 필요합니다. */
+document.addEventListener("click",e=>{
+  if(e.target.closest&&e.target.closest("[data-support]"))track("support",{lang:LANG});
+});
+
 function setLang(l){
   if(!D[l]||l===LANG)return;
   applyLang(l,true);
