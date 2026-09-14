@@ -58,10 +58,20 @@ jobs:
       # 화면은 미국 종목의 ISIN 을 CUSIP 에서 직접 계산하므로 이 표가 필요한 것은
       # 미국 발행사가 아닌 종목뿐입니다(28년치의 5.8%). 이미 물어본 것은 다시
       # 묻지 않으므로 보통은 요청이 0건이고 파일도 안 바뀝니다.
+      # **이 두 단계는 실행을 실패시키지 않습니다**(continue-on-error).
+      # 티커는 로고를 찾는 데만 쓰는 곁가지라, 못 받으면 그 종목의 마크가
+      # 글자 타일로 떨어질 뿐 데이터는 멀쩡합니다. 그런데 처음에는 이 단계가
+      # 실행 전체를 빨갛게 만들고 **"13F 받기가 실패했습니다"** 라는 텔레그램까지
+      # 보냈습니다 — 정작 13F 는 성공해서 커밋된 뒤였습니다. 거짓 경보입니다.
+      # 아래 알림은 이제 진짜 13F 실패일 때만 울립니다.
       - name: 티커 받기 (로고용)
-        run: python scripts/fetch_tickers.py
+        continue-on-error: true
+        # -u 로 버퍼링을 끕니다. 없으면 표준출력이 뭉쳐 나와서 **오류 줄이
+        # 결과 목록보다 먼저 찍힙니다** — 첫 실행 로그가 실제로 그랬습니다.
+        run: python -u scripts/fetch_tickers.py
 
       - name: 티커 저장
+        continue-on-error: true
         run: |
           git add data/titans/tickers.json
           if git diff --staged --quiet; then
