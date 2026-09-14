@@ -6,7 +6,7 @@
 > conversation with the owner is Korean.** Owner is a non-developer: no terminal,
 > no git. See `/CLAUDE.md` §0.
 
-STATUS as of 2026-09-14: **two probe runs done. The 13F shape is now known, not guessed.**
+STATUS as of 2026-09-14: **three probe runs done; the fetcher is written and unit-tested.**
 `SEC_CONTACT` is set; run #1 (2026-09-14, 12s) came back **200 on every request**.
 What it found is in §5-2 — read that before anything else. Nothing is parsed yet,
 no schema exists, no page exists. Everything below §4 is decided, not speculative.
@@ -320,6 +320,77 @@ OpenFIGI API          free, maps CUSIP→ticker, rate-limited without a key.
 report. Revisit before investor #2. Do not let this block the fetcher: store `cusip`
 as the key in the JSON and treat `ticker` as an annotation that can arrive later.
 
+### 5-6. Run #3 — history depth and the units change, both settled
+
+```
+13F-HR in filings.recent    39, covering 2016-12-31 … 2026-06-30
+filings.files chunks        1   (older history, fetched too — script handles it)
+```
+
+**The units DID change, and it is confirmed by arithmetic, not memory:**
+
+```
+2026-06-30  56757.xml             value/shares = 45.95     → dollars
+2016-12-31  form13fInfoTable.xml  value/shares =  0.0467   → thousands
+                                  ×1000 = 46.69  ← real Dec-2016 AAL price
+
+tableValueTotal 2016 = 147,985,198
+  read as dollars   → $148 million   absurd for Berkshire
+  read as thousands → $148 billion   correct
+```
+
+**And the filename differed across the two filings** (`56757.xml` vs
+`form13fInfoTable.xml`), which is the §5-2 finding confirmed on a second sample
+rather than inferred from one.
+
+Row counts: 148 rows in 2016-12-31 vs 89 in 2026-06-30. Field set identical
+(same 15 tags, each appearing exactly `rows`×). The old cover page carries three
+extra flags (`confirmingCopyFlag`, `returnCopyFlag`, `overrideInternetFlag`);
+harmless. `schemaVersion` is absent in the 2016 cover page and `X0202` in 2026.
+
+### 5-7. The fetcher (`scripts/fetch_13f.py`) — built on those three findings
+
+Writes `data/titans/berkshire.json`. **No prices yet** — reconcile totals first
+(§4), then solve CUSIP→ticker (§5-5).
+
+```
+list_filings()   recent + every filings.files chunk → all 13F-HR, oldest first
+holdings_xml()   read index.json, take the LARGEST .xml that is not
+                 primary_doc.xml. Never a hardcoded name, never primaryDocument.
+unit_scale()     median(value/shares) over SH rows. <1 → thousands, ×1000.
+                 Median over ~50 names, so one odd ticker cannot flip it.
+fold()           group by (cusip, class, sshPrnamtType, putCall), sum value and
+                 shares, keep `lines` = how many rows collapsed.
+```
+
+Stored shape, values always USD:
+
+```json
+{"updated","source","manager":{"cik","name"},"note",
+ "quarters":[{"period","filed","accession","lines","unit","total",
+              "holdings":[{"cusip","name","class","value","shares","lines"}]}]}
+```
+
+`unit` records what was detected so the decision stays auditable; `lines` on both
+levels keeps the row-vs-position distinction visible rather than silently erased.
+
+Incremental: filings are immutable once filed, so any accession already in the
+JSON is skipped. A quarterly run costs ~3 requests. Guards, all exercised against
+a fixture server: missing `SEC_CONTACT` → exit 1; submissions unreachable → exit 1
+and **the existing file is left untouched** (same principle as `fetch_long.py`,
+`/CLAUDE.md` §3); one quarter 404ing → the others still save and that quarter
+backfills on the next run.
+
+Unit-tested with the **real numbers read off the probe logs** — the three Ally
+rows fold to 900,335,661 / 19,593,812 shares, and the 2016 rows scale to a
+$46.69 AAL price. SH / PRN / Put are kept separate, never summed together.
+
+`.github/workflows/update-13f.yml`: weekly (Sunday), commits only when something
+changed, Telegram on failure.
+
+**Not yet run against real SEC.** Next: one `Run workflow`, read the log, check
+the printed totals per quarter against Berkshire's annual report (§4).
+
 ---
 
 ## 6. ANSWERED — owner picked the address; secret still not set
@@ -454,12 +525,14 @@ Burry's page needs the staleness line more prominently (§3).
 2. DONE  probe built
 3. DONE  run #1 — SEC reachable, shape summary in §5-2
 4. DONE  run #2 — full 13F shape read off the log (§5-3)
-5. Owner clicks Run workflow once more → run #3 (§5-4: filing list + oldest filing)
-6. THEN design the JSON schema — group by CUSIP, self-check the units
-7. Build the fetch script + quarterly workflow
-8. Reconcile against Berkshire's annual report. Do not proceed until it matches.
-9. Build the page at /titans/ against /docs/design-system.md
-10. Only then, investor #2
+5. DONE  run #3 — 39 quarters in recent + 1 older chunk; units change confirmed
+6. DONE  schema designed (§5-7) — folded by CUSIP, units self-checked
+7. DONE  fetch script + weekly workflow, unit-tested on fixtures
+8. Owner clicks Actions → Update 13F → Run workflow. Read the log.
+9. Reconcile the printed totals against Berkshire's annual report. Do not proceed
+   until it matches.
+10. CUSIP→ticker, then prices, then the page at /titans/ (see /docs/design-system.md)
+11. Only then, investor #2
 ```
 
 Steps needing a click are the owner's — assistants here cannot run Actions. Say
