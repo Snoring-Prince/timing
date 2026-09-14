@@ -38,7 +38,7 @@ OpenFIGI 로 직접 나가지 않으므로 IP 도 안 새고 화면이 그쪽에
 **`_` 로 시작하는 키는 화면이 무시합니다.** 파일에 언제 물어봤는지를 같이 둡니다.
 """
 import datetime as dt
-import json, os, re, sys, time, urllib.request, urllib.error
+import gzip, json, os, re, sys, time, urllib.request, urllib.error, zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -52,7 +52,10 @@ RETRY_DAYS = 90     # 못 찾은 것을 다시 물어보기까지
 # **출처를 새로 붙이면 이 값을 올리세요.** 못 찾은 것은 빈 값으로 굳어 있어서
 # 그냥 두면 90일 뒤에나 다시 물어봅니다. SEC 대조를 새로 넣은 지금이 그 경우라,
 # 파일의 _asked 를 지우는 대신 여기서 세대를 올려 한 번 다시 돌게 합니다.
-SOURCES = "openfigi+sec"   # 바뀌면 못 찾은 것을 전부 다시 물어봅니다
+# **sec → sec2 로 올린 이유**: 첫 실행에서 SEC 표를 gzip 인 채로 json.loads 에
+# 넣어 열다섯 건이 전부 '못 찾음' 으로 굳었습니다. 이름이 안 맞아서가 아니라
+# 표를 읽지도 못한 것이라, 고친 뒤 한 번 다시 물어봐야 합니다.
+SOURCES = "openfigi+sec2"  # 바뀌면 못 찾은 것을 전부 다시 물어봅니다
 
 
 # ── SEC 회사 이름 → 티커 ───────────────────────────────────────────
@@ -70,13 +73,47 @@ SOURCES = "openfigi+sec"   # 바뀌면 못 찾은 것을 전부 다시 물어봅
 # 엉뚱한 회사 로고를 다는 것보다 글자 타일이 낫습니다.
 SUFFIX = {"LTD","LIMITED","PLC","INC","INCORPORATED","CORP","CORPORATION",
           "CO","COMPANY","HLDGS","HOLDINGS","HOLDING","GROUP","GRP",
-          "NEW","DEL","THE","SA","NV","AG","LP","LLC","CLASS","CL"}
+          "NEW","DEL","THE","SA","NV","AG","LP","LLC","CLASS","CL",
+          "OF","AND"}          # 13F 는 'BANK AMER', SEC 는 'BANK OF AMERICA'
+
+# SEC 이름 끝에 붙는 설립 주 표식(`/DE/`, `/MD/`, `/NEW/`). 낱말로 남겨 두면
+# 무디스가 ["MOODYS","DE"] 가 되어 공시의 ["MOODYS"] 와 안 맞습니다.
+STATE = re.compile(r"\s*/[A-Za-z]{2,4}/?\s*$")
 
 
 def norm(name: str):
     """이름을 비교할 수 있는 모양으로. 회사 형태 낱말은 버립니다."""
-    w = re.sub(r"[^A-Za-z0-9 ]", " ", str(name)).upper().split()
+    # 아포스트로피는 **지웁니다**(공백으로 바꾸지 않습니다). 공백으로 바꾸면
+    # SEC 의 `Moody's` 가 ["MOODY","S"] 가 되어 공시의 ["MOODYS"] 와 어긋납니다.
+    t = re.sub(r"['\u2019]", "", STATE.sub("", str(name)))
+    w = re.sub(r"[^A-Za-z0-9 ]", " ", t).upper().split()
     return [x for x in w if x and x not in SUFFIX]
+
+
+def keys(name: str):
+    """좁은 열쇠부터 넓은 열쇠까지. **공시의 이름은 줄여 쓰여 있습니다** —
+    `OCCIDENTAL PETE` 와 `OCCIDENTAL PETROLEUM`, `BANK AMER` 와
+    `BANK OF AMERICA` 가 같은 회사입니다. 그래서 통째 비교 하나로는 안 맞고,
+    앞 글자만 잘라 비교하는 단계를 둡니다.
+
+    넓은 열쇠일수록 엉뚱한 회사가 걸릴 수 있는데, **한 회사로 좁혀질 때만
+    받는 규칙**이 그것을 막습니다 — 여럿이 걸리면 버리고 글자 타일로 갑니다.
+    """
+    w = norm(name)
+    if not w:
+        return []
+    out = [" ".join(w)]
+    if len(w) > 1:
+        # 띄어쓰기만 다른 경우. 공시는 `SIRIUSXM`, SEC 는 `Sirius XM` 입니다.
+        out.append("".join(w))
+        out.append(f"{w[0][:4]} {w[1][:4]}")
+        out.append(f"{w[0][:3]} {w[1][:3]}")
+    out.append(w[0])
+    seen, uniq = set(), []
+    for k in out:                       # 순서를 지키면서 중복만 뺀다
+        if k not in seen:
+            seen.add(k); uniq.append(k)
+    return uniq
 
 
 def sec_index(contact: str):
@@ -84,7 +121,17 @@ def sec_index(contact: str):
     req = urllib.request.Request(
         SEC_TICKERS, headers={"User-Agent": contact, "Accept-Encoding": "gzip, deflate"})
     with urllib.request.urlopen(req, timeout=30) as r:
-        text = r.read().decode("utf-8", "replace")
+        enc = (r.headers.get("Content-Encoding") or "").lower()
+        raw = r.read()
+    # **압축을 풀어야 합니다.** urllib 은 자동으로 풀지 않습니다 — Accept-Encoding 을
+    # 보내 놓고 그대로 json.loads 에 넣어서 첫 실행이 통째로 실패했습니다
+    # (207KB 가 gzip 바이트로 들어와 JSONDecodeError). 헤더를 믿지 않고
+    # **매직 바이트로도 확인**합니다. 안 보내도 압축해 주는 서버가 있습니다.
+    if raw[:2] == b"\x1f\x8b" or "gzip" in enc:
+        raw = gzip.decompress(raw)
+    elif "deflate" in enc:
+        raw = zlib.decompress(raw, -zlib.MAX_WBITS)
+    text = raw.decode("utf-8", "replace")
     print(f"  SEC 표 {len(text):,} bytes · 앞부분 {text[:120]}", flush=True)
 
     rows = json.loads(text)
@@ -99,24 +146,24 @@ def sec_index(contact: str):
         title = it.get("title") or it.get("name") or ""
         if not t or cik is None:
             continue
-        w = norm(title)
-        for key in {" ".join(w), " ".join(w[:2])}:
-            if key:
-                idx.setdefault(key, {}).setdefault(str(cik), []).append((t, title))
+        for key in keys(title):
+            idx.setdefault(key, {}).setdefault(str(cik), []).append((t, title))
     return idx
 
 
 def sec_lookup(idx, name):
-    """전체 이름으로 먼저, 안 되면 앞 두 낱말로. 한 회사일 때만 돌려줍니다."""
-    w = norm(name)
-    for key in (" ".join(w), " ".join(w[:2])):
-        if not key:
-            continue
+    """전체 이름으로 먼저, 안 되면 앞 두 낱말로. 한 회사일 때만 돌려줍니다.
+
+    돌려주는 것은 (티커, SEC 가 적은 이름, CIK). **CIK 를 같이 주는 이유**는
+    섹터(SIC)가 CIK 로 따라오기 때문입니다 — `fetch_sectors.py` 가 씁니다.
+    """
+    for key in keys(name):
         hit = idx.get(key)
         if hit and len(hit) == 1:                 # 회사가 하나로 좁혀짐
-            pairs = sorted(next(iter(hit.values())))
-            return pairs[0][0], pairs[0][1]       # (티커, SEC 가 적은 이름)
-    return None, None
+            cik = next(iter(hit))
+            pairs = sorted(hit[cik])
+            return pairs[0][0], pairs[0][1], cik
+    return None, None, None
 
 
 def cusip_ok(c: str) -> bool:
@@ -281,7 +328,7 @@ def main():
             idx = sec_index(contact)
             answered = True
             for c in rest:
-                t, title = sec_lookup(idx, name.get(c, ""))
+                t, title, _cik = sec_lookup(idx, name.get(c, ""))
                 if t:
                     got[c] = t
                     print(f"  {name.get(c,'')[:28]:<28} → {t}   (SEC: {title})", flush=True)
