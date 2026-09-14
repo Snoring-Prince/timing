@@ -27,6 +27,9 @@
 
 저장: data/titans/berkshire.json  (금액은 전부 달러로 맞춰 둠)
 
+정정 공시(13F-HR/A)는 받지 않습니다. 있는지 없는지만 로그에 알립니다 —
+이유는 list_filings() 안에 적어 뒀습니다.
+
 주가는 아직 안 붙입니다. 13F 는 종목번호(CUSIP)만 주고 티커가 없어서,
 먼저 연차보고서와 총액을 대조해 파이프라인이 맞는지 확인한 뒤에 갑니다.
 
@@ -181,15 +184,30 @@ def list_filings(contact: str) -> list[dict]:
         if b:
             blocks.append(json.loads(b))
 
-    out = []
+    out, amend = [], []
     for blk in blocks:
         forms = blk.get("form") or []
         for i, form in enumerate(forms):
-            if form != FORM:
+            if form not in (FORM, FORM + "/A"):
                 continue
             g = lambda k: (blk.get(k) or [None] * len(forms))[i]   # noqa: E731
-            out.append({"filed": g("filingDate"), "period": g("reportDate"),
-                        "accession": g("accessionNumber")})
+            row = {"filed": g("filingDate"), "period": g("reportDate"),
+                   "accession": g("accessionNumber")}
+            (out if form == FORM else amend).append(row)
+
+    # 정정 공시(13F-HR/A)는 **일부러 안 받습니다.** 정정에는 통째로 다시 쓰는
+    # 것과 빠진 것만 덧붙이는 것이 있는데, 둘을 반대로 처리하면 종목이 두 배가
+    # 되거나 통째로 사라집니다. 실물을 한 번도 못 봤으므로 짐작해서 짜지 않고,
+    # **있는지 없는지만 여기서 알립니다.** 나오면 그때 한 건을 열어 보고 넣습니다.
+    amend = [x for x in amend if x["accession"] and x["period"]]
+    if amend:
+        print(f"※ 정정 공시({FORM}/A) {len(amend)}건이 있습니다 — 아직 안 받습니다:")
+        for x in sorted(amend, key=lambda x: x["period"]):
+            print(f"    {x['filed']} 제출 · {x['period']} 기준  {x['accession']}")
+        print("  docs/masters-13f.md 의 '정정 공시' 항목을 보세요.")
+    else:
+        print(f"정정 공시({FORM}/A) 없음")
+
     out = [x for x in out if x["accession"] and x["period"]]
     out.sort(key=lambda x: x["period"])
     return out

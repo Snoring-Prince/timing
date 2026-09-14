@@ -388,6 +388,23 @@ $46.69 AAL price. SH / PRN / Put are kept separate, never summed together.
 `.github/workflows/update-13f.yml`: weekly (Sunday), commits only when something
 changed, Telegram on failure.
 
+#### Amendments (`13F-HR/A`) are deliberately NOT fetched
+
+The fetcher matches `13F-HR` exactly, so amendments are skipped. **This is a
+decision, not an oversight.** An amendment can be either a *restatement* (replaces
+the original table entirely) or an *addition* (carries only the rows that were
+missing, often previously under a confidential-treatment request). Treat one as
+the other and a quarter either doubles or empties. No sample has been seen, so
+there is nothing to design against.
+
+Rather than guess, `list_filings()` **counts and prints them** on every run
+("정정 공시(13F-HR/A) N건" or "없음"). So the first real run answers whether
+Berkshire has any at all. When one shows up: probe that accession, read its cover
+page (`amendmentType` / `isAmendment` / `amendmentNo` in the `coverPage`), and only
+then decide the merge rule. Until then a quarter with an amendment silently uses
+the original numbers — acceptable for now, but it is a known inaccuracy, not a
+clean state.
+
 **Not yet run against real SEC.** Next: one `Run workflow`, read the log, check
 the printed totals per quarter against Berkshire's annual report (§4).
 
