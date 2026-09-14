@@ -223,20 +223,71 @@ def show(name: str, body: bytes, cen: dict, n: int) -> None:
         print("  | " + line)
 
 
-def newest_filing(sub: dict, form: str) -> dict | None:
-    """제출 목록에서 그 서식의 가장 최근 건을 찾습니다.
+def all_filings(sub: dict, form: str) -> list[dict]:
+    """제출 목록에서 그 서식을 **전부** 찾습니다(최신이 앞).
 
-    `filings.recent` 만 봅니다. 오래된 것은 별도 파일로 쪼개져 있는데,
-    정찰에는 최신 한 건이면 충분합니다."""
+    `filings.recent` 만 봅니다. 더 오래된 것은 `filings.files` 에 별도 파일로
+    쪼개져 있고, 그 개수는 따로 찍습니다."""
     recent = (sub.get("filings") or {}).get("recent") or {}
     forms = recent.get("form") or []
+    out = []
     for i, f in enumerate(forms):
         if f != form:
             continue
-        return {k: (recent.get(k) or [None] * len(forms))[i]
-                for k in ("form", "filingDate", "reportDate", "accessionNumber",
-                          "primaryDocument", "primaryDocDescription", "size")}
-    return None
+        out.append({k: (recent.get(k) or [None] * len(forms))[i]
+                    for k in ("form", "filingDate", "reportDate",
+                              "accessionNumber", "primaryDocument", "size")})
+    return out
+
+
+def one_filing(cik_int: str, filing: dict, contact: str, tag: str,
+               show_n: int, man: dict) -> bool:
+    """한 건의 제출 폴더를 훑습니다 — 목차를 읽고, 그 안의 파일을 받습니다.
+
+    **파일 이름을 짐작하지 않습니다.** 목차(index.json)가 주는 이름만 씁니다.
+    첫 실행에서 보유 목록 파일이 `56757.xml` 이었습니다 — 규칙이 없는 숫자라
+    박아 두면 다음 분기에 깨집니다."""
+    acc = re.sub(r"\D", "", filing["accessionNumber"] or "")
+    base = f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{acc}"
+    print(f"[{tag}] {filing['filingDate']} 제출 · {filing['reportDate']} 기준  {base}/index.json")
+
+    rec = get(f"{base}/index.json", contact)
+    body = rec.get("_body", b"")
+    step = save(rec, f"{tag}-index.json")
+    step["census"] = census(body)
+    man["steps"].append(step)
+    print(f"    {rec['status']}  {rec['bytes']:,} bytes  {rec['error'] or ''}")
+    if not rec["ok"]:
+        return False
+
+    items = ((json.loads(body).get("directory") or {}).get("item") or [])
+    print(f"    파일 {len(items)}개")
+    shown = []
+    for it in items:
+        name = it.get("name") or ""
+        try:
+            size = int(it.get("size") or 0)
+        except (TypeError, ValueError):
+            size = 0
+        if size > MAX_BYTES:
+            print(f"    건너뜀 {name} — {size:,} bytes (제한 {MAX_BYTES:,})")
+            man.setdefault("files", []).append({"name": name, "size": size,
+                                                "skipped": "too large"})
+            continue
+        r = get(f"{base}/{name}", contact)
+        b = r.get("_body", b"")
+        f = save(r, os.path.join(f"{tag}-files", name))
+        f["name"] = name
+        f["census"] = census(b)
+        man.setdefault("files", []).append(f)
+        c = f["census"]
+        extra = (f"{c.get('tag_kinds', '')} tag kinds" if c["kind"] != "json"
+                 else f"keys={c.get('keys', [])[:8]}")
+        print(f"    {name:<44} {r['status']} {r['bytes']:>10,} bytes  {c['kind']}  {extra}")
+        shown.append((name, b, c))
+    for name, b, c in shown:
+        show(name, b, c, show_n)
+    return True
 
 
 def main() -> int:
@@ -247,6 +298,8 @@ def main() -> int:
     # 프록시가 403 으로 끊습니다(2026-09-14 실측). 로그는 읽을 수 있으므로
     # **내용을 로그에도 찍습니다.** 그러면 사람이 아티팩트를 받아 건네줄 필요가 없습니다.
     ap.add_argument("--show", type=int, default=3, help="되풀이되는 기록을 몇 개나 찍을지 (0=안 찍음)")
+    ap.add_argument("--no-old", dest="old", action="store_false",
+                    help="가장 오래된 건은 받지 않는다 (기본: 받아서 단위를 비교)")
     a = ap.parse_args()
 
     contact = os.environ.get("SEC_CONTACT", "").strip()
@@ -287,66 +340,40 @@ def main() -> int:
     print(f"    {json.dumps(stepA['census'], ensure_ascii=False)[:400]}")
 
     sub = json.loads(body)
-    filing = newest_filing(sub, a.form)
-    man["newest_filing"] = filing
-    if not filing:
-        print(f"    → {a.form} 을 최근 목록에서 못 찾았습니다. 오래된 목록은 "
-              f"filings.files 에 따로 있습니다.")
-        json.dump(man, open(os.path.join(OUT_DIR, "manifest.json"), "w"),
-                  ensure_ascii=False, indent=2)
-        return 1
-    print(f"    가장 최근 {a.form}: {json.dumps(filing, ensure_ascii=False)}")
-
-    acc = re.sub(r"\D", "", filing["accessionNumber"] or "")
-
-    # ── B. 그 제출 폴더의 목차 ───────────────────────────────────
-    base = f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{acc}"
-    url = f"{base}/index.json"
-    print(f"[B] 제출 폴더  {url}")
-    rec = get(url, contact)
-    body = rec.get("_body", b"")
-    stepB = save(rec, "B-index.json")
-    stepB["census"] = census(body)
-    man["steps"].append(stepB)
-    print(f"    {rec['status']}  {rec['bytes']:,} bytes  {rec['error'] or ''}")
-    if not rec["ok"]:
+    got = all_filings(sub, a.form)
+    older = len((sub.get("filings") or {}).get("files") or [])
+    man["filings_found"] = got
+    man["older_chunks"] = older
+    if not got:
+        print(f"    → {a.form} 을 최근 목록에서 못 찾았습니다.")
         json.dump(man, open(os.path.join(OUT_DIR, "manifest.json"), "w"),
                   ensure_ascii=False, indent=2)
         return 1
 
-    items = ((json.loads(body).get("directory") or {}).get("item") or [])
-    print(f"    파일 {len(items)}개")
-    for it in items:
-        print(f"      {it.get('name'):<44} {str(it.get('size')):>10}  {it.get('type')}")
+    # ── A-2. 그 서식이 몇 건이나, 언제까지 있나 ──────────────────
+    # 이 사이트가 보여 줄 것은 "그래서 어떻게 됐나"라 **과거가 전부** 필요합니다.
+    # 최근 목록에 몇 분기가 들어 있는지, 더 옛것이 따로 있는지를 먼저 봅니다.
+    print(f"    최근 목록의 {a.form} {len(got)}건 "
+          f"({got[-1]['reportDate']} ~ {got[0]['reportDate']})")
+    print(f"    더 오래된 목록 파일 {older}개 (filings.files)")
+    for f in got:
+        print(f"      {f['filingDate']} 제출 · {f['reportDate']} 기준  "
+              f"{f['accessionNumber']}  {f['size']:>8,} bytes")
 
-    # ── C. 폴더 안의 파일들 ──────────────────────────────────────
-    print("[C] 파일 내려받기")
-    files = []
-    shown = []
-    for it in items:
-        name = it.get("name") or ""
-        try:
-            size = int(it.get("size") or 0)
-        except (TypeError, ValueError):
-            size = 0
-        if size > MAX_BYTES:
-            print(f"    건너뜀 {name} — {size:,} bytes (제한 {MAX_BYTES:,})")
-            files.append({"name": name, "size": size, "skipped": "too large"})
-            continue
-        r = get(f"{base}/{name}", contact)
-        b = r.get("_body", b"")
-        f = save(r, os.path.join("C-files", name))
-        f["name"] = name
-        f["census"] = census(b)
-        files.append(f)
-        c = f["census"]
-        extra = (f"{c.get('tag_kinds', '')} tag kinds" if c["kind"] != "json"
-                 else f"keys={c.get('keys', [])[:8]}")
-        print(f"    {name:<44} {r['status']} {r['bytes']:>10,} bytes  {c['kind']}  {extra}")
-        shown.append((name, b, c))
-    for name, b, c in shown:
-        show(name, b, c, a.show)
-    man["files"] = files
+    # ── B·C. 가장 최근 건 ───────────────────────────────────────
+    if not one_filing(cik_int, got[0], contact, "new", a.show, man):
+        json.dump(man, open(os.path.join(OUT_DIR, "manifest.json"), "w"),
+                  ensure_ascii=False, indent=2)
+        return 1
+
+    # ── D. 가장 오래된 건 ───────────────────────────────────────
+    # **단위가 바뀐 적이 있는지**를 봐야 합니다. 금액이 달러인지 천 달러인지가
+    # 도중에 달라졌다면, 옛 분기가 1000배로 나옵니다. 날짜를 외워서 박지 말고
+    # 두 끝을 실제로 받아서 비교합니다(최신 건은 금액÷주식수가 $45.95 로
+    # 딱 떨어졌습니다 — 달러 단위라는 뜻입니다).
+    if a.old and len(got) > 1:
+        print()
+        one_filing(cik_int, got[-1], contact, "old", a.show, man)
 
     with open(os.path.join(OUT_DIR, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump(man, f, ensure_ascii=False, indent=2)
