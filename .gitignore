@@ -1,0 +1,7 @@
+# 러너에서 정찰이 만드는 원본 폴더. 저장소에 올리지 않습니다.
+# (아티팩트로만 내려받습니다 — .github/workflows/probe-sec.yml)
+sec-probe/
+
+# 파이썬이 만드는 캐시
+__pycache__/
+*.pyc
