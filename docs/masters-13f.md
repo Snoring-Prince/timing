@@ -6,7 +6,7 @@
 > conversation with the owner is Korean.** Owner is a non-developer: no terminal,
 > no git. See `/CLAUDE.md` §0.
 
-STATUS as of 2026-09-14: **the fetcher has run for real. 53 quarters are committed.**
+STATUS as of 2026-09-14: **111 quarters committed, 1998-12-31 … 2026-06-30, no gaps.**
 `SEC_CONTACT` is set; run #1 (2026-09-14, 12s) came back **200 on every request**.
 What it found is in §5-2 — read that before anything else. Nothing is parsed yet,
 no schema exists, no page exists. Everything below §4 is decided, not speculative.
@@ -545,6 +545,59 @@ $28.16B) and `02079K107` (CAP STK CL C, $9.61B). Different share classes are
 different securities and must not be folded together. **The screen has to show
 `class`, not just `name`**, or it will look like a duplicate row.
 
+### 5-9. DONE — pre-2013 converted, 28 years of history in the file
+
+The one-shot conversion ran. `data/titans/berkshire.json` now holds **111 quarters,
+1998-12-31 through 2026-06-30, with no missing quarter.** 478 KB.
+
+```
+58 pre-2013 quarters converted from text; ALL 58 reconcile against their own
+stated Form 13F Value Total.  (2 have a ±1 row-count difference with the money
+exact — recorded as lines_mismatch, harmless.)
+53 XML-era quarters: 0 total mismatches, confirmed on a second run.
+```
+
+2008 is in, which was the whole point:
+
+```
+2007-12-31 $68.8B → 2008-12-31 $51.9B → 2009-03-31 $40.9B → 2009-09-30 $56.5B
+```
+
+#### The five traps the text format actually had
+
+Each surfaced because the money did not reconcile — never by reading the code.
+
+```
+TORCHMARK / SPONSORED    9-letter names matched as CUSIPs
+greedy regex             ate the first digit of the value column (2,912,308 → 912,308)
+right-aligned numbers    a wider value starts earlier, so align on the END not the start
+868168 10 F / 82028k     check digit can be a LETTER, and lowercase appears
+Entry Total:.            a period after the colon in the 2011 layout
+```
+
+The last two cost exactly two rows in 2000-09-30, and their sum was exactly the
+gap. That is what a checksum buys you.
+
+#### What was deleted, deliberately
+
+`scripts/dump_13f_raw.py` and `.github/workflows/dump-13f-raw.yml` are **gone** —
+they were one-shot scaffolding and leaving them would make the next session think
+there is a pipeline here. **The `raw-13f` branch should be deleted too** (GitHub →
+Branches → trash); it was 6.5 MB of raw filings and has served its purpose.
+
+`scripts/onetime/convert_13f_text.py` is kept, clearly marked as run-once, **only**
+so the old numbers can be audited later. Do not maintain it, do not re-run it.
+
+#### Still open
+
+- **Amendments are still not merged.** 85 were converted and 83 reconcile, but the
+  merge rule (restate vs. add) is unused. Good news: the old paper form has explicit
+  checkboxes — `This Amendment ... [ ] is a restatement. [ ] adds new holdings
+  entries.` — so **the filing declares its own type** and the rule can be read
+  rather than guessed. Affected quarters carry `amended_by`.
+- File is 478 KB and will grow. If the page feels slow, split per-decade rather
+  than dropping history.
+
 ---
 
 ## 6. ANSWERED — owner picked the address; secret still not set
@@ -683,10 +736,11 @@ Burry's page needs the staleness line more prominently (§3).
 6. DONE  schema designed (§5-7) — folded by CUSIP, units self-checked
 7. DONE  fetch script + weekly workflow, unit-tested on fixtures
 8. DONE  first real run — 53 quarters committed (§5-8)
-9. Owner re-runs Update 13F after the self-check lands; confirm 0 mismatches
-10. Probe accession 0000950123-25-008361 to learn the amendment merge rule
-11. CUSIP→ticker, then prices, then the page at /titans/ (see /docs/design-system.md)
-12. Only then, investor #2
+9. DONE  self-check confirmed: 0 total mismatches
+10. DONE  pre-2013 converted — 111 quarters, no gaps (§5-9)
+11. Amendments: read the restatement/adds checkbox, then merge
+12. CUSIP→ticker, then prices, then the page at /titans/ (see /docs/design-system.md)
+13. Only then, investor #2
 ```
 
 Steps needing a click are the owner's — assistants here cannot run Actions. Say

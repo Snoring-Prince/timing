@@ -124,6 +124,8 @@ timing/
 ├── scripts/
 │   ├── probe_sec.py                 SEC 13F 정찰 — 받아서 재고 원본만 저장 (손으로)
 │   ├── fetch_13f.py                 13F 공시 → data/titans/berkshire.json (주 1회)
+│   ├── onetime/
+│   │   └── convert_13f_text.py      2013년 이전 텍스트 공시를 한 번 변환한 기록
 │   ├── fetch_data.py                지수 + 공포탐욕 + VIX 현재값  (매일)
 │   ├── fetch_long.py                장기 이력 SPY/QQQ/VIX/F&G     (주 1회)
 │   ├── backtest.py                  잣대별 수익률·승률 곡선        (주 1회)
@@ -142,7 +144,7 @@ timing/
     ├── market-long.json             1990년부터의 긴 이력 (주 1회)
     ├── backtest.json                곡선 데이터 + 잣대 정의
     └── titans/
-        └── berkshire.json           13F 분기별 보유 (금액은 달러로 맞춰 둠)
+        └── berkshire.json           13F 분기별 보유 111개 분기 1998~2026 (달러)
 ```
 
 `data` 브랜치에 `quote.json` 이 아직 남아 있습니다(아무도 안 씀).
