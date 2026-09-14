@@ -123,6 +123,7 @@ timing/
 │   └── live.js                      실시간 중계소 (클라우드플레어에 붙여넣는 코드)
 ├── scripts/
 │   ├── probe_sec.py                 SEC 13F 정찰 — 받아서 재고 원본만 저장 (손으로)
+│   ├── fetch_13f.py                 13F 공시 → data/titans/berkshire.json (주 1회)
 │   ├── fetch_data.py                지수 + 공포탐욕 + VIX 현재값  (매일)
 │   ├── fetch_long.py                장기 이력 SPY/QQQ/VIX/F&G     (주 1회)
 │   ├── backtest.py                  잣대별 수익률·승률 곡선        (주 1회)
@@ -134,11 +135,14 @@ timing/
 │   ├── update-backtest.yml   cron "0 23 * * 6"        주 1회(토) + 설명 글 대조
 │   ├── check.yml             PR 때 설명 글 대조 · 텔레그램 시험 발송 버튼
 │   │                         (예약 셋 다 실패하면 텔레그램으로 알림)
-│   └── probe-sec.yml         손으로 누를 때만 — SEC 원본을 아티팩트로 (9-3)
+│   ├── probe-sec.yml         손으로 누를 때만 — SEC 원본을 아티팩트로 (9-3)
+│   └── update-13f.yml        cron "0 1 * * 0"          주 1회(일) — 13F
 └── data/
     ├── market.json                  최근 며칠 + 현재값 (매일)
     ├── market-long.json             1990년부터의 긴 이력 (주 1회)
-    └── backtest.json                곡선 데이터 + 잣대 정의
+    ├── backtest.json                곡선 데이터 + 잣대 정의
+    └── titans/
+        └── berkshire.json           13F 분기별 보유 (금액은 달러로 맞춰 둠)
 ```
 
 `data` 브랜치에 `quote.json` 이 아직 남아 있습니다(아무도 안 씀).
