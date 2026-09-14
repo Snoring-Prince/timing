@@ -437,9 +437,40 @@ Counting them as failures means every weekly run prints 58 errors forever, and
 **a real failure would be invisible inside that noise.** They are now counted
 separately (`NO_XML`) and reported as "XML 이전 형식이라 건너뛴 분기".
 
-Pre-2013 history would need a separate text parser for a format that varies.
-**Not worth it now** — 2013 onward is 13 years, which is plenty for "그래서
-어떻게 됐나". Revisit only if the screen actually wants the 2008 crash.
+Pre-2013 history needs a separate text parser. **The owner pushed back on
+dropping it (2026-09-14): "우리 사이트는 데이터가 생명인데." They are right that
+2008 is the single most valuable stretch for a site about how choices turned
+out** — Buffett's 2008 moves are the story. So this is not closed, it is
+**unmeasured**, and the next step is to look rather than to argue.
+
+What is actually known vs. assumed:
+
+```
+KNOWN    index.json returns 200 for these filings; the folder simply has no .xml
+KNOWN    ~90 of the 100 amendments fall in this pre-2013 era — much messier
+UNKNOWN  what the documents look like: fixed-width text? HTML tables? both?
+UNKNOWN  whether the format is stable, or changes with the filing agent
+```
+
+The filing-agent prefix changes across the era (`0000950150` → `0000950129` →
+`0000950134` → `0000950123` → `0001193125`), and filing agents are exactly the
+kind of thing that changes a text layout. **Do not write one parser on the
+assumption of one format.**
+
+`probe_sec.py --accession` takes a comma-separated list for this. Three samples
+span the era:
+
+```
+0000950150-00-000118   oldest (1998-12-31 era)
+0000950134-09-003064   2008 year-end era
+0001193125-13-222307   last pre-XML (2013-03-31)
+```
+
+For text filings the probe now dumps `--head` characters (default 8000) instead
+of counting tags, and — because the SGML header can be long enough to push the
+table past that window — `table_peek()` finds the first CUSIP-shaped token and
+prints from just before it. Measured: on a fixture with an 11KB header it lands
+on the table. That is locating, not parsing.
 
 **(b) 100 amendments exist, and ~7 fall inside the saved range:**
 
