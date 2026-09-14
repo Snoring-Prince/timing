@@ -43,6 +43,10 @@ jobs:
           if git diff --staged --quiet; then
             echo "바뀐 내용 없음 — 새 분기가 아직 안 나왔습니다"
           else
+            # 새 분기가 실제로 들어온 날에만 사이트맵의 titans 줄을 옮긴다.
+            # 표식(<!-- titans -->) 덕분에 root 줄은 건드리지 않는다.
+            sed -i "s#<lastmod>[^<]*</lastmod><!-- titans -->#<lastmod>$(date -u +%Y-%m-%d)</lastmod><!-- titans -->#" sitemap.xml
+            git add sitemap.xml
             git commit -m "13F 갱신 $(date -u +%Y-%m-%d)"
             git push
           fi

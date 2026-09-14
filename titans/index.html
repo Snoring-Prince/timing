@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Berkshire Hathaway portfolio — every 13F filing since 1998</title>
+
+<!-- ══ 검색엔진·공유 ═══════════════════════════════════════════════════
+     본 사이트와 같은 규칙입니다(CLAUDE.md 6-2). 크롤러 대부분은 JS 를 안
+     돌리므로 여기 적힌 **영어**가 검색 결과에 나오는 글자입니다. 한국어
+     방문자에게는 applyLang() → paintHead() 가 갈아끼웁니다.
+═════════════════════════════════════════════════════════════════════ -->
+<meta name="description" content="What Berkshire Hathaway holds right now, and what changed last quarter — position sizes, share counts, how long each has been held, read straight from the SEC 13F filings.">
+<link rel="canonical" href="https://itpaidoff.com/titans/">
+<link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/?lang=en">
+<link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/?lang=ko">
+<link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="It paid off">
+<meta property="og:url" content="https://itpaidoff.com/titans/">
+<meta property="og:title" content="Berkshire Hathaway portfolio — every 13F filing since 1998">
+<meta property="og:description" content="What Berkshire Hathaway holds right now, and what changed last quarter, read straight from the SEC 13F filings.">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ko_KR">
+<meta name="twitter:card" content="summary">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#F7F9FB">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+
+<!-- ══ 다국어 ══════════════════════════════════════════════════════════
+     본 사이트와 같은 구조입니다. 언어를 추가하려면 D 에 항목 하나를
+     통째로 복사해 넣으면 되고, 화면 코드는 tx("키") 만 부릅니다.
+     번역 함수 이름은 t 가 아니라 **tx** 입니다(본 사이트와 동일).
+═════════════════════════════════════════════════════════════════════ -->
+<script>
+const D={
+en:{
+  locale:"en-US", dir:"ltr", tab:"English",
+  docTitle:"Berkshire Hathaway portfolio — every 13F filing since 1998",
+  metaDesc:"What Berkshire Hathaway holds right now, and what changed last quarter — position sizes, share counts, how long each has been held, read straight from the SEC 13F filings.",
+  brand:"Titans' picks",
+  tagline:"What Berkshire Hathaway holds now",
+  asOf:d=>`As of ${d}`,
+  filedOn:d=>`filed ${d}`,
+  quarterHead:"This quarter",
+  kNew:"new", kAdd:"added", kTrim:"trimmed", kHold:"held", kOut:"exited",
+  positions:n=>`${n} positions`,
+  bought:(n,v)=>`The biggest buy was ${n} — about ${v} at the quarter-end price.`,
+  sold:(n,v)=>`The biggest sale was ${n} — about ${v} at the quarter-end price.`,
+  untouched:(a,b)=>`${a} of the ${b} positions did not move by a single share.`,
+  evNew:"New", evBack:"Back in", evOut:"Sold out",
+  heldFor:"held",
+  yr:n=>n<1?`${Math.round(n*12)} mo`:(n%1?`${n.toFixed(1)} yr`:`${n} yr`),
+  colShare:"Share of portfolio", colShares:"Shares", colValue:"Value",
+  same:"unchanged",
+  foldOpen:n=>`Show ${n} smaller positions`,
+  foldNote:(p,a,t)=>`${p} of the portfolio · ${a} added to, ${t} trimmed`,
+  prevTick:"tick marks last quarter's share",
+  rulerLabel:(y,s)=>`held ${y}, since ${s}`,
+  noData:"Could not load the filings.",
+  aboutH:"How to read this",
+  footTitle:"Source and limits",
+  foot:[
+    "Source: SEC Form 13F-HR, filed by Berkshire Hathaway Inc. (CIK 0001067983). US government work — public domain.",
+    "A 13F is filed 45 days after the quarter ends, so these holdings are at least six weeks old and may already have changed.",
+    "A 13F shows US-listed long equity positions only. Bonds, cash, foreign listings, wholly owned businesses and short positions are not in it.",
+    "Values are what the filing states for the quarter-end date. Dividing value by share count gives an implied quarter-end price — not a trade price.",
+    "Share classes of one issuer are shown on one line (marked A+C and so on) because one decision usually moves both. Preferred stock is kept on its own line.",
+    "This page reports what was filed. It is not advice, and nothing here is a recommendation to buy or sell."
+  ]
+},
+ko:{
+  locale:"ko-KR", dir:"ltr", tab:"한국어",
+  docTitle:"버크셔 해서웨이 포트폴리오 — 1998년부터의 13F 공시",
+  metaDesc:"버크셔 해서웨이가 지금 들고 있는 종목과 지난 분기에 바뀐 것 — 비중, 주식수, 보유 기간을 SEC 13F 공시에서 그대로 읽었습니다.",
+  brand:"대가들의 선택",
+  tagline:"버크셔 해서웨이가 지금 들고 있는 것",
+  asOf:d=>`${d} 기준`,
+  filedOn:d=>`${d} 공시`,
+  quarterHead:"이번 분기",
+  kNew:"신규", kAdd:"늘림", kTrim:"줄임", kHold:"그대로", kOut:"전량매도",
+  positions:n=>`${n}종목`,
+  bought:(n,v)=>`가장 많이 산 것은 ${n} 입니다 — 분기말 가격으로 약 ${v}.`,
+  sold:(n,v)=>`가장 많이 판 것은 ${n} 입니다 — 분기말 가격으로 약 ${v}.`,
+  untouched:(a,b)=>`${b} 중 ${a}은 한 주도 움직이지 않았습니다.`,
+  evNew:"신규", evBack:"재진입", evOut:"전량매도",
+  heldFor:"보유",
+  yr:n=>n<1?`${Math.round(n*12)}개월`:(n%1?`${n.toFixed(1)}년`:`${n}년`),
+  colShare:"비중", colShares:"주식수", colValue:"금액",
+  same:"그대로",
+  foldOpen:n=>`작은 ${n}종목 더 보기`,
+  foldNote:(p,a,t)=>`전체의 ${p} · 늘림 ${a} · 줄임 ${t}`,
+  prevTick:"눈금은 직전 분기 비중",
+  rulerLabel:(y,s)=>`${s}부터 ${y} 보유`,
+  noData:"공시를 불러오지 못했습니다.",
+  aboutH:"보는 법",
+  footTitle:"출처와 한계",
+  foot:[
+    "출처: 버크셔 해서웨이(CIK 0001067983)가 SEC 에 낸 Form 13F-HR. 미국 정부 저작물이라 퍼블릭 도메인입니다.",
+    "13F 는 분기가 끝나고 45일 뒤에 냅니다. 그래서 여기 보이는 것은 최소 6주 전의 상태이고, 그 사이에 이미 바뀌었을 수 있습니다.",
+    "13F 에는 미국 상장 주식의 매수 포지션만 나옵니다. 채권·현금·해외 상장·통째로 소유한 회사·공매도는 들어 있지 않습니다.",
+    "금액은 공시에 적힌 분기말 값입니다. 금액을 주식수로 나누면 분기말 가격이 나오는데, 실제 체결가가 아닙니다.",
+    "같은 회사의 여러 종류 주식은 한 줄로 묶었습니다(A+C 처럼 표시). 한 번의 결정이 대개 둘을 같이 움직이기 때문입니다. 우선주는 성격이 다르므로 따로 둡니다.",
+    "이 화면은 공시된 내용을 그대로 옮길 뿐입니다. 투자 자문이 아니고, 무엇을 사거나 팔라는 뜻도 아닙니다."
+  ]
+}
+};
+
+/* 상승을 빨강으로 읽는 문화권 — 본 사이트와 같은 집합·같은 팔레트 */
+const REDUP=new Set(["ko","ja","zh"]);
+const PAL={
+  redUp  :{up:"#C4362C",down:"#1F5FA9",upRGB:"196,54,44", downRGB:"31,95,169"},
+  greenUp:{up:"#1B7F4B",down:"#C4362C",upRGB:"27,127,75", downRGB:"196,54,44"}
+};
+
+let LANG="en", L10N=D.en, LOCALE="en-US";
+
+function pickLang(){
+  const two=s=>String(s||"").slice(0,2).toLowerCase();
+  try{ const q=two(new URLSearchParams(location.search).get("lang")); if(q&&D[q])return q; }catch(e){}
+  try{ const s=localStorage.getItem("dt.lang"); if(s&&D[s])return s; }catch(e){}
+  const navs=(navigator.languages&&navigator.languages.length)?navigator.languages:[navigator.language||"en"];
+  for(const l of navs){ const k=two(l); if(D[k])return k; }
+  return "en";
+}
+function pickLocale(lang){
+  const navs=(navigator.languages&&navigator.languages.length)?navigator.languages:[navigator.language||""];
+  for(const l of navs) if(String(l).slice(0,2).toLowerCase()===lang) return l;
+  return D[lang].locale;
+}
+const tx=(k,...a)=>{ const v=(k in L10N)?L10N[k]:D.en[k]; return typeof v==="function"?v(...a):v; };
+</script>
+
+<style>
+:root{
+  --paper:#E9ECF0; --card:#FFFFFF;
+  --ink:#0F1A24; --ink-2:#475765; --ink-3:#5F6B74;
+  --rule:#BCC6D0; --rule-2:#DDE3E9;
+  --up:#1B7F4B; --down:#C4362C;
+  --up-rgb:27,127,75; --down-rgb:196,54,44;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --cond:"IBM Plex Sans Condensed","Pretendard Variable",Pretendard,sans-serif;
+  --body:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  background-image:linear-gradient(rgba(15,26,36,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(15,26,36,.028) 1px,transparent 1px);
+  background-size:56px 56px;
+  color:var(--ink);font-family:var(--body);line-height:1.5;-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:900px;margin:0 auto;padding:36px 20px 72px}
+
+/* ── 머리글 ─────────────────────────────────────────────── */
+.masthead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;
+  padding-bottom:14px;margin-bottom:22px;border-bottom:2px solid var(--ink)}
+.eyebrow{margin:0 0 6px;font-family:var(--cond);font-weight:600;font-size:11px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.masthead h1{margin:0;font-family:var(--cond);font-weight:700;font-size:30px;letter-spacing:-.01em;line-height:1.05}
+.mast-right{display:flex;flex-direction:column;align-items:flex-end;gap:9px}
+.stamp{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-align:right}
+
+/* ── 언어 탭 ─────────────────────────────────────────────── */
+.seg{display:inline-flex;border:1px solid var(--rule);background:var(--card)}
+.seg button{appearance:none;border:0;background:transparent;cursor:pointer;
+  font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.06em;
+  color:var(--ink-2);padding:5px 10px;line-height:1.2}
+.seg button+button{border-left:1px solid var(--rule-2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.seg button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+/* ── 패널 ───────────────────────────────────────────────── */
+.panel{background:var(--card);border:1px solid var(--rule);margin-bottom:20px;padding:20px}
+.panel h2{margin:0 0 14px;font-family:var(--cond);font-weight:700;font-size:19px;letter-spacing:-.01em}
+.cap{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-3);line-height:1.25}
+
+/* ── 이번 분기 요약 ──────────────────────────────────────── */
+.tally{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--rule-2);margin-bottom:16px}
+.tally div{flex:1 1 0;min-width:76px;padding:10px 12px;text-align:center}
+.tally div+div{border-left:1px solid var(--rule-2)}
+.tally .n{font-family:var(--mono);font-weight:500;font-size:23px;letter-spacing:-.02em;
+  line-height:1.1;display:block;margin-bottom:3px}
+.tally .k{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);line-height:1.25}
+.tally .up .n{color:var(--up)} .tally .down .n{color:var(--down)}
+
+.says{margin:0 0 16px;font-family:var(--body);font-size:16.5px;line-height:1.6;color:var(--ink)}
+.says p{margin:0 0 6px} .says p:last-child{margin-bottom:0}
+
+/* 사건(신규·재진입·전량매도)은 크기가 아니라 사건이라 접히지 않고 늘 위에 있다 */
+.events{border-top:1px solid var(--rule-2);padding-top:12px}
+.ev{display:flex;align-items:baseline;gap:10px;font-family:var(--mono);font-size:12px;
+  line-height:1.9;color:var(--ink-2);flex-wrap:wrap}
+.ev .tag{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;border:1px solid currentColor;padding:1px 5px;flex:0 0 auto}
+.ev.in .tag{color:var(--up)} .ev.out .tag{color:var(--down)}
+.ev .nm{color:var(--ink);flex:1 1 auto;min-width:0}
+.ev .sub{color:var(--ink-3);flex:0 0 auto}
+
+/* ── 종목 줄 ─────────────────────────────────────────────── */
+.rows{margin:0;padding:0;list-style:none}
+.row{position:relative;padding:9px 0 10px;border-top:1px solid var(--rule-2)}
+.row:first-child{border-top:0}
+/* 비중 막대는 줄의 바탕이다. 제일 큰 종목이 100% 폭이 되게 맞춰 그린다. */
+.bar{position:absolute;left:0;top:0;bottom:0;background:rgba(15,26,36,.055);z-index:0}
+/* 직전 분기 비중 자리. **줄 높이를 다 가로지르면 이름 글자를 뚫고 지나간다**
+   (Kraft Heinz 의 '헤' 자리에 세로줄이 그어져 있었다). 그래서 줄 바닥에만
+   짧게 찍는다 — 보유 연차 자와 같은 눈금 어휘라 새 기호를 배울 것이 없다. */
+.tick{position:absolute;bottom:0;height:11px;width:0;border-left:1.2px solid var(--ink-3);opacity:.85;z-index:1}
+.rowin{position:relative;z-index:2;display:grid;grid-template-columns:24px 1fr auto;
+  column-gap:10px;align-items:baseline}
+.rk{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-align:right}
+.nm{font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:.01em;
+  line-height:1.25;min-width:0;overflow-wrap:anywhere}
+.cls{font-family:var(--cond);font-weight:600;font-size:9.5px;letter-spacing:.1em;
+  color:var(--ink-3);border:1px solid var(--rule);padding:0 4px;margin-left:6px;
+  white-space:nowrap;vertical-align:2px}
+.w{font-family:var(--mono);font-weight:500;font-size:20px;letter-spacing:-.02em;
+  line-height:1.1;text-align:right;white-space:nowrap}
+/* 둘째 줄 — 보유 연차 자 / 주식수 변화 / 금액 */
+.sub2{grid-column:2/4;display:flex;align-items:center;gap:12px;margin-top:5px;flex-wrap:wrap}
+.ruler{flex:0 0 auto;display:block}
+.yrs{font-family:var(--mono);font-size:11px;color:var(--ink-3);white-space:nowrap}
+.act{font-family:var(--mono);font-size:12px;white-space:nowrap;margin-left:auto}
+.act.up{color:var(--up)} .act.down{color:var(--down)} .act.flat{color:var(--ink-3)}
+.val{font-family:var(--mono);font-size:12px;color:var(--ink-2);white-space:nowrap;
+  min-width:62px;text-align:right}
+
+/* ── 접힘 ───────────────────────────────────────────────── */
+details.fold{border-top:1px solid var(--rule-2);margin-top:2px}
+details.fold>summary{list-style:none;cursor:pointer;padding:11px 0 2px;
+  font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.02em;
+  display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::before{content:"▸";color:var(--ink-3);font-size:11px}
+details.fold[open]>summary::before{content:"▾"}
+details.fold>summary:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+details.fold>summary .why{font-family:var(--mono);font-weight:400;font-size:11px;color:var(--ink-3)}
+details.fold .rows{margin-top:4px}
+
+/* ── 범례·각주 ───────────────────────────────────────────── */
+.legend{display:flex;align-items:center;gap:8px;margin:14px 0 0;
+  font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.8}
+.legend i{display:inline-block;width:0;height:11px;border-left:1.2px solid var(--ink-3);flex:0 0 auto;margin:0 5px}
+.foot{font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--ink-3);margin:26px 0 0}
+.foot h2{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 8px}
+.foot p{margin:0 0 7px}
+.foot a{color:inherit}
+.back{display:inline-block;margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+
+/* ── 애니메이션 — 최초 1회만 ─────────────────────────────── */
+.fade{animation:fade .5s ease-out both}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+body.settled .fade{animation:none}
+@media (prefers-reduced-motion:reduce){ .fade{animation:none} }
+
+/* ── 좁은 화면 ───────────────────────────────────────────── */
+@media (max-width:640px){
+  .wrap{padding:24px 14px 56px}
+  .panel{padding:14px}
+  .masthead{flex-direction:column;align-items:flex-start;gap:12px}
+  .mast-right{align-items:flex-start}
+  .stamp{text-align:left}
+  .masthead h1{font-size:24px}
+  .panel h2{font-size:16px}
+  .says{font-size:15px}
+  .nm{font-size:14px}
+  .w{font-size:19px}
+  .rowin{grid-template-columns:20px 1fr auto;column-gap:8px}
+  /* 다섯 칸이 한 줄에 들어가게 최소 폭을 내린다. 4+1 로 접히면 마지막 칸
+     하나가 줄 전체를 차지해 계기판이 아니라 빈칸처럼 보인다. */
+  .tally div{min-width:50px;padding:9px 4px}
+  .tally .n{font-size:19px}
+  .tally .k{font-size:9.5px;letter-spacing:.06em}
+  /* 영어 대문자 캡션은 한국어보다 훨씬 길다 — 좁은 화면에서 줄을 바꾸게 둔다 */
+  .tally .k{white-space:normal}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div>
+      <!-- 브랜드는 눈썹줄로. 번역하지 않는 이름이 아니라 두 언어가 다르므로
+           applyLang() 이 채운다(본 사이트의 eyebrow 와 다른 점). -->
+      <p class="eyebrow" id="brand">Titans' picks</p>
+      <h1 id="tagline">What Berkshire Hathaway holds now</h1>
+    </div>
+    <div class="mast-right">
+      <div class="seg" id="langtabs" role="group" aria-label="Language"></div>
+      <div class="stamp" id="stamp"></div>
+    </div>
+  </header>
+
+  <section class="panel fade" id="quarter" hidden>
+    <h2 id="qhead">This quarter</h2>
+    <div class="tally" id="tally"></div>
+    <div class="says" id="says"></div>
+    <div class="events" id="events" hidden></div>
+  </section>
+
+  <section class="panel fade" id="book" hidden>
+    <h2 id="bookhead"></h2>
+    <ul class="rows" id="top"></ul>
+    <details class="fold" id="fold" hidden>
+      <summary><span id="foldttl"></span><span class="why" id="foldwhy"></span></summary>
+      <ul class="rows" id="rest"></ul>
+    </details>
+    <p class="legend"><i></i><span id="legend"></span></p>
+  </section>
+
+  <footer class="foot">
+    <h2 id="foothead">Source and limits</h2>
+    <div id="footbody"></div>
+    <a class="back" href="/">← itpaidoff.com</a>
+  </footer>
+
+</div>
+
+<script>
+/* ══ 데이터 ═══════════════════════════════════════════════════════════
+   화면은 자기 집 파일만 읽습니다. Actions 가 주 1회 SEC 에서 받아
+   data/titans/berkshire.json 에 저장합니다(scripts/fetch_13f.py).
+══════════════════════════════════════════════════════════════════════ */
+let RAW=null, LOADED=false;
+
+/* 같은 발행사의 여러 종류 주식을 한 줄로 묶는다.
+   CUSIP 아홉 자리 중 **앞 여섯 자리가 발행사**다. 알파벳 A(02079K305)와
+   C(02079K107)가 그래서 같은 묶음이 된다.
+   **우선주는 묶지 않는다** — 표만 없는 보통주(알파벳 C)와 달리 배당·청산
+   순위가 다른 별개의 증권이다. 28년치에 딱 하나 있다(Sealed Air PFD CVA). */
+const ISPFD=/\bPFD\b|PREFERRED/;
+const gkey=h=>h.cusip.slice(0,6)+(ISPFD.test((h.class||"").toUpperCase())?"|P":"");
+
+function merge(q){
+  const g=new Map();
+  for(const h of q.holdings){
+    const k=gkey(h);
+    let a=g.get(k);
+    if(!a){ a={key:k,name:h.name,value:0,shares:0,classes:[],n:0}; g.set(k,a); }
+    a.value+=h.value; a.shares+=h.shares; a.n++;
+    a.classes.push(h.class||"");
+    if(h.name.length>a.name.length) a.name=h.name;
+  }
+  return g;
+}
+/* 묶음에 붙일 꼬리표. 두 줄 이상일 때만 A+C 처럼 적는다 — 합쳤다는 사실을
+   화면에 밝히지 않으면 공시와 대조하는 사람이 줄 수를 못 맞춘다. */
+function classTag(a){
+  if(a.n<2) return "";
+  const s=[...new Set(a.classes.map(c=>{
+    const m=String(c).toUpperCase().match(/(?:CL|CLASS|SER|SERIES)\s*([A-Z])\b/);
+    return m?m[1]:null;
+  }).filter(Boolean))].sort();
+  return s.length>1?s.join("+"):"";
+}
+
+const num=n=>Number(n||0).toLocaleString(LOCALE);
+const pct=n=>`${n.toFixed(1)}%`;
+function money(v){
+  const b=v/1e9;
+  if(b>=100) return `$${b.toFixed(0)}B`;
+  if(b>=1)   return `$${b.toFixed(1)}B`;
+  const m=v/1e6;
+  return m>=1?`$${m.toFixed(0)}M`:`$${(v/1e3).toFixed(0)}K`;
+}
+function shortShares(n){
+  if(LANG==="ko"){
+    if(n>=1e8) return `${(n/1e8).toFixed(n>=1e9?0:2)}억주`;
+    if(n>=1e4) return `${Math.round(n/1e4).toLocaleString(LOCALE)}만주`;
+    return `${num(n)}주`;
+  }
+  if(n>=1e9) return `${(n/1e9).toFixed(2)}bn shares`;
+  if(n>=1e6) return `${(n/1e6).toFixed(1)}m shares`;
+  return `${num(n)} shares`;
+}
+function fdate(iso){
+  if(LANG==="ko") return String(iso).replace(/-/g,".");
+  try{ return new Intl.DateTimeFormat(LOCALE,{year:"numeric",month:"short",day:"numeric"})
+        .format(new Date(iso+"T00:00:00Z")); }
+  catch(e){ return String(iso); }
+}
+/* 종목 이름은 공시에 전부 대문자로 적혀 있다(APPLE INC). 그대로 두면
+   화면이 소리지르는 것처럼 보이므로 낱말머리만 대문자로 내린다.
+   두 글자 이하 낱말과 이미 섞여 있는 이름은 그대로 둔다. */
+/* 진짜 약어만 대문자로 남긴다. Inc·Corp·Co 까지 대문자로 두면 "Apple INC" 가 된다. */
+const KEEP=new Set(["IBM","HP","NVR","USA","US","UK","AT&T","PLC","LLC","NV","SA","AG","ADR","REIT","MTN"]);
+const SMALL=new Set(["of","and","the","for","de","la"]);
+function title(s){
+  if(/[a-z]/.test(s)) return s;
+  return s.split(/\s+/).map((w,i)=>{
+    if(KEEP.has(w.replace(/[^A-Z&.]/g,""))) return w;
+    const low=w.toLowerCase();
+    return (i>0&&SMALL.has(low))?low:w.charAt(0)+low.slice(1);
+  }).join(" ");
+}
+
+/* ══ 그리기 ══════════════════════════════════════════════════════════ */
+function build(){
+  const qs=RAW.quarters;
+  const cur=qs[qs.length-1], prv=qs[qs.length-2];
+  const C=merge(cur), P=prv?merge(prv):new Map();
+  const tc=[...C.values()].reduce((s,a)=>s+a.value,0);
+  const tp=[...P.values()].reduce((s,a)=>s+a.value,0);
+
+  /* 연속 보유 시작 분기. 끊겼다가 다시 들어온 것은 다시 들어온 시점부터 센다 —
+     "10년 보유"가 중간에 판 3년을 포함하면 거짓말이 된다. */
+  const seen=qs.map(q=>new Set(q.holdings.map(gkey)));
+  const startOf=k=>{
+    let i=qs.length-1;
+    while(i>0 && seen[i-1].has(k)) i--;
+    return {period:qs[i].period, qtrs:qs.length-i};
+  };
+  const everBefore=k=>seen.slice(0,-1).some(s=>s.has(k));
+
+  const list=[...C.values()].map(a=>{
+    const p=P.get(a.key);
+    const st=startOf(a.key);
+    const dsh=(p&&p.shares>0)?(a.shares/p.shares-1):null;
+    return {
+      ...a,
+      w:a.value/tc*100,
+      wPrev:p?p.value/tp*100:null,
+      dsh,
+      flat:dsh!==null&&Math.abs(dsh)<5e-4,
+      isNew:!p,
+      back:!p&&everBefore(a.key),
+      start:st.period, years:st.qtrs/4,
+      /* 이번 분기에 사고판 몫을 분기말 가격으로 환산한다. 비중 변화는 가격이
+         섞여 있어 행동을 말해 주지 않는다 — 주식수 차이만 쓴다. */
+      netUSD:(p?(a.shares-p.shares):a.shares)*(a.shares>0?a.value/a.shares:0)
+    };
+  }).sort((x,y)=>y.value-x.value);
+
+  /* 이번 분기에 통째로 사라진 묶음 */
+  const out=prv?[...P.values()].filter(a=>!C.has(a.key)).map(a=>{
+    let i=qs.length-2; const k=a.key;
+    while(i>0 && seen[i-1].has(k)) i--;
+    return {...a, years:(qs.length-1-i)/4};
+  }).sort((x,y)=>y.value-x.value):[];
+
+  return {cur,prv,list,out,tc,tp};
+}
+
+function tallyOf(B){
+  let nw=0,add=0,trim=0,hold=0;
+  for(const r of B.list){
+    if(r.isNew) nw++;
+    else if(r.flat) hold++;
+    else if(r.dsh>0) add++;
+    else if(r.dsh<0) trim++;
+    else hold++;
+  }
+  return {nw,add,trim,hold,out:B.out.length};
+}
+
+/* 해석 문장 — **행동만 적습니다.** 속마음("좋게 본다")도, 앞일("지금이 기회")도
+   쓰지 않습니다. 13F 에는 "왜"가 없고 무엇을·얼마나만 있습니다. */
+function says(B,T){
+  const p=[];
+  const buys=B.list.filter(r=>r.netUSD>0).sort((a,b)=>b.netUSD-a.netUSD);
+  const sells=B.list.filter(r=>r.netUSD<0).sort((a,b)=>a.netUSD-b.netUSD);
+  if(buys[0]) p.push(tx("bought",title(buys[0].name),money(buys[0].netUSD)));
+  if(sells[0]) p.push(tx("sold",title(sells[0].name),money(-sells[0].netUSD)));
+  /* 영어는 숫자만, 한국어는 "종목"을 붙여 센다 — 사전 쪽에서 단위를 정한다 */
+  if(T.hold>0) p.push(LANG==="ko"
+    ? tx("untouched",tx("positions",T.hold),tx("positions",B.list.length))
+    : tx("untouched",T.hold,B.list.length));
+  return p;
+}
+
+/* 보유 연차 자 — 1년에 눈금 하나, 5년마다 길게. 숫자를 안 읽어도
+   "이건 오래된 것"이 길이로 보인다. 도면의 축척자와 같은 물건이다. */
+function ruler(years,maxYears,W){
+  const w=Math.max(9,Math.round(W*Math.min(1,years/maxYears)));
+  const H=11,mid=6;
+  let s=`<svg class="ruler" width="${w}" height="${H}" viewBox="0 0 ${w} ${H}" aria-hidden="true">`;
+  s+=`<line x1="0.5" y1="${mid}" x2="${w-0.5}" y2="${mid}" stroke="var(--ink-3)" stroke-width="1"/>`;
+  s+=`<line x1="0.5" y1="${mid-4}" x2="0.5" y2="${mid+4}" stroke="var(--ink-3)" stroke-width="1"/>`;
+  s+=`<line x1="${w-0.5}" y1="${mid-4}" x2="${w-0.5}" y2="${mid+4}" stroke="var(--ink-3)" stroke-width="1"/>`;
+  const per=w/Math.max(years,.25);
+  if(per>=2.6){
+    for(let y=1;y<years;y++){
+      const x=Math.round(y*per)+.5, h=(y%5===0)?3:1.6;
+      s+=`<line x1="${x}" y1="${mid-h}" x2="${x}" y2="${mid+h}" stroke="var(--ink-3)" stroke-width="1" opacity="${y%5===0?.85:.5}"/>`;
+    }
+  }
+  return s+`</svg>`;
+}
+
+function rowHTML(r,rank,maxW,rulerW,maxYears){
+  const tag=classTag(r);
+  const barW=Math.max(0,Math.min(100,r.w/maxW*100));
+  const tickW=r.wPrev===null?null:Math.max(0,Math.min(100,r.wPrev/maxW*100));
+  let act,cls;
+  if(r.isNew){ act=r.back?tx("evBack"):tx("evNew"); cls="up"; }
+  else if(r.flat){ act=tx("same"); cls="flat"; }
+  else{ act=(r.dsh>0?"+":"")+(r.dsh*100).toFixed(1)+"%"; cls=r.dsh>0?"up":"down"; }
+  const yrs=tx("yr",Math.round(r.years*10)/10);
+  return `<li class="row">
+    <span class="bar" style="width:${barW.toFixed(2)}%"></span>
+    ${tickW===null?"":`<span class="tick" style="left:${tickW.toFixed(2)}%"></span>`}
+    <div class="rowin">
+      <span class="rk">${rank}</span>
+      <span class="nm">${title(r.name)}${tag?`<span class="cls">${tag}</span>`:""}</span>
+      <span class="w">${pct(r.w)}</span>
+      <span class="sub2">
+        <span title="${tx("rulerLabel",yrs,fdate(r.start))}">${ruler(r.years,maxYears,rulerW)}</span>
+        <span class="yrs">${yrs}</span>
+        <span class="act ${cls}">${act}</span>
+        <span class="val">${money(r.value)}</span>
+      </span>
+    </div>
+  </li>`;
+}
+
+function render(){
+  const el=id=>document.getElementById(id);
+  el("brand").textContent=tx("brand");
+  el("tagline").textContent=tx("tagline");
+  el("foothead").textContent=tx("footTitle");
+  el("footbody").innerHTML=tx("foot").map(s=>`<p>${s}</p>`).join("");
+  el("legend").textContent=tx("prevTick");
+  el("qhead").textContent=tx("quarterHead");
+  if(!RAW){ el("stamp").textContent=LOADED?tx("noData"):""; return; }
+
+  const B=build(), T=tallyOf(B);
+  el("stamp").innerHTML=`${tx("asOf",fdate(B.cur.period))}<br>${tx("filedOn",fdate(B.cur.filed))}`;
+
+  /* 직전 분기가 없으면 비교할 대상이 없다. 그대로 그리면 전 종목이 '신규'로
+     찍혀 거짓말이 되므로 이번 분기 칸을 통째로 접는다. */
+  if(!B.prv){ el("quarter").hidden=true; }
+  else{
+  el("tally").innerHTML=[
+    ["kNew",T.nw,"up"],["kAdd",T.add,"up"],["kTrim",T.trim,"down"],
+    ["kHold",T.hold,""],["kOut",T.out,"down"]
+  ].map(([k,n,c])=>`<div class="${n?c:""}"><span class="n">${n}</span><span class="k">${tx(k)}</span></div>`).join("");
+  el("says").innerHTML=says(B,T).map(s=>`<p>${s}</p>`).join("");
+
+  /* 사건은 접히지 않는다. 이번 분기 신규가 26위($400만)라 크기로 접으면 사라진다. */
+  const evs=[];
+  for(const r of B.list.filter(x=>x.isNew))
+    evs.push(`<div class="ev in"><span class="tag">${r.back?tx("evBack"):tx("evNew")}</span><span class="nm">${title(r.name)}</span><span class="sub">${money(r.value)}</span></div>`);
+  for(const r of B.out)
+    evs.push(`<div class="ev out"><span class="tag">${tx("evOut")}</span><span class="nm">${title(r.name)}</span><span class="sub">${tx("heldFor")} ${tx("yr",Math.round(r.years*10)/10)} · ${money(r.value)}</span></div>`);
+  el("events").innerHTML=evs.join("");
+  el("events").hidden=!evs.length;
+  el("quarter").hidden=false;
+  }
+
+  /* 목록 */
+  el("bookhead").textContent=`${tx("positions",B.list.length)} · ${money(B.tc)}`;
+  const maxW=B.list[0]?B.list[0].w:1;
+  const maxYears=Math.max(...B.list.map(r=>r.years),1);
+  const rulerW=(window.innerWidth||900)<640?92:132;
+  const top=B.list.slice(0,10), rest=B.list.slice(10);
+  el("top").innerHTML=top.map((r,i)=>rowHTML(r,i+1,maxW,rulerW,maxYears)).join("");
+  el("rest").innerHTML=rest.map((r,i)=>rowHTML(r,i+11,maxW,rulerW,maxYears)).join("");
+  if(rest.length){
+    const share=rest.reduce((s,r)=>s+r.value,0)/B.tc*100;
+    const a=rest.filter(r=>!r.isNew&&!r.flat&&r.dsh>0).length;
+    const t=rest.filter(r=>!r.isNew&&!r.flat&&r.dsh<0).length;
+    el("foldttl").textContent=tx("foldOpen",rest.length);
+    el("foldwhy").textContent=tx("foldNote",pct(share),a,t);
+    el("fold").hidden=false;
+  } else el("fold").hidden=true;
+  el("book").hidden=false;
+}
+
+function applyLang(lang,remember){
+  LANG=D[lang]?lang:"en"; L10N=D[LANG]; LOCALE=pickLocale(LANG);
+  if(remember){ try{ localStorage.setItem("dt.lang",LANG) }catch(e){} }
+  const r=document.documentElement;
+  r.setAttribute("lang",LANG); r.setAttribute("dir",L10N.dir||"ltr");
+  const p=REDUP.has(LANG)?PAL.redUp:PAL.greenUp;
+  r.style.setProperty("--up",p.up); r.style.setProperty("--down",p.down);
+  r.style.setProperty("--up-rgb",p.upRGB); r.style.setProperty("--down-rgb",p.downRGB);
+  document.title=tx("docTitle");
+  paintHead(); paintTabs(); render();
+}
+function paintHead(){
+  const set=(sel,attr,val)=>{const e=document.head.querySelector(sel);if(e)e.setAttribute(attr,val)};
+  const t=tx("docTitle"),d=tx("metaDesc");
+  set('meta[name="description"]',"content",d);
+  set('meta[property="og:title"]',"content",t);
+  set('meta[property="og:description"]',"content",d);
+  set('meta[property="og:locale"]',"content",LANG==="ko"?"ko_KR":"en_US");
+  set('meta[property="og:locale:alternate"]',"content",LANG==="ko"?"en_US":"ko_KR");
+  const c=document.head.querySelector('link[rel="canonical"]');
+  if(c){ let u="https://itpaidoff.com/titans/";
+    try{ if(new URLSearchParams(location.search).get("lang")) u+="?lang="+LANG; }catch(e){}
+    c.setAttribute("href",u); }
+}
+/* 언어를 바꾸면 글자가 바뀌므로 탭은 비우고 다시 그린다(본 사이트와 같은 예외). */
+function paintTabs(){
+  const box=document.getElementById("langtabs");
+  box.innerHTML=Object.keys(D).map(k=>
+    `<button type="button" data-lang="${k}" aria-pressed="${k===LANG}">${D[k].tab}</button>`).join("");
+}
+document.getElementById("langtabs").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-lang]"); if(!b)return;
+  applyLang(b.dataset.lang,true);
+  try{ if(window.track) track("lang",{lang:LANG}); }catch(err){}
+});
+
+/* 창 폭이 바뀌면 자의 길이만 다시 잡는다 */
+let rz; addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if(RAW) render(); },180); });
+
+fetch("../data/titans/berkshire.json",{cache:"no-store"})
+  .then(r=>r.ok?r.json():null)
+  .then(j=>{ RAW=(j&&Array.isArray(j.quarters)&&j.quarters.length)?j:null; })
+  .catch(()=>{ RAW=null; })
+  .finally(()=>{ LOADED=true; applyLang(pickLang(),false); });
+
+applyLang(pickLang(),false);
+setTimeout(()=>document.body.classList.add("settled"),1600);
+</script>
+</body>
+</html>
