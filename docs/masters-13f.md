@@ -9,7 +9,7 @@
 STATUS as of 2026-09-14: **probe built and merged-ready; it has never been run.**
 Step 2 of §11 exists in code (`scripts/probe_sec.py`, `.github/workflows/probe-sec.yml`).
 It cannot run until the owner adds the `SEC_CONTACT` secret (§6) — still the one
-blocker. Nothing is parsed, no schema exists, no page exists. Everything below §4
+blocker, though the address question behind it is now answered. Nothing is parsed, no schema exists, no page exists. Everything below §4
 is decided, not speculative.
 
 ---
@@ -163,7 +163,7 @@ The real shape is still unknown — that is the entire point of running it.
 
 ---
 
-## 6. OPEN — needs the owner's answer before the probe can run
+## 6. ANSWERED — owner picked the address; secret still not set
 
 SEC rejects anonymous requests; it requires a declared contact email in the
 `User-Agent` header. **This repo is public**, so hardcoding the address exposes it
@@ -176,11 +176,21 @@ Settings → Secrets and variables → Actions
   SEC_CONTACT   contact email declared to SEC
 ```
 
-**Asked the owner on 2026-09-14 whether to use dysan1000@gmail.com or a different
-address. Asked again on 2026-09-14 in a second session. Not yet answered.** Do not
-put any email address in code before they answer — the global rule is that their
-email is used only to identify them, never sent to an unrelated service unless
-they explicitly ask. Nothing in `probe_sec.py` contains an address; it reads
+**ANSWERED 2026-09-14: the owner chose their own existing address** — the one
+already on their GitHub/Umami account — over creating a project-specific one.
+That is the explicit permission the global rule requires before their address
+goes to an unrelated service, and it covers the SEC User-Agent, nothing else.
+
+**Do not add it to the probe, a workflow, a default argument, or a doc example.**
+It lives only in the `SEC_CONTACT` secret, which only the owner can set.
+
+Honest caveat, found while writing this: **the address is already in the public
+repo twice** — `/CLAUDE.md` §0 header and §5 (Umami account). So "nowhere in the
+repo" is not true today. That does not change the rule for new code (a
+User-Agent on every SEC request is a different exposure from one line in a doc,
+and more instances is strictly worse), but nobody should claim the address is
+unpublished. Told the owner 2026-09-14; removing those two lines is their call,
+not ours. Nothing in `probe_sec.py` contains an address; it reads
 `SEC_CONTACT` and refuses to run without it.
 
 **The probe exits 1, not 0, when the secret is missing** — deliberately unlike
@@ -262,7 +272,7 @@ Burry's page needs the staleness line more prominently (§3).
 ## 11. Next actions, in order
 
 ```
-1. Get the SEC_CONTACT answer, owner adds the secret     ← STILL BLOCKING
+1. Owner adds the SEC_CONTACT secret (address decided)   ← STILL BLOCKING
 2. DONE (built, never run): workflow_dispatch probe
 3. Owner runs Actions → Probe SEC → Run workflow.
    Download the sec-probe artifact. Read manifest.json first.
