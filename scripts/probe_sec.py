@@ -178,6 +178,51 @@ def census(body: bytes) -> dict:
     return out
 
 
+SMALL = 8 * 1024        # 이보다 작은 글자 파일은 통째로 찍습니다
+
+
+def show(name: str, body: bytes, cen: dict, n: int) -> None:
+    """받은 것을 로그에 그대로 보여 줍니다. **해석하지 않습니다.**
+
+    되풀이되는 기록이 무엇인지도 정하지 않습니다 — **가장 많이 나온 태그**를
+    그냥 고릅니다. 그것이 무슨 뜻인지는 사람이 보고 판단합니다."""
+    if n <= 0 or cen.get("kind") == "json":
+        return
+    # .htm/.html 은 EDGAR 가 사람 보라고 만든 화면입니다. 자료가 아니라 껍데기라
+    # 개수만 세고 넘어갑니다 — 로그에 200줄씩 쌓일 이유가 없습니다.
+    if name.lower().endswith((".htm", ".html")):
+        print(f"\n  ── {name} — 화면용 HTML 이라 개수만: "
+              f"태그 {cen.get('tag_kinds')}종")
+        return
+    print(f"\n  ── {name} ─────────────────────────────────────────")
+    tags = cen.get("tags") or {}
+    print(f"  태그 {cen.get('tag_kinds')}종: " +
+          ", ".join(f"{k}×{v}" for k, v in list(tags.items())[:25]))
+
+    txt = body.decode("utf-8", "replace")
+    if len(body) <= SMALL:
+        print("  (작은 파일이라 통째로)")
+        for line in txt.splitlines():
+            print("  | " + line)
+        return
+
+    # 가장 많이 나온 태그를 기록 단위로 삼고 앞의 몇 개만 찍습니다.
+    top = next((k for k in tags if tags[k] > 1), None)
+    if not top:
+        print("  | " + txt[:1500].replace("\n", "\n  | "))
+        return
+    blocks = re.findall(rf"<{re.escape(top)}\b.*?</{re.escape(top)}>", txt, re.S)
+    print(f"  되풀이 단위로 보이는 것: <{top}> {len(blocks)}개 — 앞 {min(n, len(blocks))}개")
+    for b in blocks[:n]:
+        for line in b.splitlines():
+            print("  | " + line)
+        print("  |")
+    head = txt[:txt.find(f"<{top}")] if f"<{top}" in txt else txt[:800]
+    print("  머리 부분:")
+    for line in head.strip().splitlines()[:25]:
+        print("  | " + line)
+
+
 def newest_filing(sub: dict, form: str) -> dict | None:
     """제출 목록에서 그 서식의 가장 최근 건을 찾습니다.
 
@@ -198,6 +243,10 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="SEC 13F 정찰 — 받아서 재고 원본을 저장합니다")
     ap.add_argument("--cik", default=CIK_DEFAULT, help="10자리 CIK (기본: 버크셔)")
     ap.add_argument("--form", default=FORM_DEFAULT, help="서식 이름 (기본: 13F-HR)")
+    # 아티팩트를 개발 환경에서 못 받습니다 — 내려받기 주소가 blob.core.windows.net 이고
+    # 프록시가 403 으로 끊습니다(2026-09-14 실측). 로그는 읽을 수 있으므로
+    # **내용을 로그에도 찍습니다.** 그러면 사람이 아티팩트를 받아 건네줄 필요가 없습니다.
+    ap.add_argument("--show", type=int, default=3, help="되풀이되는 기록을 몇 개나 찍을지 (0=안 찍음)")
     a = ap.parse_args()
 
     contact = os.environ.get("SEC_CONTACT", "").strip()
@@ -273,6 +322,7 @@ def main() -> int:
     # ── C. 폴더 안의 파일들 ──────────────────────────────────────
     print("[C] 파일 내려받기")
     files = []
+    shown = []
     for it in items:
         name = it.get("name") or ""
         try:
@@ -293,14 +343,18 @@ def main() -> int:
         extra = (f"{c.get('tag_kinds', '')} tag kinds" if c["kind"] != "json"
                  else f"keys={c.get('keys', [])[:8]}")
         print(f"    {name:<44} {r['status']} {r['bytes']:>10,} bytes  {c['kind']}  {extra}")
+        shown.append((name, b, c))
+    for name, b, c in shown:
+        show(name, b, c, a.show)
     man["files"] = files
 
     with open(os.path.join(OUT_DIR, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump(man, f, ensure_ascii=False, indent=2)
 
     print()
-    print(f"원본을 {OUT_DIR}/ 에 저장했습니다. 아티팩트로 내려받아 읽은 뒤에")
-    print("JSON 구조를 설계합니다. 이 스크립트는 아무것도 해석하지 않았습니다.")
+    print(f"원본을 {OUT_DIR}/ 에 저장했고(아티팩트), 위에 그대로 찍었습니다.")
+    print("이것을 읽고 나서 JSON 구조를 설계합니다.")
+    print("이 스크립트는 아무것도 해석하지 않았습니다 — 받고, 세고, 보여 줬을 뿐입니다.")
     return 0
 
 

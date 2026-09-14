@@ -6,11 +6,10 @@
 > conversation with the owner is Korean.** Owner is a non-developer: no terminal,
 > no git. See `/CLAUDE.md` §0.
 
-STATUS as of 2026-09-14: **probe built and merged-ready; it has never been run.**
-Step 2 of §11 exists in code (`scripts/probe_sec.py`, `.github/workflows/probe-sec.yml`).
-It cannot run until the owner adds the `SEC_CONTACT` secret (§6) — still the one
-blocker, though the address question behind it is now answered. Nothing is parsed, no schema exists, no page exists. Everything below §4
-is decided, not speculative.
+STATUS as of 2026-09-14: **probe ran once, successfully. SEC is reachable from a runner.**
+`SEC_CONTACT` is set; run #1 (2026-09-14, 12s) came back **200 on every request**.
+What it found is in §5-2 — read that before anything else. Nothing is parsed yet,
+no schema exists, no page exists. Everything below §4 is decided, not speculative.
 
 ---
 
@@ -161,6 +160,59 @@ oversized file being skipped, and that the contact address appears in **no** sav
 file (`user_agent` in the manifest is written as the literal `<SEC_CONTACT>`).
 The real shape is still unknown — that is the entire point of running it.
 
+### 5-2. What run #1 actually returned (2026-09-14, measured)
+
+```
+A  data.sec.gov/submissions/CIK0001067983.json     200   161,265 B
+B  .../Archives/edgar/data/1067983/000119312526352200/index.json
+                                                    200       656 B
+C  five files, all 200:
+     primary_doc.xml                     5,555 B   42 tag kinds
+     56757.xml                          44,724 B   15 tag kinds   ← the holdings
+     0001193125-26-352200.txt           51,654 B   66 tag kinds   ← whole submission
+     ...-index.html                      8,042 B   EDGAR's own rendering
+     ...-index-headers.html              2,752 B   ditto
+```
+
+Newest 13F-HR: **filed 2026-08-14 for the quarter ending 2026-06-30**,
+accession `0001193125-26-352200`. The 45-day lag is visible right there.
+
+**SEC does not block the runner.** The declared-contact User-Agent is accepted;
+no 403, no 418, no rate limiting at ~6 requests. Whole filing is ~51KB — §7's
+"much smaller than it looks" holds.
+
+#### The one finding that will bite anyone who guesses
+
+**The holdings file has an arbitrary numeric name: `56757.xml`.** It is not
+`infotable.xml`, not `form13fInfoTable.xml`, not anything predictable. **You must
+read `index.json` to find it.** A parser that hardcodes a filename will work on
+one filing and break on the next.
+
+Worse, the obvious-looking shortcut is a trap: `filings.recent.primaryDocument`
+in the submissions JSON says `xslForm13F_X02/primary_doc.xml` — that is an
+**XSL rendering path for humans**, and it is the cover page, not the holdings.
+Following `primaryDocument` gets you a filing with zero positions in it.
+
+So the fetch order is fixed and non-negotiable:
+
+```
+submissions JSON  →  accessionNumber
+accessionNumber   →  that folder's index.json
+index.json        →  the .xml that is NOT primary_doc.xml
+```
+
+#### Still unread
+
+The probe saved raw files as an artifact, but **the artifact cannot be downloaded
+from this dev environment** — the download URL is on `blob.core.windows.net` and
+the egress proxy 403s it (measured). Job logs ARE readable through the GitHub MCP
+tools. So the probe now **prints the content into the log** (`--show`, default 3):
+tag census per file, the first N repeating record blocks, and small files whole.
+HTML files are counted only — they are EDGAR's rendering, not data.
+
+That change is not yet run. **Next action is one more `Run workflow` click**, then
+read the log and design the schema from what is printed.
+
 ---
 
 ## 6. ANSWERED — owner picked the address; secret still not set
@@ -291,20 +343,20 @@ Burry's page needs the staleness line more prominently (§3).
 ## 11. Next actions, in order
 
 ```
-1. Owner adds the SEC_CONTACT secret (address decided)   ← STILL BLOCKING
-2. DONE (built, never run): workflow_dispatch probe
-3. Owner runs Actions → Probe SEC → Run workflow.
-   Download the sec-probe artifact. Read manifest.json first.
-4. THEN design the JSON schema, from what the artifact actually shows.
-5. Build the fetch script + quarterly workflow.
-6. Reconcile against Berkshire's annual report. Do not proceed until it matches.
-7. Build the page at /titans/ against /docs/design-system.md.
-8. Only then, investor #2.
+1. DONE  SEC_CONTACT secret set by owner
+2. DONE  probe built
+3. DONE  run #1 — SEC reachable, shape summary in §5-2
+4. Owner clicks Run workflow once more (probe now prints content to the log)
+5. Read the log, THEN design the JSON schema
+6. Build the fetch script + quarterly workflow
+7. Reconcile against Berkshire's annual report. Do not proceed until it matches.
+8. Build the page at /titans/ against /docs/design-system.md
+9. Only then, investor #2
 ```
 
-Step 3 is the owner's click, not ours — assistants here cannot run Actions. When
-handing it over, say exactly which buttons: **Actions → Probe SEC → Run workflow**,
-then the artifact at the bottom of the finished run.
+Steps needing a click are the owner's — assistants here cannot run Actions. Say
+exactly which buttons: **Actions → Probe SEC → Run workflow**. Do NOT ask them to
+download the artifact; read the job log instead (the artifact host is blocked here).
 
 ## 12. Working conventions for this repo
 
