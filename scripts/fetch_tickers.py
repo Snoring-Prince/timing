@@ -50,6 +50,34 @@ PAUSE = 3.0         # 분당 25요청 한도 — 넉넉히 띄운다
 RETRY_DAYS = 90     # 못 찾은 것을 다시 물어보기까지
 
 
+def cusip_ok(c: str) -> bool:
+    """CUSIP 아홉째 자리가 앞 여덟 자리에서 계산한 값과 맞는가.
+
+    **OpenFIGI 가 이것을 검사합니다.** 첫 실행에서 한 건만
+    `Invalid idValue format` 이 왔는데, 세어 보니 정확히 체크숫자가 틀린
+    자리였습니다. 그런 것은 물어봐야 소용이 없으므로 보내지 않습니다.
+
+    28년치에서 두 건이 걸립니다. **둘 다 올바른 짝이 자료 안에 따로 있습니다.**
+      G47766101  Ingersoll-Rand 2006~2007 — 바른 값 G4776G101.
+                 2013년 이전 텍스트 공시를 변환할 때 글자 G 를 숫자 6 으로 읽음.
+      G6693N103  NU Holdings 2021~2022 — 바른 값 G6683N103.
+                 XML 시대라 **SEC 원문 자체의 오타**입니다(나중 분기에 고쳐짐).
+    """
+    if len(c) != 9:
+        return False
+    tot = 0
+    for i, ch in enumerate(c[:8].upper()):
+        if ch.isdigit(): v = int(ch)
+        elif ch.isalpha(): v = ord(ch) - 55
+        elif ch == "*": v = 36
+        elif ch == "@": v = 37
+        elif ch == "#": v = 38
+        else: return False
+        if i % 2: v *= 2
+        tot += v // 10 + v % 10
+    return c[8].isdigit() and int(c[8]) == (10 - tot % 10) % 10
+
+
 def needs_ticker(cusip: str) -> bool:
     """ISIN 을 만들 수 없는 것만 고른다.
 
@@ -66,7 +94,7 @@ def load_json(path, default):
         return default
 
 
-def ask(cusips):
+def ask(cusips, id_type="ID_CUSIP"):
     """OpenFIGI 에 한 묶음을 묻는다. 돌려주는 것은 ({cusip: ticker}, 원본 조각).
 
     **원본을 같이 돌려줍니다.** 첫 실행에서 17개가 전부 '못 찾음' 으로 나왔는데
@@ -75,7 +103,9 @@ def ask(cusips):
     짐작해서 파서를 짠 셈이고, 그건 이 프로젝트가 `probe_sec.py` 를 만들면서
     하지 않기로 한 일입니다(CLAUDE.md 9-3). 이제 원본을 로그에 남깁니다.
     """
-    body = json.dumps([{"idType": "ID_CUSIP", "idValue": c} for c in cusips]).encode()
+    # ID_CUSIP_8_CHR 은 체크숫자를 뗀 여덟 자리로 묻습니다.
+    vals = [c[:8] if id_type == "ID_CUSIP_8_CHR" else c for c in cusips]
+    body = json.dumps([{"idType": id_type, "idValue": v} for v in vals]).encode()
     req = urllib.request.Request(
         API, data=body,
         headers={"Content-Type": "application/json",
@@ -88,7 +118,7 @@ def ask(cusips):
         # 오류 본문에 이유가 적혀 있는 경우가 많다. 삼키지 않는다.
         raise RuntimeError(f"HTTP {e.code} · {e.read().decode('utf-8','replace')[:300]}") from None
 
-    raw = f"HTTP {status} · {text[:400]}"
+    raw = f"{id_type} · HTTP {status} · {text[:360]}"
     rows = json.loads(text)
 
     out = {}
@@ -143,37 +173,58 @@ def main():
         print("새로 물어볼 것이 없습니다.")
         return 0
 
-    got, failed, first_raw = {}, [], None
-    for i in range(0, len(todo), BATCH):
-        chunk = todo[i:i + BATCH]
-        try:
-            hits, raw = ask(chunk)
-            got.update(hits)
-            if first_raw is None:
-                first_raw = raw
-        except Exception as e:
-            print(f"  실패 {type(e).__name__}: {e}", flush=True)
-            failed += chunk
-        if i + BATCH < len(todo):
-            time.sleep(PAUSE)
+    # 체크숫자가 틀린 것은 보내 봐야 'Invalid idValue format' 만 돌아온다.
+    broken = [c for c in todo if not cusip_ok(c)]
+    todo = [c for c in todo if cusip_ok(c)]
+    for c in broken:
+        print(f"  {c}  {name.get(c,'')[:30]:<30} → 체크숫자가 틀린 CUSIP (묻지 않음)")
+
+    # **두 가지 방식으로 물어봅니다.** 첫 실행에서 형식이 멀쩡한 CINS 열다섯 건이
+    # 전부 'No identifier found' 였습니다. OpenFIGI 가 CINS 를 ID_CUSIP 으로는
+    # 색인하지 않는 것으로 보이는데, 짐작만 하지 않고 문서에 있는 여덟 자리 방식
+    # (ID_CUSIP_8_CHR)도 실제로 한 번 물어보고 원본을 남깁니다.
+    got, failed, raws, answered = {}, [], {}, False
+    for id_type in ("ID_CUSIP", "ID_CUSIP_8_CHR"):
+        rest = [c for c in todo if c not in got]
+        if not rest:
+            break
+        print(f"\n[{id_type}] {len(rest)}건", flush=True)
+        for i in range(0, len(rest), BATCH):
+            chunk = rest[i:i + BATCH]
+            try:
+                hits, raw = ask(chunk, id_type)
+                got.update(hits)
+                answered = True
+                raws.setdefault(id_type, raw)   # 방식마다 원본 하나씩
+            except Exception as e:
+                print(f"  실패 {type(e).__name__}: {e}", flush=True)
+                failed += chunk
+            if i + BATCH < len(rest):
+                time.sleep(PAUSE)
+        print(f"  누적 {len(got)}건 찾음", flush=True)
 
     for c in todo:
         print(f"  {c}  {name.get(c,'')[:30]:<30} → {got.get(c) or '못 찾음'}")
 
     # 하나도 못 받았으면 **저쪽이 실제로 보낸 것**을 보여 준다. 우리가 해석한
     # 결과만 찍으면 왜 비었는지 알 수 없다 — 첫 실행에서 실제로 그랬다.
-    if not got and first_raw:
-        print(f"\n첫 응답 원본: {first_raw}", flush=True)
+    if not got:
+        for r in raws.values():
+            print(f"\n응답 원본: {r}", flush=True)
 
-    # **처음 물어본 것이 있는데 그중 하나도 못 받았으면** OpenFIGI 가 막힌 것이다.
-    # 옛 종목이 계속 안 잡히는 것은 실패가 아니다 — 그건 원래 없는 것이다.
-    if fresh and not any(c in got for c in fresh):
-        print("\n처음 물어본 종목을 하나도 받지 못했습니다 — OpenFIGI 가 막혔을 수 있습니다.",
+    # **실패로 끝내는 기준은 "답이 왔느냐" 하나뿐입니다.**
+    # 처음에는 "하나도 못 찾으면 실패"로 뒀는데, 재 보니 OpenFIGI 는 멀쩡히
+    # 답하면서 CINS 를 그냥 모른다고 합니다(HTTP 200 + No identifier found).
+    # 그 상태로 실패를 내면 **새 해외 종목이 들어올 때마다 빨간 X** 가 뜨고,
+    # 6-2 의 "매주 실패하면 아무도 안 봅니다"가 그대로 생깁니다.
+    # 못 찾은 것은 빈 값으로 적어 두면 그만입니다 — 화면은 글자 타일로 갑니다.
+    if todo and not answered:
+        print("\nOpenFIGI 에 닿지 못했습니다 — 응답이 하나도 오지 않았습니다.",
               file=sys.stderr)
         return 1
 
     # 못 찾은 것도 빈 값으로 적어 둔다. 안 적으면 매주 다시 묻고 매주 실패한다.
-    for c in todo:
+    for c in todo + broken:
         have[c] = got.get(c, "")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     have["_asked"] = today.isoformat()
