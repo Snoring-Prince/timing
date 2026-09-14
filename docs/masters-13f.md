@@ -6,7 +6,7 @@
 > conversation with the owner is Korean.** Owner is a non-developer: no terminal,
 > no git. See `/CLAUDE.md` §0.
 
-STATUS as of 2026-09-14: **three probe runs done; the fetcher is written and unit-tested.**
+STATUS as of 2026-09-14: **the fetcher has run for real. 53 quarters are committed.**
 `SEC_CONTACT` is set; run #1 (2026-09-14, 12s) came back **200 on every request**.
 What it found is in §5-2 — read that before anything else. Nothing is parsed yet,
 no schema exists, no page exists. Everything below §4 is decided, not speculative.
@@ -408,6 +408,143 @@ clean state.
 **Not yet run against real SEC.** Next: one `Run workflow`, read the log, check
 the printed totals per quarter against Berkshire's annual report (§4).
 
+### 5-8. First real run (2026-09-14) — what actually came back
+
+```
+13F-HR found          111, 1998-12-31 … 2026-06-30
+saved                  53, 2013-06-30 … 2026-06-30     data/titans/berkshire.json, 273 KB
+13F-HR/A found        100  ← not 0. See below.
+```
+
+**The unit switch is real and lands on exactly one boundary:**
+
+```
+2022-09-30   value/shares 0.06   thousands
+2022-12-31   value/shares 63.61  dollars     ← one clean cutover, no mixed quarter
+```
+
+Totals look right across the whole range ($89B in 2013 → $299B in 2026), and
+2016-12-31 came out at **$148.0B**, matching what §5-6 predicted from that
+filing's own `tableValueTotal`. Folding is lossless: summing each holding's
+`lines` equals the raw row count in **all 53 quarters**.
+
+#### Two things the run exposed
+
+**(a) 58 "failures" were not failures.** Every 13F-HR from 1998-12-31 through
+2013-03-31 has **no XML in its folder at all** — EDGAR did not require XML for
+13F until mid-2013, so those filings are text documents in a different format.
+Counting them as failures means every weekly run prints 58 errors forever, and
+**a real failure would be invisible inside that noise.** They are now counted
+separately (`NO_XML`) and reported as "XML 이전 형식이라 건너뛴 분기".
+
+Pre-2013 history needs a separate text parser. **The owner pushed back on
+dropping it (2026-09-14): "우리 사이트는 데이터가 생명인데." They are right that
+2008 is the single most valuable stretch for a site about how choices turned
+out** — Buffett's 2008 moves are the story. So this is not closed, it is
+**unmeasured**, and the next step is to look rather than to argue.
+
+What is actually known vs. assumed:
+
+```
+KNOWN    index.json returns 200 for these filings; the folder simply has no .xml
+KNOWN    ~90 of the 100 amendments fall in this pre-2013 era — much messier
+UNKNOWN  what the documents look like: fixed-width text? HTML tables? both?
+UNKNOWN  whether the format is stable, or changes with the filing agent
+```
+
+The filing-agent prefix changes across the era (`0000950150` → `0000950129` →
+`0000950134` → `0000950123` → `0001193125`), and filing agents are exactly the
+kind of thing that changes a text layout. **Do not write one parser on the
+assumption of one format.**
+
+`probe_sec.py --accession` takes a comma-separated list for this. Three samples
+span the era:
+
+```
+0000950150-00-000118   oldest (1998-12-31 era)
+0000950134-09-003064   2008 year-end era
+0001193125-13-222307   last pre-XML (2013-03-31)
+```
+
+For text filings the probe now dumps `--head` characters (default 8000) instead
+of counting tags, and — because the SGML header can be long enough to push the
+table past that window — `table_peek()` finds the first CUSIP-shaped token and
+prints from just before it. Measured: on a fixture with an 11KB header it lands
+on the table. That is locating, not parsing.
+
+#### DECIDED 2026-09-14: this is a one-shot conversion, not a parser
+
+Owner: **"어차피 한번만 할건데, 파서까지 만들 일이야? 그냥 니가 요즘 형식으로
+정리해주면 되잖아."** Correct, and it reframes the job. These 58 filings are
+frozen forever. Nothing needs to run weekly, recover from errors, or handle a
+format we have not seen. **Write throwaway code, verify it, commit the JSON,
+delete the code.** Do not build a maintained pre-2013 pipeline.
+
+The obstacle was never the parsing, it was *seeing* the files:
+
+```
+SEC blocked from the dev environment       → cannot fetch directly
+58 × ~90KB ≈ 5MB                           → too large to read through job logs
+artifact download on blob.core.windows.net → proxy 403
+```
+
+**Solution: the runner pushes the raw filings to a scratch branch**
+(`scripts/dump_13f_raw.py` + `.github/workflows/dump-13f-raw.yml`, branch
+`raw-13f`). The assistant then fetches that branch and reads the documents
+locally, at full fidelity, with no click-and-wait loop. 13F is public domain, so
+a public branch is fine. Amendments are dumped too — ~90 of the 100 are in this
+era, so their shape gets settled in the same pass.
+
+The branch is an **orphan** branch: it carries only `sec-raw/`, never main's
+files. Verified on a scratch repo — `raw-13f` contains only the dump and `main`
+is untouched.
+
+**The conversion has a built-in answer key.** Each filing states its own
+`Form 13F Information Table Value Total` and entry count. Crude extraction is
+fine as long as every quarter reconciles against its own stated total — the same
+check `fetch_13f.py` already does for the XML era (§5-8c). 58/58 matching means
+done, regardless of how ugly the code was.
+
+**Cleanup is part of the job**: once `berkshire.json` carries the old quarters,
+delete `dump_13f_raw.py`, `dump-13f-raw.yml`, and the `raw-13f` branch. Leaving
+them makes the next session think there is a pipeline to maintain.
+
+**(b) 100 amendments exist, and ~7 fall inside the saved range:**
+
+```
+2013-06-30  2014-09-30  2015-06-30  2020-09-30
+2023-09-30 (two)  2023-12-31  2025-03-31
+```
+
+These are almost certainly confidential-treatment releases — Berkshire routinely
+asks the SEC to withhold a position while it is still building it, then files an
+amendment once the position is complete. **That means those quarters' original
+filings are genuinely incomplete**, not merely restated. This is no longer a
+theoretical gap.
+
+Still not merged, because the merge rule is still unknown (restate vs. add,
+§5-7). Quarters with an amendment now carry `amended_by: [accession]` in the JSON
+so the screen can mark them rather than quietly showing short numbers.
+`probe_sec.py --accession` (and the workflow input) exists to open one:
+**`0000950123-25-008361`** (2025-03-31, filed 2025-08-14) is the freshest sample.
+
+#### (c) A self-check that beats eyeballing
+
+Our summed total is now compared against the filing's own `tableValueTotal`
+(scaled by the same factor), and the row count against `tableEntryTotal`. A
+quarter off by more than 0.5% gets `total_mismatch` in the JSON and a `※` in the
+log. This is the check that proves no rows were dropped and the unit call was
+right — **it is not an independent check against the annual report**, since both
+numbers come from the same filing. A true outside check still needs the annual
+report, which is not reachable from this environment.
+
+#### (d) Same issuer, two rows, both correct
+
+`ALPHABET INC` appears twice in 2026-06-30 — CUSIP `02079K305` (CAP STK CL A,
+$28.16B) and `02079K107` (CAP STK CL C, $9.61B). Different share classes are
+different securities and must not be folded together. **The screen has to show
+`class`, not just `name`**, or it will look like a duplicate row.
+
 ---
 
 ## 6. ANSWERED — owner picked the address; secret still not set
@@ -545,11 +682,11 @@ Burry's page needs the staleness line more prominently (§3).
 5. DONE  run #3 — 39 quarters in recent + 1 older chunk; units change confirmed
 6. DONE  schema designed (§5-7) — folded by CUSIP, units self-checked
 7. DONE  fetch script + weekly workflow, unit-tested on fixtures
-8. Owner clicks Actions → Update 13F → Run workflow. Read the log.
-9. Reconcile the printed totals against Berkshire's annual report. Do not proceed
-   until it matches.
-10. CUSIP→ticker, then prices, then the page at /titans/ (see /docs/design-system.md)
-11. Only then, investor #2
+8. DONE  first real run — 53 quarters committed (§5-8)
+9. Owner re-runs Update 13F after the self-check lands; confirm 0 mismatches
+10. Probe accession 0000950123-25-008361 to learn the amendment merge rule
+11. CUSIP→ticker, then prices, then the page at /titans/ (see /docs/design-system.md)
+12. Only then, investor #2
 ```
 
 Steps needing a click are the owner's — assistants here cannot run Actions. Say

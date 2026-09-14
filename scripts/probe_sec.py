@@ -178,10 +178,28 @@ def census(body: bytes) -> dict:
     return out
 
 
+CUSIPISH = re.compile(r"\b[0-9A-Z]{8}[0-9]\b")
+
+
 SMALL = 8 * 1024        # 이보다 작은 글자 파일은 통째로 찍습니다
 
 
-def show(name: str, body: bytes, cen: dict, n: int) -> None:
+def table_peek(txt: str, head_n: int) -> None:
+    """표가 있을 만한 자리를 찾아 그 언저리를 보여 줍니다.
+
+    옛 텍스트 공시는 SGML 머리글이 길어서 앞부분만 찍으면 정작 표를 못 봅니다.
+    **CUSIP 처럼 생긴 토큰**(영숫자 8 + 숫자 1)이 처음 나오는 곳을 찾아
+    그 앞뒤를 찍습니다. 해석이 아니라 어디를 봐야 하는지 짚는 것입니다."""
+    m = CUSIPISH.search(txt)
+    if not m:
+        print("  (CUSIP 처럼 생긴 것을 못 찾았습니다 — 표가 다른 모양입니다)")
+        return
+    a = max(0, m.start() - 400)
+    print(f"  CUSIP 같은 것이 {m.start():,}번째 글자에 처음 나옵니다. 그 언저리:")
+    print("  | " + txt[a:a + head_n].replace("\n", "\n  | "))
+
+
+def show(name: str, body: bytes, cen: dict, n: int, head_n: int = 1500) -> None:
     """받은 것을 로그에 그대로 보여 줍니다. **해석하지 않습니다.**
 
     되풀이되는 기록이 무엇인지도 정하지 않습니다 — **가장 많이 나온 태그**를
@@ -209,7 +227,11 @@ def show(name: str, body: bytes, cen: dict, n: int) -> None:
     # 가장 많이 나온 태그를 기록 단위로 삼고 앞의 몇 개만 찍습니다.
     top = next((k for k in tags if tags[k] > 1), None)
     if not top:
-        print("  | " + txt[:1500].replace("\n", "\n  | "))
+        # 태그가 없습니다 — 2013년 이전 텍스트 공시가 이렇습니다.
+        # 앞머리(SGML 머리글)만 보면 표를 못 보므로 넉넉히 찍습니다.
+        print(f"  되풀이되는 태그가 없습니다 — 앞 {head_n:,}자를 그대로:")
+        print("  | " + txt[:head_n].replace("\n", "\n  | "))
+        table_peek(txt, head_n)
         return
     blocks = re.findall(rf"<{re.escape(top)}\b.*?</{re.escape(top)}>", txt, re.S)
     print(f"  되풀이 단위로 보이는 것: <{top}> {len(blocks)}개 — 앞 {min(n, len(blocks))}개")
@@ -217,10 +239,13 @@ def show(name: str, body: bytes, cen: dict, n: int) -> None:
         for line in b.splitlines():
             print("  | " + line)
         print("  |")
-    head = txt[:txt.find(f"<{top}")] if f"<{top}" in txt else txt[:800]
+    head = txt[:txt.find(f"<{top}")] if f"<{top}" in txt else txt[:head_n]
     print("  머리 부분:")
-    for line in head.strip().splitlines()[:25]:
+    for line in head.strip().splitlines()[:60]:
         print("  | " + line)
+    if cen.get("tag_kinds", 0) < 8:
+        # 태그가 몇 종 안 되면 XML 이 아니라 옛 텍스트일 가능성이 큽니다.
+        table_peek(txt, head_n)
 
 
 def all_filings(sub: dict, form: str) -> list[dict]:
@@ -241,7 +266,7 @@ def all_filings(sub: dict, form: str) -> list[dict]:
 
 
 def one_filing(cik_int: str, filing: dict, contact: str, tag: str,
-               show_n: int, man: dict) -> bool:
+               show_n: int, man: dict, head_n: int = 1500) -> bool:
     """한 건의 제출 폴더를 훑습니다 — 목차를 읽고, 그 안의 파일을 받습니다.
 
     **파일 이름을 짐작하지 않습니다.** 목차(index.json)가 주는 이름만 씁니다.
@@ -286,7 +311,7 @@ def one_filing(cik_int: str, filing: dict, contact: str, tag: str,
         print(f"    {name:<44} {r['status']} {r['bytes']:>10,} bytes  {c['kind']}  {extra}")
         shown.append((name, b, c))
     for name, b, c in shown:
-        show(name, b, c, show_n)
+        show(name, b, c, show_n, head_n)
     return True
 
 
@@ -300,6 +325,14 @@ def main() -> int:
     ap.add_argument("--show", type=int, default=3, help="되풀이되는 기록을 몇 개나 찍을지 (0=안 찍음)")
     ap.add_argument("--no-old", dest="old", action="store_false",
                     help="가장 오래된 건은 받지 않는다 (기본: 받아서 단위를 비교)")
+    # 특정 한 건만 열어 보고 싶을 때. 정정 공시(13F-HR/A)처럼 모양을 모르는
+    # 것을 볼 때 씁니다 — 접수번호를 주면 목록을 건너뛰고 그것만 훑습니다.
+    ap.add_argument("--accession", default="",
+                    help="이 접수번호들만 훑는다. 쉼표로 여러 개 (예: A,B)")
+    # 2013년 이전 13F 는 XML 이 아니라 텍스트입니다. 태그가 없으면 셀 것이
+    # 없으므로 **앞부분을 넉넉히 그대로 찍어** 형식을 눈으로 봅니다.
+    ap.add_argument("--head", type=int, default=8000,
+                    help="태그가 없는 파일에서 찍을 글자 수")
     a = ap.parse_args()
 
     contact = os.environ.get("SEC_CONTACT", "").strip()
@@ -340,6 +373,22 @@ def main() -> int:
     print(f"    {json.dumps(stepA['census'], ensure_ascii=False)[:400]}")
 
     sub = json.loads(body)
+
+    # 접수번호를 준 경우: 목록을 건너뛰고 그것만. 서식이 무엇이든 상관없습니다.
+    if a.accession:
+        accs = [x.strip() for x in a.accession.split(",") if x.strip()]
+        ones = [{"filingDate": "?", "reportDate": "?", "accessionNumber": x}
+                for x in accs]
+        man["filings_found"] = ones
+        ok = True
+        for i, one in enumerate(ones):
+            if not one_filing(cik_int, one, contact, f"one{i + 1}", a.show, man,
+                              a.head):
+                ok = False
+        with open(os.path.join(OUT_DIR, "manifest.json"), "w", encoding="utf-8") as f:
+            json.dump(man, f, ensure_ascii=False, indent=2)
+        return 0 if ok else 1
+
     got = all_filings(sub, a.form)
     older = len((sub.get("filings") or {}).get("files") or [])
     man["filings_found"] = got
