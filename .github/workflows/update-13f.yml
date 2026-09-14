@@ -51,6 +51,26 @@ jobs:
             git push
           fi
 
+      # 로고를 찾는 데 쓰는 티커입니다. **공시를 저장한 뒤에 돌립니다** —
+      # 티커를 못 받는다고 13F 데이터까지 안 올라가면 곤란합니다(6-2 의
+      # "데이터를 먼저 커밋하고 그 뒤에 본다"와 같은 순서).
+      #
+      # 화면은 미국 종목의 ISIN 을 CUSIP 에서 직접 계산하므로 이 표가 필요한 것은
+      # 미국 발행사가 아닌 종목뿐입니다(28년치의 5.8%). 이미 물어본 것은 다시
+      # 묻지 않으므로 보통은 요청이 0건이고 파일도 안 바뀝니다.
+      - name: 티커 받기 (로고용)
+        run: python scripts/fetch_tickers.py
+
+      - name: 티커 저장
+        run: |
+          git add data/titans/tickers.json
+          if git diff --staged --quiet; then
+            echo "티커 표에 바뀐 내용 없음"
+          else
+            git commit -m "티커 갱신 $(date -u +%Y-%m-%d)"
+            git push
+          fi
+
       # 이 프로젝트에서 진짜 위험한 것은 터지는 것이 아니라 **데이터가 조용히
       # 끊기는 것**입니다(CLAUDE.md 6-2). 비밀값이 없으면 notify.py 는
       # 조용히 넘어가고, 알림 실패가 실행을 실패시키지도 않습니다.

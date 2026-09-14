@@ -39,7 +39,42 @@
      통째로 복사해 넣으면 되고, 화면 코드는 tx("키") 만 부릅니다.
      번역 함수 이름은 t 가 아니라 **tx** 입니다(본 사이트와 동일).
 ═════════════════════════════════════════════════════════════════════ -->
+<!-- ══ 회사 마크 주소 ═════════════════════════════════════════════════
+     본 사이트의 window.LIVE · window.STATS · window.SUPPORT 와 같은 요령입니다
+     (CLAUDE.md 5번) — **주소 한 줄이 설정의 전부이고, 비우면 통째로 잠깁니다.**
+
+     지금 쓰는 곳: Elbstream Stock Logos API (https://api.elbstream.com)
+       GET /logos/{idType}/{id}     idType = isin | symbol | wkn | cik | lei
+       쿼리 format = jpg|png|svg|webp,  size = 16~1024 (높이 픽셀)
+     {idType} 과 {id} 는 코드가 채웁니다.
+
+     **ISIN 은 CUSIP 에서 직접 만듭니다 — 티커 표가 필요 없습니다.**
+     미국 종목의 ISIN 은 "US" + CUSIP 아홉 자리 + 체크숫자입니다. 우리 자료에는
+     모든 보유 종목의 CUSIP 이 들어 있으므로 상위 10개뿐 아니라 28년치 242개가
+     자동으로 풀립니다. 문서의 예시(US5949181045 · US1667641005)로 대조했습니다.
+
+     **못 받아 오면 조용히 뒤로 물러납니다**: 바깥 그림 → 저장소에 박아 둔
+     simple-icons 마크 → 글자 타일. 깨진 이미지 아이콘이 뜨지 않고, 바깥 서버가
+     죽어도 화면은 이 기능을 켜기 전 모습 그대로 돕니다.
+
+     **API 키는 필요 없습니다 — 2026-09-14 에 실제로 열어서 확인했습니다.**
+     문서 맨 앞은 "모든 엔드포인트에 키가 필요하다"고 적지만 로고만은 예외입니다
+     (예시에 Authorization 헤더가 없고 'Auth Required' 표시도 없습니다).
+     <img> 태그는 애초에 헤더를 못 보내므로 그림으로 거는 이상 공개일 수밖에 없습니다.
+
+     **인증 없음은 OpenAPI 스펙에 선언돼 있습니다** — 이 경로만 `security: []` 이고
+     (전역 BearerAuth 를 명시적으로 끔), /news·/companies 는 BearerAuth 입니다.
+
+     ISIN 을 못 만드는 종목(CINS — 버뮤다·아일랜드·스위스 법인 등, 28년치의 5.8%)은
+     `data/titans/tickers.json` 의 티커로 `symbol` 조회를 합니다. 그 표는
+     `scripts/fetch_tickers.py` 가 주 1회 OpenFIGI 에서 받아 채웁니다 —
+     **손으로 적는 표가 아닙니다.**
+     ※ 바깥 주소를 쓰면 방문자 브라우저가 그쪽에 직접 요청합니다(= IP 가 갑니다).
+       이용약관은 쓰기 전에 확인할 일입니다.
+═════════════════════════════════════════════════════════════════════ -->
 <script>
+window.MARKS = { url: "https://api.elbstream.com/logos/{idType}/{id}?format=png&size=64" };
+
 const D={
 en:{
   locale:"en-US", dir:"ltr", tab:"English",
@@ -57,13 +92,14 @@ en:{
   untouched:(a,b)=>`${a} of the ${b} positions did not move by a single share.`,
   evNew:"New", evBack:"Back in", evOut:"Sold out",
   heldFor:"held",
+  costArrow:d=>`estimated average cost \u2192 price on ${d} · before dividends`,
+  sinceBefore:y=>`held since before ${y}`,
+  justIn:"entered this quarter",
   yr:n=>n<1?`${Math.round(n*12)} mo`:(n%1?`${n.toFixed(1)} yr`:`${n} yr`),
   colShare:"Share of portfolio", colShares:"Shares", colValue:"Value",
   same:"unchanged",
-  foldOpen:n=>`Show ${n} smaller positions`,
-  foldNote:(p,a,t)=>`${p} of the portfolio · ${a} added to, ${t} trimmed`,
+  topOnly:(n,p)=>`Top ${n} shown — ${p} of the portfolio`,
   prevTick:"tick marks last quarter's share",
-  rulerLabel:(y,s)=>`held ${y}, since ${s}`,
   noData:"Could not load the filings.",
   aboutH:"How to read this",
   footTitle:"Source and limits",
@@ -73,6 +109,11 @@ en:{
     "A 13F shows US-listed long equity positions only. Bonds, cash, foreign listings, wholly owned businesses and short positions are not in it.",
     "Values are what the filing states for the quarter-end date. Dividing value by share count gives an implied quarter-end price — not a trade price.",
     "Share classes of one issuer are shown on one line (marked A+C and so on) because one decision usually moves both. Preferred stock is kept on its own line.",
+    "Average cost is an estimate. Each quarter's share change is priced at the midpoint of that quarter's and the previous quarter's implied price, then carried forward on an average-cost basis. Actual trades happened at prices we cannot see, so the estimate can be off by a wide margin.",
+    "Stock splits are detected from the filings themselves — a whole-number jump in share count matched by the same drop in implied price. Apple 4:1 in 2020, American Express 3:1 in 2000, Coca-Cola 2:1 in 2012, Moody's 2:1 in 2005, DaVita 2:1 in 2013.",
+    "Positions already held in the first filing on file (1998) have no visible entry, so no cost can be estimated for them.",
+    "The return shown is price only. Dividends received over the years are not in it, so the real outcome was better than the number.",
+    "Company marks are from simple-icons (CC0-1.0) and are stored in this repository, not loaded from anywhere else. The shapes are public domain; the trademarks belong to their owners and are used here only to identify a holding. Companies that set does not cover are shown as initials instead.",
     "This page reports what was filed. It is not advice, and nothing here is a recommendation to buy or sell."
   ]
 },
@@ -92,13 +133,14 @@ ko:{
   untouched:(a,b)=>`${b} 중 ${a}은 한 주도 움직이지 않았습니다.`,
   evNew:"신규", evBack:"재진입", evOut:"전량매도",
   heldFor:"보유",
+  costArrow:d=>`추정 매수 평균가 \u2192 ${d} 가격 · 배당 제외`,
+  sinceBefore:y=>`${y}년 이전부터 보유`,
+  justIn:"이번 분기 진입",
   yr:n=>n<1?`${Math.round(n*12)}개월`:(n%1?`${n.toFixed(1)}년`:`${n}년`),
   colShare:"비중", colShares:"주식수", colValue:"금액",
   same:"그대로",
-  foldOpen:n=>`작은 ${n}종목 더 보기`,
-  foldNote:(p,a,t)=>`전체의 ${p} · 늘림 ${a} · 줄임 ${t}`,
+  topOnly:(n,p)=>`상위 ${n}종목만 · 전체의 ${p}`,
   prevTick:"눈금은 직전 분기 비중",
-  rulerLabel:(y,s)=>`${s}부터 ${y} 보유`,
   noData:"공시를 불러오지 못했습니다.",
   aboutH:"보는 법",
   footTitle:"출처와 한계",
@@ -108,6 +150,11 @@ ko:{
     "13F 에는 미국 상장 주식의 매수 포지션만 나옵니다. 채권·현금·해외 상장·통째로 소유한 회사·공매도는 들어 있지 않습니다.",
     "금액은 공시에 적힌 분기말 값입니다. 금액을 주식수로 나누면 분기말 가격이 나오는데, 실제 체결가가 아닙니다.",
     "같은 회사의 여러 종류 주식은 한 줄로 묶었습니다(A+C 처럼 표시). 한 번의 결정이 대개 둘을 같이 움직이기 때문입니다. 우선주는 성격이 다르므로 따로 둡니다.",
+    "매수 평균가는 추정치입니다. 분기마다 늘어난 주식수를 그 분기와 직전 분기 가격의 중간값으로 사들인 것으로 보고, 이동평균 방식으로 이어 계산했습니다. 실제 체결가는 공시에 없으므로 추정이 크게 빗나갈 수 있습니다.",
+    "액면분할은 공시 자체에서 찾아냅니다 — 주식수가 정수 배수로 뛰면서 가격이 꼭 그만큼 내려간 분기입니다. 애플 4:1(2020), 아메리칸익스프레스 3:1(2000), 코카콜라 2:1(2012), 무디스 2:1(2005), 다비타 2:1(2013).",
+    "자료의 첫 공시(1998년)에 이미 들어 있던 종목은 사들이는 장면이 안 보이므로 매수가를 추정할 수 없습니다.",
+    "수익률에는 배당이 들어 있지 않습니다. 여러 해 받은 배당만큼 실제 결과는 여기 적힌 숫자보다 낫습니다.",
+    "회사 마크는 simple-icons(CC0-1.0)에서 가져와 이 저장소에 넣어 둔 것입니다. 바깥에서 불러오지 않습니다. 도형은 퍼블릭 도메인이고 상표는 각 회사 것이며, 여기서는 어느 회사를 들고 있는지 가리키는 용도로만 씁니다. 그 세트에 없는 회사는 이름 첫 글자로 대신합니다.",
     "이 화면은 공시된 내용을 그대로 옮길 뿐입니다. 투자 자문이 아니고, 무엇을 사거나 팔라는 뜻도 아닙니다."
   ]
 }
@@ -179,9 +226,12 @@ body{
 
 /* ── 패널 ───────────────────────────────────────────────── */
 .panel{background:var(--card);border:1px solid var(--rule);margin-bottom:20px;padding:20px}
-.panel h2{margin:0 0 14px;font-family:var(--cond);font-weight:700;font-size:19px;letter-spacing:-.01em}
+.panel h2{margin:0 0 5px;font-family:var(--cond);font-weight:700;font-size:19px;letter-spacing:-.01em}
 .cap{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--ink-3);line-height:1.25}
+  text-transform:uppercase;color:var(--ink-3);line-height:1.35;margin:0 0 13px}
+#bookcut{margin-bottom:2px;color:var(--ink-2)}
+#bookcut:empty{display:none}
+#quarter h2{margin-bottom:14px}
 
 /* ── 이번 분기 요약 ──────────────────────────────────────── */
 .tally{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--rule-2);margin-bottom:16px}
@@ -208,7 +258,7 @@ body{
 
 /* ── 종목 줄 ─────────────────────────────────────────────── */
 .rows{margin:0;padding:0;list-style:none}
-.row{position:relative;padding:9px 0 10px;border-top:1px solid var(--rule-2)}
+.row{position:relative;padding:11px 0 12px;border-top:1px solid var(--rule-2)}
 .row:first-child{border-top:0}
 /* 비중 막대는 줄의 바탕이다. 제일 큰 종목이 100% 폭이 되게 맞춰 그린다. */
 .bar{position:absolute;left:0;top:0;bottom:0;background:rgba(15,26,36,.055);z-index:0}
@@ -216,36 +266,40 @@ body{
    (Kraft Heinz 의 '헤' 자리에 세로줄이 그어져 있었다). 그래서 줄 바닥에만
    짧게 찍는다 — 보유 연차 자와 같은 눈금 어휘라 새 기호를 배울 것이 없다. */
 .tick{position:absolute;bottom:0;height:11px;width:0;border-left:1.2px solid var(--ink-3);opacity:.85;z-index:1}
-.rowin{position:relative;z-index:2;display:grid;grid-template-columns:24px 1fr auto;
+.rowin{position:relative;z-index:2;display:grid;grid-template-columns:22px 30px 1fr auto;
   column-gap:10px;align-items:baseline}
 .rk{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-align:right}
 .nm{font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:.01em;
   line-height:1.25;min-width:0;overflow-wrap:anywhere}
+/* 회사 마크. **로고와 글자 타일이 똑같은 상자를 쓰는 것이 핵심**이다 —
+   상자가 제각각이면 몇 줄만 그림이 있는 목록이 '덜 만든 화면'처럼 보인다.
+   17px 로 만들었다가 키웠다: 그 크기에서는 심벌(사과·G)만 읽히고 글자 로고
+   (무디스·처브·크래프트하인즈)는 뭉개진다. 30px 부터 글자 로고가 살아난다.
+   둥근 모서리는 없다(재료표 5번 — 이 화면에 동그라미는 ⓘ 와 표시등뿐). */
+.mk{grid-row:1/span 2;align-self:center;width:30px;height:30px;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  background:var(--card);border:1px solid var(--rule-2);flex:0 0 auto}
+.mk svg{width:19px;height:19px;display:block}
+.mk.img img{width:100%;height:100%;object-fit:contain;display:block}
+.mk.mono{background:var(--ink-2);border-color:var(--ink-2);color:#fff;
+  font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.02em;line-height:1}
 .cls{font-family:var(--cond);font-weight:600;font-size:9.5px;letter-spacing:.1em;
   color:var(--ink-3);border:1px solid var(--rule);padding:0 4px;margin-left:6px;
   white-space:nowrap;vertical-align:2px}
-.w{font-family:var(--mono);font-weight:500;font-size:20px;letter-spacing:-.02em;
+/* 주인공은 금액이다. 비중은 막대가 이미 그림으로 말하고 있으므로 작게 적는다. */
+.val{font-family:var(--mono);font-weight:500;font-size:20px;letter-spacing:-.02em;
   line-height:1.1;text-align:right;white-space:nowrap}
-/* 둘째 줄 — 보유 연차 자 / 주식수 변화 / 금액 */
-.sub2{grid-column:2/4;display:flex;align-items:center;gap:12px;margin-top:5px;flex-wrap:wrap}
-.ruler{flex:0 0 auto;display:block}
-.yrs{font-family:var(--mono);font-size:11px;color:var(--ink-3);white-space:nowrap}
-.act{font-family:var(--mono);font-size:12px;white-space:nowrap;margin-left:auto}
-.act.up{color:var(--up)} .act.down{color:var(--down)} .act.flat{color:var(--ink-3)}
-.val{font-family:var(--mono);font-size:12px;color:var(--ink-2);white-space:nowrap;
-  min-width:62px;text-align:right}
-
-/* ── 접힘 ───────────────────────────────────────────────── */
-details.fold{border-top:1px solid var(--rule-2);margin-top:2px}
-details.fold>summary{list-style:none;cursor:pointer;padding:11px 0 2px;
-  font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.02em;
-  display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
-details.fold>summary::-webkit-details-marker{display:none}
-details.fold>summary::before{content:"▸";color:var(--ink-3);font-size:11px}
-details.fold[open]>summary::before{content:"▾"}
-details.fold>summary:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-details.fold>summary .why{font-family:var(--mono);font-weight:400;font-size:11px;color:var(--ink-3)}
-details.fold .rows{margin-top:4px}
+/* 둘째 줄 — 추정 매수가 → 기준일 가격 / 수익률 / 주식수 변화 / 비중 */
+.sub2{grid-column:3/5;display:flex;align-items:baseline;gap:10px;margin-top:5px;flex-wrap:wrap}
+.cost{font-family:var(--mono);font-size:12px;color:var(--ink-2);white-space:nowrap}
+.cost em{font-style:normal;color:var(--ink-3);padding:0 2px}
+/* 색은 수익률에만 쓴다. 주식수 변화는 이득이 아니라 행동이라 중립색이고,
+   '늘림/줄임'이라는 말이 방향을 말한다 — 색을 하나 더 늘리지 않는다. */
+.ret{font-family:var(--mono);font-weight:500;font-size:12px;white-space:nowrap}
+.ret.up{color:var(--up)} .ret.down{color:var(--down)}
+.act{font-family:var(--mono);font-size:12px;color:var(--ink-3);white-space:nowrap;margin-left:auto}
+.w{font-family:var(--mono);font-size:12px;color:var(--ink-2);white-space:nowrap;
+  min-width:46px;text-align:right}
 
 /* ── 범례·각주 ───────────────────────────────────────────── */
 .legend{display:flex;align-items:center;gap:8px;margin:14px 0 0;
@@ -275,8 +329,11 @@ body.settled .fade{animation:none}
   .panel h2{font-size:16px}
   .says{font-size:15px}
   .nm{font-size:14px}
-  .w{font-size:19px}
-  .rowin{grid-template-columns:20px 1fr auto;column-gap:8px}
+  .val{font-size:18px}
+  .rowin{grid-template-columns:18px 26px 1fr auto;column-gap:8px}
+  .mk{width:26px;height:26px}
+  .mk svg{width:16px;height:16px}
+  .mk.mono{font-size:10.5px}
   /* 다섯 칸이 한 줄에 들어가게 최소 폭을 내린다. 4+1 로 접히면 마지막 칸
      하나가 줄 전체를 차지해 계기판이 아니라 빈칸처럼 보인다. */
   .tally div{min-width:50px;padding:9px 4px}
@@ -312,11 +369,9 @@ body.settled .fade{animation:none}
 
   <section class="panel fade" id="book" hidden>
     <h2 id="bookhead"></h2>
+    <p class="cap" id="bookcut"></p>
+    <p class="cap" id="bookcap"></p>
     <ul class="rows" id="top"></ul>
-    <details class="fold" id="fold" hidden>
-      <summary><span id="foldttl"></span><span class="why" id="foldwhy"></span></summary>
-      <ul class="rows" id="rest"></ul>
-    </details>
     <p class="legend"><i></i><span id="legend"></span></p>
   </section>
 
@@ -333,7 +388,7 @@ body.settled .fade{animation:none}
    화면은 자기 집 파일만 읽습니다. Actions 가 주 1회 SEC 에서 받아
    data/titans/berkshire.json 에 저장합니다(scripts/fetch_13f.py).
 ══════════════════════════════════════════════════════════════════════ */
-let RAW=null, LOADED=false;
+let RAW=null, LOADED=false, FIRSTY="";
 
 /* 같은 발행사의 여러 종류 주식을 한 줄로 묶는다.
    CUSIP 아홉 자리 중 **앞 여섯 자리가 발행사**다. 알파벳 A(02079K305)와
@@ -348,10 +403,13 @@ function merge(q){
   for(const h of q.holdings){
     const k=gkey(h);
     let a=g.get(k);
-    if(!a){ a={key:k,name:h.name,value:0,shares:0,classes:[],n:0}; g.set(k,a); }
+    if(!a){ a={key:k,name:h.name,value:0,shares:0,classes:[],n:0,cusip:h.cusip,top:0}; g.set(k,a); }
     a.value+=h.value; a.shares+=h.shares; a.n++;
+    /* 대표 CUSIP 은 그 묶음에서 제일 큰 줄의 것. ISIN 을 만들려면 여섯 자리로는
+       부족하고 아홉 자리가 다 있어야 한다. */
+    if(h.value>a.top){ a.top=h.value; a.cusip=h.cusip; }
     a.classes.push(h.class||"");
-    if(h.name.length>a.name.length) a.name=h.name;
+    a.name=h.name;
   }
   return g;
 }
@@ -424,10 +482,14 @@ function build(){
   };
   const everBefore=k=>seen.slice(0,-1).some(s=>s.has(k));
 
+  /* 평균단가는 첫 분기부터 되짚어야 나온다 — 111개 분기를 한 번만 묶어 둔다 */
+  const snaps=qs.map(merge);
+
   const list=[...C.values()].map(a=>{
     const p=P.get(a.key);
     const st=startOf(a.key);
     const dsh=(p&&p.shares>0)?(a.shares/p.shares-1):null;
+    const cb=costBasis(snaps,a.key);
     return {
       ...a,
       w:a.value/tc*100,
@@ -437,6 +499,11 @@ function build(){
       isNew:!p,
       back:!p&&everBefore(a.key),
       start:st.period, years:st.qtrs/4,
+      avgCost:cb.avg, nowPrice:cb.last,
+      /* 첫 공시(1998-12-31)에 이미 들어 있던 종목은 사들이는 장면이 안 보인다.
+         그 값을 평균단가라고 적으면 "1998년에 그 값에 샀다"는 거짓말이 된다. */
+      preData:cb.first===0,
+      freshIn:st.qtrs<=1,
       /* 이번 분기에 사고판 몫을 분기말 가격으로 환산한다. 비중 변화는 가격이
          섞여 있어 행동을 말해 주지 않는다 — 주식수 차이만 쓴다. */
       netUSD:(p?(a.shares-p.shares):a.shares)*(a.shares>0?a.value/a.shares:0)
@@ -480,46 +547,195 @@ function says(B,T){
   return p;
 }
 
-/* 보유 연차 자 — 1년에 눈금 하나, 5년마다 길게. 숫자를 안 읽어도
-   "이건 오래된 것"이 길이로 보인다. 도면의 축척자와 같은 물건이다. */
-function ruler(years,maxYears,W){
-  const w=Math.max(9,Math.round(W*Math.min(1,years/maxYears)));
-  const H=11,mid=6;
-  let s=`<svg class="ruler" width="${w}" height="${H}" viewBox="0 0 ${w} ${H}" aria-hidden="true">`;
-  s+=`<line x1="0.5" y1="${mid}" x2="${w-0.5}" y2="${mid}" stroke="var(--ink-3)" stroke-width="1"/>`;
-  s+=`<line x1="0.5" y1="${mid-4}" x2="0.5" y2="${mid+4}" stroke="var(--ink-3)" stroke-width="1"/>`;
-  s+=`<line x1="${w-0.5}" y1="${mid-4}" x2="${w-0.5}" y2="${mid+4}" stroke="var(--ink-3)" stroke-width="1"/>`;
-  const per=w/Math.max(years,.25);
-  if(per>=2.6){
-    for(let y=1;y<years;y++){
-      const x=Math.round(y*per)+.5, h=(y%5===0)?3:1.6;
-      s+=`<line x1="${x}" y1="${mid-h}" x2="${x}" y2="${mid+h}" stroke="var(--ink-3)" stroke-width="1" opacity="${y%5===0?.85:.5}"/>`;
+/* ══ 회사 마크 ═══════════════════════════════════════════════════════
+   CUSIP 앞 여섯 자리(발행사)로 찾습니다. 화면이 묶는 단위와 같아서
+   알파벳 A 와 C 가 한 마크를 씁니다.
+
+   **저장소에 박아 둡니다. 바깥에서 받아오지 않습니다.** 로고를 남의 서버에서
+   불러오면 그쪽이 문을 닫는 날 화면이 조용히 빈칸이 됩니다 — 이 프로젝트가
+   이미 두 번 겪은 일입니다(CLAUDE.md 11번). 실제로 무료로 쓰던 Clearbit
+   로고 API 가 2025년 말에 닫혔습니다. 방문자 IP 가 새는 것도 막힙니다.
+
+   출처: simple-icons (CC0-1.0). 도형 자체는 퍼블릭 도메인이고, 상표는 각
+   회사 것입니다 — 여기서는 "무엇을 들고 있나"를 가리키는 용도로만 씁니다.
+
+   **없는 회사가 더 많습니다.** 개발자용 브랜드 세트라 보험·에너지·산업재는
+   거의 안 들어 있습니다(상위 10종목 중 다섯: 셰브런·옥시덴탈·처브·무디스·
+   크래프트하인즈). 없으면 이름 첫 글자 타일로 대신합니다 — 빈칸을 두면
+   그림을 못 불러온 것처럼 보입니다.
+
+   추가하려면 한 줄 더 넣으면 됩니다: "CUSIP6":{h:"색", t:"이름", d:"path"}
+══════════════════════════════════════════════════════════════════ */
+/* ── ISIN 은 CUSIP 에서 만듭니다 ──────────────────────────────────
+   미국 종목의 ISIN = "US" + CUSIP 아홉 자리 + 체크숫자 한 자리.
+   체크숫자는 글자를 A=10 … Z=35 로 편 뒤 Luhn 으로 냅니다.
+   문서 예시와 대조해 확인했습니다 — 594918104 → US5949181045,
+   166764100 → US1667641005(문서의 뉴스 응답에 Chevron Corp. 으로 나옵니다).
+
+   **첫 글자가 숫자가 아니면 미국 발행사가 아닙니다**(CINS). 처브가 그렇습니다
+   (H1467J104 — 스위스). 그런 종목은 ISIN 을 지어낼 수 없으니 티커로 찾습니다. */
+function isinCheck(body){
+  let s="";
+  for(const c of body.toUpperCase())
+    s += /[0-9]/.test(c) ? c : String(c.charCodeAt(0)-55);
+  let sum=0;
+  for(let i=s.length-1;i>=0;i--){
+    let d=+s[i];
+    if((s.length-1-i)%2===0){ d*=2; if(d>9) d-=9; }
+    sum+=d;
+  }
+  return (10-(sum%10))%10;
+}
+function usISIN(cusip){
+  const c=String(cusip||"").toUpperCase();
+  if(c.length!==9||!/^[0-9]/.test(c)) return null;   // CINS = 미국 발행사가 아님
+  return "US"+c+isinCheck("US"+c);
+}
+/* ISIN 을 못 만드는 종목의 티커. **손으로 적지 않습니다.**
+   `scripts/fetch_tickers.py` 가 주 1회 OpenFIGI 에서 받아
+   `data/titans/tickers.json` 에 저장한 것을 그대로 읽습니다.
+   못 받았거나 파일이 없으면 비어 있고, 마크는 글자 타일로 떨어집니다. */
+let TICKERS={};
+
+const LOGO={
+  "037833":{h:"000000",t:"Apple",d:"M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"},
+  "025816":{h:"2E77BC",t:"American Express",d:"M16.015 14.378c0-.32-.135-.496-.344-.622-.21-.12-.464-.135-.81-.135h-1.543v2.82h.675v-1.027h.72c.24 0 .39.024.478.125.12.13.104.38.104.55v.35h.66v-.555c-.002-.25-.017-.376-.108-.516-.06-.08-.18-.18-.33-.234l.02-.008c.18-.072.48-.297.48-.747zm-.87.407l-.028-.002c-.09.053-.195.058-.33.058h-.81v-.63h.824c.12 0 .24 0 .33.05.098.048.156.147.15.255 0 .12-.045.215-.134.27zM20.297 15.837H19v.6h1.304c.676 0 1.05-.278 1.05-.884 0-.28-.066-.448-.187-.582-.153-.133-.392-.193-.73-.207l-.376-.015c-.104 0-.18 0-.255-.03-.09-.03-.15-.105-.15-.21 0-.09.017-.166.09-.21.083-.046.177-.066.272-.06h1.23v-.602h-1.35c-.704 0-.958.437-.958.84 0 .9.776.855 1.407.87.104 0 .18.015.225.06.046.03.082.106.082.18 0 .077-.035.15-.08.18-.06.053-.15.07-.277.07zM0 0v10.096L.81 8.22h1.75l.225.464V8.22h2.043l.45 1.02.437-1.013h6.502c.295 0 .56.057.756.236v-.23h1.787v.23c.307-.17.686-.23 1.12-.23h2.606l.24.466v-.466h1.918l.254.465v-.466h1.858v3.948H20.87l-.36-.6v.585h-2.353l-.256-.63h-.583l-.27.614h-1.213c-.48 0-.84-.104-1.08-.24v.24h-2.89v-.884c0-.12-.03-.12-.105-.135h-.105v1.036H6.067v-.48l-.21.48H4.69l-.202-.48v.465H2.235l-.256-.624H1.4l-.256.624H0V24h23.786v-7.108c-.27.135-.613.18-.973.18H21.09v-.255c-.21.165-.57.255-.914.255H14.71v-.9c0-.12-.018-.12-.12-.12h-.075v1.022h-1.8v-1.066c-.298.136-.643.15-.928.136h-.214v.915h-2.18l-.54-.617-.57.6H4.742v-3.93h3.61l.518.602.554-.6h2.412c.28 0 .74.03.942.225v-.24h2.177c.202 0 .644.045.903.225v-.24h3.265v.24c.163-.164.508-.24.803-.24h1.89v.24c.194-.15.464-.24.84-.24h1.176V0H0zM21.156 14.955c.004.005.006.012.01.016.01.01.024.01.032.02l-.042-.035zM23.828 13.082h.065v.555h-.065zM23.865 15.03v-.005c-.03-.025-.046-.048-.075-.07-.15-.153-.39-.215-.764-.225l-.36-.012c-.12 0-.194-.007-.27-.03-.09-.03-.15-.105-.15-.21 0-.09.03-.16.09-.204.076-.045.15-.05.27-.05h1.223v-.588h-1.283c-.69 0-.96.437-.96.84 0 .9.78.855 1.41.87.104 0 .18.015.224.06.046.03.076.106.076.18 0 .07-.034.138-.09.18-.045.056-.136.07-.27.07h-1.288v.605h1.287c.42 0 .734-.118.9-.36h.03c.09-.134.135-.3.135-.523 0-.24-.045-.39-.135-.526zM18.597 14.208v-.583h-2.235V16.458h2.235v-.585h-1.57v-.57h1.533v-.584h-1.532v-.51M13.51 8.787h.685V11.6h-.684zM13.126 9.543l-.007.006c0-.314-.13-.5-.34-.624-.217-.125-.47-.135-.81-.135H10.43v2.82h.674v-1.034h.72c.24 0 .39.03.487.12.122.136.107.378.107.548v.354h.677v-.553c0-.25-.016-.375-.11-.516-.09-.107-.202-.19-.33-.237.172-.07.472-.3.472-.75zm-.855.396h-.015c-.09.054-.195.056-.33.056H11.1v-.623h.825c.12 0 .24.004.33.05.09.04.15.128.15.25s-.047.22-.134.266zM15.92 9.373h.632v-.6h-.644c-.464 0-.804.105-1.02.33-.286.3-.362.69-.362 1.11 0 .512.123.833.36 1.074.232.238.645.31.97.31h.78l.255-.627h1.39l.262.627h1.36v-2.11l1.272 2.11h.95l.002.002V8.786h-.684v1.963l-1.18-1.96h-1.02V11.4L18.11 8.744h-1.004l-.943 2.22h-.3c-.177 0-.362-.03-.468-.134-.125-.15-.186-.36-.186-.662 0-.285.08-.51.194-.63.133-.135.272-.165.516-.165zm1.668-.108l.464 1.118v.002h-.93l.466-1.12zM2.38 10.97l.254.628H4V9.393l.972 2.205h.584l.973-2.202.015 2.202h.69v-2.81H6.118l-.807 1.904-.876-1.905H3.343v2.663L2.205 8.787h-.997L.01 11.597h.72l.26-.626h1.39zm-.688-1.705l.46 1.118-.003.002h-.915l.457-1.12zM11.856 13.62H9.714l-.85.923-.825-.922H5.346v2.82H8l.855-.932.824.93h1.302v-.94h.838c.6 0 1.17-.164 1.17-.945l-.006-.003c0-.78-.598-.93-1.128-.93zM7.67 15.853l-.014-.002H6.02v-.557h1.47v-.574H6.02v-.51H7.7l.733.82-.764.824zm2.642.33l-1.03-1.147 1.03-1.108v2.253zm1.553-1.258h-.885v-.717h.885c.24 0 .42.098.42.344 0 .243-.15.372-.42.372zM9.967 9.373v-.586H7.73V11.6h2.237v-.58H8.4v-.564h1.527V9.88H8.4v-.507"},
+  "02079K":{h:"4285F4",t:"Google",d:"M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"},
+  "191216":{h:"D00013",t:"Coca-Cola",d:"M16.813 8.814s-.45.18-.973.756c-.524.577-.828 1.225-.603 1.397.087.066.287.079.65-.25a2.864 2.864 0 00.766-1.063c.234-.57.16-.833.16-.84m2.863 1.038c-.581-.299-1.006-.664-1.448-.89-.422-.216-.695-.307-1.036-.261a1.057 1.057 0 00-.14.035s.176.6-.523 1.607c-.708 1.022-1.35 1.015-1.533.734-.191-.296.056-.9.468-1.437.432-.562 1.19-1.028 1.19-1.028s-.241-.148-.835.19c-.58.326-1.577 1.107-2.502 2.423-.926 1.316-1.11 2.04-1.242 2.61-.132.57-.012 1.18.62 1.18s1.368-.964 1.576-1.299c.386-.624.637-1.581.112-1.45-.259.065-.468.351-.6.627a2.683 2.683 0 00-.19.554 2.185 2.185 0 00-.513.298 3.788 3.788 0 00-.486.43s.002-.456.365-1.194c.364-.737 1.03-1.074 1.408-1.106.34-.027.783.262.408 1.327-.375 1.065-1.483 2.36-2.646 2.376-1.073.015-1.776-1.355-.282-3.745C13.501 9.19 15.441 8.38 16.07 8.29c.63-.09.835.187.835.187a2.709 2.709 0 011.197-.197c.77.052 1.364.596 2.15.979-.205.195-.4.4-.575.592m3.454-.89c-.533.342-1.27.652-1.979.586-.179.185-.371.4-.563.634 1.228.243 2.305-.519 2.877-1.167A3.82 3.82 0 0024 8.248a4.792 4.792 0 01-.869.714m-1.636 3.462a.268.268 0 00.023-.051.124.124 0 00-.113-.108c-.117-.005-.277.017-.695.48a6.303 6.303 0 00-.89 1.263c-.24.438-.337.764-.2.848a.199.199 0 00.146.015c.093-.022.199-.11.36-.295.075-.088.158-.212.258-.349.277-.376.973-1.563 1.111-1.803m-4.349.504c.07-.182.159-.541-.026-.682-.199-.15-.705.201-.708.561-.003.369.357.535.443.559.05.013.066.01.09-.029a3.284 3.284 0 00.201-.409m-.383.67a1.531 1.531 0 01-.348-.222 1.116 1.116 0 01-.26-.317c-.008-.012-.015-.003-.023.008-.007.01-.039.039-.309.434-.27.396-.684 1.216-.31 1.355.241.09.641-.331.86-.61a5.21 5.21 0 00.402-.614c.012-.023 0-.029-.012-.034m4.258.947c-.102.163-.218.476.117.281.41-.236.994-1.123.994-1.123h.265a8.88 8.88 0 01-.803 1.054c-.415.46-.922.879-1.28.837-.416-.048-.286-.596-.286-.596s-.596.635-1.01.59c-.557-.062-.387-.751-.387-.751s-.63.774-1.06.75c-.673-.04-.504-.859-.316-1.436.1-.308.193-.55.193-.55s-.067.017-.21.038c-.076.011-.212.019-.212.019s-.28.495-.505.792c-.224.297-1.178 1.322-1.74 1.117-.518-.19-.346-.984-.044-1.615.44-.92 1.68-2.243 2.396-2.068.741.18.017 1.532.017 1.532s0 .005.007.009c.015.005.054.01.143-.008a1.605 1.605 0 00.271-.08s.746-1.561 1.569-2.583c.823-1.02 2.465-2.78 3.11-2.354.156.105.086.465-.126.902a2.891 2.891 0 01-.291.078c.142-.258.236-.475.264-.627.097-.528-1.135.585-2.015 1.78a16.594 16.594 0 00-1.409 2.28 3.86 3.86 0 00.454-.324 13.002 13.002 0 001.118-1.043 12.169 12.169 0 00.951-1.098 2.58 2.58 0 00.28-.029 12.054 12.054 0 01-1.05 1.24c-.35.355-.73.737-1.061 1.015a8.84 8.84 0 01-.931.691s-.77 1.553-.351 1.652c.246.06.732-.69.732-.69s.635-.967 1.017-1.404c.522-.593.97-.936 1.42-.942.261-.005.415.273.415.273l.123-.19h.757s-1.414 2.398-1.527 2.579m2.111-5.58c-.533.341-1.27.651-1.979.585-.18.185-.371.4-.564.634 1.229.243 2.305-.518 2.878-1.167A3.82 3.82 0 0024 8.248a4.792 4.792 0 01-.869.714m-10.63 1.177h-.72l-.407.658h.72zm-3.41 2.277c.307-.42 1.152-1.891 1.152-1.891a.124.124 0 00-.112-.108c-.117-.006-.312.034-.7.519-.387.485-.688.87-.907 1.272-.24.438-.346.747-.207.831a.205.205 0 00.144.015c.09-.022.208-.113.369-.298a5.57 5.57 0 00.262-.34m-3.863-1.99c-.199-.15-.705.201-.708.56-.003.369.456.482.515.484a.09.09 0 00.05-.01.06.06 0 00.024-.027 3.483 3.483 0 00.146-.325c.07-.183.158-.541-.027-.682m-.3 1.27a1.678 1.678 0 01-.39-.18.812.812 0 01-.279-.309c-.007-.012-.015-.003-.022.008-.007.01-.047.061-.318.458-.27.398-.672 1.21-.296 1.35.24.09.644-.334.864-.612a7.24 7.24 0 00.455-.681c.009-.024 0-.03-.014-.034m5.88.244h.263s-1.321 1.912-2.068 1.823c-.416-.049-.293-.563-.293-.563s-.585.685-1.123.546c-.487-.125-.172-.936-.172-.936-.056.022-1.111 1.211-1.853.926-.776-.3-.373-1.296-.225-1.595.125-.253.263-.499.263-.499s-.119.034-.195.051l-.186.04s-.367.596-.591.894c-.225.297-1.178 1.32-1.74 1.117-.562-.204-.423-.99-.107-1.615.512-1.012 1.726-2.256 2.458-2.068.739.189.127 1.388.127 1.388s.147.019.5-.222c.507-.346 1.176-1.277 1.901-1.167.342.051.66.4.225 1.064-.139.213-.372.403-.55.215-.111-.118-.014-.33.103-.477a.457.457 0 01.39-.179s.12-.273-.185-.269c-.247.005-.871.58-1.223 1.16-.323.533-.813 1.441-.322 1.639.451.182 1.309-.836 1.706-1.37.397-.533 1.302-1.742 2.062-1.79.261-.017.417.221.417.221l.088-.139h.759s-1.43 2.387-1.542 2.567c-.088.141-.204.46.117.281.322-.178.996-1.043.996-1.043m-.414 3.824a3.144 3.144 0 00-1.908-.557 1.17 1.17 0 00-.93.504c-.29-.505-.862-.815-1.747-.808-1.43.016-2.849.676-3.972.675-1.077 0-1.863-.677-1.837-1.88.047-2.109 1.83-4.009 3.16-4.864.767-.49 1.409-.637 1.828-.59.306.034.674.388.442.909-.341.761-.812.699-.795.335.01-.237.168-.386.286-.469a.582.582 0 01.278-.068c.068-.057.117-.474-.429-.337-.546.137-1.21.676-1.84 1.371-.63.696-1.61 2.011-1.852 3.392-.113.64-.039 1.808 1.48 1.795 1.287-.01 3.185-.859 4.929-.841a3.34 3.34 0 011.725.472c.451.278.992.684 1.184.961"},
+  "060505":{h:"012169",t:"Bank of America",d:"M15.194 7.57c.487-.163 1.047-.307 1.534-.451-1.408-.596-3.176-1.227-4.764-1.625-.253.073-1.01.271-1.534.434.541.162 2.328.577 4.764 1.642zm-8.896 6.785c.577.343 1.19.812 1.786 1.209 3.952-3.068 7.85-5.432 12.127-6.767-.596-.307-1.119-.578-1.787-.902-2.562.65-6.947 2.4-12.126 6.46zm-.758-6.46c-2.112.974-4.331 2.31-5.54 3.085.433.199.866.361 1.461.65 2.671-1.805 4.764-2.905 5.594-3.266-.595-.217-1.154-.361-1.515-.47zm8.066.234c-.686-.379-3.068-1.263-4.71-1.642-.487.18-1.173.451-1.642.65.595.162 2.815.758 4.71 1.714.487-.235 1.173-.523 1.642-.722zm-3.374 1.552c-.56-.27-1.173-.523-1.643-.74-1.425.704-3.284 1.769-5.63 3.447.505.27 1.047.595 1.624.92 1.805-1.335 3.627-2.598 5.649-3.627zm1.732 8.825c3.79-3.249 9.113-6.407 12.036-7.544a48.018 48.018 0 00-1.949-1.155c-3.771 1.246-8.174 4.007-12.108 7.129.667.505 1.371 1.028 2.02 1.57zm2.851-.235h-.108l-.18-.27h-.109v.27h-.072v-.596h.27c.055 0 .109 0 .145.036.054.019.072.073.072.127 0 .108-.09.162-.198.162zm-.289-.343c.09 0 .199.018.199-.09 0-.072-.072-.09-.144-.09h-.163v.18zm-.523.036c0-.289.235-.523.541-.523.307 0 .542.234.542.523a.543.543 0 01-.542.542.532.532 0 01-.54-.542m.107 0c0 .235.199.433.451.433a.424.424 0 100-.848c-.27 0-.45.199-.45.415"},
+};
+/* 마크가 없을 때 쓰는 글자.
+   **회사 형태를 뜻하는 낱말을 먼저 버립니다.** 안 버리면 Chevron Corporation 이
+   'CC', Chubb Limited 가 'CL' 이 되어 회사가 아니라 법인 형태를 가리킵니다. */
+const SUFFIX=/^(INC|INCORPORATED|CORP|CORPORATION|CO|COMPANY|LTD|LIMITED|PLC|LLC|LP|NV|SA|AG|HOLDINGS|HLDGS|GROUP|GRP|NEW|DEL|THE)$/i;
+function monogram(name){
+  const w=String(name).replace(/[^A-Za-z ]/g," ").trim().split(/\s+/)
+    .filter(x=>x.length>1&&!SUFFIX.test(x));
+  if(!w.length) return String(name).replace(/[^A-Za-z]/g,"").slice(0,2).toUpperCase()||"?";
+  return (w.length>1?w[0][0]+w[1][0]:w[0].slice(0,2)).toUpperCase();
+}
+/* 뒤로 물러나는 순서: 바깥 그림 → 저장소의 simple-icons → 글자 타일.
+   그래서 바깥 서버가 죽어도 화면은 이 기능을 켜기 전 모습 그대로가 된다. */
+function localMark(r){
+  const g=LOGO[r.key.split("|")[0]];
+  if(g) return `<span class="mk"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"`
+    +` style="fill:#${g.h}"><path d="${g.d}"/></svg></span>`;
+  return `<span class="mk mono" aria-hidden="true">${monogram(r.name)}</span>`;
+}
+function markHTML(r){
+  const url=(window.MARKS&&window.MARKS.url)||"";
+  const fall=localMark(r);
+  if(url){
+    /* 미국 종목이면 ISIN 을 즉석에서 계산하고(표가 필요 없다),
+       아니면 표에서 티커를 찾는다. 둘 다 없으면 바깥에 묻지 않는다. */
+    const isin=usISIN(r.cusip), tk=TICKERS[r.cusip];
+    const src = isin ? url.replace("{idType}","isin").replace("{id}",isin)
+              : tk   ? url.replace("{idType}","symbol").replace("{id}",encodeURIComponent(tk))
+              : null;
+    if(src){
+      return `<span class="mk img" aria-hidden="true"><img src="${src}" alt="" loading="lazy"`
+        +` onerror="this.parentNode.outerHTML='${fall.replace(/'/g,"&#39;").replace(/"/g,"&quot;")}'"></span>`;
     }
   }
-  return s+`</svg>`;
+  return fall;
 }
 
-function rowHTML(r,rank,maxW,rulerW,maxYears){
+/* ══ 추정 매수 평균가 ═══════════════════════════════════════════════
+   13F 에는 체결가가 없습니다. 있는 것은 분기말의 **금액과 주식수**뿐이고,
+   나누면 그 분기말 가격이 나옵니다. 그래서 이렇게 어림합니다.
+
+     분기마다 늘어난 주식수를  (직전 분기말 + 이번 분기말) / 2  로 사들였다고 보고
+     이동평균으로 이어 붙입니다. 팔면 평균단가는 그대로 두고 원가만 비례해서 줄입니다.
+
+   **추정입니다.** 실제로는 분기 중 아무 날에나 샀으므로 크게 빗나갈 수 있습니다.
+   각주에 그렇게 적어 두었고, 화면에도 '추정'이라고 씁니다.
+
+   ── 액면분할이 제일 큰 함정입니다 ──────────────────────────────
+   2020년 8월 애플 4:1 때 주식수가 245M → 944M 으로 뜁니다. 이걸 '샀다'로 세면
+   **추정 평균단가가 $39.59 대신 $213.33 이 되어 수익률이 +631% 대신 +36% 로
+   나옵니다.** 실측으로 확인한 숫자입니다 — 분할을 안 잡으면 이 화면은 거짓말을 합니다.
+
+   분할은 공시 자체에서 찾습니다: 주식수가 f 배로 뛰면서 가격이 꼭 1/f 로 내려간 분기.
+   **정수 배수만 인정합니다.** 1.5 배를 후보에 넣었더니 '55% 더 산 분기'(애플 2016-06)와
+   '주식을 크게 늘린 분기'(레너드 2026-03)가 분할로 잡혔습니다. 정수만 두면
+   현재 26묶음에서 다섯 건이 정확히 잡히고 오탐이 없습니다 —
+   애플 ×4(2020-09) · 아멕스 ×3(2000-06) · 코카콜라 ×2(2012-09) ·
+   무디스 ×2(2005-06) · 다비타 ×2(2013-09).
+══════════════════════════════════════════════════════════════════ */
+const SPLITF=[2,3,4,5,6,7,8,10,15,20];
+/* 가격 쪽 여유가 넉넉한 것은 분기 중에 시세가 움직이기 때문입니다 —
+   애플은 분할과 같은 분기에 주가가 27% 올랐습니다. */
+function splitFactor(rShares,rPrice){
+  let best=null;
+  for(const f of SPLITF){
+    if(Math.abs(rShares/f-1)<.30 && Math.abs(rPrice/f-1)<.30){
+      if(best===null||Math.abs(rShares/f-1)<Math.abs(rShares/best-1)) best=f;
+    }
+  }
+  return best;
+}
+/* 묶음 하나의 일생을 처음부터 되짚어 평균단가를 만든다.
+   전량 매도하면 0 에서 다시 시작한다 — 3년 전에 팔고 다시 산 종목의
+   평균단가에 옛 매수가 섞이면 안 된다. */
+function costBasis(snaps,key){
+  let held=0,cost=0,prevP=null,first=null;
+  for(let i=0;i<snaps.length;i++){
+    const a=snaps[i].get(key);
+    if(!a||a.shares<=0||a.value<=0){ held=0;cost=0;prevP=null;first=null; continue; }
+    const p=a.value/a.shares;
+    if(first===null) first=i;
+    if(held>0&&prevP){
+      const f=splitFactor(a.shares/held, prevP/p);
+      if(f) held*=f;
+    }
+    if(held===0){ cost=a.shares*p; held=a.shares; }
+    else if(a.shares>held){ cost+=(a.shares-held)*((prevP+p)/2); held=a.shares; }
+    else if(a.shares<held){ cost*=a.shares/held; held=a.shares; }
+    prevP=p;
+  }
+  return {avg:held>0?cost/held:null, first, last:prevP};
+}
+
+/* 수익률은 자릿수가 커진다. 100% 안쪽은 소수 한 자리, 그 밖은 정수. */
+function retPct(r){
+  const v=r*100, a=Math.abs(v);
+  const n=a<100?v.toFixed(1):Math.round(v).toLocaleString(LOCALE);
+  return (v>0?"+":v<0?"\u2212":"")+String(n).replace("-","")+"%";
+}
+const price=n=>n.toLocaleString(LOCALE,{minimumFractionDigits:2,maximumFractionDigits:2});
+
+function rowHTML(r,rank,maxW){
   const tag=classTag(r);
   const barW=Math.max(0,Math.min(100,r.w/maxW*100));
   const tickW=r.wPrev===null?null:Math.max(0,Math.min(100,r.wPrev/maxW*100));
-  let act,cls;
-  if(r.isNew){ act=r.back?tx("evBack"):tx("evNew"); cls="up"; }
-  else if(r.flat){ act=tx("same"); cls="flat"; }
-  else{ act=(r.dsh>0?"+":"")+(r.dsh*100).toFixed(1)+"%"; cls=r.dsh>0?"up":"down"; }
-  const yrs=tx("yr",Math.round(r.years*10)/10);
+
+  /* 주식수 변화는 행동이므로 중립색이다. 색은 수익률에만 쓴다(디자인 재료표 13). */
+  let act;
+  if(r.isNew) act=r.back?tx("evBack"):tx("evNew");
+  else if(r.flat) act=tx("same");
+  else act=`${r.dsh>0?tx("kAdd"):tx("kTrim")} ${retPct(r.dsh)}`;
+
+  /* 매수가 → 기준일 가격. 못 쓰는 경우가 둘 있고, 둘 다 말로 밝힌다. */
+  let cost;
+  if(r.preData) cost=`<span class="cost">${tx("sinceBefore",FIRSTY)}</span>`;
+  else if(r.freshIn||!r.avgCost) cost=`<span class="cost">${tx("justIn")}</span>`;
+  else{
+    const g=r.nowPrice/r.avgCost-1;
+    cost=`<span class="cost">${price(r.avgCost)}<em>\u2192</em>${price(r.nowPrice)}</span>`
+        +`<span class="ret ${g>=0?"up":"down"}">${retPct(g)}</span>`;
+  }
   return `<li class="row">
     <span class="bar" style="width:${barW.toFixed(2)}%"></span>
     ${tickW===null?"":`<span class="tick" style="left:${tickW.toFixed(2)}%"></span>`}
     <div class="rowin">
       <span class="rk">${rank}</span>
+      ${markHTML(r)}
       <span class="nm">${title(r.name)}${tag?`<span class="cls">${tag}</span>`:""}</span>
-      <span class="w">${pct(r.w)}</span>
+      <span class="val">${money(r.value)}</span>
       <span class="sub2">
-        <span title="${tx("rulerLabel",yrs,fdate(r.start))}">${ruler(r.years,maxYears,rulerW)}</span>
-        <span class="yrs">${yrs}</span>
-        <span class="act ${cls}">${act}</span>
-        <span class="val">${money(r.value)}</span>
+        ${cost}
+        <span class="act">${act}</span>
+        <span class="w">${pct(r.w)}</span>
       </span>
     </div>
   </li>`;
@@ -535,6 +751,7 @@ function render(){
   el("qhead").textContent=tx("quarterHead");
   if(!RAW){ el("stamp").textContent=LOADED?tx("noData"):""; return; }
 
+  FIRSTY=String(RAW.quarters[0].period).slice(0,4);
   const B=build(), T=tallyOf(B);
   el("stamp").innerHTML=`${tx("asOf",fdate(B.cur.period))}<br>${tx("filedOn",fdate(B.cur.filed))}`;
 
@@ -561,20 +778,16 @@ function render(){
 
   /* 목록 */
   el("bookhead").textContent=`${tx("positions",B.list.length)} · ${money(B.tc)}`;
+  el("bookcap").textContent=tx("costArrow",fdate(B.cur.period));
+  /* 상위 10종목만 보여 준다(사용자 판단). 아래 16줄은 다 합쳐 9% 라 이야기가 없다.
+     다만 **전체 종목 수와 총액은 제목에 그대로 둔다** — 10개가 전부인 것처럼
+     보이면 화면이 거짓말을 한다. 접힌 쪽에 있던 신규·전량매도 같은 사건은
+     크기와 무관하게 위 '이번 분기' 칸에 이미 나와 있다. */
   const maxW=B.list[0]?B.list[0].w:1;
-  const maxYears=Math.max(...B.list.map(r=>r.years),1);
-  const rulerW=(window.innerWidth||900)<640?92:132;
   const top=B.list.slice(0,10), rest=B.list.slice(10);
-  el("top").innerHTML=top.map((r,i)=>rowHTML(r,i+1,maxW,rulerW,maxYears)).join("");
-  el("rest").innerHTML=rest.map((r,i)=>rowHTML(r,i+11,maxW,rulerW,maxYears)).join("");
-  if(rest.length){
-    const share=rest.reduce((s,r)=>s+r.value,0)/B.tc*100;
-    const a=rest.filter(r=>!r.isNew&&!r.flat&&r.dsh>0).length;
-    const t=rest.filter(r=>!r.isNew&&!r.flat&&r.dsh<0).length;
-    el("foldttl").textContent=tx("foldOpen",rest.length);
-    el("foldwhy").textContent=tx("foldNote",pct(share),a,t);
-    el("fold").hidden=false;
-  } else el("fold").hidden=true;
+  el("top").innerHTML=top.map((r,i)=>rowHTML(r,i+1,maxW)).join("");
+  const shown=top.reduce((s,r)=>s+r.value,0)/B.tc*100;
+  el("bookcut").textContent=rest.length?tx("topOnly",top.length,pct(shown)):"";
   el("book").hidden=false;
 }
 
@@ -614,14 +827,23 @@ document.getElementById("langtabs").addEventListener("click",e=>{
   try{ if(window.track) track("lang",{lang:LANG}); }catch(err){}
 });
 
-/* 창 폭이 바뀌면 자의 길이만 다시 잡는다 */
-let rz; addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if(RAW) render(); },180); });
-
-fetch("../data/titans/berkshire.json",{cache:"no-store"})
+/* 티커 표는 있으면 좋고 없어도 그만입니다 — 못 받으면 그 줄만 글자 타일이 됩니다.
+   그래서 따로 받고, 실패를 화면에 알리지 않습니다. */
+fetch("../data/titans/tickers.json",{cache:"no-store"})
   .then(r=>r.ok?r.json():null)
-  .then(j=>{ RAW=(j&&Array.isArray(j.quarters)&&j.quarters.length)?j:null; })
-  .catch(()=>{ RAW=null; })
-  .finally(()=>{ LOADED=true; applyLang(pickLang(),false); });
+  .then(j=>{
+    if(j&&typeof j==="object")
+      /* `_` 로 시작하는 키는 사람이 보라고 넣어 둔 것입니다(마지막으로 물어본 날). */
+      for(const k in j) if(k[0]!=="_"&&j[k]) TICKERS[k]=j[k];
+  })
+  .catch(()=>{})
+  .finally(()=>{
+    fetch("../data/titans/berkshire.json",{cache:"no-store"})
+      .then(r=>r.ok?r.json():null)
+      .then(j=>{ RAW=(j&&Array.isArray(j.quarters)&&j.quarters.length)?j:null; })
+      .catch(()=>{ RAW=null; })
+      .finally(()=>{ LOADED=true; applyLang(pickLang(),false); });
+  });
 
 applyLang(pickLang(),false);
 setTimeout(()=>document.body.classList.add("settled"),1600);
