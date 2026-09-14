@@ -6,7 +6,7 @@
 > conversation with the owner is Korean.** Owner is a non-developer: no terminal,
 > no git. See `/CLAUDE.md` §0.
 
-STATUS as of 2026-09-14: **probe ran once, successfully. SEC is reachable from a runner.**
+STATUS as of 2026-09-14: **two probe runs done. The 13F shape is now known, not guessed.**
 `SEC_CONTACT` is set; run #1 (2026-09-14, 12s) came back **200 on every request**.
 What it found is in §5-2 — read that before anything else. Nothing is parsed yet,
 no schema exists, no page exists. Everything below §4 is decided, not speculative.
@@ -213,6 +213,113 @@ HTML files are counted only — they are EDGAR's rendering, not data.
 That change is not yet run. **Next action is one more `Run workflow` click**, then
 read the log and design the schema from what is printed.
 
+### 5-3. Run #2 — the actual 13F shape (2026-09-14, read off the log)
+
+`56757.xml`, root `<informationTable>`, namespace
+`http://www.sec.gov/edgar/document/thirteenf/informationtable`. **89 `<infoTable>`
+records.** One record:
+
+```xml
+<infoTable>
+  <nameOfIssuer>ALLY FINL INC</nameOfIssuer>
+  <titleOfClass>COM</titleOfClass>
+  <cusip>02005N100</cusip>
+  <value>577211815</value>
+  <shrsOrPrnAmt><sshPrnamt>12561737</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt>
+  <investmentDiscretion>DFND</investmentDiscretion>
+  <otherManager>4</otherManager>
+  <votingAuthority><Sole>12561737</Sole><Shared>0</Shared><None>0</None></votingAuthority>
+</infoTable>
+```
+
+Census is exact: every one of `nameOfIssuer, titleOfClass, cusip, value,
+shrsOrPrnAmt, sshPrnamt, sshPrnamtType, investmentDiscretion, otherManager,
+votingAuthority, Sole, Shared, None` appears **89×**. So every field is present on
+every row, and **`putCall` does not appear at all** — Berkshire held no options
+this quarter. It exists in the schema; a parser must tolerate its absence AND
+its presence.
+
+`primary_doc.xml` (cover page) gives the metadata worth keeping:
+
+```
+periodOfReport / reportCalendarOrQuarter   06-30-2026
+isAmendment                                false
+filingManager.name                         Berkshire Hathaway Inc
+signatureDate                              08-14-2026
+otherIncludedManagersCount                 14
+tableEntryTotal                            89
+tableValueTotal                            299253556246
+isConfidentialOmitted                      false
+otherManagers2Info                         14 × {sequenceNumber, form13FFileNumber, name}
+```
+
+#### THE finding: 89 rows ≠ 89 positions
+
+The first three records are **all ALLY FINL INC, all CUSIP `02005N100`**, differing
+only in `otherManager` (`4` / `2,4,11` / `4,5`) and amount. Berkshire files on behalf
+of itself plus 14 subsidiaries (GEICO, General Re, National Indemnity, … and
+`Buffett Warren E` is sequence 4), and **each subsidiary combination gets its own
+row.**
+
+```
+577,211,815 + 128,838,056 + 194,285,790  =   900,335,661   ← real Ally position
+ 12,561,737 +   2,803,875 +   4,228,200  =    19,593,812   shares
+```
+
+**Any screen built off raw rows shows Ally three times.** Group by `cusip` and sum
+`value` and `sshPrnamt`. `tableEntryTotal` counts rows, so it is not a position
+count and must never be shown as one. `otherManager` is a comma-separated list of
+`sequenceNumber`s pointing into `primary_doc.xml`'s `otherManagers2Info` — useful
+if we ever want "which subsidiary held it", useless otherwise.
+
+#### Units: dollars, verified by arithmetic
+
+All three Ally rows give `value / sshPrnamt` = **exactly 45.95**. That is a share
+price, so `value` is in **dollars**, not thousands. `tableValueTotal`
+299,253,556,246 = $299.25B agrees.
+
+**Do not assume this held historically.** SEC changed the units at some point; a
+filing reported in thousands would render old quarters 1000× too big. Do not
+hardcode a cutover date from memory — run #3 fetches the oldest filing in
+`filings.recent` so the two ends can be compared directly. Better still, the
+fetcher should **self-check**: `value / sshPrnamt` must land in a plausible
+share-price range, else the filing is in thousands.
+
+#### Other notes
+
+- `.txt` (the complete submission) contains both documents wrapped in SGML, so one
+  fetch could replace two. Not worth it — `index.json` + the XML is cleaner and the
+  census proved the `.txt` carries `otherManager×103` (89 rows + 14 cover entries),
+  which is exactly the kind of double-count that causes bugs.
+- `<ccc>` in the cover page is masked `XXXXXXXX` by EDGAR. Nothing sensitive.
+- `schemaVersion` X0202. Worth storing — old filings will differ.
+
+### 5-4. Run #3 (queued, one click) answers what is left
+
+The probe now also prints **every 13F-HR in `filings.recent`** (filing date, report
+date, accession, size) plus the count of older `filings.files` chunks, and then
+fetches **the oldest one in recent** so its units and field set can be compared
+against the newest. `--no-old` turns that off.
+
+Open questions it closes: how many quarters are reachable without paging into
+`filings.files`, and whether the schema/units shifted.
+
+### 5-5. Known unsolved: CUSIP → ticker
+
+13F gives **CUSIP only**. Yahoo needs tickers. SEC's `company_tickers.json` is keyed
+by CIK, not CUSIP, and 13F does not carry the issuer's CIK. Options, none free of
+cost:
+
+```
+hand-built table      ~50 names for Berkshire. Verifiable, and the annual-report
+                      reconciliation (§4) checks it. Does not scale to 8 investors.
+OpenFIGI API          free, maps CUSIP→ticker, rate-limited without a key.
+```
+
+**Start with the hand-built table** — Berkshire only, checked against the annual
+report. Revisit before investor #2. Do not let this block the fetcher: store `cusip`
+as the key in the JSON and treat `ticker` as an annotation that can arrive later.
+
 ---
 
 ## 6. ANSWERED — owner picked the address; secret still not set
@@ -346,12 +453,13 @@ Burry's page needs the staleness line more prominently (§3).
 1. DONE  SEC_CONTACT secret set by owner
 2. DONE  probe built
 3. DONE  run #1 — SEC reachable, shape summary in §5-2
-4. Owner clicks Run workflow once more (probe now prints content to the log)
-5. Read the log, THEN design the JSON schema
-6. Build the fetch script + quarterly workflow
-7. Reconcile against Berkshire's annual report. Do not proceed until it matches.
-8. Build the page at /titans/ against /docs/design-system.md
-9. Only then, investor #2
+4. DONE  run #2 — full 13F shape read off the log (§5-3)
+5. Owner clicks Run workflow once more → run #3 (§5-4: filing list + oldest filing)
+6. THEN design the JSON schema — group by CUSIP, self-check the units
+7. Build the fetch script + quarterly workflow
+8. Reconcile against Berkshire's annual report. Do not proceed until it matches.
+9. Build the page at /titans/ against /docs/design-system.md
+10. Only then, investor #2
 ```
 
 Steps needing a click are the owner's — assistants here cannot run Actions. Say
