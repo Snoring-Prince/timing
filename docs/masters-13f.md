@@ -228,6 +228,25 @@ directly (CORS).
 
 ---
 
+## 7-2. URL: this page lives at `/titans/`, not at the site root
+
+Owner decided 2026-09-14. One repo, one Pages site, three screens under one domain:
+
+```
+itpaidoff.com/            hub (not built yet — do NOT build it yet, see /CLAUDE.md §2)
+itpaidoff.com/timing/     the existing dashboard (not moved yet)
+itpaidoff.com/titans/     THIS project            ← build here from the start
+itpaidoff.com/samuel/     DCA curves (rough idea)
+```
+
+**`titans`, not `masters`** — owner's word, chosen to avoid colliding with other sites
+(and the golf tournament). **Lowercase**: paths are case-sensitive on Pages.
+
+Building here costs nothing in SEO because the root is untouched. Do not move the
+dashboard or create the hub as part of this project — the root page is currently the
+only substantial content Google has, and it is still unindexed. Full reasoning in
+`/CLAUDE.md` §2 "앞으로의 주소 구조".
+
 ## 8. Design — non-negotiable
 
 **Read `/docs/design-system.md` before writing any markup or CSS.** That document
@@ -279,7 +298,7 @@ Burry's page needs the staleness line more prominently (§3).
 4. THEN design the JSON schema, from what the artifact actually shows.
 5. Build the fetch script + quarterly workflow.
 6. Reconcile against Berkshire's annual report. Do not proceed until it matches.
-7. Build the page against /docs/design-system.md.
+7. Build the page at /titans/ against /docs/design-system.md.
 8. Only then, investor #2.
 ```
 
