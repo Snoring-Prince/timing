@@ -55,9 +55,9 @@
   "sic": "2082"
  },
  "037833": {
-  "cik": "",
-  "desc": "",
-  "sic": ""
+  "cik": "320193",
+  "desc": "Electronic Computers",
+  "sic": "3571"
  },
  "039483": {
   "cik": "7084",
@@ -210,9 +210,9 @@
   "sic": "5331"
  },
  "23331A": {
-  "cik": "",
-  "desc": "",
-  "sic": ""
+  "cik": "882184",
+  "desc": "Operative Builders",
+  "sic": "1531"
  },
  "23918K": {
   "cik": "927066",
@@ -290,9 +290,9 @@
   "sic": ""
  },
  "278058": {
-  "cik": "",
-  "desc": "",
-  "sic": ""
+  "cik": "1551182",
+  "desc": "Misc Industrial & Commercial Machinery & Equipment",
+  "sic": "3590"
  },
  "281020": {
   "cik": "827052",
@@ -1075,14 +1075,14 @@
   "sic": "4841"
  },
  "G6683N": {
-  "cik": "",
-  "desc": "",
-  "sic": ""
+  "cik": "1691493",
+  "desc": "Finance Services",
+  "sic": "6199"
  },
  "G6693N": {
-  "cik": "",
-  "desc": "",
-  "sic": ""
+  "cik": "1691493",
+  "desc": "Finance Services",
+  "sic": "6199"
  },
  "G7709Q": {
   "cik": "1802768",
@@ -1105,5 +1105,5 @@
   "sic": "6331"
  },
  "_asked": "2026-09-15",
- "_sources": "sec-sic"
+ "_sources": "sec-sic2"
 }
