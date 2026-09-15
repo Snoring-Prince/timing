@@ -95,6 +95,8 @@ en:{
   costArrow:d=>`return = estimated average cost \u2192 price on ${d} · before dividends`,
   sinceBefore:y=>`held since before ${y}`,
   justIn:"entered this quarter",
+  /* 가운데 칸은 좁다. 긴 설명은 각주가 하고, 여기는 왜 숫자가 없는지만 짧게. */
+  noRetOld:y=>`pre-${y}`, noRetNew:"just in",
   yr:n=>n<1?`${Math.round(n*12)} mo`:(n%1?`${n.toFixed(1)} yr`:`${n} yr`),
   colShare:"Share of portfolio", colShares:"Shares", colValue:"Value",
   same:"unchanged",
@@ -140,6 +142,8 @@ ko:{
   costArrow:d=>`수익률 = 추정 매수 평균가 \u2192 ${d} 가격 · 배당 제외`,
   sinceBefore:y=>`${y}년 이전부터 보유`,
   justIn:"이번 분기 진입",
+  /* 가운데 칸은 좁다. 긴 설명은 각주가 하고, 여기는 왜 숫자가 없는지만 짧게. */
+  noRetOld:y=>`${y}년 이전`, noRetNew:"이번 분기",
   yr:n=>n<1?`${Math.round(n*12)}개월`:(n%1?`${n.toFixed(1)}년`:`${n}년`),
   colShare:"비중", colShares:"주식수", colValue:"금액",
   same:"그대로",
@@ -289,9 +293,22 @@ details.fold .rows{margin-top:4px}
    (Kraft Heinz 의 '헤' 자리에 세로줄이 그어져 있었다). 그래서 줄 바닥에만
    짧게 찍는다 — 보유 연차 자와 같은 눈금 어휘라 새 기호를 배울 것이 없다. */
 .tick{position:absolute;bottom:0;height:11px;width:0;border-left:1.2px solid var(--ink-3);opacity:.85;z-index:1}
-.rowin{position:relative;z-index:2;display:grid;grid-template-columns:22px 30px 1fr auto;
-  column-gap:10px;align-items:baseline}
-.rk{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-align:right}
+/* 한 줄은 **세 덩어리**입니다 (2026-09-15, 사용자가 그려 준 구조).
+
+     {왼쪽}  로고 · 순위 · 이름 · 섹터
+     {가운데} 보유 주식 수 · 이번 분기 ±주식수 · 추정 수익률
+     {오른쪽} 보유 금액, 줄 바꿔 작은 글씨로 비중
+
+   **칸마다 최소 폭을 줍니다.** 줄(`<li>`)마다 격자가 따로라서, 폭을 안 주면
+   칸이 줄마다 제 내용만큼 넓어져 세로줄이 안 맞습니다. 이 화면의 언어가
+   계측기·측량 도면이라 거기서 다 무너집니다. 값은 실측으로 정했습니다. */
+.rowin{position:relative;z-index:2;display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;column-gap:18px;align-items:center}
+
+/* ── 왼쪽: 누구인가 ──────────────────────────────────────── */
+.who{display:flex;align-items:center;gap:9px;min-width:0;flex-wrap:wrap}
+.rk{font-family:var(--mono);font-size:11px;color:var(--ink-3);
+  min-width:16px;text-align:right;flex:0 0 auto}
 .nm{font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:.01em;
   line-height:1.25;min-width:0;overflow-wrap:anywhere}
 /* 회사 마크. **로고와 글자 타일이 똑같은 상자를 쓰는 것이 핵심**이다 —
@@ -299,9 +316,8 @@ details.fold .rows{margin-top:4px}
    17px 로 만들었다가 키웠다: 그 크기에서는 심벌(사과·G)만 읽히고 글자 로고
    (무디스·처브·크래프트하인즈)는 뭉개진다. 30px 부터 글자 로고가 살아난다.
    둥근 모서리는 없다(재료표 5번 — 이 화면에 동그라미는 ⓘ 와 표시등뿐). */
-.mk{grid-row:1/span 2;align-self:center;width:30px;height:30px;
-  display:flex;align-items:center;justify-content:center;overflow:hidden;
-  background:var(--card);border:1px solid var(--rule-2);flex:0 0 auto}
+.mk{width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;background:var(--card);border:1px solid var(--rule-2);flex:0 0 auto}
 .mk svg{width:19px;height:19px;display:block}
 .mk.img img{width:100%;height:100%;object-fit:contain;display:block}
 .mk.mono{background:var(--ink-2);border-color:var(--ink-2);color:#fff;
@@ -313,43 +329,29 @@ details.fold .rows{margin-top:4px}
    한 줄에 똑같이 생긴 상자가 둘이면 무엇이 무엇인지 흐려집니다. 섹터는
    이름에 딸린 설명이라 글자만 작고 흐리게 둡니다. */
 .sec{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.06em;
-  color:var(--ink-3);margin-left:7px;white-space:nowrap;vertical-align:1px}
-/* 주인공은 금액이다. 비중은 막대가 이미 그림으로 말하고 있으므로 작게 적는다. */
-.val{font-family:var(--mono);font-weight:500;font-size:20px;letter-spacing:-.02em;
-  line-height:1.1;text-align:right;white-space:nowrap}
-/* 둘째 줄 — 왼쪽은 **자리**(보유 주식 수·비중·이번 분기 행동),
-   오른쪽은 **돈**(수익률). 위 줄의 금액과 같은 오른쪽 끝에 서므로
-   금액과 수익률이 한 자(尺)로 읽힙니다.
+  color:var(--ink-3);white-space:nowrap;flex:0 0 auto}
 
-   **매수가 → 기준일 가격 화살표는 뺐습니다** (2026-09-15, 사용자 요청).
-   `39.59→289.36 +631%` 에서 사람이 실제로 읽는 것은 맨 뒤 하나였고,
-   앞의 두 숫자는 그 값을 어떻게 얻었는지의 설명이라 각주로 내려갔습니다. */
-.sub2{grid-column:3/5;display:flex;align-items:baseline;gap:10px;margin-top:5px;flex-wrap:wrap}
-/* 보유 주식 수. 금액은 위 줄이 이미 크게 말하고 있으므로 여기서는 **몇 주를
-   들고 있고 그것이 포트폴리오의 몇 %인가**만 적습니다.
-
-   **세 칸에 최소 폭을 줍니다.** 이 화면의 디자인 언어가 계측기·측량 도면이라
-   (재료표), 줄마다 `2.28억주` 와 `8,438만주` 처럼 글자 수가 달라 비중과
-   행동의 시작점이 들쭉날쭉하면 자로 잰 느낌이 사라집니다. 최소 폭을 주면
-   비중 괄호와 `그대로/늘림/줄임` 이 줄마다 같은 자리에 섭니다.
-   값은 실측입니다 — 한국어 주식수 최대 65px, 영어 107px, 비중 최대 46px. */
-.hold{font-family:var(--mono);font-size:12px;color:var(--ink-2);white-space:nowrap;
-  font-variant-numeric:tabular-nums;min-width:70px}
-html:not([lang="ko"]) .hold{min-width:112px}
-/* 비중은 한 단 뒤로 물립니다 — 주식수에 딸린 값이라 같은 무게로 읽히면
-   무엇이 주인공인지 흐려집니다. 오른쪽 맞춤이라 소수점이 줄을 섭니다. */
-.wt{font-family:var(--mono);font-size:12px;color:var(--ink-3);white-space:nowrap;
-  font-variant-numeric:tabular-nums;min-width:50px;text-align:right}
-/* 색은 수익률에만 쓴다. 주식수 변화는 이득이 아니라 행동이라 중립색이고,
-   '늘림/줄임'이라는 말이 방향을 말한다 — 색을 하나 더 늘리지 않는다. */
-.act{font-family:var(--mono);font-size:12px;color:var(--ink-3);white-space:nowrap}
-/* 수익률과 '못 쓰는 자리' 안내는 같은 칸을 씁니다 — 셋 중 하나만 나옵니다.
-   `min-width` 는 자릿수가 다른 값끼리도 오른쪽이 맞게 하는 자입니다. */
-.ret,.note{margin-left:auto;font-family:var(--mono);font-size:12px;
-  white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
-.ret{font-weight:500;min-width:62px}
+/* ── 가운데: 얼마나 들고, 이번에 얼마나 움직였고, 얼마가 됐나 ─────
+   셋 다 가운데 맞춤입니다. 색은 수익률에만 씁니다 — 사고판 것은 이득이
+   아니라 행동이라 중립색입니다(재료표 13). */
+.mid{display:flex;align-items:baseline;gap:12px;justify-content:center}
+.mid>span{font-family:var(--mono);font-size:12px;white-space:nowrap;
+  font-variant-numeric:tabular-nums;text-align:center}
+.hold{color:var(--ink-2);min-width:74px}
+.act{color:var(--ink-3);min-width:86px}
+.ret{font-weight:500;min-width:70px}
 .ret.up{color:var(--up)} .ret.down{color:var(--down)}
-.note{color:var(--ink-3)}
+.note{color:var(--ink-3);min-width:70px}
+html:not([lang="ko"]) .hold{min-width:118px}
+html:not([lang="ko"]) .act{min-width:124px}
+
+/* ── 오른쪽: 금액이 주인공, 비중은 그 밑에 작게 ──────────────────
+   비중은 막대가 이미 그림으로 말하고 있으므로 숫자는 작게 적습니다. */
+.amt{display:flex;flex-direction:column;align-items:flex-end;gap:1px;min-width:78px}
+.val{font-family:var(--mono);font-weight:500;font-size:20px;letter-spacing:-.02em;
+  line-height:1.15;white-space:nowrap}
+.wt{font-family:var(--mono);font-size:11px;color:var(--ink-3);white-space:nowrap;
+  font-variant-numeric:tabular-nums;line-height:1}
 
 /* ── 범례·각주 ───────────────────────────────────────────── */
 .legend{display:flex;align-items:center;gap:8px;margin:14px 0 0;
@@ -379,12 +381,16 @@ body.settled .fade{animation:none}
   .panel h2{font-size:16px}
   .says{font-size:15px}
   .nm{font-size:14px}
+  /* 좁은 화면에서는 세 덩어리가 한 줄에 못 들어갑니다. **왼쪽은 그대로 두고
+     가운데·오른쪽만 아래로 내립니다** — 로고와 이름이 먼저 읽히는 순서는
+     지키면서, 숫자 세 칸이 제 너비를 갖습니다. 최소 폭도 풉니다. */
+  .rowin{grid-template-columns:minmax(0,1fr) auto;column-gap:10px;row-gap:7px}
+  .who{grid-column:1/3}
+  .mid{grid-column:1;justify-content:flex-start;gap:10px}
+  .amt{grid-column:2}
+  .mid>span,html:not([lang="ko"]) .hold,html:not([lang="ko"]) .act{min-width:0;text-align:left}
+  .amt{min-width:0}
   .val{font-size:18px}
-  .rowin{grid-template-columns:18px 26px 1fr auto;column-gap:8px}
-  /* 좁은 화면에서는 자를 맞추는 최소 폭을 풉니다 — 자리를 지키려다 오히려
-     조각이 줄줄이 접혀서, 줄을 맞추는 이득보다 잃는 것이 큽니다. */
-  .hold,html:not([lang="ko"]) .hold,.wt{min-width:0}
-  .sub2{gap:8px}
   .mk{width:26px;height:26px}
   .mk svg{width:16px;height:16px}
   .mk.mono{font-size:10.5px}
@@ -564,6 +570,9 @@ function build(){
       freshIn:st.qtrs<=1,
       /* 이번 분기에 사고판 몫을 분기말 가격으로 환산한다. 비중 변화는 가격이
          섞여 있어 행동을 말해 주지 않는다 — 주식수 차이만 쓴다. */
+      /* 가운데 칸에 '몇 주 늘었나'를 적으려면 비율이 아니라 **주식수 차이**가
+         필요하다. 비율(dsh)은 판정에, 이 값(dn)은 화면 표기에 쓴다. */
+      dn:p?(a.shares-p.shares):null,
       netUSD:(p?(a.shares-p.shares):a.shares)*(a.shares>0?a.value/a.shares:0)
     };
   }).sort((x,y)=>y.value-x.value);
@@ -830,42 +839,48 @@ function retPct(r){
 }
 
 function rowHTML(r,rank,maxW){
-  const tag=classTag(r);
+  const tag=classTag(r), sec=sectorOf(r);
   const barW=Math.max(0,Math.min(100,r.w/maxW*100));
   const tickW=r.wPrev===null?null:Math.max(0,Math.min(100,r.wPrev/maxW*100));
 
-  /* 주식수 변화는 행동이므로 중립색이다. 색은 수익률에만 쓴다(디자인 재료표 13). */
+  /* 가운데 둘째 칸 — 이번 분기에 **몇 주** 늘고 줄었나.
+     비율이 아니라 주식수로 적습니다(사용자 요청). 판정 자체는 예전처럼
+     주식수 차이로 하므로 말과 셈이 어긋나지 않습니다.
+     **색은 쓰지 않습니다** — 사고판 것은 이득이 아니라 행동입니다(재료표 13). */
   let act;
   if(r.isNew) act=r.back?tx("evBack"):tx("evNew");
-  else if(r.flat) act=tx("same");
-  else act=`${r.dsh>0?tx("kAdd"):tx("kTrim")} ${retPct(r.dsh)}`;
+  else if(r.flat||!r.dn) act=tx("same");
+  else act=(r.dn>0?"+":"\u2212")+shortShares(Math.abs(r.dn));
 
-  /* 오른쪽 칸: 추정 수익률. 못 쓰는 자리가 둘 있고, 둘 다 말로 밝힌다 —
-     숫자를 지어내는 대신 왜 없는지를 적는다. */
+  /* 가운데 셋째 칸 — 추정 수익률. 못 쓰는 자리가 둘 있고, 둘 다 말로 밝힙니다.
+     칸이 좁으므로 여기서는 짧게 적고 긴 설명은 각주가 합니다. */
   let gain;
-  if(r.preData) gain=`<span class="note">${tx("sinceBefore",FIRSTY)}</span>`;
-  else if(r.freshIn||!r.avgCost) gain=`<span class="note">${tx("justIn")}</span>`;
+  if(r.preData) gain=`<span class="note">${tx("noRetOld",FIRSTY)}</span>`;
+  else if(r.freshIn||!r.avgCost) gain=`<span class="note">${tx("noRetNew")}</span>`;
   else{
     const g=r.nowPrice/r.avgCost-1;
     gain=`<span class="ret ${g>=0?"up":"down"}">${retPct(g)}</span>`;
   }
-  /* 왼쪽 칸: 몇 주를 들고 있고 그것이 전체의 몇 %인가. */
-  const hold=`<span class="hold">${shortShares(r.shares)}</span>`
-            +`<span class="wt">(${pct(r.w)})</span>`;
-  const sec=sectorOf(r);
+
   return `<li class="row">
     <span class="bar" style="width:${barW.toFixed(2)}%"></span>
     ${tickW===null?"":`<span class="tick" style="left:${tickW.toFixed(2)}%"></span>`}
     <div class="rowin">
-      <span class="rk">${rank}</span>
-      ${markHTML(r)}
-      <span class="nm">${title(r.name)}${tag?`<span class="cls">${tag}</span>`:""}${sec?`<span class="sec">${sec}</span>`:""}</span>
-      <span class="val">${money(r.value)}</span>
-      <span class="sub2">
-        ${hold}
+      <div class="who">
+        ${markHTML(r)}
+        <span class="rk">${rank}</span>
+        <span class="nm">${title(r.name)}${tag?`<span class="cls">${tag}</span>`:""}</span>
+        ${sec?`<span class="sec">${sec}</span>`:""}
+      </div>
+      <div class="mid">
+        <span class="hold">${shortShares(r.shares)}</span>
         <span class="act">${act}</span>
         ${gain}
-      </span>
+      </div>
+      <div class="amt">
+        <span class="val">${money(r.value)}</span>
+        <span class="wt">${pct(r.w)}</span>
+      </div>
     </div>
   </li>`;
 }
