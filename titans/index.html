@@ -92,7 +92,7 @@ en:{
   untouched:(a,b)=>`${a} of the ${b} positions did not move by a single share.`,
   evNew:"New", evBack:"Back in", evOut:"Sold out",
   heldFor:"held",
-  costArrow:d=>`estimated average cost \u2192 price on ${d} · before dividends`,
+  costArrow:d=>`return = estimated average cost \u2192 price on ${d} · before dividends`,
   sinceBefore:y=>`held since before ${y}`,
   justIn:"entered this quarter",
   yr:n=>n<1?`${Math.round(n*12)} mo`:(n%1?`${n.toFixed(1)} yr`:`${n} yr`),
@@ -137,7 +137,7 @@ ko:{
   untouched:(a,b)=>`${b} 중 ${a}은 한 주도 움직이지 않았습니다.`,
   evNew:"신규", evBack:"재진입", evOut:"전량매도",
   heldFor:"보유",
-  costArrow:d=>`추정 매수 평균가 \u2192 ${d} 가격 · 배당 제외`,
+  costArrow:d=>`수익률 = 추정 매수 평균가 \u2192 ${d} 가격 · 배당 제외`,
   sinceBefore:y=>`${y}년 이전부터 보유`,
   justIn:"이번 분기 진입",
   yr:n=>n<1?`${Math.round(n*12)}개월`:(n%1?`${n.toFixed(1)}년`:`${n}년`),
@@ -317,17 +317,39 @@ details.fold .rows{margin-top:4px}
 /* 주인공은 금액이다. 비중은 막대가 이미 그림으로 말하고 있으므로 작게 적는다. */
 .val{font-family:var(--mono);font-weight:500;font-size:20px;letter-spacing:-.02em;
   line-height:1.1;text-align:right;white-space:nowrap}
-/* 둘째 줄 — 추정 매수가 → 기준일 가격 / 수익률 / 주식수 변화 / 비중 */
+/* 둘째 줄 — 왼쪽은 **자리**(보유 주식 수·비중·이번 분기 행동),
+   오른쪽은 **돈**(수익률). 위 줄의 금액과 같은 오른쪽 끝에 서므로
+   금액과 수익률이 한 자(尺)로 읽힙니다.
+
+   **매수가 → 기준일 가격 화살표는 뺐습니다** (2026-09-15, 사용자 요청).
+   `39.59→289.36 +631%` 에서 사람이 실제로 읽는 것은 맨 뒤 하나였고,
+   앞의 두 숫자는 그 값을 어떻게 얻었는지의 설명이라 각주로 내려갔습니다. */
 .sub2{grid-column:3/5;display:flex;align-items:baseline;gap:10px;margin-top:5px;flex-wrap:wrap}
-.cost{font-family:var(--mono);font-size:12px;color:var(--ink-2);white-space:nowrap}
-.cost em{font-style:normal;color:var(--ink-3);padding:0 2px}
+/* 보유 주식 수. 금액은 위 줄이 이미 크게 말하고 있으므로 여기서는 **몇 주를
+   들고 있고 그것이 포트폴리오의 몇 %인가**만 적습니다.
+
+   **세 칸에 최소 폭을 줍니다.** 이 화면의 디자인 언어가 계측기·측량 도면이라
+   (재료표), 줄마다 `2.28억주` 와 `8,438만주` 처럼 글자 수가 달라 비중과
+   행동의 시작점이 들쭉날쭉하면 자로 잰 느낌이 사라집니다. 최소 폭을 주면
+   비중 괄호와 `그대로/늘림/줄임` 이 줄마다 같은 자리에 섭니다.
+   값은 실측입니다 — 한국어 주식수 최대 65px, 영어 107px, 비중 최대 46px. */
+.hold{font-family:var(--mono);font-size:12px;color:var(--ink-2);white-space:nowrap;
+  font-variant-numeric:tabular-nums;min-width:70px}
+html:not([lang="ko"]) .hold{min-width:112px}
+/* 비중은 한 단 뒤로 물립니다 — 주식수에 딸린 값이라 같은 무게로 읽히면
+   무엇이 주인공인지 흐려집니다. 오른쪽 맞춤이라 소수점이 줄을 섭니다. */
+.wt{font-family:var(--mono);font-size:12px;color:var(--ink-3);white-space:nowrap;
+  font-variant-numeric:tabular-nums;min-width:50px;text-align:right}
 /* 색은 수익률에만 쓴다. 주식수 변화는 이득이 아니라 행동이라 중립색이고,
    '늘림/줄임'이라는 말이 방향을 말한다 — 색을 하나 더 늘리지 않는다. */
-.ret{font-family:var(--mono);font-weight:500;font-size:12px;white-space:nowrap}
+.act{font-family:var(--mono);font-size:12px;color:var(--ink-3);white-space:nowrap}
+/* 수익률과 '못 쓰는 자리' 안내는 같은 칸을 씁니다 — 셋 중 하나만 나옵니다.
+   `min-width` 는 자릿수가 다른 값끼리도 오른쪽이 맞게 하는 자입니다. */
+.ret,.note{margin-left:auto;font-family:var(--mono);font-size:12px;
+  white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.ret{font-weight:500;min-width:62px}
 .ret.up{color:var(--up)} .ret.down{color:var(--down)}
-.act{font-family:var(--mono);font-size:12px;color:var(--ink-3);white-space:nowrap;margin-left:auto}
-.w{font-family:var(--mono);font-size:12px;color:var(--ink-2);white-space:nowrap;
-  min-width:46px;text-align:right}
+.note{color:var(--ink-3)}
 
 /* ── 범례·각주 ───────────────────────────────────────────── */
 .legend{display:flex;align-items:center;gap:8px;margin:14px 0 0;
@@ -359,6 +381,10 @@ body.settled .fade{animation:none}
   .nm{font-size:14px}
   .val{font-size:18px}
   .rowin{grid-template-columns:18px 26px 1fr auto;column-gap:8px}
+  /* 좁은 화면에서는 자를 맞추는 최소 폭을 풉니다 — 자리를 지키려다 오히려
+     조각이 줄줄이 접혀서, 줄을 맞추는 이득보다 잃는 것이 큽니다. */
+  .hold,html:not([lang="ko"]) .hold,.wt{min-width:0}
+  .sub2{gap:8px}
   .mk{width:26px;height:26px}
   .mk svg{width:16px;height:16px}
   .mk.mono{font-size:10.5px}
@@ -471,8 +497,8 @@ function shortShares(n){
     if(n>=1e4) return `${Math.round(n/1e4).toLocaleString(LOCALE)}만주`;
     return `${num(n)}주`;
   }
-  if(n>=1e9) return `${(n/1e9).toFixed(2)}bn shares`;
-  if(n>=1e6) return `${(n/1e6).toFixed(1)}m shares`;
+  if(n>=1e9) return `${(n/1e9).toFixed(2)}B shares`;
+  if(n>=1e6) return `${(n/1e6).toFixed(1)}M shares`;
   return `${num(n)} shares`;
 }
 function fdate(iso){
@@ -802,7 +828,6 @@ function retPct(r){
   const n=a<100?v.toFixed(1):Math.round(v).toLocaleString(LOCALE);
   return (v>0?"+":v<0?"\u2212":"")+String(n).replace("-","")+"%";
 }
-const price=n=>n.toLocaleString(LOCALE,{minimumFractionDigits:2,maximumFractionDigits:2});
 
 function rowHTML(r,rank,maxW){
   const tag=classTag(r);
@@ -815,15 +840,18 @@ function rowHTML(r,rank,maxW){
   else if(r.flat) act=tx("same");
   else act=`${r.dsh>0?tx("kAdd"):tx("kTrim")} ${retPct(r.dsh)}`;
 
-  /* 매수가 → 기준일 가격. 못 쓰는 경우가 둘 있고, 둘 다 말로 밝힌다. */
-  let cost;
-  if(r.preData) cost=`<span class="cost">${tx("sinceBefore",FIRSTY)}</span>`;
-  else if(r.freshIn||!r.avgCost) cost=`<span class="cost">${tx("justIn")}</span>`;
+  /* 오른쪽 칸: 추정 수익률. 못 쓰는 자리가 둘 있고, 둘 다 말로 밝힌다 —
+     숫자를 지어내는 대신 왜 없는지를 적는다. */
+  let gain;
+  if(r.preData) gain=`<span class="note">${tx("sinceBefore",FIRSTY)}</span>`;
+  else if(r.freshIn||!r.avgCost) gain=`<span class="note">${tx("justIn")}</span>`;
   else{
     const g=r.nowPrice/r.avgCost-1;
-    cost=`<span class="cost">${price(r.avgCost)}<em>\u2192</em>${price(r.nowPrice)}</span>`
-        +`<span class="ret ${g>=0?"up":"down"}">${retPct(g)}</span>`;
+    gain=`<span class="ret ${g>=0?"up":"down"}">${retPct(g)}</span>`;
   }
+  /* 왼쪽 칸: 몇 주를 들고 있고 그것이 전체의 몇 %인가. */
+  const hold=`<span class="hold">${shortShares(r.shares)}</span>`
+            +`<span class="wt">(${pct(r.w)})</span>`;
   const sec=sectorOf(r);
   return `<li class="row">
     <span class="bar" style="width:${barW.toFixed(2)}%"></span>
@@ -834,9 +862,9 @@ function rowHTML(r,rank,maxW){
       <span class="nm">${title(r.name)}${tag?`<span class="cls">${tag}</span>`:""}${sec?`<span class="sec">${sec}</span>`:""}</span>
       <span class="val">${money(r.value)}</span>
       <span class="sub2">
-        ${cost}
+        ${hold}
         <span class="act">${act}</span>
-        <span class="w">${pct(r.w)}</span>
+        ${gain}
       </span>
     </div>
   </li>`;
