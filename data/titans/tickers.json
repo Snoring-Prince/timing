@@ -9,7 +9,7 @@
  "G5480U120": "LBTYA",
  "G5480U138": "LBTYA",
  "G5480U153": "LBTYA",
- "G6683N103": "",
+ "G6683N103": "NU",
  "G6693N103": "",
  "G7709Q104": "RPRX",
  "G85158106": "STNE",
@@ -17,5 +17,5 @@
  "G9001E128": "LILA",
  "H1467J104": "CB",
  "_asked": "2026-09-15",
- "_sources": "openfigi+sec2"
+ "_sources": "openfigi+sec3"
 }
