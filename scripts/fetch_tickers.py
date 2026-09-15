@@ -55,7 +55,7 @@ RETRY_DAYS = 90     # 못 찾은 것을 다시 물어보기까지
 # **sec → sec2 로 올린 이유**: 첫 실행에서 SEC 표를 gzip 인 채로 json.loads 에
 # 넣어 열다섯 건이 전부 '못 찾음' 으로 굳었습니다. 이름이 안 맞아서가 아니라
 # 표를 읽지도 못한 것이라, 고친 뒤 한 번 다시 물어봐야 합니다.
-SOURCES = "openfigi+sec2"  # 바뀌면 못 찾은 것을 전부 다시 물어봅니다
+SOURCES = "openfigi+sec3"  # 바뀌면 못 찾은 것을 전부 다시 물어봅니다
 
 
 # ── SEC 회사 이름 → 티커 ───────────────────────────────────────────
@@ -90,30 +90,47 @@ def norm(name: str):
     return [x for x in w if x and x not in SUFFIX]
 
 
-def keys(name: str):
-    """좁은 열쇠부터 넓은 열쇠까지. **공시의 이름은 줄여 쓰여 있습니다** —
-    `OCCIDENTAL PETE` 와 `OCCIDENTAL PETROLEUM`, `BANK AMER` 와
-    `BANK OF AMERICA` 가 같은 회사입니다. 그래서 통째 비교 하나로는 안 맞고,
-    앞 글자만 잘라 비교하는 단계를 둡니다.
+# 열쇠는 **층으로 나눠서 같은 층끼리만 맞춥니다.** 층을 섞으면 넓은 열쇠가
+# 좁은 열쇠를 이깁니다 — 첫 판에서 실제로 애플이 그렇게 떨어졌습니다.
+# `APPLE INC` 의 통째 열쇠 `APPLE` 이, `Apple Hospitality REIT` 의 첫낱말
+# 열쇠 `APPLE` 과 같은 칸에 들어가 **두 회사로 갈려서 버려졌습니다.**
+# 층을 나누면 통째 열쇠 칸에는 애플 하나뿐이라 그대로 잡힙니다.
+LEVELS = 6
 
-    넓은 열쇠일수록 엉뚱한 회사가 걸릴 수 있는데, **한 회사로 좁혀질 때만
-    받는 규칙**이 그것을 막습니다 — 여럿이 걸리면 버리고 글자 타일로 갑니다.
+
+def keys(name: str):
+    """층별 열쇠. 자리(첨자)가 곧 층이고, 없는 층은 `None` 입니다.
+
+    **공시의 이름은 줄여 쓰여 있고 낱말 순서도 다릅니다.**
+
+    ```
+    0 통째     APPLE            = Apple Inc.
+    1 순서무시  D HORTON R       = HORTON D R INC  (SEC 은 성을 앞에 적습니다)
+    2 붙여쓰기  SIRIUSXM         = Sirius XM
+    3 앞 4자    BANK AMER        = BANK OF AMERICA
+    4 앞 3자    OCC PET          = OCCIDENTAL PETROLEUM
+    5 첫낱말    CHEVRON
+    ```
+
+    넓은 층일수록 엉뚱한 회사가 걸릴 수 있는데, **한 회사로 좁혀질 때만 받는
+    규칙**이 그것을 막습니다 — 여럿이 걸리면 버리고 글자 타일로 갑니다.
     """
     w = norm(name)
     if not w:
-        return []
-    out = [" ".join(w)]
-    if len(w) > 1:
-        # 띄어쓰기만 다른 경우. 공시는 `SIRIUSXM`, SEC 는 `Sirius XM` 입니다.
-        out.append("".join(w))
-        out.append(f"{w[0][:4]} {w[1][:4]}")
-        out.append(f"{w[0][:3]} {w[1][:3]}")
-    out.append(w[0])
-    seen, uniq = set(), []
-    for k in out:                       # 순서를 지키면서 중복만 뺀다
-        if k not in seen:
-            seen.add(k); uniq.append(k)
-    return uniq
+        return [None] * LEVELS
+    # **한 낱말이어도 1·2층은 비우지 않습니다.** 낱말이 하나면 순서무시도
+    # 붙여쓰기도 그 낱말 자신인데, 비워 두면 공시의 `SIRIUSXM` 이 SEC 의
+    # `Sirius XM`(붙여쓰기 열쇠 SIRIUSXM)과 만날 자리가 없어집니다.
+    # 층을 나누면서 실제로 이 한 건이 떨어졌습니다.
+    two = len(w) > 1
+    return [
+        " ".join(w),                                  # 0 통째
+        " ".join(sorted(w)),                          # 1 순서무시
+        "".join(w),                                   # 2 붙여쓰기
+        f"{w[0][:4]} {w[1][:4]}" if two else None,    # 3 앞 4자
+        f"{w[0][:3]} {w[1][:3]}" if two else None,    # 4 앞 3자
+        w[0],                                         # 5 첫낱말
+    ]
 
 
 def sec_index(contact: str):
@@ -137,7 +154,7 @@ def sec_index(contact: str):
     rows = json.loads(text)
     # 형식을 짐작하지 않습니다 — 사전이든 목록이든 값만 훑습니다.
     items = rows.values() if isinstance(rows, dict) else rows
-    idx = {}
+    idx = [{} for _ in range(LEVELS)]
     for it in items:
         if not isinstance(it, dict):
             continue
@@ -146,8 +163,9 @@ def sec_index(contact: str):
         title = it.get("title") or it.get("name") or ""
         if not t or cik is None:
             continue
-        for key in keys(title):
-            idx.setdefault(key, {}).setdefault(str(cik), []).append((t, title))
+        for lv, key in enumerate(keys(title)):
+            if key:
+                idx[lv].setdefault(key, {}).setdefault(str(cik), []).append((t, title))
     return idx
 
 
@@ -157,8 +175,10 @@ def sec_lookup(idx, name):
     돌려주는 것은 (티커, SEC 가 적은 이름, CIK). **CIK 를 같이 주는 이유**는
     섹터(SIC)가 CIK 로 따라오기 때문입니다 — `fetch_sectors.py` 가 씁니다.
     """
-    for key in keys(name):
-        hit = idx.get(key)
+    for lv, key in enumerate(keys(name)):
+        if not key:
+            continue
+        hit = idx[lv].get(key)                    # **같은 층끼리만** 맞춥니다
         if hit and len(hit) == 1:                 # 회사가 하나로 좁혀짐
             cik = next(iter(hit))
             pairs = sorted(hit[cik])
