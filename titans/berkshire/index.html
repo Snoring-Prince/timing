@@ -103,6 +103,8 @@ en:{
   lifeCap:"top — quarter-end price · bottom — shares bought or sold that quarter",
   lifeSum:(n,lo,hi)=>`${n} quarters · low ${lo} → high ${hi}`,
   lifeThin:"only one filing — nothing to draw yet",
+  lifeSpans:["1Y","3Y","5Y","10Y","15Y","ALL"],
+  lifeSpanLab:"how far back to show",
   lifeCapP:"quarter-end price",
   lifeQuiet:"never bought or sold across this history",
   lifeScroll:"drag sideways for earlier years",
@@ -160,6 +162,8 @@ ko:{
   lifeCap:"위 칸 — 분기말 가격 · 아래 칸 — 그 분기에 사고판 주식수",
   lifeSum:(n,lo,hi)=>`${n}분기 · 최저 ${lo} → 최고 ${hi}`,
   lifeThin:"공시가 한 번뿐이라 아직 그릴 것이 없습니다",
+  lifeSpans:["1년","3년","5년","10년","15년","전체"],
+  lifeSpanLab:"얼마나 거슬러 볼까",
   lifeCapP:"분기말 가격",
   lifeQuiet:"이 기간에 사고판 적이 없습니다",
   lifeScroll:"옆으로 끌면 그 이전이 나옵니다",
@@ -253,6 +257,11 @@ body{
 .seg button+button{border-left:1px solid var(--rule-2)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
 .seg button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+/* 차트 기간처럼 줄 안에 들어가는 버튼은 한 치수 작습니다. */
+.seg.mini button{font-size:10px;letter-spacing:.08em;padding:3px 8px}
+/* **이력보다 긴 기간은 눌리지 않습니다.** 감추지 않고 흐리게 둡니다 — 줄마다
+   버튼 개수가 달라지면 목록의 세로줄이 들쭉날쭉해집니다. */
+.seg button[disabled]{color:var(--ink-3);opacity:.45;cursor:default}
 
 /* ── 패널 ───────────────────────────────────────────────── */
 .panel{background:var(--card);border:1px solid var(--rule);margin-bottom:20px;padding:20px}
@@ -438,6 +447,11 @@ html:not([lang="ko"]) .act{min-width:124px}
   .lifecap{flex-wrap:wrap;row-gap:2px}
   .liferead{flex:1 0 100%}
 }
+/* 기간 버튼 줄. **한 줄로 두고 좁으면 옆으로 흐릅니다** — 4번의 "2줄은 디자인이
+   너무 조잡해질 것 같다"가 여기도 그대로 걸립니다. */
+.lifeseg{margin:0 0 7px;max-width:100%;overflow-x:auto;
+  -webkit-overflow-scrolling:touch}
+.lifeseg button{flex:0 0 auto}
 .lifescroll{overflow-x:auto;overflow-y:hidden;min-width:0;
   -webkit-overflow-scrolling:touch}
 .lifescroll svg{display:block}
@@ -455,7 +469,14 @@ html:not([lang="ko"]) .act{min-width:124px}
 .bLab{font-family:var(--mono);font-size:10px;font-weight:500}
 .bLab.up{fill:var(--up)}
 .bLab.down{fill:var(--down)}
-/* 십자선. 재료표의 눈금 어휘 그대로 — 가는 실선 하나와 점 하나입니다. */
+/* 십자선. 재료표의 눈금 어휘 그대로 — 가는 실선 하나와 점 하나입니다.
+
+   **`hidden` 속성으로 감추지 않습니다.** SVG 안에서는 그게 안 먹혀서, 자리를
+   안 정한 십자선이 `x=0` 에 그대로 그려졌습니다 — 모든 차트 왼쪽 위에 세로줄
+   하나와 점 반쪽이 붙어 있었습니다. 속성만 보고 "숨었다"고 시험해서 못 잡았고,
+   화면을 찍어 보고 나서야 나왔습니다. 지금은 **클래스로** 켜고 끕니다. */
+.cross{display:none}
+.cross.on{display:inline}
 .cross .cx{stroke:var(--ink-3);stroke-width:1;opacity:.55}
 .cross .cdot{fill:var(--ink)}
 .ax{stroke:var(--rule);stroke-width:1}
@@ -1045,14 +1066,31 @@ function retPct(r){
    가장 큰 매도에만 이름표를 달고, 나머지 숫자는 아래 한 줄에 적습니다. */
 const PXQ=12, LEFT=10, RIGHT=76, PADT=16, H1=96, GAP=12, H2=40, PADB=30;
 
-function chartHTML(r){
-  const L=r.life||[];
-  if(L.length<2) return `<p class="lifenote">${tx("lifeThin")}</p>`;
+/* 그림만 그립니다(버튼·캡션은 `chartHTML` 이 두릅니다). 기간 버튼을 누르면
+   줄을 통째로 다시 그리지 않고 **이 결과만 갈아 끼웁니다** — 다시 그리면 펼쳐
+   놓은 줄이 접히고 방금 누른 버튼이 사라져 초점을 잃습니다(7번의 "버튼은 한 번만
+   만들고 이후엔 aria-pressed 만 옮깁니다"와 같은 자리). */
+function chartBody(r, li){
+  const ALL=r.life||[];
+
+  /* **기간 버튼이 고른 만큼만 봅니다.** 자르는 쪽은 늘 과거입니다 — 가장 최근
+     분기는 어느 기간에서도 보여야 합니다. 잘라서 점이 하나만 남으면 선이 안
+     그려지므로 둘이 될 때까지 되물립니다(이번 분기에 들어온 종목에서 실제로
+     일어납니다). */
+  const want=effRange(r);
+  let L=ALL;
+  if(want){
+    const cut=ALL[ALL.length-1].gi-want+1;
+    let s=ALL.findIndex(o=>o.gi>=cut);
+    if(s<0) s=ALL.length-1;
+    if(s>ALL.length-2) s=ALL.length-2;
+    L=ALL.slice(s);
+  }
 
   /* 그 분기에 실제로 사고판 주식수. **묶음이 새로 시작하는 분기는 전량 매수**이고,
      다만 맨 첫 분기가 집계 시작(1998)이면 사들이는 장면을 못 봤으므로 0 으로 둡니다 —
      거기에 막대를 세우면 "1998년에 4억주를 샀다"는 거짓말이 됩니다. */
-  const mv=L.map((o,i)=>o.first?((i===0&&r.preData)?0:o.sh):o.dn);
+  const mv=L.map(o=>o.first?((o===ALL[0]&&r.preData)?0:o.sh):o.dn);
 
   /* **한 번도 안 사고판 종목은 아래 칸을 아예 안 그립니다.** 코카콜라는 111분기
      내내 막대가 0 인데, 빈 칸에 0선만 그으면 "고장난 화면"으로 읽힙니다.
@@ -1064,7 +1102,7 @@ function chartHTML(r){
      분기도 자리를 차지해야 시간이 사라지지 않습니다. */
   const g0=L[0].gi, span=L[L.length-1].gi-g0;
   /* 짧은 이력은 늘려 줍니다 — 60분기(15년) 어치 폭 안에서만. */
-  const PX=span>0?Math.min(PXQ*4, Math.max(PXQ, PXQ*60/span)):PXQ;
+  const PX=span>0?Math.min(PXQ*8, Math.max(PXQ, PXQ*60/span)):PXQ;
   const n=L.length, W=LEFT+span*PX+RIGHT, H=PADT+H1+G+B2+PADB;
   const ps=L.map(o=>o.p);
   let lo=Math.min(...ps), hi=Math.max(...ps);
@@ -1143,18 +1181,15 @@ function chartHTML(r){
   const last=L[L.length-1];
 
   /* 마우스를 올리면 그 분기의 값을 읽어 줍니다. 좌표를 여기서 한 번 계산해 두면
-     움직일 때마다 가장 가까운 점을 고르기만 하면 됩니다. */
-  const li=LIFES.length;
-  LIFES.push({pts:L.map((o,i)=>({x:x(i), y:y(o.p), q:o.q, p:o.p, mv:mv[i]})),
-              top:PADT, bot:PADT+H1+G+B2});
+     움직일 때마다 가장 가까운 점을 고르기만 하면 됩니다.
+     **`li` 는 매개변수입니다** — 여기서 다시 선언하면 `Identifier 'li' has already
+     been declared` 로 화면이 통째로 빕니다(`tag`/`flag` 때와 같은 자리). */
+  LIFES[li]={r, pts:L.map((o,i)=>({x:x(i), y:y(o.p), q:o.q, p:o.p, mv:mv[i]})),
+             top:PADT, bot:PADT+H1+G+B2};
 
-  return `<figure class="life" data-life="${li}">
-    <figcaption class="lifecap"><span>${traded?tx("lifeCap"):tx("lifeCapP")}</span><b
-      class="liferead" aria-live="polite"></b></figcaption>
-    <div class="lifescroll">
-      <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img"
+  const svg=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img"
            aria-label="${title(r.name)}">
-        <g class="cross" hidden>
+        <g class="cross">
           <line class="cx" y1="${PADT}" y2="${PADT+H1+G+B2}"/>
           <circle class="cdot" r="3.2"/>
         </g>
@@ -1164,13 +1199,77 @@ function chartHTML(r){
               class="pLab">${usd(last.p)}</text>
         ${traded?`<line x1="${LEFT-4}" y1="${zero}" x2="${W-RIGHT+4}" y2="${zero}" class="zero"/>`:""}
         ${bars}${marks}${ticks}
-      </svg>
-    </div>
-    <p class="lifesum">${tx("lifeSum",n,usd(Math.min(...ps)),usd(Math.max(...ps)))}${
-      traded?"":" \u00B7 "+tx("lifeQuiet")}<span
-      class="hint" hidden> · ${tx("lifeScroll")}</span></p>
+      </svg>`;
+
+  const sum=`${tx("lifeSum",n,usd(Math.min(...ps)),usd(Math.max(...ps)))}${
+    traded?"":" \u00B7 "+tx("lifeQuiet")}<span
+    class="hint" hidden> · ${tx("lifeScroll")}</span>`;
+
+  return {svg, sum, cap:traded?tx("lifeCap"):tx("lifeCapP")};
+}
+
+/* 기간 버튼 — `1년 3년 5년 10년 15년 전체` (사용자 요청).
+   값은 **분기 수**입니다. 0 은 전체입니다. */
+const LR=[4,12,20,40,60,0];
+let LRANGE=0;                      // 지금 고른 기간. 모든 줄이 함께 씁니다.
+
+/* **한 줄만 따로 놀게 하지 않습니다.** 기간은 그 종목의 성질이 아니라 *보는 방법*
+   이라 26줄이 제각각이면 위아래를 견줄 수 없습니다. 4번 대시보드에서 위·아래
+   버튼을 묶어 둔 것과 같은 판단입니다. */
+function loadRange(){
+  try{ const v=+localStorage.getItem("bk.range");
+       if(LR.includes(v)) LRANGE=v; }catch(e){}
+}
+function saveRange(){ try{ localStorage.setItem("bk.range",LRANGE) }catch(e){} }
+
+/* 그 종목이 실제로 갖고 있는 분기 수(빈 자리 포함). */
+const lifeSpan=r=>{ const L=r.life||[]; return L.length?L[L.length-1].gi-L[0].gi+1:0; };
+
+/* **이력보다 긴 기간은 누를 수 없게 합니다.** 15년 버튼이 눌린 4분기짜리 종목은
+   전체와 똑같은 그림을 그리면서 이름표만 거짓말을 합니다. 그런 줄에서는 전체로
+   떨어집니다 — 값을 고쳐 놓지는 않으므로, 이력이 긴 줄은 고른 기간 그대로입니다. */
+const okRange=(r,q)=>!q||q<lifeSpan(r);
+const effRange=r=>okRange(r,LRANGE)?LRANGE:0;
+
+function rangeBar(r){
+  const now=effRange(r);
+  return `<div class="seg mini lifeseg" role="group" aria-label="${tx("lifeSpanLab")}">`
+    + LR.map((q,i)=>`<button type="button" data-q="${q}"`
+        + `${okRange(r,q)?"":" disabled"}`
+        + ` aria-pressed="${q===now}">${tx("lifeSpans")[i]}</button>`).join("")
+    + `</div>`;
+}
+
+function chartHTML(r){
+  const L=r.life||[];
+  if(L.length<2) return `<p class="lifenote">${tx("lifeThin")}</p>`;
+  const li=LIFES.length; LIFES.push(null);      // 자리를 먼저 잡고 chartBody 가 채웁니다
+  const o=chartBody(r,li);
+  return `<figure class="life" data-life="${li}">
+    <figcaption class="lifecap"><span class="lifewhat">${o.cap}</span><b
+      class="liferead" aria-live="polite"></b></figcaption>
+    ${rangeBar(r)}
+    <div class="lifescroll">${o.svg}</div>
+    <p class="lifesum">${o.sum}</p>
   </figure>`;
 }
+
+/* 기간을 바꾸면 **그림과 아래 한 줄만** 갈아 끼웁니다. 줄 전체를 다시 그리면
+   펼쳐 둔 것이 접힙니다. */
+function drawLife(fig){
+  const li=+fig.dataset.life, st=LIFES[li];
+  if(!st) return;
+  const r=st.r, o=chartBody(r,li);
+  fig.querySelector(".lifescroll").innerHTML=o.svg;
+  fig.querySelector(".lifesum").innerHTML=o.sum;
+  fig.querySelector(".lifewhat").textContent=o.cap;
+  clearLife(fig);
+  const now=effRange(r);
+  fig.querySelectorAll(".lifeseg button").forEach(b=>
+    b.setAttribute("aria-pressed", String(+b.dataset.q===now)));
+  settleLife(fig);
+}
+
 
 function rowHTML(r,rank,maxW){
   const tag=classTag(r), sec=sectorOf(r);
@@ -1265,7 +1364,7 @@ function readLife(fig, clientX){
   for(let i=1;i<L.pts.length;i++)
     if(Math.abs(L.pts[i].x-sx)<Math.abs(L.pts[best].x-sx)) best=i;
   const t=L.pts[best];
-  g.removeAttribute("hidden");
+  g.classList.add("on");
   g.querySelector(".cx").setAttribute("x1",t.x); g.querySelector(".cx").setAttribute("x2",t.x);
   g.querySelector(".cdot").setAttribute("cx",t.x); g.querySelector(".cdot").setAttribute("cy",t.y);
   const trade=t.mv?`<i class="${t.mv>0?"up":"down"}">${t.mv>0?tx("buy"):tx("sell")}</i> `
@@ -1273,7 +1372,7 @@ function readLife(fig, clientX){
   out.innerHTML=`${fdate(t.q)} · ${usd(t.p)}${trade?" · "+trade:""}`;
 }
 function clearLife(fig){
-  const g=fig.querySelector(".cross"); if(g) g.setAttribute("hidden","");
+  const g=fig.querySelector(".cross"); if(g) g.classList.remove("on");
   const out=fig.querySelector(".liferead"); if(out) out.innerHTML="";
 }
 
@@ -1288,19 +1387,35 @@ function wireLife(ul){
     /* 손가락은 뗀 자리에 머무르지 않으므로 `pointerleave` 가 안 옵니다. */
     sc.addEventListener("pointerup",e=>{ if(e.pointerType!=="mouse") clearLife(fig); });
   });
-  ul.querySelectorAll("details.lf").forEach(d=>{
-    d.addEventListener("toggle",()=>{
-      if(!d.open) return;
-      const sc=d.querySelector(".lifescroll");
-      if(!sc) return;
-      sc.scrollLeft=sc.scrollWidth;
-      /* **끌 수 있다는 말은 실제로 넘칠 때만 합니다.** 분기 수로 짐작하면
-         좁은 화면에서는 짧은 차트도 넘치고 넓은 화면에서는 긴 차트도 안 넘칩니다.
-         여기서는 이미 그려진 뒤라 그냥 재면 됩니다. */
-      const h=d.querySelector(".lifesum .hint");
-      if(h) h.hidden = sc.scrollWidth<=sc.clientWidth+1;
+  /* 기간 버튼. **한 줄에서 누르면 모든 줄이 같이 옮겨 갑니다** — 기간은 그
+     종목의 성질이 아니라 보는 방법이라, 줄마다 달라지면 위아래를 견줄 수 없습니다. */
+  ul.querySelectorAll(".lifeseg").forEach(seg=>{
+    seg.addEventListener("click",e=>{
+      const b=e.target.closest("button[data-q]");
+      if(!b||b.disabled) return;
+      const q=+b.dataset.q;
+      if(q===LRANGE) return;
+      LRANGE=q; saveRange();
+      document.querySelectorAll("figure.life").forEach(drawLife);
     });
   });
+
+  ul.querySelectorAll("details.lf").forEach(d=>{
+    d.addEventListener("toggle",()=>{ if(d.open) settleLife(d); });
+  });
+}
+
+/* 접혀 있는 동안은 폭이 0 이라 미리 옮길 수 없습니다. 그래서 **열리는 순간**과
+   **기간을 바꾼 직후**에 이것을 부릅니다. */
+function settleLife(root){
+  const sc=root.querySelector(".lifescroll");
+  if(!sc) return;
+  sc.scrollLeft=sc.scrollWidth;
+  /* **끌 수 있다는 말은 실제로 넘칠 때만 합니다.** 분기 수로 짐작하면
+     좁은 화면에서는 짧은 차트도 넘치고 넓은 화면에서는 긴 차트도 안 넘칩니다.
+     여기서는 이미 그려진 뒤라 그냥 재면 됩니다. */
+  const h=root.querySelector(".lifesum .hint");
+  if(h) h.hidden = sc.scrollWidth<=sc.clientWidth+1;
 }
 
 /* 각주. 분할 목록과 '집계 전' 종목은 자료에서 오므로 **새 분기가 들어오면
@@ -1453,6 +1568,9 @@ Promise.all([
     .finally(()=>{ LOADED=true; applyLang(pickLang(),false); });
 });
 
+/* 지난번에 고른 기간을 **첫 그림 전에** 읽습니다 — 뒤에 읽으면 전체로 한 번
+   그렸다가 바뀌어 화면이 깜빡입니다. 값이 이상하면 그냥 전체로 갑니다. */
+loadRange();
 applyLang(pickLang(),false);
 setTimeout(()=>document.body.classList.add("settled"),1600);
 </script>
