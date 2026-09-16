@@ -48,6 +48,9 @@ from datetime import datetime, timezone
 from statistics import median
 
 OUT = "data/titans/berkshire.json"
+# 정정 공시가 새로 뜨면 이 파일을 남깁니다. 워크플로가 이것을 보고 텔레그램을
+# 보냅니다. **저장소에 커밋하지 않습니다** — 알림용 쪽지일 뿐입니다.
+ALERT = "amend-alert.txt"
 
 # 버크셔 해서웨이. 첫 번째인 이유는 docs/masters-13f.md 4번에 있습니다 —
 # 연차보고서에 보유 종목이 나와 우리 계산을 대조할 수 있는 유일한 곳입니다.
@@ -279,12 +282,19 @@ def main() -> int:
     # 이미 받아 둔 분기는 다시 받지 않습니다. 공시는 한 번 나오면 바뀌지
     # 않으므로, 분기마다 새 것 하나만 받으면 됩니다.
     old = {}
+    # 지난번에 이미 알고 있던 정정 공시. 새로 뜬 것만 알리려고 들고 있습니다.
+    known_amend: set[str] = set()
+    had_prev = False
     if os.path.exists(OUT):
         try:
             with open(OUT, encoding="utf-8") as f:
                 prev = json.load(f)
             old = {q["accession"]: q for q in prev.get("quarters", [])}
-            print(f"이미 갖고 있는 분기 {len(old)}개")
+            for q in prev.get("quarters", []):
+                known_amend.update(q.get("amended_by") or [])
+            had_prev = True
+            print(f"이미 갖고 있는 분기 {len(old)}개 · "
+                  f"이미 아는 정정 공시 {len(known_amend)}건")
         except Exception as e:                         # noqa: BLE001
             print(f"옛 파일을 읽지 못해 처음부터 받습니다 — {e}")
 
@@ -353,7 +363,6 @@ def main() -> int:
             q["lines_mismatch"] = cent
             mark += f"  ※ 공시 줄 수 {cent} ≠ {len(rows)}"
         if f["period"] in amend_by:
-            q["amended_by"] = amend_by[f["period"]]
             mark += "  ※ 정정 공시 있음"
 
         quarters.append(q)
@@ -379,6 +388,17 @@ def main() -> int:
         return 1
 
     quarters.sort(key=lambda q: q["period"])
+
+    # 정정 표시는 **이미 받아 둔 분기에도 매번 다시 붙입니다.** 예전에는 새로
+    # 내려받는 분기에만 붙였는데, 공시는 한 번 받으면 다시 안 받으므로
+    # **나중에 뜬 정정이 파일에 영영 안 적혔습니다.** 그래서 같은 정정을 매주
+    # '새 것'으로 알리는 상태였습니다(시험에서 잡았습니다).
+    for q in quarters:
+        got_a = amend_by.get(q["period"])
+        if got_a:
+            q["amended_by"] = got_a
+        else:
+            q.pop("amended_by", None)   # 취소된 정정이 남아 있지 않게
     doc = {
         "updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "source": "SEC Form 13F-HR (public domain)",
@@ -401,6 +421,36 @@ def main() -> int:
     if amended:
         print(f"정정 공시가 있는 분기 {len(amended)}개 (원본 숫자를 쓰는 중): "
               f"{', '.join(q['period'] for q in amended)}")
+    # ── 새로 뜬 정정 공시를 알립니다 ────────────────────────────────
+    # **정정은 자동으로 합치지 않습니다**(list_filings 의 주석 참고). 통째로
+    # 다시 쓰는 것과 빠진 것만 덧붙이는 것이 있는데, 둘을 반대로 처리하면
+    # 종목이 두 배가 되거나 통째로 사라집니다. 실물을 한 번도 못 봤으므로
+    # **사람이 한 건을 열어 보게 알리는 것**이 지금 할 수 있는 최선입니다.
+    #
+    # 처음 받는 실행(옛 파일이 없음)에서는 알리지 않습니다 — 28년치가 통째로
+    # '새 정정'으로 잡혀 알림이 의미를 잃습니다.
+    fresh = [x for x in amends if x["accession"] not in known_amend]
+    if fresh and had_prev:
+        lines = [f"버크셔 13F 정정 공시(13F-HR/A) {len(fresh)}건이 새로 떴습니다.",
+                 "",
+                 "화면은 아직 원본 숫자를 쓰고 있습니다. 한 건을 열어 보고",
+                 "통째로 다시 쓴 것인지 빠진 것만 덧붙인 것인지 확인해야 합니다.",
+                 ""]
+        for x in sorted(fresh, key=lambda v: v["period"]):
+            acc = x["accession"]
+            lines.append(f"  {x['period']}  냄 {x['filed']}  {acc}")
+            lines.append(f"    https://www.sec.gov/Archives/edgar/data/"
+                         f"{int(CIK)}/{acc.replace('-', '')}/")
+        with open(ALERT, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+        print(f"\n*** 새 정정 공시 {len(fresh)}건 — {ALERT} 를 남겼습니다 ***")
+        for ln in lines[5:]:
+            print(ln)
+    elif fresh:
+        print(f"\n정정 공시 {len(fresh)}건이 있지만 첫 실행이라 알리지 않습니다.")
+    else:
+        print("\n새로 뜬 정정 공시 없음")
+
     last = quarters[-1]
     print(f"가장 최근 {last['period']}: 종목 {len(last['holdings'])}개 · "
           f"${last['total']/1e9:,.1f}B")
