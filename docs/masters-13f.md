@@ -665,19 +665,33 @@ directly (CORS).
 
 ---
 
-## 7-2. URL: this page lives at `/titans/`, not at the site root
+## 7-2. URL: `/titans/berkshire/` — one folder per investor
 
 Owner decided 2026-09-14. One repo, one Pages site, three screens under one domain:
 
 ```
 itpaidoff.com/            hub (not built yet — do NOT build it yet, see /CLAUDE.md §2)
 itpaidoff.com/timing/     the existing dashboard (not moved yet)
-itpaidoff.com/titans/     THIS project            ← build here from the start
+itpaidoff.com/titans/            investor list    ← build only when there are 2+
+itpaidoff.com/titans/berkshire/  THIS project     ← here
 itpaidoff.com/samuel/     DCA curves (rough idea)
 ```
 
 **`titans`, not `masters`** — owner's word, chosen to avoid colliding with other sites
 (and the golf tournament). **Lowercase**: paths are case-sensitive on Pages.
+
+**Moved from `/titans/` to `/titans/berkshire/` on 2026-09-16** (owner's suggestion).
+One folder per investor; `/titans/` is now a bounce page (canonical + refresh +
+a *visible* link, and it carries `?lang=` through). Pages cannot do 301s, so the cost
+of moving scales with how known the URL is — right now that is one sitemap line and
+no index entry, so this was the cheapest possible moment.
+
+**`berkshire`, not `warren-buffett`.** §10 and `/CLAUDE.md` forbid putting a living
+investor's name on the signage (publicity/trademark). The 13F filer is the company,
+not the man. stockcircle uses `/portfolio/warren-buffett`; do not copy that.
+
+**Do not turn `/titans/` into a list page yet** — a two-link page is thin, and the site
+is still unindexed. Build the list when investor #2 exists.
 
 Building here costs nothing in SEO because the root is untouched. Do not move the
 dashboard or create the hub as part of this project — the root page is currently the
@@ -739,9 +753,33 @@ Burry's page needs the staleness line more prominently (§3).
 9. DONE  self-check confirmed: 0 total mismatches
 10. DONE  pre-2013 converted — 111 quarters, no gaps (§5-9)
 11. Amendments: read the restatement/adds checkbox, then merge
-12. CUSIP→ticker, then prices, then the page at /titans/ (see /docs/design-system.md)
-13. Only then, investor #2
+12. DONE  CUSIP→ticker (OpenFIGI + SEC name match), sectors (SEC SIC)
+13. DONE  page shipped at /titans/berkshire/ — holdings list + per-holding chart
+14. Amendments: read the restatement/adds checkbox, then merge (see 11)
+15. Only then, investor #2
 ```
+
+### Per-holding chart (2026-09-16)
+
+Expanding a row draws that holding's whole life: **quarter-end price on top,
+shares bought/sold that quarter below, shared x-axis.** It needs **no new data
+source** — the price is `value ÷ shares`, the same implied price the cost-basis
+estimate already uses, so the weekly 13F workflow refreshes the chart for free.
+That property is worth protecting: it is the reason this product stays
+public-domain and self-updating (§1).
+
+Two traps, both found by measuring:
+
+- **Splits must adjust the previous share count too**, not just the earlier
+  points. Adjusting only the history made Apple's 2020 4:1 split render as a
+  `+699M` purchase — the single largest bar in the chart. With `held` scaled,
+  it reads `-36M`, the real trim. Same failure mode as the cost-basis bug in §7.
+- **`text-anchor` must be an SVG attribute, not CSS.** A class rule beats the
+  attribute, so the leftmost year label stayed centre-anchored and was clipped.
+
+A holding that was never traded in the filing window (Coca-Cola, 111 quarters)
+drops the lower panel entirely and says so in words. An empty panel with a lone
+zero rule reads as a broken screen.
 
 Steps needing a click are the owner's — assistants here cannot run Actions. Say
 exactly which buttons: **Actions → Probe SEC → Run workflow**. Do NOT ask them to
