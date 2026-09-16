@@ -665,19 +665,33 @@ directly (CORS).
 
 ---
 
-## 7-2. URL: this page lives at `/titans/`, not at the site root
+## 7-2. URL: `/titans/berkshire/` — one folder per investor
 
 Owner decided 2026-09-14. One repo, one Pages site, three screens under one domain:
 
 ```
 itpaidoff.com/            hub (not built yet — do NOT build it yet, see /CLAUDE.md §2)
 itpaidoff.com/timing/     the existing dashboard (not moved yet)
-itpaidoff.com/titans/     THIS project            ← build here from the start
+itpaidoff.com/titans/            investor list    ← build only when there are 2+
+itpaidoff.com/titans/berkshire/  THIS project     ← here
 itpaidoff.com/samuel/     DCA curves (rough idea)
 ```
 
 **`titans`, not `masters`** — owner's word, chosen to avoid colliding with other sites
 (and the golf tournament). **Lowercase**: paths are case-sensitive on Pages.
+
+**Moved from `/titans/` to `/titans/berkshire/` on 2026-09-16** (owner's suggestion).
+One folder per investor; `/titans/` is now a bounce page (canonical + refresh +
+a *visible* link, and it carries `?lang=` through). Pages cannot do 301s, so the cost
+of moving scales with how known the URL is — right now that is one sitemap line and
+no index entry, so this was the cheapest possible moment.
+
+**`berkshire`, not `warren-buffett`.** §10 and `/CLAUDE.md` forbid putting a living
+investor's name on the signage (publicity/trademark). The 13F filer is the company,
+not the man. stockcircle uses `/portfolio/warren-buffett`; do not copy that.
+
+**Do not turn `/titans/` into a list page yet** — a two-link page is thin, and the site
+is still unindexed. Build the list when investor #2 exists.
 
 Building here costs nothing in SEO because the root is untouched. Do not move the
 dashboard or create the hub as part of this project — the root page is currently the
