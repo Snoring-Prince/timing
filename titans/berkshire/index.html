@@ -125,6 +125,7 @@ en:{
     "A 13F is filed 45 days after the quarter ends, so these holdings are at least six weeks old and may already have changed.",
     "A 13F shows US-listed long equity positions only. Bonds, cash, foreign listings, wholly owned businesses and short positions are not in it.",
     "Values are what the filing states for the quarter-end date. Dividing value by share count gives an implied quarter-end price — not a trade price.",
+    "A 13F is a quarter-end snapshot, so when inside the quarter a trade happened is not knowable. The chart\u2019s trade bars therefore span the whole stretch from the previous filing to that one \u2014 they mean \u201Csomewhere in here\u201D, not a single day.",
     "Share classes of one issuer are shown on one line (marked A+C and so on) because one decision usually moves both. Preferred stock is kept on its own line.",
     `“pre-records” marks a holding that was already in the first filing we have (${firstY||"1998"}), so the buying is not visible and no cost or return can be worked out for it.${pre&&pre.length?` Right now that is ${pre.join(", ")}.`:""}`,
     "Average cost is an estimate. Each quarter's share change is priced at the midpoint of that quarter's and the previous quarter's implied price, then carried forward on an average-cost basis. Actual trades happened at prices we cannot see, so the estimate can be off by a wide margin.",
@@ -182,6 +183,7 @@ ko:{
     "13F 는 분기가 끝나고 45일 뒤에 냅니다. 그래서 여기 보이는 것은 최소 6주 전의 상태이고, 그 사이에 이미 바뀌었을 수 있습니다.",
     "13F 에는 미국 상장 주식의 매수 포지션만 나옵니다. 채권·현금·해외 상장·통째로 소유한 회사·공매도는 들어 있지 않습니다.",
     "금액은 공시에 적힌 분기말 값입니다. 금액을 주식수로 나누면 분기말 가격이 나오는데, 실제 체결가가 아닙니다.",
+    "13F 는 분기말 스냅샷뿐이라 그 분기 안에서 언제 사고팔았는지는 알 수 없습니다. 그래서 차트의 매매 막대는 한 점이 아니라 직전 공시부터 그 공시까지를 통째로 덮습니다 — ‘이 사이 어딘가’ 라는 뜻입니다.",
     "같은 회사의 여러 종류 주식은 한 줄로 묶었습니다(A+C 처럼 표시). 한 번의 결정이 대개 둘을 같이 움직이기 때문입니다. 우선주는 성격이 다르므로 따로 둡니다.",
     `‘집계 전’ 은 우리가 가진 첫 공시(${firstY||"1998"}년)에 이미 들어 있던 종목입니다. 사들이는 장면이 안 보이므로 매수가도 수익률도 낼 수 없습니다.${pre&&pre.length?` 지금은 ${pre.join(" · ")} 가 여기 해당합니다.`:""}`,
     "매수 평균가는 추정치입니다. 분기마다 늘어난 주식수를 그 분기와 직전 분기 가격의 중간값으로 사들인 것으로 보고, 이동평균 방식으로 이어 계산했습니다. 실제 체결가는 공시에 없으므로 추정이 크게 빗나갈 수 있습니다.",
@@ -431,28 +433,26 @@ html:not([lang="ko"]) .act{min-width:124px}
 /* 캡션 줄은 **두 칸**입니다 — 왼쪽은 안 변하는 설명, 오른쪽은 마우스를 올린
    자리의 값. 오른쪽 자리를 늘 비워 두므로 글자가 나타나도 줄이 안 밀립니다
    (`min-height` 로 못박습니다). */
-.lifecap{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
-  font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--ink-3);margin:0 0 4px;min-height:13px}
-.lifecap>span{min-width:0}
-/* 읽어 주는 값은 숫자라 고정폭입니다. 대문자·자간을 풀어 캡션과 구별합니다. */
-.liferead{font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:0;
-  text-transform:none;color:var(--ink-2);white-space:nowrap;flex:0 0 auto}
-.liferead i{font-style:normal;font-family:var(--cond);font-weight:700;font-size:9.5px;
-  letter-spacing:.12em}
-.liferead i.up{color:var(--up)} .liferead i.down{color:var(--down)}
-/* 좁은 화면에서는 두 칸이 한 줄에 안 섭니다. **설명을 감추지 않고** 줄을 바꿉니다 —
-   손을 떼면 값이 사라지는데 그때 설명까지 없으면 캡션 자리가 통째로 빕니다. */
-@media (max-width:640px){
-  .lifecap{flex-wrap:wrap;row-gap:2px}
-  .liferead{flex:1 0 100%}
-}
+.lifecap{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 4px}
+/* 짚은 자리에 뜨는 값. **그림 안(SVG)이 아니라 위에 얹는 HTML** 이라 바탕을
+   깔 수 있고 그림 밖으로 잘리지 않습니다. 기준 상자는 `.lifescroll` 이라
+   옆으로 끌면 같이 따라갑니다. 마우스를 안 가로채게 `pointer-events:none`. */
+.lifetip{position:absolute;pointer-events:none;z-index:3;white-space:nowrap;
+  background:var(--card);border:1px solid var(--rule);padding:4px 7px;
+  font-family:var(--mono);font-size:11px;font-weight:500;line-height:1.45;
+  letter-spacing:0;text-transform:none;color:var(--ink)}
+.lifetip em{font-style:normal;color:var(--ink-3);margin-right:7px}
+.lifetip i{font-style:normal;font-family:var(--cond);font-weight:700;font-size:9.5px;
+  letter-spacing:.12em;margin-right:4px}
+.lifetip i.up{color:var(--up)} .lifetip i.down{color:var(--down)}
+
 /* 기간 버튼 줄. **한 줄로 두고 좁으면 옆으로 흐릅니다** — 4번의 "2줄은 디자인이
    너무 조잡해질 것 같다"가 여기도 그대로 걸립니다. */
 .lifeseg{margin:0 0 7px;max-width:100%;overflow-x:auto;
   -webkit-overflow-scrolling:touch}
 .lifeseg button{flex:0 0 auto}
-.lifescroll{overflow-x:auto;overflow-y:hidden;min-width:0;
+.lifescroll{position:relative;overflow-x:auto;overflow-y:hidden;min-width:0;
   -webkit-overflow-scrolling:touch}
 .lifescroll svg{display:block}
 .lifesum,.lifenote{font-family:var(--mono);font-size:11px;line-height:1.7;
@@ -826,7 +826,12 @@ let SPLITS=[];
 /* 마우스를 올렸을 때 읽어 줄 좌표. 차트마다 한 칸이고 `<figure data-life>` 가
    그 첨자를 들고 있습니다. **SVG 속성에 넣지 않습니다** — 111분기짜리가 스물몇
    개면 HTML 이 통째로 무거워집니다. */
-let LIFES=[];        // 분기 이름표 (lifeOf 가 씁니다)
+let LIFES=[];
+/* 차트가 들어갈 칸의 실제 폭. **`render()` 에서 목록 `<ul>` 을 재서 넣습니다** —
+   차트는 그 안에 여백 없이 들어가므로 같은 값입니다. 이게 있어야 `1년` 을 눌러도
+   차트가 카드를 꽉 채웁니다(전에는 분기 수로만 폭을 정해서 1년이 374px 짜리
+   토막으로 나왔습니다). 못 재면 900px 카드 기준값으로 갑니다. */
+let LIFEW=0;        // 분기 이름표 (lifeOf 가 씁니다)
 let TICKERS={};
 
 /* ── 섹터 ────────────────────────────────────────────────────
@@ -1034,6 +1039,9 @@ function lifeOf(snaps,key){
 }
 
 /* 주당 가격. 금액(money)과 자릿수가 다르다 — $66.0B 와 $289.36 은 다른 자입니다. */
+/* 주식수를 **줄이지 않고** 적습니다. 자릿점은 보는 사람의 지역 방식입니다. */
+const fullShares=n=>Math.round(n).toLocaleString(LOCALE);
+
 const usd=n=>"$"+n.toLocaleString(LOCALE,{minimumFractionDigits:2,maximumFractionDigits:2});
 
 /* 수익률은 자릿수가 커진다. 100% 안쪽은 소수 한 자리, 그 밖은 정수. */
@@ -1102,7 +1110,10 @@ function chartBody(r, li){
      분기도 자리를 차지해야 시간이 사라지지 않습니다. */
   const g0=L[0].gi, span=L[L.length-1].gi-g0;
   /* 짧은 이력은 늘려 줍니다 — 60분기(15년) 어치 폭 안에서만. */
-  const PX=span>0?Math.min(PXQ*8, Math.max(PXQ, PXQ*60/span)):PXQ;
+  /* 분기당 폭. **칸을 꽉 채우되 12px 아래로는 안 내려갑니다** — 그 아래로 가면
+     28년치가 한 화면에 뭉개지므로, 그때는 12px 로 두고 옆으로 끕니다. */
+  const box=(LIFEW||806)-LEFT-RIGHT;
+  const PX=span>0?Math.max(PXQ, box/span):PXQ;
   const n=L.length, W=LEFT+span*PX+RIGHT, H=PADT+H1+G+B2+PADB;
   const ps=L.map(o=>o.p);
   let lo=Math.min(...ps), hi=Math.max(...ps);
@@ -1112,7 +1123,16 @@ function chartBody(r, li){
   const y=v=>PADT+H1-(v-lo)/(hi-lo)*H1;
   const zero=PADT+H1+G+B2/2;
   const mx=Math.max(...mv.map(Math.abs))||1;
-  const bw=Math.max(3,Math.min(PX-4,26));
+  /* **막대는 분기말이 아니라 그 분기 한가운데에 섭니다.** 13F 는 분기말
+     스냅샷뿐이라 그 안에서 언제 사고팔았는지는 아무도 모릅니다. 분기말 자리에
+     세우면 **마지막 날에 다 거래한 것처럼** 읽힙니다(사용자가 정확히 지적한 부분).
+
+     폭은 분기 하나를 덮되 **44px 에서 끊습니다.** 안 끊으면 `1년` 처럼 넓게
+     편 화면에서 한 분기가 240px 이 되어, 막대가 아니라 **굵은 줄 하나**로
+     보입니다(실측에서 그렇게 나왔습니다). */
+  const bw=Math.min(44, Math.max(2, PX-(PX>6?1.5:0.5)));
+  /* 그 분기의 한가운데. 첫 분기는 왼쪽에 직전 공시가 없으므로 더 안 밉니다. */
+  const mid=i=>Math.max(LEFT, x(i)-PX/2);
 
   /* **전량 매도했다가 다시 산 자리에서는 선을 끊습니다**(`o.first`). 이어 그리면
      그동안 안 들고 있었다는 사실이 사라집니다 — 보유 연차를 셀 때와 같은 규칙입니다. */
@@ -1122,20 +1142,28 @@ function chartBody(r, li){
   const bars=!traded?"":mv.map((v,i)=>{
     if(!v) return "";
     const h=Math.max(1.5,Math.abs(v)/mx*(H2/2-2));
-    return `<rect x="${(x(i)-bw/2).toFixed(1)}" y="${(v>0?zero-h:zero).toFixed(1)}"
-      width="${bw}" height="${h.toFixed(1)}" class="${v>0?"bUp":"bDn"}"/>`;
+    /* 왼쪽 끝에서는 막대가 그림 밖으로 반쯤 나가 잘립니다(실측에서 잡음). */
+    const bx=Math.max(0, mid(i)-bw/2), bwi=Math.min(bw, mid(i)+bw/2-bx);
+    return `<rect x="${bx.toFixed(1)}" y="${(v>0?zero-h:zero).toFixed(1)}"
+      width="${bwi.toFixed(1)}" height="${h.toFixed(1)}" class="${v>0?"bUp":"bDn"}"/>`;
   }).join("");
 
   /* 가장 큰 매수 하나와 가장 큰 매도 하나에만 이름표. 스물몇 개를 다 적으면
-     14px 간격에서 글자가 겹쳐 뭉갭니다(재료표의 "띠가 좁으면 이름 생략"과 같은 처리). */
+     글자가 겹쳐 뭉갭니다(재료표의 "띠가 좁으면 이름 생략"과 같은 처리) —
+     나머지 분기 값은 마우스를 올리면 나옵니다.
+
+     **단위(`shares`/`주`)를 빼고 숫자를 다 적습니다** (사용자 요청).
+     `+120.9M shares` 처럼 줄여 쓰면 정확한 주식수를 알 수 없고, 단위는
+     캡션이 이미 `사고판 주식수` 라고 말하고 있어 줄마다 되풀이할 말이 아닙니다. */
   let bi=-1,si=-1;
   if(traded) mv.forEach((v,i)=>{ if(v>0&&(bi<0||v>mv[bi]))bi=i; if(v<0&&(si<0||v<mv[si]))si=i; });
   const marks=[[bi,"up",-6],[si,"down",13]].filter(([i])=>i>=0).map(([i,c,dy])=>{
     const h=Math.abs(mv[i])/mx*(H2/2-2);
     const yy=mv[i]>0?zero-h+dy:zero+h+dy;
-    const anc=x(i)<70?"start":x(i)>W-RIGHT-30?"end":"middle";
-    return `<text x="${x(i).toFixed(1)}" y="${yy.toFixed(1)}" text-anchor="${anc}"
-      class="bLab ${c}">${(mv[i]>0?"+":"\u2212")+shortShares(Math.abs(mv[i]))}</text>`;
+    const cx=mid(i);                            // 막대 한가운데
+    const anc=cx<80?"start":cx>W-RIGHT-40?"end":"middle";
+    return `<text x="${cx.toFixed(1)}" y="${yy.toFixed(1)}" text-anchor="${anc}"
+      class="bLab ${c}">${(mv[i]>0?"+":"\u2212")+fullShares(Math.abs(mv[i]))}</text>`;
   }).join("");
 
   /* 연도 눈금. **몇 년마다 찍을지는 픽셀을 재서 정합니다** — `%2` 로 박아 두면
@@ -1143,40 +1171,47 @@ function chartBody(r, li){
      (실제로 붙어 있었습니다). 한 해 간격이 `4*PX` 이므로 60px 을 넘도록 잡습니다.
      그러고도 **바로 앞 이름표와 겹치면 건너뜁니다** — 맨 왼쪽 눈금은 늘 찍히는데,
      그 다음 눈금이 한두 분기 뒤일 수 있습니다. */
-  const step=Math.max(1,Math.ceil(60/(4*PX)));
+  /* 눈금은 **달력 경계에만** 찍습니다.
+
+     전에는 맨 왼쪽에 *처음 산 분기* 자리로 눈금을 하나 박았습니다. 그래서 축이
+     `2019 2020 2021 …` 인데 2019↔2020 만 42px 이고 나머지는 107px 인,
+     **자가 아닌 자**가 됐습니다(옥시덴탈에서 사용자가 발견). 지금은 그 눈금을
+     아예 안 만듭니다 — 선이 어디서 시작하는지는 그림이 이미 말합니다.
+     4번 대시보드의 *"x축 눈금은 달력 경계에 놓습니다"* 와 같은 규칙입니다.
+
+     **간격은 픽셀을 재서 정합니다.** 한 분기가 `PX` 이므로 60px 을 넘는 가장 작은
+     분기 배수를 고르고, 4분기(1년) 이상이면 1월 자리에만 찍어 **연도**를 적습니다.
+     그보다 잦으면 `25 Q4` 처럼 분기를 적습니다 — `1년` 버튼처럼 창이 짧을 때
+     연도만 적으면 눈금이 한두 개밖에 안 남습니다. */
+  const per=[1,2,4,8,12,20,40,60].find(k=>k*PX>=60)||60;
   const cand=[];
-  let prevY=null;
   for(let g=g0; g<=L[L.length-1].gi; g++){
-    const yr=+String(QS[g]).slice(0,4);
-    if(yr===prevY) continue;
-    prevY=yr;
-    if(g>g0 && yr%step!==0) continue;
-    /* 맨 왼쪽 연도는 가운데 맞춤으로 두면 그림 밖으로 반쯤 잘려 나갑니다. */
-    const gx=xg(g), anc=gx<20?"start":"middle";
-    cand.push({gx, yr, anc, stub:g===g0});
+    const q=String(QS[g]), yr=+q.slice(0,4), mo=q.slice(5,7);
+    if(per>=4){
+      if(mo!=="03") continue;                       // 그 해의 첫 분기(1~3월)
+      if(yr%(per/4)!==0) continue;
+    }else if((g-g0)%per!==0) continue;
+    const gx=xg(g);
+    cand.push({gx, lab:per>=4?String(yr):`${q.slice(2,4)} Q${Math.ceil(+mo/3)}`,
+               anc:gx<20?"start":"middle"});
   }
 
   /* **글자 상자의 가장자리로 겹침을 봅니다.** 가운뎃점 사이 거리로 재면
      맨 왼쪽(`start` 맞춤) 이름표가 오른쪽으로만 뻗는 것을 놓쳐서 `2007 2008` 이
-     3px 겹쳐 있었습니다. 9.5px 고정폭 네 글자는 약 24px 입니다.
-
-     **겹치면 첫 눈금(`stub`)을 버리고 제자리 연도를 남깁니다.** 첫 눈금은 1월이
-     아니라 *처음 산 분기*에 서 있어서, 그것 때문에 다음 연도를 버리면 축이
-     `2020 2022 2023…` 처럼 들쭉날쭉해집니다. 선이 어디서 시작하는지는 그림이
-     이미 말하고 있으므로, 규칙적인 연도 쪽을 남기는 편이 자로 읽힙니다. */
-  const LW=24, keep=[];
+     3px 겹쳐 있었습니다. 9.5px 고정폭 네 글자는 약 24px 입니다. */
+  const LW=per>=4?24:30, keep=[];
   const right=c=>c.gx+(c.anc==="start"?LW:LW/2);
   const left =c=>c.gx-(c.anc==="start"?0:LW/2);
   for(const c of cand){
     const prev=keep[keep.length-1];
-    if(prev && left(c)-right(prev)<8){ if(prev.stub) keep[keep.length-1]=c; continue; }
+    if(prev && left(c)-right(prev)<8) continue;
     keep.push(c);
   }
 
   let ticks="";
   for(const c of keep)
     ticks+=`<line x1="${c.gx.toFixed(1)}" y1="${PADT+H1+G+B2}" x2="${c.gx.toFixed(1)}" y2="${PADT+H1+G+B2+4}" class="ax"/>`
-         +`<text x="${c.gx.toFixed(1)}" y="${H-5}" text-anchor="${c.anc}" class="axL">${c.yr}</text>`;
+         +`<text x="${c.gx.toFixed(1)}" y="${H-5}" text-anchor="${c.anc}" class="axL">${c.lab}</text>`;
 
   const last=L[L.length-1];
 
@@ -1240,16 +1275,19 @@ function rangeBar(r){
     + `</div>`;
 }
 
+/* 말풍선은 그림 **바깥**에 있는 형제입니다. 그림만 갈아 끼울 때도 같이 넣어야
+   합니다 — 한 번 빠뜨려서 기간 버튼을 누르면 말풍선이 사라졌습니다. */
+const TIP=`<b class="lifetip" aria-live="polite" hidden></b>`;
+
 function chartHTML(r){
   const L=r.life||[];
   if(L.length<2) return `<p class="lifenote">${tx("lifeThin")}</p>`;
   const li=LIFES.length; LIFES.push(null);      // 자리를 먼저 잡고 chartBody 가 채웁니다
   const o=chartBody(r,li);
   return `<figure class="life" data-life="${li}">
-    <figcaption class="lifecap"><span class="lifewhat">${o.cap}</span><b
-      class="liferead" aria-live="polite"></b></figcaption>
+    <figcaption class="lifecap"><span class="lifewhat">${o.cap}</span></figcaption>
     ${rangeBar(r)}
-    <div class="lifescroll">${o.svg}</div>
+    <div class="lifescroll">${o.svg}${TIP}</div>
     <p class="lifesum">${o.sum}</p>
   </figure>`;
 }
@@ -1260,7 +1298,7 @@ function drawLife(fig){
   const li=+fig.dataset.life, st=LIFES[li];
   if(!st) return;
   const r=st.r, o=chartBody(r,li);
-  fig.querySelector(".lifescroll").innerHTML=o.svg;
+  fig.querySelector(".lifescroll").innerHTML=o.svg+TIP;
   fig.querySelector(".lifesum").innerHTML=o.sum;
   fig.querySelector(".lifewhat").textContent=o.cap;
   clearLife(fig);
@@ -1355,7 +1393,7 @@ function rowHTML(r,rank,maxW){
 function readLife(fig, clientX){
   const L=LIFES[+fig.dataset.life]; if(!L) return;
   const svg=fig.querySelector("svg"), g=fig.querySelector(".cross");
-  const out=fig.querySelector(".liferead");
+  const out=fig.querySelector(".lifetip");
   const box=svg.getBoundingClientRect();
   /* SVG 는 `width` 속성과 `viewBox` 가 같은 값이라 보통 1:1 인데, 좁은 화면에서
      줄어들 수 있으므로 실제 폭으로 환산합니다. */
@@ -1367,25 +1405,54 @@ function readLife(fig, clientX){
   g.classList.add("on");
   g.querySelector(".cx").setAttribute("x1",t.x); g.querySelector(".cx").setAttribute("x2",t.x);
   g.querySelector(".cdot").setAttribute("cx",t.x); g.querySelector(".cdot").setAttribute("cy",t.y);
+  /* **값은 짚은 자리에 띄웁니다** (사용자 요청 — 구석에 두니 "도저히 못 알아보겠다").
+     그림 안이 아니라 그림 위에 얹는 HTML 이라 바탕을 깔 수 있고 잘리지 않습니다.
+     `.lifescroll` 이 기준 상자라 옆으로 끌면 말풍선도 같이 따라갑니다. */
   const trade=t.mv?`<i class="${t.mv>0?"up":"down"}">${t.mv>0?tx("buy"):tx("sell")}</i> `
-    +(t.mv>0?"+":"\u2212")+shortShares(Math.abs(t.mv)):"";
-  out.innerHTML=`${fdate(t.q)} · ${usd(t.p)}${trade?" · "+trade:""}`;
+    +(t.mv>0?"+":"\u2212")+fullShares(Math.abs(t.mv)):"";
+  out.innerHTML=`<em>${fdate(t.q)}</em>${usd(t.p)}${trade?"<br>"+trade:""}`;
+  out.hidden=false;
+  /* 오른쪽 끝 점은 말풍선이 그림 밖으로 나가므로 왼쪽으로 뒤집습니다. */
+  const sc=fig.querySelector(".lifescroll");
+  const tw=out.offsetWidth, th=out.offsetHeight;
+  /* **눈에 보이는 창을 기준으로 뒤집습니다.** 그림 전체 폭으로 재면, 옆으로
+     끌어 놓은 28년치 차트에서 말풍선이 그림 안에는 있는데 화면 밖으로 나갑니다. */
+  const vr=sc.scrollLeft+sc.clientWidth, vl=sc.scrollLeft;
+  let lx=t.x+12;
+  if(lx+tw>vr) lx=t.x-12-tw;          // 오른쪽에 자리가 없으면 왼쪽으로
+  if(lx<vl) lx=Math.min(t.x+12, vr-tw); // 왼쪽에도 없으면 창 안으로 밀어 넣는다
+  out.style.left=Math.max(0,lx)+"px";
+  /* 점 위에 얹되 그림 위로 삐져나가지 않게 합니다. */
+  out.style.top=Math.max(2,Math.min(t.y-th-8, L.bot-th))+"px";
 }
 function clearLife(fig){
   const g=fig.querySelector(".cross"); if(g) g.classList.remove("on");
-  const out=fig.querySelector(".liferead"); if(out) out.innerHTML="";
+  const out=fig.querySelector(".lifetip"); if(out){ out.hidden=true; out.innerHTML=""; }
+}
+
+/* **손가락으로 탭하면 값이 남아 있어야 합니다.** 예전에는 손을 떼는 순간
+   (`pointerup`) 지웠는데, 탭은 누르자마자 떼는 것이라 값이 떴다가 바로 사라져
+   **휴대폰에서는 아무것도 못 읽었습니다**(실측에서 잡음). 지금은 마우스만
+   빠져나갈 때 지우고, 손가락은 **다른 데를 누를 때** 지웁니다. */
+let TAPWIRED=false;
+function wireTapAway(){
+  if(TAPWIRED) return;
+  TAPWIRED=true;
+  document.addEventListener("pointerdown",e=>{
+    const mine=e.target.closest&&e.target.closest("figure.life");
+    document.querySelectorAll("figure.life").forEach(f=>{ if(f!==mine) clearLife(f); });
+  },true);
 }
 
 function wireLife(ul){
   if(!ul) return;
+  wireTapAway();
   ul.querySelectorAll("figure.life").forEach(fig=>{
     const sc=fig.querySelector(".lifescroll"); if(!sc) return;
     sc.addEventListener("pointermove",e=>readLife(fig,e.clientX));
     sc.addEventListener("pointerdown",e=>readLife(fig,e.clientX));
-    sc.addEventListener("pointerleave",()=>clearLife(fig));
+    sc.addEventListener("pointerleave",e=>{ if(e.pointerType==="mouse") clearLife(fig); });
     sc.addEventListener("pointercancel",()=>clearLife(fig));
-    /* 손가락은 뗀 자리에 머무르지 않으므로 `pointerleave` 가 안 옵니다. */
-    sc.addEventListener("pointerup",e=>{ if(e.pointerType!=="mouse") clearLife(fig); });
   });
   /* 기간 버튼. **한 줄에서 누르면 모든 줄이 같이 옮겨 갑니다** — 기간은 그
      종목의 성질이 아니라 보는 방법이라, 줄마다 달라지면 위아래를 견줄 수 없습니다. */
@@ -1507,6 +1574,20 @@ function render(){
     el("bookcut").textContent="";
   }
   el("book").hidden=false;
+  /* **폭은 카드를 펼친 뒤에 잽니다.** 위에서 재려고 했더니 그때는 `#book` 이
+     아직 `hidden` 이라 `clientWidth` 가 0 이었고, 390px 화면에서도 900px 짜리
+     기본값으로 그려졌습니다(실측에서 잡음). 값이 달라졌으면 한 번 다시 그립니다 —
+     이때는 줄이 다 접혀 있어 눈에 안 띕니다. */
+  fitLife();
+}
+
+/* 차트가 들어갈 칸의 실제 폭을 재고, 달라졌으면 다시 그립니다. */
+function fitLife(){
+  const ul=document.getElementById("top");
+  const w=ul&&ul.clientWidth;
+  if(!w||Math.abs(w-LIFEW)<2) return;
+  LIFEW=w;
+  document.querySelectorAll("figure.life").forEach(drawLife);
 }
 
 function applyLang(lang,remember){
@@ -1572,6 +1653,12 @@ Promise.all([
    그렸다가 바뀌어 화면이 깜빡입니다. 값이 이상하면 그냥 전체로 갑니다. */
 loadRange();
 applyLang(pickLang(),false);
+
+/* 창 크기가 바뀌면 차트도 다시 그립니다 — 안 그러면 휴대폰을 돌렸을 때
+   차트만 옛 폭으로 남습니다. 잦게 부르면 111분기짜리를 스물몇 개 다시 그리므로
+   멈춘 뒤에 한 번만 합니다. */
+let RSZ=0;
+addEventListener("resize",()=>{ clearTimeout(RSZ); RSZ=setTimeout(fitLife,160); });
 setTimeout(()=>document.body.classList.add("settled"),1600);
 </script>
 </body>
