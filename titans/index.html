@@ -93,13 +93,15 @@ en:{
   evNew:"New", evBack:"Back in", evOut:"Sold out",
   heldFor:"held",
   costArrow:d=>`return = estimated average cost \u2192 price on ${d} · before dividends`,
-  sinceBefore:y=>`held since before ${y}`,
-  justIn:"entered this quarter",
-  /* 가운데 칸은 좁다. 긴 설명은 각주가 하고, 여기는 왜 숫자가 없는지만 짧게. */
-  noRetOld:y=>`pre-${y}`, noRetNew:"just in",
+  /* 가운데 칸은 좁다. **왜 숫자가 없는지만** 짧게 적고, 긴 설명은 각주가 한다.
+     `집계 전` 은 우리 자료(1998년 첫 공시)보다 먼저 들고 있던 종목이다 —
+     연도를 줄마다 적어 봐야 방문자는 그 해가 무슨 뜻인지 모른다(사용자 지적). */
+  noRetOld:"pre-records", noRetNew:"just in",
   yr:n=>n<1?`${Math.round(n*12)} mo`:(n%1?`${n.toFixed(1)} yr`:`${n} yr`),
-  colShare:"Share of portfolio", colShares:"Shares", colValue:"Value",
-  same:"unchanged",
+  /* 목록 머리글. **안 변하는 말은 머리에 한 번만** 적는다(4번 성적표와 같은 판단). */
+  colShares:"Shares held", colQtr:"This quarter", colRet:"Est. return", colVal:"Value · weight",
+  buy:"BUY", sell:"SELL",
+  same:"held",
   topOnly:(n,p)=>`Top ${n} shown — ${p} of the portfolio`,
   allShown:n=>`All ${n} positions shown`,
   foldOpen:n=>`Show ${n} smaller positions`,
@@ -114,6 +116,7 @@ en:{
     "A 13F shows US-listed long equity positions only. Bonds, cash, foreign listings, wholly owned businesses and short positions are not in it.",
     "Values are what the filing states for the quarter-end date. Dividing value by share count gives an implied quarter-end price — not a trade price.",
     "Share classes of one issuer are shown on one line (marked A+C and so on) because one decision usually moves both. Preferred stock is kept on its own line.",
+    "“pre-records” marks a holding that was already in the first filing we have (1998), so the buying is not visible and no cost or return can be worked out for it. Coca-Cola and American Express are the two large ones.",
     "Average cost is an estimate. Each quarter's share change is priced at the midpoint of that quarter's and the previous quarter's implied price, then carried forward on an average-cost basis. Actual trades happened at prices we cannot see, so the estimate can be off by a wide margin.",
     "Stock splits are detected from the filings themselves — a whole-number jump in share count matched by the same drop in implied price. Apple 4:1 in 2020, American Express 3:1 in 2000, Coca-Cola 2:1 in 2012, Moody's 2:1 in 2005, DaVita 2:1 in 2013.",
     "Positions already held in the first filing on file (1998) have no visible entry, so no cost can be estimated for them.",
@@ -140,13 +143,15 @@ ko:{
   evNew:"신규", evBack:"재진입", evOut:"전량매도",
   heldFor:"보유",
   costArrow:d=>`수익률 = 추정 매수 평균가 \u2192 ${d} 가격 · 배당 제외`,
-  sinceBefore:y=>`${y}년 이전부터 보유`,
-  justIn:"이번 분기 진입",
-  /* 가운데 칸은 좁다. 긴 설명은 각주가 하고, 여기는 왜 숫자가 없는지만 짧게. */
-  noRetOld:y=>`${y}년 이전`, noRetNew:"이번 분기",
+  /* 가운데 칸은 좁다. **왜 숫자가 없는지만** 짧게 적고, 긴 설명은 각주가 한다.
+     `1998년 이전` 이라고 적었더니 사용자가 "의미를 잘 모르겠다"고 했다 —
+     방문자는 1998년이 우리 자료의 시작이라는 걸 알 길이 없다. */
+  noRetOld:"집계 전", noRetNew:"이번 분기",
   yr:n=>n<1?`${Math.round(n*12)}개월`:(n%1?`${n.toFixed(1)}년`:`${n}년`),
-  colShare:"비중", colShares:"주식수", colValue:"금액",
-  same:"그대로",
+  /* 목록 머리글. **안 변하는 말은 머리에 한 번만** 적는다(4번 성적표와 같은 판단). */
+  colShares:"보유 주식 수", colQtr:"이번 분기", colRet:"추정 수익률", colVal:"금액 · 비중",
+  buy:"BUY", sell:"SELL",
+  same:"유지",
   topOnly:(n,p)=>`상위 ${n}종목만 · 전체의 ${p}`,
   allShown:n=>`${n}종목 전부 펼침`,
   foldOpen:n=>`작은 ${n}종목 더 보기`,
@@ -161,6 +166,7 @@ ko:{
     "13F 에는 미국 상장 주식의 매수 포지션만 나옵니다. 채권·현금·해외 상장·통째로 소유한 회사·공매도는 들어 있지 않습니다.",
     "금액은 공시에 적힌 분기말 값입니다. 금액을 주식수로 나누면 분기말 가격이 나오는데, 실제 체결가가 아닙니다.",
     "같은 회사의 여러 종류 주식은 한 줄로 묶었습니다(A+C 처럼 표시). 한 번의 결정이 대개 둘을 같이 움직이기 때문입니다. 우선주는 성격이 다르므로 따로 둡니다.",
+    "‘집계 전’ 은 우리가 가진 첫 공시(1998년)에 이미 들어 있던 종목입니다. 사들이는 장면이 안 보이므로 매수가도 수익률도 낼 수 없습니다. 코카콜라와 아메리칸익스프레스가 여기 해당합니다.",
     "매수 평균가는 추정치입니다. 분기마다 늘어난 주식수를 그 분기와 직전 분기 가격의 중간값으로 사들인 것으로 보고, 이동평균 방식으로 이어 계산했습니다. 실제 체결가는 공시에 없으므로 추정이 크게 빗나갈 수 있습니다.",
     "액면분할은 공시 자체에서 찾아냅니다 — 주식수가 정수 배수로 뛰면서 가격이 꼭 그만큼 내려간 분기입니다. 애플 4:1(2020), 아메리칸익스프레스 3:1(2000), 코카콜라 2:1(2012), 무디스 2:1(2005), 다비타 2:1(2013).",
     "자료의 첫 공시(1998년)에 이미 들어 있던 종목은 사들이는 장면이 안 보이므로 매수가를 추정할 수 없습니다.",
@@ -334,16 +340,39 @@ details.fold .rows{margin-top:4px}
 /* ── 가운데: 얼마나 들고, 이번에 얼마나 움직였고, 얼마가 됐나 ─────
    셋 다 가운데 맞춤입니다. 색은 수익률에만 씁니다 — 사고판 것은 이득이
    아니라 행동이라 중립색입니다(재료표 13). */
-.mid{display:flex;align-items:baseline;gap:12px;justify-content:center}
+.mid{display:flex;align-items:flex-start;gap:12px;justify-content:center}
+/* 줄 높이를 세 칸에 똑같이 못박습니다 — `.act` 만 다른 값을 쓰면 글자 상자가
+   달라져 숫자가 3px 어긋납니다(실측으로 잡았습니다). */
 .mid>span{font-family:var(--mono);font-size:12px;white-space:nowrap;
-  font-variant-numeric:tabular-nums;text-align:center}
+  font-variant-numeric:tabular-nums;text-align:center;line-height:1.25}
+/* **이름표 자리를 세 칸이 똑같이 비워 둡니다.** 이번 분기 칸만 두 줄이면
+   그 칸의 숫자가 이웃보다 한 줄 내려앉아 가로줄이 어긋납니다(실제로 그랬습니다).
+   높이는 `.act i` 와 같은 14px 로 못박아 둡니다. */
+.hold::before,.ret::before,.note::before{content:"";display:block;height:14px}
 .hold{color:var(--ink-2);min-width:74px}
-.act{color:var(--ink-3);min-width:86px}
+/* 이번 분기 칸은 두 줄입니다 — 위 이름표(BUY/SELL), 아래 주식수.
+   **안 움직인 줄에도 이름표 자리를 비워 둡니다**(`i` 가 늘 있습니다).
+   그래야 사고판 줄만 두 줄이 되어 목록이 들쭉날쭉해지지 않습니다. */
+.act{color:var(--ink-2);min-width:86px;display:inline-flex;
+  flex-direction:column;align-items:center}
+.act i{font-style:normal;font-family:var(--cond);font-weight:700;font-size:9.5px;
+  letter-spacing:.12em;height:14px;line-height:14px;color:var(--ink-3)}
+.act i .up{color:var(--up)} .act i .down{color:var(--down)}
 .ret{font-weight:500;min-width:70px}
 .ret.up{color:var(--up)} .ret.down{color:var(--down)}
 .note{color:var(--ink-3);min-width:70px}
 html:not([lang="ko"]) .hold{min-width:118px}
 html:not([lang="ko"]) .act{min-width:124px}
+
+/* ── 목록 머리글 ─────────────────────────────────────────────
+   열 이름은 **안 변하는 말**이라 머리에 한 번만 적습니다. 줄마다 바뀌는
+   `BUY`/`SELL` 만 줄 안에 둡니다 — 변하는 것은 줄에, 안 변하는 것은 머리에. */
+.head{padding:0 0 8px;border-bottom:1px solid var(--rule);align-items:end}
+.head .mid>span,.head .amt span{font-family:var(--cond);font-weight:600;
+  font-size:10px;letter-spacing:.1em;color:var(--ink-3);white-space:nowrap;
+  text-transform:uppercase;line-height:1.2}
+.head .amt span{text-align:right}
+.head .hold::before,.head .ret::before{content:none}
 
 /* ── 오른쪽: 금액이 주인공, 비중은 그 밑에 작게 ──────────────────
    비중은 막대가 이미 그림으로 말하고 있으므로 숫자는 작게 적습니다. */
@@ -389,6 +418,10 @@ body.settled .fade{animation:none}
   .mid{grid-column:1;justify-content:flex-start;gap:10px}
   .amt{grid-column:2}
   .mid>span,html:not([lang="ko"]) .hold,html:not([lang="ko"]) .act{min-width:0;text-align:left}
+  .act{align-items:flex-start}
+  /* 좁은 화면에서는 세 칸이 한 줄에 안 서므로 머리글이 가리키는 자리가
+     사라집니다. 자리를 못 가리키는 이름표는 없느니만 못합니다. */
+  .head{display:none}
   .amt{min-width:0}
   .val{font-size:18px}
   .mk{width:26px;height:26px}
@@ -431,6 +464,15 @@ body.settled .fade{animation:none}
     <h2 id="bookhead"></h2>
     <p class="cap" id="bookcut"></p>
     <p class="cap" id="bookcap"></p>
+    <div class="rowin head" id="colhead">
+      <div class="who"></div>
+      <div class="mid">
+        <span class="hold" id="c1"></span>
+        <span class="act" id="c2"></span>
+        <span class="ret" id="c3"></span>
+      </div>
+      <div class="amt"><span id="c4"></span></div>
+    </div>
     <ul class="rows" id="top"></ul>
     <details class="fold" id="fold" hidden>
       <summary><span id="foldttl"></span><span class="why" id="foldwhy"></span></summary>
@@ -843,19 +885,32 @@ function rowHTML(r,rank,maxW){
   const barW=Math.max(0,Math.min(100,r.w/maxW*100));
   const tickW=r.wPrev===null?null:Math.max(0,Math.min(100,r.wPrev/maxW*100));
 
-  /* 가운데 둘째 칸 — 이번 분기에 **몇 주** 늘고 줄었나.
-     비율이 아니라 주식수로 적습니다(사용자 요청). 판정 자체는 예전처럼
-     주식수 차이로 하므로 말과 셈이 어긋나지 않습니다.
-     **색은 쓰지 않습니다** — 사고판 것은 이득이 아니라 행동입니다(재료표 13). */
-  let act;
-  if(r.isNew) act=r.back?tx("evBack"):tx("evNew");
-  else if(r.flat||!r.dn) act=tx("same");
-  else act=(r.dn>0?"+":"\u2212")+shortShares(Math.abs(r.dn));
+  /* 가운데 둘째 칸 — 이번 분기에 **몇 주** 사고팔았나. 두 줄입니다:
+     위에 `BUY`/`SELL`, 아래에 주식수(사용자 요청).
+
+     **색은 이름표에만 씁니다.** 숫자까지 칠하면 한 줄에 빨간 숫자가 둘이 되어
+     (증감과 수익률) 어느 쪽이 돈 이야기인지 흐려집니다. `--up`/`--down` 을
+     쓰므로 언어를 따라 함께 뒤집힙니다 — 한국어는 빨강 매수/파랑 매도,
+     영어는 초록 매수/빨강 매도(6번의 색 규칙).
+
+     **안 움직인 줄에도 이름표 자리를 비워 둡니다.** 안 그러면 사고판 줄만
+     두 줄이 되어 목록이 들쭉날쭉해집니다. */
+  /* 이름이 `tag` 가 아니라 `flag` 인 이유: 위에서 `tag` 는 이미 주식 종류
+     꼬리표(A+C)로 쓰고 있습니다. 겹쳐 쓰면 화면이 통째로 빕니다 — 실제로
+     한 번 그랬습니다(`Identifier 'tag' has already been declared`). */
+  let flag="", num;
+  if(r.flat||!r.dn){ num=tx("same"); }
+  else{
+    const up=r.isNew||r.dn>0;
+    flag=`<b class="${up?"up":"down"}">${up?tx("buy"):tx("sell")}</b>`;
+    num=(up?"+":"\u2212")+shortShares(Math.abs(r.isNew?r.shares:r.dn));
+  }
+  const act=`<span class="act"><i>${flag}</i>${num}</span>`;
 
   /* 가운데 셋째 칸 — 추정 수익률. 못 쓰는 자리가 둘 있고, 둘 다 말로 밝힙니다.
      칸이 좁으므로 여기서는 짧게 적고 긴 설명은 각주가 합니다. */
   let gain;
-  if(r.preData) gain=`<span class="note">${tx("noRetOld",FIRSTY)}</span>`;
+  if(r.preData) gain=`<span class="note">${tx("noRetOld")}</span>`;
   else if(r.freshIn||!r.avgCost) gain=`<span class="note">${tx("noRetNew")}</span>`;
   else{
     const g=r.nowPrice/r.avgCost-1;
@@ -874,7 +929,7 @@ function rowHTML(r,rank,maxW){
       </div>
       <div class="mid">
         <span class="hold">${shortShares(r.shares)}</span>
-        <span class="act">${act}</span>
+        ${act}
         ${gain}
       </div>
       <div class="amt">
@@ -923,6 +978,13 @@ function render(){
   /* 목록 */
   el("bookhead").textContent=`${tx("positions",B.list.length)} · ${money(B.tc)}`;
   el("bookcap").textContent=tx("costArrow",fdate(B.cur.period));
+  /* 열 이름은 **줄마다 되풀이하지 않고 머리에 한 번만** 적습니다 — 26줄이면
+     같은 말이 78번 나오고, 라벨이 숫자보다 자리를 더 차지합니다(4번 성적표에서
+     이미 같은 판단을 했습니다). 줄마다 바뀌는 `BUY`/`SELL` 만 줄 안에 둡니다. */
+  el("c1").textContent=tx("colShares");
+  el("c2").textContent=tx("colQtr");
+  el("c3").textContent=tx("colRet");
+  el("c4").textContent=tx("colVal");
   /* 상위 10종목을 펴고 **나머지는 접습니다 — 지우는 것이 아닙니다.**
      전체 종목 수와 총액은 제목에 그대로 둡니다 — 10개가 전부인 것처럼 보이면
      화면이 거짓말을 합니다. 막대 폭은 접힌 줄도 1위 기준으로 그려서, 펼쳤을 때
