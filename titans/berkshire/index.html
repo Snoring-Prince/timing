@@ -100,6 +100,12 @@ en:{
   yr:n=>n<1?`${Math.round(n*12)} mo`:(n%1?`${n.toFixed(1)} yr`:`${n} yr`),
   /* 목록 머리글. **안 변하는 말은 머리에 한 번만** 적는다(4번 성적표와 같은 판단). */
   colShares:"Shares held", colQtr:"This quarter", colRet:"Est. return", colVal:"Value · weight",
+  lifeCap:"top — quarter-end price · bottom — shares bought or sold that quarter",
+  lifeSum:(n,lo,hi)=>`${n} quarters · low ${lo} → high ${hi}`,
+  lifeThin:"only one filing — nothing to draw yet",
+  lifeCapP:"quarter-end price",
+  lifeQuiet:"never bought or sold across this history",
+  lifeScroll:"drag sideways for earlier years",
   buy:"BUY", sell:"SELL",
   same:"held",
   topOnly:(n,p)=>`Top ${n} shown — ${p} of the portfolio`,
@@ -150,6 +156,12 @@ ko:{
   yr:n=>n<1?`${Math.round(n*12)}개월`:(n%1?`${n.toFixed(1)}년`:`${n}년`),
   /* 목록 머리글. **안 변하는 말은 머리에 한 번만** 적는다(4번 성적표와 같은 판단). */
   colShares:"보유 주식 수", colQtr:"이번 분기", colRet:"추정 수익률", colVal:"금액 · 비중",
+  lifeCap:"위 칸 — 분기말 가격 · 아래 칸 — 그 분기에 사고판 주식수",
+  lifeSum:(n,lo,hi)=>`${n}분기 · 최저 ${lo} → 최고 ${hi}`,
+  lifeThin:"공시가 한 번뿐이라 아직 그릴 것이 없습니다",
+  lifeCapP:"분기말 가격",
+  lifeQuiet:"이 기간에 사고판 적이 없습니다",
+  lifeScroll:"옆으로 끌면 그 이전이 나옵니다",
   buy:"BUY", sell:"SELL",
   same:"유지",
   topOnly:(n,p)=>`상위 ${n}종목만 · 전체의 ${p}`,
@@ -291,8 +303,24 @@ details.fold .rows{margin-top:4px}
 
 /* ── 종목 줄 ─────────────────────────────────────────────── */
 .rows{margin:0;padding:0;list-style:none}
-.row{position:relative;padding:11px 0 12px;border-top:1px solid var(--rule-2)}
+.row{border-top:1px solid var(--rule-2)}
 .row:first-child{border-top:0}
+/* 줄을 누르면 그 종목의 일생이 펼쳐집니다. 여닫이는 `<details>` 가 쥐고 있고
+   `<summary>` 가 줄 자체입니다 — **줄 여백(padding)이 `.row` 가 아니라 여기
+   있어야 합니다.** `.row` 에 두면 펼친 차트 아래까지 여백이 붙고, 비중 막대의
+   기준 상자(`position:relative`)도 차트 높이만큼 늘어나 줄이 기둥이 됩니다.
+   기본 삼각형 표식은 지웁니다 — 우리 것은 `.caret` 입니다. */
+.rowline{position:relative;display:block;padding:11px 0 12px;cursor:pointer;
+  list-style:none;-webkit-tap-highlight-color:transparent}
+.rowline::-webkit-details-marker{display:none}
+.rowline::marker{content:""}
+.rowline:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+/* 여닫이 표식. '더 보기' 와 같은 글자를 씁니다 — 이 화면에서 무언가 열린다는
+   말은 하나면 됩니다. 머리글에도 같은 상자를 빈 채로 둬서 열이 안 어긋납니다. */
+.caret{flex:0 0 auto;width:9px;font-size:9px;line-height:1;color:var(--ink-3);
+  font-weight:400;text-align:center}
+.lf>.rowline>.rowin>.who>.caret::before{content:"\25B8"}
+.lf[open]>.rowline>.rowin>.who>.caret::before{content:"\25BE"}
 /* 비중 막대는 줄의 바탕이다. 제일 큰 종목이 100% 폭이 되게 맞춰 그린다. */
 .bar{position:absolute;left:0;top:0;bottom:0;background:rgba(15,26,36,.055);z-index:0}
 /* 직전 분기 비중 자리. **줄 높이를 다 가로지르면 이름 글자를 뚫고 지나간다**
@@ -382,6 +410,39 @@ html:not([lang="ko"]) .act{min-width:124px}
 .wt{font-family:var(--mono);font-size:11px;color:var(--ink-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;line-height:1}
 
+/* ── 한 종목의 일생 (줄을 펼치면 나옵니다) ───────────────────
+   **위 칸 가격선 · 아래 칸 매매 막대, 가로축을 함께 씁니다.** 성적표가 이미
+   쓰는 어휘입니다. 색은 매매에만 씁니다 — 가격선은 방향이 아니라 사실이라
+   중립색(재료표 4번의 `보조 가격선 --ink-2 1.6px`)입니다.
+
+   **분기당 폭이 고정이라 차트가 카드보다 넓을 수 있습니다.** 그래서 감싼
+   상자만 옆으로 흐르게 두고(`overflow-x:auto`), 페이지 자체는 안 넘치게
+   `min-width:0` 으로 격자에서 풀어 줍니다. */
+.life{margin:2px 0 13px;padding:0}
+.lifecap{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 4px}
+.lifescroll{overflow-x:auto;overflow-y:hidden;min-width:0;
+  -webkit-overflow-scrolling:touch}
+.lifescroll svg{display:block}
+.lifesum,.lifenote{font-family:var(--mono);font-size:11px;line-height:1.7;
+  color:var(--ink-3);margin:5px 0 0}
+.lifenote{margin:0 0 13px}
+.pLine{fill:none;stroke:var(--ink-2);stroke-width:1.6;
+  stroke-linejoin:round;stroke-linecap:round}
+.pDot{fill:var(--ink-2)}
+.pLab{font-family:var(--mono);font-size:10.5px;fill:var(--ink-2)}
+/* 0 기준선. 재료표의 `0% 기준선 1.3px` 그대로입니다. */
+.zero{stroke:var(--ink-3);stroke-width:1.3}
+.bUp{fill:var(--up)}
+.bDn{fill:var(--down)}
+.bLab{font-family:var(--mono);font-size:10px;font-weight:500}
+.bLab.up{fill:var(--up)}
+.bLab.down{fill:var(--down)}
+.ax{stroke:var(--rule);stroke-width:1}
+/* **맞춤을 CSS 에 두지 않습니다** — CSS 가 SVG 속성을 이겨서 맨 왼쪽 연도의
+   `text-anchor="start"` 가 먹히지 않습니다(7번의 `fill` 과 같은 자리). */
+.axL{font-family:var(--mono);font-size:9.5px;fill:var(--ink-3)}
+
 /* ── 범례·각주 ───────────────────────────────────────────── */
 .legend{display:flex;align-items:center;gap:8px;margin:14px 0 0;
   font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.8}
@@ -465,7 +526,7 @@ body.settled .fade{animation:none}
     <p class="cap" id="bookcut"></p>
     <p class="cap" id="bookcap"></p>
     <div class="rowin head" id="colhead">
-      <div class="who"></div>
+      <div class="who"><b class="caret"></b></div>
       <div class="mid">
         <span class="hold" id="c1"></span>
         <span class="act" id="c2"></span>
@@ -590,6 +651,7 @@ function build(){
 
   /* 평균단가는 첫 분기부터 되짚어야 나온다 — 111개 분기를 한 번만 묶어 둔다 */
   const snaps=qs.map(merge);
+  QS=qs.map(q=>String(q.period));      // lifeOf 가 분기 이름을 붙일 때 씁니다
 
   const list=[...C.values()].map(a=>{
     const p=P.get(a.key);
@@ -615,6 +677,9 @@ function build(){
       /* 가운데 칸에 '몇 주 늘었나'를 적으려면 비율이 아니라 **주식수 차이**가
          필요하다. 비율(dsh)은 판정에, 이 값(dn)은 화면 표기에 쓴다. */
       dn:p?(a.shares-p.shares):null,
+      /* 펼쳤을 때 그릴 분기 시계열. 저장소 파일 하나로 만들어지므로 주 1회
+         워크플로가 13F 를 갱신하면 차트도 저절로 따라옵니다. */
+      life:lifeOf(snaps,a.key),
       netUSD:(p?(a.shares-p.shares):a.shares)*(a.shares>0?a.value/a.shares:0)
     };
   }).sort((x,y)=>y.value-x.value);
@@ -704,6 +769,7 @@ function usISIN(cusip){
    `scripts/fetch_tickers.py` 가 주 1회 OpenFIGI 에서 받아
    `data/titans/tickers.json` 에 저장한 것을 그대로 읽습니다.
    못 받았거나 파일이 없으면 비어 있고, 마크는 글자 타일로 떨어집니다. */
+let QS=[];        // 분기 이름표 (lifeOf 가 씁니다)
 let TICKERS={};
 
 /* ── 섹터 ────────────────────────────────────────────────────
@@ -873,11 +939,144 @@ function costBasis(snaps,key){
   return {avg:held>0?cost/held:null, first, last:prevP};
 }
 
+/* 한 묶음의 **일생** — 분기말 가격과 그 분기에 사고판 주식수.
+
+   **새 자료가 한 톨도 필요 없습니다.** 13F 의 `금액 ÷ 주식수` 가 곧 그 분기말
+   가격이고, 분할만 보정하면 진짜 주가 이력이 됩니다. 실측으로 대조했습니다 —
+   애플 2023-12-31 이 $192.53 로 실제 종가와 같고, 2016-03-31 은 $27.25 로
+   실제 $108.99 를 2020년 4:1 분할로 나눈 값과 같습니다.
+
+   **과거를 오늘 기준으로 맞춥니다** — 분할이 나오면 그때까지 쌓은 값의 가격은
+   ÷f, 주식수는 ×f. 안 그러면 분할이 '699M주 매수'로 찍혀 거짓말이 됩니다.
+
+   **전량 매도하면 끊습니다.** 3년 전에 팔고 다시 산 종목의 선을 이어 그리면
+   중간에 없었던 사실이 사라집니다(보유 연차를 세는 규칙과 같은 자리). */
+function lifeOf(snaps,key){
+  const out=[];
+  let held=null,prevP=null;
+  for(let i=0;i<snaps.length;i++){
+    const a=snaps[i].get(key);
+    if(!a||a.shares<=0||a.value<=0){ held=null;prevP=null;continue; }
+    const p=a.value/a.shares;
+    if(held&&prevP){
+      const f=splitFactor(a.shares/held, prevP/p);
+      /* **직전 주식수도 같이 늘려야 합니다.** 지난 분기들만 고치고 `held` 를 그대로
+         두면 이번 분기 증감이 `944M - 245M = +699M` 으로 잡혀 **액면분할이 사상
+         최대의 매수로 그려집니다**(애플 2020-09 에서 실제로 그랬습니다).
+         늘려 두면 `944M - 980M = -36M` 으로, 그 분기에 실제로 판 만큼만 남습니다. */
+      if(f){ for(const o of out){ o.p/=f; o.sh*=f; o.dn*=f; } held*=f; }
+    }
+    out.push({q:QS[i], p, sh:a.shares, dn:held?a.shares-held:0, first:!held});
+    held=a.shares; prevP=p;
+  }
+  return out;
+}
+
+/* 주당 가격. 금액(money)과 자릿수가 다르다 — $66.0B 와 $289.36 은 다른 자입니다. */
+const usd=n=>"$"+n.toLocaleString(LOCALE,{minimumFractionDigits:2,maximumFractionDigits:2});
+
 /* 수익률은 자릿수가 커진다. 100% 안쪽은 소수 한 자리, 그 밖은 정수. */
 function retPct(r){
   const v=r*100, a=Math.abs(v);
   const n=a<100?v.toFixed(1):Math.round(v).toLocaleString(LOCALE);
   return (v>0?"+":v<0?"\u2212":"")+String(n).replace("-","")+"%";
+}
+
+/* ── 한 종목의 일생 ───────────────────────────────────────────────
+   **위 칸 가격 · 아래 칸 매매, 가로축을 함께 씁니다.** 성적표에서 이미 쓰는
+   어휘입니다("위 칸 수익률 중앙값 / 아래 칸 수익날 확률") — 새로 배울 것이 없습니다.
+
+   **분기당 폭을 고정합니다**(`PXQ`). 그래야 종목이 달라도 한 자로 읽히고,
+   화면에 들어가는 만큼만 보이고 그 이전은 옆으로 끌어서 봅니다 — 900px 카드에서
+   약 15년치(60분기)가 들어갑니다. 폭을 컨테이너에 맞춰 늘리면 코카콜라(28년)와
+   메이시스(2분기)가 같은 폭이 되어 자가 사라집니다.
+
+   **색은 매매에만 씁니다.** 가격선은 방향이 아니라 사실이라 중립색입니다
+   (재료표 4번의 `보조 가격선 --ink-2 1.6px`). 매수·매도만 `--up`/`--down` 이라
+   언어를 따라 뒤집힙니다.
+
+   **호버를 안 만들었습니다.** 손가락에는 호버가 없어서, 값을 읽히려면 그림 위에
+   적어야 합니다(재료표 "숫자는 그림뿐 아니라 값으로도"). 그래서 가장 큰 매수와
+   가장 큰 매도에만 이름표를 달고, 나머지 숫자는 아래 한 줄에 적습니다. */
+const PXQ=12, LEFT=10, RIGHT=76, PADT=16, H1=96, GAP=12, H2=40, PADB=30;
+
+function chartHTML(r){
+  const L=r.life||[];
+  if(L.length<2) return `<p class="lifenote">${tx("lifeThin")}</p>`;
+
+  /* 그 분기에 실제로 사고판 주식수. **묶음이 새로 시작하는 분기는 전량 매수**이고,
+     다만 맨 첫 분기가 집계 시작(1998)이면 사들이는 장면을 못 봤으므로 0 으로 둡니다 —
+     거기에 막대를 세우면 "1998년에 4억주를 샀다"는 거짓말이 됩니다. */
+  const mv=L.map((o,i)=>o.first?((i===0&&r.preData)?0:o.sh):o.dn);
+
+  /* **한 번도 안 사고판 종목은 아래 칸을 아예 안 그립니다.** 코카콜라는 111분기
+     내내 막대가 0 인데, 빈 칸에 0선만 그으면 "고장난 화면"으로 읽힙니다.
+     칸을 지우고 그 사실을 아래 한 줄에 말로 적습니다. */
+  const traded=mv.some(v=>v);
+  const G=traded?GAP:0, B2=traded?H2:0;
+  const n=L.length, W=LEFT+(n-1)*PXQ+RIGHT, H=PADT+H1+G+B2+PADB;
+  const ps=L.map(o=>o.p);
+  let lo=Math.min(...ps), hi=Math.max(...ps);
+  const pad=(hi-lo)*.06||hi*.06||1; lo-=pad; hi+=pad;
+  const x=i=>LEFT+i*PXQ;
+  const y=v=>PADT+H1-(v-lo)/(hi-lo)*H1;
+  const zero=PADT+H1+G+B2/2;
+  const mx=Math.max(...mv.map(Math.abs))||1;
+  const bw=Math.max(3,PXQ-4);
+
+  const line=L.map((o,i)=>`${i?"L":"M"}${x(i).toFixed(1)} ${y(o.p).toFixed(1)}`).join(" ");
+
+  /* 막대. 매수는 0선 위로, 매도는 아래로. 0선은 재료표의 `0% 기준선 1.3px`. */
+  const bars=!traded?"":mv.map((v,i)=>{
+    if(!v) return "";
+    const h=Math.max(1.5,Math.abs(v)/mx*(H2/2-2));
+    return `<rect x="${(x(i)-bw/2).toFixed(1)}" y="${(v>0?zero-h:zero).toFixed(1)}"
+      width="${bw}" height="${h.toFixed(1)}" class="${v>0?"bUp":"bDn"}"/>`;
+  }).join("");
+
+  /* 가장 큰 매수 하나와 가장 큰 매도 하나에만 이름표. 스물몇 개를 다 적으면
+     14px 간격에서 글자가 겹쳐 뭉갭니다(재료표의 "띠가 좁으면 이름 생략"과 같은 처리). */
+  let bi=-1,si=-1;
+  if(traded) mv.forEach((v,i)=>{ if(v>0&&(bi<0||v>mv[bi]))bi=i; if(v<0&&(si<0||v<mv[si]))si=i; });
+  const marks=[[bi,"up",-6],[si,"down",13]].filter(([i])=>i>=0).map(([i,c,dy])=>{
+    const h=Math.abs(mv[i])/mx*(H2/2-2);
+    const yy=mv[i]>0?zero-h+dy:zero+h+dy;
+    const anc=x(i)<70?"start":x(i)>W-RIGHT-30?"end":"middle";
+    return `<text x="${x(i).toFixed(1)}" y="${yy.toFixed(1)}" text-anchor="${anc}"
+      class="bLab ${c}">${(mv[i]>0?"+":"\u2212")+shortShares(Math.abs(mv[i]))}</text>`;
+  }).join("");
+
+  /* 연도 눈금. 2년마다 — 매년 찍으면 56px 간격에 글자가 붙습니다. */
+  let ticks="", prevY=null;
+  L.forEach((o,i)=>{
+    const yr=+o.q.slice(0,4);
+    if(yr!==prevY && (prevY===null || yr%2===0)){
+      /* 맨 왼쪽 연도는 가운데 맞춤으로 두면 그림 밖으로 반쯤 잘려 나갑니다. */
+      const anc=x(i)<20?"start":"middle";
+      ticks+=`<line x1="${x(i)}" y1="${PADT+H1+G+B2}" x2="${x(i)}" y2="${PADT+H1+G+B2+4}" class="ax"/>`
+           +`<text x="${x(i)}" y="${H-5}" text-anchor="${anc}" class="axL">${yr}</text>`;
+      prevY=yr;
+    }else if(yr!==prevY) prevY=yr;
+  });
+
+  const last=L[L.length-1];
+  return `<figure class="life">
+    <figcaption class="lifecap">${traded?tx("lifeCap"):tx("lifeCapP")}</figcaption>
+    <div class="lifescroll">
+      <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img"
+           aria-label="${title(r.name)}">
+        <path d="${line}" class="pLine"/>
+        <circle cx="${x(n-1)}" cy="${y(last.p).toFixed(1)}" r="2.6" class="pDot"/>
+        <text x="${(x(n-1)+7).toFixed(1)}" y="${(y(last.p)+4).toFixed(1)}"
+              class="pLab">${usd(last.p)}</text>
+        ${traded?`<line x1="${LEFT-4}" y1="${zero}" x2="${W-RIGHT+4}" y2="${zero}" class="zero"/>`:""}
+        ${bars}${marks}${ticks}
+      </svg>
+    </div>
+    <p class="lifesum">${tx("lifeSum",n,usd(Math.min(...ps)),usd(Math.max(...ps)))}${
+      traded?"":" \u00B7 "+tx("lifeQuiet")}<span
+      class="hint" hidden> · ${tx("lifeScroll")}</span></p>
+  </figure>`;
 }
 
 function rowHTML(r,rank,maxW){
@@ -917,11 +1116,17 @@ function rowHTML(r,rank,maxW){
     gain=`<span class="ret ${g>=0?"up":"down"}">${retPct(g)}</span>`;
   }
 
-  return `<li class="row">
+  /* 줄을 누르면 그 종목의 일생이 펼쳐집니다. `<details>` 를 쓰므로 키보드와
+     여닫이가 공짜로 따라옵니다 — 아래 '더 보기' 와 같은 어휘입니다.
+     **비중 막대와 직전 분기 표식은 `<summary>` 안**에 둡니다. `<li>` 에 두면
+     펼친 차트 높이까지 막대가 늘어나 줄이 아니라 기둥처럼 보입니다. */
+  return `<li class="row"><details class="lf">
+    <summary class="rowline">
     <span class="bar" style="width:${barW.toFixed(2)}%"></span>
     ${tickW===null?"":`<span class="tick" style="left:${tickW.toFixed(2)}%"></span>`}
     <div class="rowin">
       <div class="who">
+        <b class="caret"></b>
         ${markHTML(r)}
         <span class="rk">${rank}</span>
         <span class="nm">${title(r.name)}${tag?`<span class="cls">${tag}</span>`:""}</span>
@@ -937,7 +1142,30 @@ function rowHTML(r,rank,maxW){
         <span class="wt">${pct(r.w)}</span>
       </div>
     </div>
-  </li>`;
+    </summary>
+    ${chartHTML(r)}
+  </details></li>`;
+}
+
+/* 차트는 **오른쪽 끝(가장 최근 분기)에서 시작합니다.** 28년치는 카드보다
+   넓어서 왼쪽 끝에서 열리면 1998년이 먼저 보이는데, 사람이 궁금한 것은
+   지금입니다. 접혀 있는 동안은 폭이 0 이라 미리 옮겨 둘 수 없으므로
+   여는 순간에 옮깁니다(`toggle` 은 버블링하지 않아 줄마다 답니다). */
+function wireLife(ul){
+  if(!ul) return;
+  ul.querySelectorAll("details.lf").forEach(d=>{
+    d.addEventListener("toggle",()=>{
+      if(!d.open) return;
+      const sc=d.querySelector(".lifescroll");
+      if(!sc) return;
+      sc.scrollLeft=sc.scrollWidth;
+      /* **끌 수 있다는 말은 실제로 넘칠 때만 합니다.** 분기 수로 짐작하면
+         좁은 화면에서는 짧은 차트도 넘치고 넓은 화면에서는 긴 차트도 안 넘칩니다.
+         여기서는 이미 그려진 뒤라 그냥 재면 됩니다. */
+      const h=d.querySelector(".lifesum .hint");
+      if(h) h.hidden = sc.scrollWidth<=sc.clientWidth+1;
+    });
+  });
 }
 
 function render(){
@@ -993,6 +1221,7 @@ function render(){
   const top=B.list.slice(0,10), rest=B.list.slice(10);
   el("top").innerHTML=top.map((r,i)=>rowHTML(r,i+1,maxW)).join("");
   el("rest").innerHTML=rest.map((r,i)=>rowHTML(r,i+11,maxW)).join("");
+  wireLife(el("top")); wireLife(el("rest"));
   const shown=top.reduce((s,r)=>s+r.value,0)/B.tc*100;
   const fold=el("fold");
   if(rest.length){
