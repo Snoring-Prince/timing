@@ -34,6 +34,32 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 
+<!-- ══ 이 투자자 ══════════════════════════════════════════════════════
+     **이 화면은 틀(template)입니다.** 투자자를 한 명 더 넣으려면
+     `titans/berkshire/` 폴더를 통째로 복사해서 이름을 바꾸고, **아래 블록
+     여섯 줄과 위 `<head>` 의 주소·제목만** 고치면 됩니다. 화면 코드와 사전은
+     이 블록에서 이름을 받아 쓰므로 손댈 곳이 없습니다.
+
+     `window.LIVE`·`window.STATS`·`window.SUPPORT`(CLAUDE.md 5번)와 같은
+     요령입니다 — **설정은 한 블록에 모으고, 나머지는 그것만 읽습니다.**
+
+       slug   주소의 폴더 이름. `/titans/<slug>/`
+       cik    SEC 제출인 번호. 각주에 그대로 찍힙니다
+       data   공시 JSON 의 자리 (scripts/fetch_13f.py 가 만듭니다)
+       en/ko  간판에 걸 이름. **법인 이름을 씁니다** — 살아 있는 사람 이름을
+              간판에 걸지 않는다는 규칙이 화면 글자에도 걸립니다(CLAUDE.md 9번)
+       since  자료의 첫 해. 제목과 각주가 이 값을 씁니다
+═════════════════════════════════════════════════════════════════════ -->
+<script>
+window.TITAN = {
+  slug : "berkshire",
+  cik  : "0001067983",
+  data : "../../data/titans/berkshire.json",
+  name : { en:"Berkshire Hathaway", ko:"버크셔 해서웨이" },
+  since: 1998
+};
+</script>
+
 <!-- ══ 다국어 ══════════════════════════════════════════════════════════
      본 사이트와 같은 구조입니다. 언어를 추가하려면 D 에 항목 하나를
      통째로 복사해 넣으면 되고, 화면 코드는 tx("키") 만 부릅니다.
@@ -75,21 +101,30 @@
 <script>
 window.MARKS = { url: "https://api.elbstream.com/logos/{idType}/{id}?format=png&size=64" };
 
+/* 설정 블록의 짧은 이름. 사전과 화면이 둘 다 이것만 읽습니다 —
+   투자자를 바꿀 때 고칠 곳이 `window.TITAN` 하나로 끝나는 이유입니다.
+   블록이 없어도 화면이 안 죽게 기본값을 둡니다. */
+const TT = Object.assign(
+  { slug:"berkshire", cik:"", data:"../../data/titans/berkshire.json",
+    name:{en:"this investor", ko:"이 투자자"}, since:1998 },
+  window.TITAN||{});
+/* 지금 언어로 된 이름. `applyLang()` 이 언어를 바꾸면 따라 바뀝니다. */
+const tName=()=>TT.name[LANG]||TT.name.en;
+
 const D={
 en:{
   locale:"en-US", dir:"ltr", tab:"English",
-  docTitle:"Berkshire Hathaway portfolio — every 13F filing since 1998",
-  metaDesc:"What Berkshire Hathaway holds right now, and what changed last quarter — position sizes, share counts, how long each has been held, read straight from the SEC 13F filings.",
+  docTitle:(n,y)=>`${n} portfolio — every 13F filing since ${y}`,
+  metaDesc:n=>`What ${n} holds right now, and what changed last quarter — position sizes, share counts, how long each has been held, read straight from the SEC 13F filings.`,
   brand:"Titans' picks",
-  tagline:"What Berkshire Hathaway holds now",
+  tagline:n=>`What ${n} holds now`,
   asOf:d=>`As of ${d}`,
   filedOn:d=>`filed ${d}`,
   quarterHead:"This quarter",
   kNew:"new", kAdd:"added", kTrim:"trimmed", kHold:"held", kOut:"exited",
   positions:n=>`${n} positions`,
-  bought:(n,v)=>`The biggest buy was ${n} — about ${v} at the quarter-end price.`,
-  sold:(n,v)=>`The biggest sale was ${n} — about ${v} at the quarter-end price.`,
-  untouched:(a,b)=>`${a} of the ${b} positions did not move by a single share.`,
+  bought:(n,v)=>`<i>Largest buy</i><span>${n}</span><em>${v} est.</em>`,
+  sold:(n,v)=>`<i>Largest sale</i><span>${n}</span><em>${v} est.</em>`,
   evNew:"New", evBack:"Back in", evOut:"Sold out",
   heldFor:"held",
   costArrow:d=>`return = estimated average cost \u2192 price on ${d} · before dividends`,
@@ -103,7 +138,7 @@ en:{
   lifeCap:"top — quarter-end price · bottom — shares bought or sold that quarter",
   lifeSum:(n,lo,hi)=>`${n} quarters · low ${lo} → high ${hi}`,
   lifeThin:"only one filing — nothing to draw yet",
-  lifeSpans:["1Y","3Y","5Y","10Y","15Y","ALL"],
+  lifeSpans:["1Y","5Y","10Y","15Y"],
   lifeSpanLab:"how far back to show",
   lifeCapP:"quarter-end price",
   lifeQuiet:"never bought or sold across this history",
@@ -112,8 +147,7 @@ en:{
   same:"held",
   topOnly:(n,p)=>`Top ${n} shown — ${p} of the portfolio`,
   allShown:n=>`All ${n} positions shown`,
-  foldOpen:n=>`Show ${n} smaller positions`,
-  foldNote:(p,a,t)=>`${p} of the portfolio · ${a} added to, ${t} trimmed`,
+  foldOpen:n=>"Show more",
   prevTick:"tick marks last quarter's share",
   noData:"Could not load the filings.",
   aboutH:"How to read this",
@@ -121,7 +155,7 @@ en:{
   /* 각주는 **함수**입니다 — 첫 공시 연도·분할 목록·집계 전 종목이 자료에서
      오므로, 분기가 새로 나와 그것들이 바뀌면 글도 같이 바뀝니다. */
   foot:(firstY,splits,pre)=>[
-    "Source: SEC Form 13F-HR, filed by Berkshire Hathaway Inc. (CIK 0001067983). US government work — public domain.",
+    `Source: SEC Form 13F-HR, filed by ${TT.name.en} (CIK ${TT.cik}). US government work \u2014 public domain.`,
     "A 13F is filed 45 days after the quarter ends, so these holdings are at least six weeks old and may already have changed.",
     "A 13F shows US-listed long equity positions only. Bonds, cash, foreign listings, wholly owned businesses and short positions are not in it.",
     "Values are what the filing states for the quarter-end date. Dividing value by share count gives an implied quarter-end price — not a trade price.",
@@ -138,18 +172,20 @@ en:{
 },
 ko:{
   locale:"ko-KR", dir:"ltr", tab:"한국어",
-  docTitle:"버크셔 해서웨이 포트폴리오 — 1998년부터의 13F 공시",
-  metaDesc:"버크셔 해서웨이가 지금 들고 있는 종목과 지난 분기에 바뀐 것 — 비중, 주식수, 보유 기간을 SEC 13F 공시에서 그대로 읽었습니다.",
+  docTitle:(n,y)=>`${n} 포트폴리오 — ${y}년부터의 13F 공시`,
+  metaDesc:n=>`${n}가 지금 들고 있는 종목과 지난 분기에 바뀐 것 — 비중, 주식수, 보유 기간을 SEC 13F 공시에서 그대로 읽었습니다.`,
   brand:"대가들의 선택",
-  tagline:"버크셔 해서웨이가 지금 들고 있는 것",
+  tagline:n=>`${n}가 지금 들고 있는 것`,
   asOf:d=>`${d} 기준`,
   filedOn:d=>`${d} 공시`,
   quarterHead:"이번 분기",
-  kNew:"신규", kAdd:"늘림", kTrim:"줄임", kHold:"그대로", kOut:"전량매도",
+  kNew:"신규", kAdd:"확대", kTrim:"축소", kHold:"유지", kOut:"전량매도",
   positions:n=>`${n}종목`,
-  bought:(n,v)=>`가장 많이 산 것은 ${n} 입니다 — 분기말 가격으로 약 ${v}.`,
-  sold:(n,v)=>`가장 많이 판 것은 ${n} 입니다 — 분기말 가격으로 약 ${v}.`,
-  untouched:(a,b)=>`${b} 중 ${a}은 한 주도 움직이지 않았습니다.`,
+  /* **줄글이 아니라 이름표 + 값입니다** (사용자 요청). 한 화면에 나란히 놓이는
+     두 줄이라 같은 꼴이어야 견줘집니다 — "가장 많이 산 것은 … 입니다" 는
+     라벨이 숫자보다 자리를 더 차지하던 성적표와 같은 문제였습니다. */
+  bought:(n,v)=>`<i>최대 매수</i><span>${n}</span><em>${v} 추정</em>`,
+  sold:(n,v)=>`<i>최대 매도</i><span>${n}</span><em>${v} 추정</em>`,
   evNew:"신규", evBack:"재진입", evOut:"전량매도",
   heldFor:"보유",
   costArrow:d=>`수익률 = 추정 매수 평균가 \u2192 ${d} 가격 · 배당 제외`,
@@ -163,7 +199,7 @@ ko:{
   lifeCap:"위 칸 — 분기말 가격 · 아래 칸 — 그 분기에 사고판 주식수",
   lifeSum:(n,lo,hi)=>`${n}분기 · 최저 ${lo} → 최고 ${hi}`,
   lifeThin:"공시가 한 번뿐이라 아직 그릴 것이 없습니다",
-  lifeSpans:["1년","3년","5년","10년","15년","전체"],
+  lifeSpans:["1년","5년","10년","15년"],
   lifeSpanLab:"얼마나 거슬러 볼까",
   lifeCapP:"분기말 가격",
   lifeQuiet:"이 기간에 사고판 적이 없습니다",
@@ -172,14 +208,13 @@ ko:{
   same:"유지",
   topOnly:(n,p)=>`상위 ${n}종목만 · 전체의 ${p}`,
   allShown:n=>`${n}종목 전부 펼침`,
-  foldOpen:n=>`작은 ${n}종목 더 보기`,
-  foldNote:(p,a,t)=>`전체의 ${p} · 늘림 ${a} · 줄임 ${t}`,
+  foldOpen:n=>"더 보기",
   prevTick:"눈금은 직전 분기 비중",
   noData:"공시를 불러오지 못했습니다.",
   aboutH:"보는 법",
   footTitle:"출처와 한계",
   foot:(firstY,splits,pre)=>[
-    "출처: 버크셔 해서웨이(CIK 0001067983)가 SEC 에 낸 Form 13F-HR. 미국 정부 저작물이라 퍼블릭 도메인입니다.",
+    `출처: ${TT.name.ko}(CIK ${TT.cik})가 SEC 에 낸 Form 13F-HR. 미국 정부 저작물이라 퍼블릭 도메인입니다.`,
     "13F 는 분기가 끝나고 45일 뒤에 냅니다. 그래서 여기 보이는 것은 최소 6주 전의 상태이고, 그 사이에 이미 바뀌었을 수 있습니다.",
     "13F 에는 미국 상장 주식의 매수 포지션만 나옵니다. 채권·현금·해외 상장·통째로 소유한 회사·공매도는 들어 있지 않습니다.",
     "금액은 공시에 적힌 분기말 값입니다. 금액을 주식수로 나누면 분기말 가격이 나오는데, 실제 체결가가 아닙니다.",
@@ -231,6 +266,28 @@ const tx=(k,...a)=>{ const v=(k in L10N)?L10N[k]:D.en[k]; return typeof v==="fun
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --cond:"IBM Plex Sans Condensed","Pretendard Variable",Pretendard,sans-serif;
   --body:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+
+  /* ── 글자 크기 자 ────────────────────────────────────────────────
+     **여섯 칸뿐입니다.** 전에는 9.5 / 10 / 10.5 / 11 / 12 / 13 / 15 / 20 이
+     뒤섞여 있었고, 0.5px 차이는 눈에 안 보이면서 고칠 곳만 늘렸습니다.
+
+     **아래쪽을 올렸습니다** (사용자 지적 — "어떤 글자 크기는 너무 작아").
+     각주 13문단이 11px 고정폭이었는데, 읽는 글로는 작습니다. 널리 쓰는
+     기준을 맞췄습니다 — 애플 HIG 는 **어떤 글자도 11pt 아래로 두지 말라**고
+     하고, 머티리얼의 제일 작은 칸(label small)도 11sp 입니다. 그래서
+     **11px 을 바닥**으로 잡고, 읽는 글은 13.5px 로 올렸습니다.
+
+     **위쪽은 안 건드렸습니다** — 사용자가 "제목은 적당한 거 같다"고 했습니다.
+     결과적으로 위아래 폭이 좁아져서 화면이 한 덩어리로 읽힙니다.
+
+     자를 쓰는 곳은 이 파일 전체입니다. **새 글자를 넣을 때 px 를 직접 적지
+     말고 이 여섯 중에서 고르세요** — 그래야 다음 투자자 화면도 같은 얼굴입니다. */
+  --t-micro:11px;    /* 대문자 이름표 · 축 연도 · BUY/SELL  (was 9.5~10) */
+  --t-label:11.5px;  /* 칸 머리글 · 캡션 · 버튼            (was 10~10.5) */
+  --t-small:12.5px;  /* 섹터 · 순위 · 비중                 (was 10.5~11) */
+  --t-text:13.5px;   /* 읽는 글 — 각주 · 요약 한 줄        (was 11)      */
+  --t-num:14px;      /* 표의 숫자                          (was 12)      */
+  --t-name:16px;     /* 종목 이름                          (was 15)      */
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -245,22 +302,22 @@ body{
 /* ── 머리글 ─────────────────────────────────────────────── */
 .masthead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;
   padding-bottom:14px;margin-bottom:22px;border-bottom:2px solid var(--ink)}
-.eyebrow{margin:0 0 6px;font-family:var(--cond);font-weight:600;font-size:11px;
+.eyebrow{margin:0 0 6px;font-family:var(--cond);font-weight:600;font-size:var(--t-label);
   letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
 .masthead h1{margin:0;font-family:var(--cond);font-weight:700;font-size:30px;letter-spacing:-.01em;line-height:1.05}
 .mast-right{display:flex;flex-direction:column;align-items:flex-end;gap:9px}
-.stamp{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-align:right}
+.stamp{font-family:var(--mono);font-size:var(--t-small);color:var(--ink-3);text-align:right}
 
 /* ── 언어 탭 ─────────────────────────────────────────────── */
 .seg{display:inline-flex;border:1px solid var(--rule);background:var(--card)}
 .seg button{appearance:none;border:0;background:transparent;cursor:pointer;
-  font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.06em;
+  font-family:var(--cond);font-weight:600;font-size:var(--t-label);letter-spacing:.06em;
   color:var(--ink-2);padding:5px 10px;line-height:1.2}
 .seg button+button{border-left:1px solid var(--rule-2)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
 .seg button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 /* 차트 기간처럼 줄 안에 들어가는 버튼은 한 치수 작습니다. */
-.seg.mini button{font-size:10px;letter-spacing:.08em;padding:3px 8px}
+.seg.mini button{font-size:var(--t-micro);letter-spacing:.08em;padding:3px 8px}
 /* **이력보다 긴 기간은 눌리지 않습니다.** 감추지 않고 흐리게 둡니다 — 줄마다
    버튼 개수가 달라지면 목록의 세로줄이 들쭉날쭉해집니다. */
 .seg button[disabled]{color:var(--ink-3);opacity:.45;cursor:default}
@@ -268,7 +325,7 @@ body{
 /* ── 패널 ───────────────────────────────────────────────── */
 .panel{background:var(--card);border:1px solid var(--rule);margin-bottom:20px;padding:20px}
 .panel h2{margin:0 0 5px;font-family:var(--cond);font-weight:700;font-size:19px;letter-spacing:-.01em}
-.cap{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.12em;
+.cap{font-family:var(--cond);font-weight:600;font-size:var(--t-label);letter-spacing:.12em;
   text-transform:uppercase;color:var(--ink-3);line-height:1.35;margin:0 0 13px}
 #bookcut{margin-bottom:2px;color:var(--ink-2)}
 #bookcut:empty{display:none}
@@ -280,22 +337,34 @@ body{
 .tally div+div{border-left:1px solid var(--rule-2)}
 .tally .n{font-family:var(--mono);font-weight:500;font-size:23px;letter-spacing:-.02em;
   line-height:1.1;display:block;margin-bottom:3px}
-.tally .k{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.1em;
+.tally .k{font-family:var(--cond);font-weight:600;font-size:var(--t-micro);letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink-3);line-height:1.25}
 .tally .up .n{color:var(--up)} .tally .down .n{color:var(--down)}
 
-.says{margin:0 0 16px;font-family:var(--body);font-size:16.5px;line-height:1.6;color:var(--ink)}
-.says p{margin:0 0 6px} .says p:last-child{margin-bottom:0}
+/* 최대 매수·최대 매도. **줄글이 아니라 세 칸입니다** — 바로 아래 사건 줄과
+   같은 짜임(이름표 · 이름 · 값)이라 둘이 한 표로 읽힙니다. */
+.says{margin:0 0 14px}
+.says p{display:flex;align-items:baseline;gap:12px;margin:0 0 5px;
+  font-family:var(--mono);font-size:var(--t-num);line-height:1.6;color:var(--ink)}
+.says p:last-child{margin-bottom:0}
+.says i{font-style:normal;font-family:var(--cond);font-weight:600;
+  font-size:var(--t-micro);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);flex:0 0 auto;min-width:64px}
+.says span{flex:1 1 auto;min-width:0}
+.says em{font-style:normal;color:var(--ink-3);flex:0 0 auto}
+html:not([lang="ko"]) .says i{min-width:88px}
 
 /* 사건(신규·재진입·전량매도)은 크기가 아니라 사건이라 접히지 않고 늘 위에 있다 */
 .events{border-top:1px solid var(--rule-2);padding-top:12px}
-.ev{display:flex;align-items:baseline;gap:10px;font-family:var(--mono);font-size:12px;
+.ev{display:flex;align-items:baseline;gap:10px;font-family:var(--mono);font-size:var(--t-num);
   line-height:1.9;color:var(--ink-2);flex-wrap:wrap}
-.ev .tag{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.1em;
+.ev .tag{font-family:var(--cond);font-weight:600;font-size:var(--t-micro);letter-spacing:.1em;
   text-transform:uppercase;border:1px solid currentColor;padding:1px 5px;flex:0 0 auto}
 .ev.in .tag{color:var(--up)} .ev.out .tag{color:var(--down)}
 .ev .nm{color:var(--ink);flex:1 1 auto;min-width:0}
 .ev .sub{color:var(--ink-3);flex:0 0 auto}
+/* 두 사건이 붙어 있어 한 줄처럼 보였습니다 — 사이를 띄웁니다(사용자 요청). */
+.ev+.ev{margin-top:7px}
 
 /* ── 접힘 ─────────────────────────────────────────────────
    **지우지 마세요.** 한 번 지웠다가 되살렸습니다 — 상위 10개만 남기고 나머지를
@@ -304,12 +373,11 @@ body{
 details.fold{border-top:1px solid var(--rule-2);margin-top:2px}
 details.fold>summary{list-style:none;cursor:pointer;padding:11px 0 2px;
   display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
-  font-family:var(--cond);font-weight:700;font-size:13px;color:var(--ink-2)}
+  font-family:var(--cond);font-weight:700;font-size:var(--t-name);color:var(--ink-2)}
 details.fold>summary::-webkit-details-marker{display:none}
-details.fold>summary::before{content:"\25B8";color:var(--ink-3);font-size:11px}
+details.fold>summary::before{content:"\25B8";color:var(--ink-3);font-size:var(--t-micro)}
 details.fold[open]>summary::before{content:"\25BE"}
 details.fold>summary:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-details.fold>summary .why{font-family:var(--mono);font-weight:400;font-size:11px;color:var(--ink-3)}
 details.fold .rows{margin-top:4px}
 
 /* ── 종목 줄 ─────────────────────────────────────────────── */
@@ -352,9 +420,9 @@ details.fold .rows{margin-top:4px}
 
 /* ── 왼쪽: 누구인가 ──────────────────────────────────────── */
 .who{display:flex;align-items:center;gap:9px;min-width:0;flex-wrap:wrap}
-.rk{font-family:var(--mono);font-size:11px;color:var(--ink-3);
+.rk{font-family:var(--mono);font-size:var(--t-small);color:var(--ink-3);
   min-width:16px;text-align:right;flex:0 0 auto}
-.nm{font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:.01em;
+.nm{font-family:var(--cond);font-weight:700;font-size:var(--t-name);letter-spacing:.01em;
   line-height:1.25;min-width:0;overflow-wrap:anywhere}
 /* 회사 마크. **로고와 글자 타일이 똑같은 상자를 쓰는 것이 핵심**이다 —
    상자가 제각각이면 몇 줄만 그림이 있는 목록이 '덜 만든 화면'처럼 보인다.
@@ -366,14 +434,14 @@ details.fold .rows{margin-top:4px}
 .mk svg{width:19px;height:19px;display:block}
 .mk.img img{width:100%;height:100%;object-fit:contain;display:block}
 .mk.mono{background:var(--ink-2);border-color:var(--ink-2);color:#fff;
-  font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.02em;line-height:1}
-.cls{font-family:var(--cond);font-weight:600;font-size:9.5px;letter-spacing:.1em;
+  font-family:var(--cond);font-weight:700;font-size:var(--t-small);letter-spacing:.02em;line-height:1}
+.cls{font-family:var(--cond);font-weight:600;font-size:var(--t-micro);letter-spacing:.1em;
   color:var(--ink-3);border:1px solid var(--rule);padding:0 4px;margin-left:6px;
   white-space:nowrap;vertical-align:2px}
 /* 섹터. **테두리를 두르지 않습니다** — 테두리 상자는 주식 종류(A+C)의 것이고,
    한 줄에 똑같이 생긴 상자가 둘이면 무엇이 무엇인지 흐려집니다. 섹터는
    이름에 딸린 설명이라 글자만 작고 흐리게 둡니다. */
-.sec{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.06em;
+.sec{font-family:var(--cond);font-weight:600;font-size:var(--t-small);letter-spacing:.06em;
   color:var(--ink-3);white-space:nowrap;flex:0 0 auto}
 
 /* ── 가운데: 얼마나 들고, 이번에 얼마나 움직였고, 얼마가 됐나 ─────
@@ -382,33 +450,41 @@ details.fold .rows{margin-top:4px}
 .mid{display:flex;align-items:flex-start;gap:12px;justify-content:center}
 /* 줄 높이를 세 칸에 똑같이 못박습니다 — `.act` 만 다른 값을 쓰면 글자 상자가
    달라져 숫자가 3px 어긋납니다(실측으로 잡았습니다). */
-.mid>span{font-family:var(--mono);font-size:12px;white-space:nowrap;
+.mid>span{font-family:var(--mono);font-size:var(--t-num);white-space:nowrap;
   font-variant-numeric:tabular-nums;text-align:center;line-height:1.25}
 /* **이름표 자리를 세 칸이 똑같이 비워 둡니다.** 이번 분기 칸만 두 줄이면
    그 칸의 숫자가 이웃보다 한 줄 내려앉아 가로줄이 어긋납니다(실제로 그랬습니다).
    높이는 `.act i` 와 같은 14px 로 못박아 둡니다. */
 .hold::before,.ret::before,.note::before{content:"";display:block;height:14px}
-.hold{color:var(--ink-2);min-width:74px}
+.hold{color:var(--ink-2);min-width:82px}
 /* 이번 분기 칸은 두 줄입니다 — 위 이름표(BUY/SELL), 아래 주식수.
    **안 움직인 줄에도 이름표 자리를 비워 둡니다**(`i` 가 늘 있습니다).
    그래야 사고판 줄만 두 줄이 되어 목록이 들쭉날쭉해지지 않습니다. */
-.act{color:var(--ink-2);min-width:86px;display:inline-flex;
+.act{color:var(--ink-2);min-width:96px;display:inline-flex;
   flex-direction:column;align-items:center}
-.act i{font-style:normal;font-family:var(--cond);font-weight:700;font-size:9.5px;
+.act i{font-style:normal;font-family:var(--cond);font-weight:700;font-size:var(--t-micro);
   letter-spacing:.12em;height:14px;line-height:14px;color:var(--ink-3)}
 .act i .up{color:var(--up)} .act i .down{color:var(--down)}
-.ret{font-weight:500;min-width:70px}
+.ret{font-weight:500;min-width:78px}   /* .note 와 같은 폭이어야 합니다 ↓ */
 .ret.up{color:var(--up)} .ret.down{color:var(--down)}
-.note{color:var(--ink-3);min-width:70px}
-html:not([lang="ko"]) .hold{min-width:118px}
-html:not([lang="ko"]) .act{min-width:124px}
+/* **`.ret` 와 `.note` 는 폭이 같아야 합니다.** 가운데 세 칸은 `justify-content:
+   center` 라, 셋째 칸만 넓은 줄(`집계 전`)이 섞이면 **덩어리 전체가 옆으로
+   밀려** 세로줄이 어긋납니다(영어에서 18px 씩 흔들렸습니다). */
+.note{color:var(--ink-3);min-width:78px}
+html:not([lang="ko"]) .hold{min-width:82px}
+/* 값은 실측입니다 — 글자를 14px 로 올린 뒤 각 칸의 제일 긴 내용을 재서
+   잡았습니다(영어 `BUY +553,465 shares` 138px). 안 맞추면 줄마다 칸 폭이
+   달라져 세로줄이 어긋납니다 — 실제로 영어에서 23px 씩 흔들렸습니다. */
+html:not([lang="ko"]) .act{min-width:100px}
+html:not([lang="ko"]) .ret,
+html:not([lang="ko"]) .note{min-width:96px}
 
 /* ── 목록 머리글 ─────────────────────────────────────────────
    열 이름은 **안 변하는 말**이라 머리에 한 번만 적습니다. 줄마다 바뀌는
    `BUY`/`SELL` 만 줄 안에 둡니다 — 변하는 것은 줄에, 안 변하는 것은 머리에. */
 .head{padding:0 0 8px;border-bottom:1px solid var(--rule);align-items:end}
 .head .mid>span,.head .amt span{font-family:var(--cond);font-weight:600;
-  font-size:10px;letter-spacing:.1em;color:var(--ink-3);white-space:nowrap;
+  font-size:var(--t-label);letter-spacing:.1em;color:var(--ink-3);white-space:nowrap;
   text-transform:uppercase;line-height:1.2}
 .head .amt span{text-align:right}
 .head .hold::before,.head .ret::before{content:none}
@@ -418,7 +494,7 @@ html:not([lang="ko"]) .act{min-width:124px}
 .amt{display:flex;flex-direction:column;align-items:flex-end;gap:1px;min-width:78px}
 .val{font-family:var(--mono);font-weight:500;font-size:20px;letter-spacing:-.02em;
   line-height:1.15;white-space:nowrap}
-.wt{font-family:var(--mono);font-size:11px;color:var(--ink-3);white-space:nowrap;
+.wt{font-family:var(--mono);font-size:var(--t-small);color:var(--ink-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;line-height:1}
 
 /* ── 한 종목의 일생 (줄을 펼치면 나옵니다) ───────────────────
@@ -433,17 +509,17 @@ html:not([lang="ko"]) .act{min-width:124px}
 /* 캡션 줄은 **두 칸**입니다 — 왼쪽은 안 변하는 설명, 오른쪽은 마우스를 올린
    자리의 값. 오른쪽 자리를 늘 비워 두므로 글자가 나타나도 줄이 안 밀립니다
    (`min-height` 로 못박습니다). */
-.lifecap{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.1em;
+.lifecap{font-family:var(--cond);font-weight:600;font-size:var(--t-label);letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink-3);margin:0 0 4px}
 /* 짚은 자리에 뜨는 값. **그림 안(SVG)이 아니라 위에 얹는 HTML** 이라 바탕을
    깔 수 있고 그림 밖으로 잘리지 않습니다. 기준 상자는 `.lifescroll` 이라
    옆으로 끌면 같이 따라갑니다. 마우스를 안 가로채게 `pointer-events:none`. */
 .lifetip{position:absolute;pointer-events:none;z-index:3;white-space:nowrap;
   background:var(--card);border:1px solid var(--rule);padding:4px 7px;
-  font-family:var(--mono);font-size:11px;font-weight:500;line-height:1.45;
+  font-family:var(--mono);font-size:var(--t-num);font-weight:500;line-height:1.45;
   letter-spacing:0;text-transform:none;color:var(--ink)}
 .lifetip em{font-style:normal;color:var(--ink-3);margin-right:7px}
-.lifetip i{font-style:normal;font-family:var(--cond);font-weight:700;font-size:9.5px;
+.lifetip i{font-style:normal;font-family:var(--cond);font-weight:700;font-size:var(--t-micro);
   letter-spacing:.12em;margin-right:4px}
 .lifetip i.up{color:var(--up)} .lifetip i.down{color:var(--down)}
 
@@ -455,18 +531,18 @@ html:not([lang="ko"]) .act{min-width:124px}
 .lifescroll{position:relative;overflow-x:auto;overflow-y:hidden;min-width:0;
   -webkit-overflow-scrolling:touch}
 .lifescroll svg{display:block}
-.lifesum,.lifenote{font-family:var(--mono);font-size:11px;line-height:1.7;
+.lifesum,.lifenote{font-family:var(--mono);font-size:var(--t-text);line-height:1.7;
   color:var(--ink-3);margin:5px 0 0}
 .lifenote{margin:0 0 13px}
 .pLine{fill:none;stroke:var(--ink-2);stroke-width:1.6;
   stroke-linejoin:round;stroke-linecap:round}
 .pDot{fill:var(--ink-2)}
-.pLab{font-family:var(--mono);font-size:10.5px;fill:var(--ink-2)}
+.pLab{font-family:var(--mono);font-size:var(--t-small);fill:var(--ink-2)}
 /* 0 기준선. 재료표의 `0% 기준선 1.3px` 그대로입니다. */
 .zero{stroke:var(--ink-3);stroke-width:1.3}
 .bUp{fill:var(--up)}
 .bDn{fill:var(--down)}
-.bLab{font-family:var(--mono);font-size:10px;font-weight:500}
+.bLab{font-family:var(--mono);font-size:var(--t-micro);font-weight:500}
 .bLab.up{fill:var(--up)}
 .bLab.down{fill:var(--down)}
 /* 십자선. 재료표의 눈금 어휘 그대로 — 가는 실선 하나와 점 하나입니다.
@@ -479,21 +555,25 @@ html:not([lang="ko"]) .act{min-width:124px}
 .cross.on{display:inline}
 .cross .cx{stroke:var(--ink-3);stroke-width:1;opacity:.55}
 .cross .cdot{fill:var(--ink)}
+/* 가격 눈금선 — 아주 옅게. 재료표의 `격자 1px` 이고, 선보다 뒤에 있어야
+   합니다(그리는 차례로 정합니다). */
+.gl{stroke:var(--rule-2);stroke-width:1}
+.glL{font-family:var(--mono);font-size:var(--t-micro);fill:var(--ink-3)}
 .ax{stroke:var(--rule);stroke-width:1}
 /* **맞춤을 CSS 에 두지 않습니다** — CSS 가 SVG 속성을 이겨서 맨 왼쪽 연도의
    `text-anchor="start"` 가 먹히지 않습니다(7번의 `fill` 과 같은 자리). */
-.axL{font-family:var(--mono);font-size:9.5px;fill:var(--ink-3)}
+.axL{font-family:var(--mono);font-size:var(--t-micro);fill:var(--ink-3)}
 
 /* ── 범례·각주 ───────────────────────────────────────────── */
 .legend{display:flex;align-items:center;gap:8px;margin:14px 0 0;
-  font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.8}
+  font-family:var(--mono);font-size:var(--t-text);color:var(--ink-3);line-height:1.8}
 .legend i{display:inline-block;width:0;height:11px;border-left:1.2px solid var(--ink-3);flex:0 0 auto;margin:0 5px}
-.foot{font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--ink-3);margin:26px 0 0}
-.foot h2{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.12em;
+.foot{font-family:var(--mono);font-size:var(--t-text);line-height:1.85;color:var(--ink-3);margin:26px 0 0}
+.foot h2{font-family:var(--cond);font-weight:600;font-size:var(--t-label);letter-spacing:.12em;
   text-transform:uppercase;color:var(--ink-3);margin:0 0 8px}
 .foot p{margin:0 0 7px}
 .foot a{color:inherit}
-.back{display:inline-block;margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.back{display:inline-block;margin-top:14px;font-family:var(--mono);font-size:var(--t-text);color:var(--ink-3)}
 
 /* ── 애니메이션 — 최초 1회만 ─────────────────────────────── */
 .fade{animation:fade .5s ease-out both}
@@ -510,8 +590,9 @@ body.settled .fade{animation:none}
   .stamp{text-align:left}
   .masthead h1{font-size:24px}
   .panel h2{font-size:16px}
-  .says{font-size:15px}
-  .nm{font-size:14px}
+  .says i{min-width:0}
+  html:not([lang="ko"]) .says i{min-width:0}
+  .nm{font-size:15px}
   /* 좁은 화면에서는 세 덩어리가 한 줄에 못 들어갑니다. **왼쪽은 그대로 두고
      가운데·오른쪽만 아래로 내립니다** — 로고와 이름이 먼저 읽히는 순서는
      지키면서, 숫자 세 칸이 제 너비를 갖습니다. 최소 폭도 풉니다. */
@@ -528,12 +609,12 @@ body.settled .fade{animation:none}
   .val{font-size:18px}
   .mk{width:26px;height:26px}
   .mk svg{width:16px;height:16px}
-  .mk.mono{font-size:10.5px}
+  .mk.mono{font-size:var(--t-micro)}
   /* 다섯 칸이 한 줄에 들어가게 최소 폭을 내린다. 4+1 로 접히면 마지막 칸
      하나가 줄 전체를 차지해 계기판이 아니라 빈칸처럼 보인다. */
   .tally div{min-width:50px;padding:9px 4px}
   .tally .n{font-size:19px}
-  .tally .k{font-size:9.5px;letter-spacing:.06em}
+  .tally .k{font-size:10.5px;letter-spacing:.06em}
   /* 영어 대문자 캡션은 한국어보다 훨씬 길다 — 좁은 화면에서 줄을 바꾸게 둔다 */
   .tally .k{white-space:normal}
 }
@@ -577,7 +658,7 @@ body.settled .fade{animation:none}
     </div>
     <ul class="rows" id="top"></ul>
     <details class="fold" id="fold" hidden>
-      <summary><span id="foldttl"></span><span class="why" id="foldwhy"></span></summary>
+      <summary><span id="foldttl"></span></summary>
       <ul class="rows" id="rest"></ul>
     </details>
     <p class="legend"><i></i><span id="legend"></span></p>
@@ -641,15 +722,23 @@ function money(v){
   const m=v/1e6;
   return m>=1?`$${m.toFixed(0)}M`:`$${(v/1e3).toFixed(0)}K`;
 }
+/* **영어에서 `shares` 를 떼었습니다** (2026-09-17). 열 머리글이 이미
+   `SHARES HELD`·`THIS QUARTER` 라고 적고 있어서 26줄에 같은 말이 52번
+   되풀이됐고, 글자를 14px 로 올리자 그 폭 때문에 **영어 섹터가 둘째 줄로
+   밀려났습니다**(`Financial Services` 가 이름 아래로 떨어짐). 4번의
+   "라벨이 숫자보다 자리를 더 차지했습니다 … 열 머리에 한 번만" 과 같은 자리입니다.
+
+   한국어의 `주` 는 뗄 수 없습니다 — `2.28억` 만 남기면 무엇이 2.28억인지
+   알 수 없습니다. 원래도 짧아서 밀어낼 일이 없습니다. */
 function shortShares(n){
   if(LANG==="ko"){
     if(n>=1e8) return `${(n/1e8).toFixed(n>=1e9?0:2)}억주`;
     if(n>=1e4) return `${Math.round(n/1e4).toLocaleString(LOCALE)}만주`;
     return `${num(n)}주`;
   }
-  if(n>=1e9) return `${(n/1e9).toFixed(2)}B shares`;
-  if(n>=1e6) return `${(n/1e6).toFixed(1)}M shares`;
-  return `${num(n)} shares`;
+  if(n>=1e9) return `${(n/1e9).toFixed(2)}B`;
+  if(n>=1e6) return `${(n/1e6).toFixed(1)}M`;
+  return num(n);
 }
 function fdate(iso){
   if(LANG==="ko") return String(iso).replace(/-/g,".");
@@ -764,10 +853,8 @@ function says(B,T){
   const sells=B.list.filter(r=>r.netUSD<0).sort((a,b)=>a.netUSD-b.netUSD);
   if(buys[0]) p.push(tx("bought",title(buys[0].name),money(buys[0].netUSD)));
   if(sells[0]) p.push(tx("sold",title(sells[0].name),money(-sells[0].netUSD)));
-  /* 영어는 숫자만, 한국어는 "종목"을 붙여 센다 — 사전 쪽에서 단위를 정한다 */
-  if(T.hold>0) p.push(LANG==="ko"
-    ? tx("untouched",tx("positions",T.hold),tx("positions",B.list.length))
-    : tx("untouched",T.hold,B.list.length));
+  /* **"한 주도 안 움직인 종목 수" 줄은 뺐습니다** (사용자 요청) — 바로 위
+     다섯 칸 계기판의 `유지` 가 이미 같은 숫자를 적고 있습니다. */
   return p;
 }
 
@@ -1072,7 +1159,7 @@ function retPct(r){
    **호버를 안 만들었습니다.** 손가락에는 호버가 없어서, 값을 읽히려면 그림 위에
    적어야 합니다(재료표 "숫자는 그림뿐 아니라 값으로도"). 그래서 가장 큰 매수와
    가장 큰 매도에만 이름표를 달고, 나머지 숫자는 아래 한 줄에 적습니다. */
-const PXQ=12, LEFT=10, RIGHT=76, PADT=16, H1=96, GAP=12, H2=40, PADB=30;
+const PXQ=12, LEFT=10, RIGHT=88, PADT=18, H1=124, GAP=14, H2=44, PADB=32;
 
 /* 그림만 그립니다(버튼·캡션은 `chartHTML` 이 두릅니다). 기간 버튼을 누르면
    줄을 통째로 다시 그리지 않고 **이 결과만 갈아 끼웁니다** — 다시 그리면 펼쳐
@@ -1081,19 +1168,17 @@ const PXQ=12, LEFT=10, RIGHT=76, PADT=16, H1=96, GAP=12, H2=40, PADB=30;
 function chartBody(r, li){
   const ALL=r.life||[];
 
-  /* **기간 버튼이 고른 만큼만 봅니다.** 자르는 쪽은 늘 과거입니다 — 가장 최근
-     분기는 어느 기간에서도 보여야 합니다. 잘라서 점이 하나만 남으면 선이 안
-     그려지므로 둘이 될 때까지 되물립니다(이번 분기에 들어온 종목에서 실제로
-     일어납니다). */
-  const want=effRange(r);
-  let L=ALL;
-  if(want){
-    const cut=ALL[ALL.length-1].gi-want+1;
-    let s=ALL.findIndex(o=>o.gi>=cut);
-    if(s<0) s=ALL.length-1;
-    if(s>ALL.length-2) s=ALL.length-2;
-    L=ALL.slice(s);
-  }
+  /* **창은 그 종목의 이력이 아니라 달력입니다** (2026-09-17, 사용자 요청).
+     전에는 들고 있던 구간만 보여 줘서, 2년 들고 있는 종목을 `15년` 으로 봐도
+     2년치만 나왔습니다. 지금은 **가장 최근 분기에서 N분기 뒤로** 창을 잡고,
+     그 안에서 들고 있던 구간만 선이 그려집니다 — 그래서 **언제 들어왔고
+     언제 나갔는지**가 창 안에서 보입니다. 26줄이 같은 창을 쓰므로 줄끼리
+     가로축이 맞아 "이 사람이 먼저 샀나" 같은 것도 견줘집니다. */
+  const g0=winStart();
+  let L=ALL.filter(o=>o.gi>=g0);
+  /* 창 안에 점이 하나뿐이면 선이 안 그려집니다(이번 분기에 들어온 종목).
+     그때만 바로 앞 점을 하나 끌어옵니다 — 창 밖이지만 없는 것보다 낫습니다. */
+  if(L.length<2 && ALL.length>=2) L=ALL.slice(-2);
 
   /* 그 분기에 실제로 사고판 주식수. **묶음이 새로 시작하는 분기는 전량 매수**이고,
      다만 맨 첫 분기가 집계 시작(1998)이면 사들이는 장면을 못 봤으므로 0 으로 둡니다 —
@@ -1106,10 +1191,9 @@ function chartBody(r, li){
   const traded=mv.some(v=>v);
   const G=traded?GAP:0, B2=traded?H2:0;
 
-  /* 가로 자리는 **처음 산 분기부터 몇 분기 뒤인가**로 잡습니다. 안 들고 있던
+  /* 가로 자리는 **창의 왼쪽 끝부터 몇 분기 뒤인가**입니다. 안 들고 있던
      분기도 자리를 차지해야 시간이 사라지지 않습니다. */
-  const g0=L[0].gi, span=L[L.length-1].gi-g0;
-  /* 짧은 이력은 늘려 줍니다 — 60분기(15년) 어치 폭 안에서만. */
+  const gA=Math.min(g0, L[0].gi), span=Math.max(1, QS.length-1-gA);
   /* 분기당 폭. **칸을 꽉 채우되 12px 아래로는 안 내려갑니다** — 그 아래로 가면
      28년치가 한 화면에 뭉개지므로, 그때는 12px 로 두고 옆으로 끕니다. */
   const box=(LIFEW||806)-LEFT-RIGHT;
@@ -1118,8 +1202,8 @@ function chartBody(r, li){
   const ps=L.map(o=>o.p);
   let lo=Math.min(...ps), hi=Math.max(...ps);
   const pad=(hi-lo)*.06||hi*.06||1; lo-=pad; hi+=pad;
-  const x=i=>LEFT+(L[i].gi-g0)*PX;   // i 는 L 의 첨자, 자리는 gi 가 정한다
-  const xg=g=>LEFT+(g-g0)*PX;        // 전체 분기 목록의 자리로 바로 잡을 때
+  const x=i=>LEFT+(L[i].gi-gA)*PX;   // i 는 L 의 첨자, 자리는 gi 가 정한다
+  const xg=g=>LEFT+(g-gA)*PX;        // 전체 분기 목록의 자리로 바로 잡을 때
   const y=v=>PADT+H1-(v-lo)/(hi-lo)*H1;
   const zero=PADT+H1+G+B2/2;
   const mx=Math.max(...mv.map(Math.abs))||1;
@@ -1137,6 +1221,34 @@ function chartBody(r, li){
   /* **전량 매도했다가 다시 산 자리에서는 선을 끊습니다**(`o.first`). 이어 그리면
      그동안 안 들고 있었다는 사실이 사라집니다 — 보유 연차를 셀 때와 같은 규칙입니다. */
   const line=L.map((o,i)=>`${(i&&!o.first)?"L":"M"}${x(i).toFixed(1)} ${y(o.p).toFixed(1)}`).join(" ");
+
+  /* 가격 눈금선. **"차트가 너무 듬성듬성해"** 에 대한 답입니다 (사용자) —
+     선 하나만 떠 있으면 높이를 읽을 자가 없어 빈 칸처럼 보입니다.
+
+     **값은 딱 떨어지는 수로 고릅니다.** 최저·최고를 그대로 쓰면 `$23.90`
+     같은 수가 눈금이 되어 자로 안 읽힙니다. 1·2·5 × 10ⁿ 중에서 고릅니다.
+
+     **이름표를 왼쪽 여백으로 빼지 않습니다.** 여백을 늘리면 28년치가 더 좁아져
+     옆으로 끄는 거리가 길어집니다. 선 바로 위 왼쪽에 얹으면 자리가 안 듭니다. */
+  const gstep=(()=>{
+    /* **줄 수가 네 개에 가장 가까운 눈금을 고릅니다.** "raw 보다 큰 첫 값"으로
+       고르면 애플처럼 값이 12배 벌어진 종목에서 줄이 두 개밖에 안 남습니다. */
+    const p10=Math.pow(10,Math.floor(Math.log10(Math.max(hi-lo,1e-6))));
+    const cand=[.1,.2,.25,.5,1,2,2.5,5,10].map(m=>m*p10).filter(v=>v>0);
+    let best=cand[0], score=1e9;
+    for(const v of cand){
+      const n=Math.floor(hi/v)-Math.ceil(lo/v)+1;
+      const d=Math.abs(n-4)+(n<2?10:0);
+      if(d<score){ score=d; best=v; }
+    }
+    return best; })();
+  let grid="";
+  for(let v=Math.ceil(lo/gstep)*gstep; v<=hi; v+=gstep){
+    const gy=y(v);
+    if(gy<PADT+8||gy>PADT+H1-1) continue;
+    grid+=`<line x1="${LEFT}" y1="${gy.toFixed(1)}" x2="${(W-RIGHT+4).toFixed(1)}" y2="${gy.toFixed(1)}" class="gl"/>`
+        + `<text x="${LEFT}" y="${(gy-3).toFixed(1)}" class="glL">${usd(v)}</text>`;
+  }
 
   /* 막대. 매수는 0선 위로, 매도는 아래로. 0선은 재료표의 `0% 기준선 1.3px`. */
   const bars=!traded?"":mv.map((v,i)=>{
@@ -1183,14 +1295,14 @@ function chartBody(r, li){
      분기 배수를 고르고, 4분기(1년) 이상이면 1월 자리에만 찍어 **연도**를 적습니다.
      그보다 잦으면 `25 Q4` 처럼 분기를 적습니다 — `1년` 버튼처럼 창이 짧을 때
      연도만 적으면 눈금이 한두 개밖에 안 남습니다. */
-  const per=[1,2,4,8,12,20,40,60].find(k=>k*PX>=60)||60;
+  const per=[1,2,4,8,12,20,40,60].find(k=>k*PX>=64)||60;
   const cand=[];
-  for(let g=g0; g<=L[L.length-1].gi; g++){
+  for(let g=gA; g<QS.length; g++){
     const q=String(QS[g]), yr=+q.slice(0,4), mo=q.slice(5,7);
     if(per>=4){
       if(mo!=="03") continue;                       // 그 해의 첫 분기(1~3월)
       if(yr%(per/4)!==0) continue;
-    }else if((g-g0)%per!==0) continue;
+    }else if((QS.length-1-g)%per!==0) continue;
     const gx=xg(g);
     cand.push({gx, lab:per>=4?String(yr):`${q.slice(2,4)} Q${Math.ceil(+mo/3)}`,
                anc:gx<20?"start":"middle"});
@@ -1199,7 +1311,7 @@ function chartBody(r, li){
   /* **글자 상자의 가장자리로 겹침을 봅니다.** 가운뎃점 사이 거리로 재면
      맨 왼쪽(`start` 맞춤) 이름표가 오른쪽으로만 뻗는 것을 놓쳐서 `2007 2008` 이
      3px 겹쳐 있었습니다. 9.5px 고정폭 네 글자는 약 24px 입니다. */
-  const LW=per>=4?24:30, keep=[];
+  const LW=per>=4?28:36, keep=[];   // 11px 고정폭: 네 글자 ≈ 27px, `25 Q4` ≈ 34px
   const right=c=>c.gx+(c.anc==="start"?LW:LW/2);
   const left =c=>c.gx-(c.anc==="start"?0:LW/2);
   for(const c of cand){
@@ -1228,6 +1340,7 @@ function chartBody(r, li){
           <line class="cx" y1="${PADT}" y2="${PADT+H1+G+B2}"/>
           <circle class="cdot" r="3.2"/>
         </g>
+        ${grid}
         <path d="${line}" class="pLine"/>
         <circle cx="${x(n-1)}" cy="${y(last.p).toFixed(1)}" r="2.6" class="pDot"/>
         <text x="${(x(n-1)+7).toFixed(1)}" y="${(y(last.p)+4).toFixed(1)}"
@@ -1243,10 +1356,10 @@ function chartBody(r, li){
   return {svg, sum, cap:traded?tx("lifeCap"):tx("lifeCapP")};
 }
 
-/* 기간 버튼 — `1년 3년 5년 10년 15년 전체` (사용자 요청).
-   값은 **분기 수**입니다. 0 은 전체입니다. */
-const LR=[4,12,20,40,60,0];
-let LRANGE=0;                      // 지금 고른 기간. 모든 줄이 함께 씁니다.
+/* 기간 버튼 — `1년 5년 10년 15년`. 값은 **분기 수**입니다.
+   `3년`과 `전체`는 사용자 판단으로 뺐습니다 (2026-09-17). */
+const LR=[4,20,40,60];
+let LRANGE=60;                     // 기본은 15년. 모든 줄이 함께 씁니다.
 
 /* **한 줄만 따로 놀게 하지 않습니다.** 기간은 그 종목의 성질이 아니라 *보는 방법*
    이라 26줄이 제각각이면 위아래를 견줄 수 없습니다. 4번 대시보드에서 위·아래
@@ -1257,23 +1370,21 @@ function loadRange(){
 }
 function saveRange(){ try{ localStorage.setItem("bk.range",LRANGE) }catch(e){} }
 
-/* 그 종목이 실제로 갖고 있는 분기 수(빈 자리 포함). */
-const lifeSpan=r=>{ const L=r.life||[]; return L.length?L[L.length-1].gi-L[0].gi+1:0; };
-
-/* **이력보다 긴 기간은 누를 수 없게 합니다.** 15년 버튼이 눌린 4분기짜리 종목은
-   전체와 똑같은 그림을 그리면서 이름표만 거짓말을 합니다. 그런 줄에서는 전체로
-   떨어집니다 — 값을 고쳐 놓지는 않으므로, 이력이 긴 줄은 고른 기간 그대로입니다. */
-const okRange=(r,q)=>!q||q<lifeSpan(r);
-const effRange=r=>okRange(r,LRANGE)?LRANGE:0;
-
-function rangeBar(r){
-  const now=effRange(r);
+/* **버튼을 흐리게 만들지 않습니다.** 예전에는 "이력보다 긴 기간"을 못 누르게
+   했는데, 이제 가로축이 **그 종목의 이력이 아니라 달력**이라(아래 `winStart`)
+   어느 기간이든 뜻이 있습니다 — 처브를 `15년` 으로 보면 15년짜리 축 오른쪽 끝에
+   2년치 선만 그려지고, 그게 바로 **언제 들어왔는지**입니다(사용자 요청).
+   목록에 있는 26줄은 전부 지금 보유 중이라 어느 창에서도 값이 있습니다. */
+function rangeBar(){
   return `<div class="seg mini lifeseg" role="group" aria-label="${tx("lifeSpanLab")}">`
     + LR.map((q,i)=>`<button type="button" data-q="${q}"`
-        + `${okRange(r,q)?"":" disabled"}`
-        + ` aria-pressed="${q===now}">${tx("lifeSpans")[i]}</button>`).join("")
+        + ` aria-pressed="${q===LRANGE}">${tx("lifeSpans")[i]}</button>`).join("")
     + `</div>`;
 }
+
+/* 창의 왼쪽 끝 — **전체 분기 목록에서** 셉니다. 종목마다 다른 자리에서 시작하면
+   줄끼리 가로축이 안 맞아 "언제 들어왔나"를 견줄 수 없습니다. */
+const winStart=()=>Math.max(0, QS.length-LRANGE);
 
 /* 말풍선은 그림 **바깥**에 있는 형제입니다. 그림만 갈아 끼울 때도 같이 넣어야
    합니다 — 한 번 빠뜨려서 기간 버튼을 누르면 말풍선이 사라졌습니다. */
@@ -1286,7 +1397,7 @@ function chartHTML(r){
   const o=chartBody(r,li);
   return `<figure class="life" data-life="${li}">
     <figcaption class="lifecap"><span class="lifewhat">${o.cap}</span></figcaption>
-    ${rangeBar(r)}
+    ${rangeBar()}
     <div class="lifescroll">${o.svg}${TIP}</div>
     <p class="lifesum">${o.sum}</p>
   </figure>`;
@@ -1302,9 +1413,8 @@ function drawLife(fig){
   fig.querySelector(".lifesum").innerHTML=o.sum;
   fig.querySelector(".lifewhat").textContent=o.cap;
   clearLife(fig);
-  const now=effRange(r);
   fig.querySelectorAll(".lifeseg button").forEach(b=>
-    b.setAttribute("aria-pressed", String(+b.dataset.q===now)));
+    b.setAttribute("aria-pressed", String(+b.dataset.q===LRANGE)));
   settleLife(fig);
 }
 
@@ -1497,7 +1607,7 @@ function paintFoot(B){
 function render(){
   const el=id=>document.getElementById(id);
   el("brand").textContent=tx("brand");
-  el("tagline").textContent=tx("tagline");
+  el("tagline").textContent=tx("tagline",tName());
   el("foothead").textContent=tx("footTitle");
   /* 각주를 두 번 그립니다. **자료가 없어도 각주는 나와야 하므로** 한 번은
      맨 앞에서 예시 없이 그리고, `build()` 뒤에 분할·집계 전 목록을 채워
@@ -1558,11 +1668,7 @@ function render(){
   const shown=top.reduce((s,r)=>s+r.value,0)/B.tc*100;
   const fold=el("fold");
   if(rest.length){
-    const share=rest.reduce((s,r)=>s+r.value,0)/B.tc*100;
-    const a=rest.filter(r=>!r.isNew&&!r.flat&&r.dsh>0).length;
-    const t=rest.filter(r=>!r.isNew&&!r.flat&&r.dsh<0).length;
     el("foldttl").textContent=tx("foldOpen",rest.length);
-    el("foldwhy").textContent=tx("foldNote",pct(share),a,t);
     fold.hidden=false;
     /* **펼치면 '상위 10종목만' 이 거짓말이 됩니다.** 접힘을 열어 둔 채로 그 줄을
        그대로 두면 화면이 자기 말을 어깁니다. 여는 순간 문장을 바꿉니다. */
@@ -1598,19 +1704,19 @@ function applyLang(lang,remember){
   const p=REDUP.has(LANG)?PAL.redUp:PAL.greenUp;
   r.style.setProperty("--up",p.up); r.style.setProperty("--down",p.down);
   r.style.setProperty("--up-rgb",p.upRGB); r.style.setProperty("--down-rgb",p.downRGB);
-  document.title=tx("docTitle");
+  document.title=tx("docTitle",tName(),TT.since);
   paintHead(); paintTabs(); render();
 }
 function paintHead(){
   const set=(sel,attr,val)=>{const e=document.head.querySelector(sel);if(e)e.setAttribute(attr,val)};
-  const t=tx("docTitle"),d=tx("metaDesc");
+  const t=tx("docTitle",tName(),TT.since),d=tx("metaDesc",tName());
   set('meta[name="description"]',"content",d);
   set('meta[property="og:title"]',"content",t);
   set('meta[property="og:description"]',"content",d);
   set('meta[property="og:locale"]',"content",LANG==="ko"?"ko_KR":"en_US");
   set('meta[property="og:locale:alternate"]',"content",LANG==="ko"?"en_US":"ko_KR");
   const c=document.head.querySelector('link[rel="canonical"]');
-  if(c){ let u="https://itpaidoff.com/titans/berkshire/";
+  if(c){ let u=`https://itpaidoff.com/titans/${TT.slug}/`;
     try{ if(new URLSearchParams(location.search).get("lang")) u+="?lang="+LANG; }catch(e){}
     c.setAttribute("href",u); }
 }
@@ -1642,7 +1748,7 @@ Promise.all([
   side("../../data/titans/tickers.json",(k,v)=>{ if(typeof v==="string") TICKERS[k]=v; }),
   side("../../data/titans/sectors.json",(k,v)=>{ if(v&&typeof v==="object") SECTORS[k]=v; }),
 ]).finally(()=>{
-  fetch("../../data/titans/berkshire.json",{cache:"no-store"})
+  fetch(TT.data,{cache:"no-store"})
     .then(r=>r.ok?r.json():null)
     .then(j=>{ RAW=(j&&Array.isArray(j.quarters)&&j.quarters.length)?j:null; })
     .catch(()=>{ RAW=null; })
