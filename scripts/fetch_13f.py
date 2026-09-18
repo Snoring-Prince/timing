@@ -174,7 +174,7 @@ def list_filings(contact: str) -> tuple[list[dict], list[dict]]:
     39건). 더 옛것은 filings.files 에 별도 파일로 쪼개져 있습니다."""
     body = get(f"https://data.sec.gov/submissions/CIK{CIK}.json", contact)
     if not body:
-        return []
+        return [], []
     sub = json.loads(body)
     fil = sub.get("filings") or {}
     blocks = [fil.get("recent") or {}]
@@ -184,8 +184,11 @@ def list_filings(contact: str) -> tuple[list[dict], list[dict]]:
         if not nm:
             continue
         b = get(f"https://data.sec.gov/submissions/{nm}", contact)
-        if b:
-            blocks.append(json.loads(b))
+        if not b:
+            # 반쪽 목록으로 저장하면 옛 분기와 정정 표시가 사라집니다.
+            # 다음 실행에서 다시 받도록 전체 목록을 실패로 돌립니다.
+            return [], []
+        blocks.append(json.loads(b))
 
     out, amend = [], []
     for blk in blocks:
@@ -282,6 +285,7 @@ def main() -> int:
     # 이미 받아 둔 분기는 다시 받지 않습니다. 공시는 한 번 나오면 바뀌지
     # 않으므로, 분기마다 새 것 하나만 받으면 됩니다.
     old = {}
+    prev = None
     # 지난번에 이미 알고 있던 정정 공시. 새로 뜬 것만 알리려고 들고 있습니다.
     known_amend: set[str] = set()
     had_prev = False
@@ -289,14 +293,15 @@ def main() -> int:
         try:
             with open(OUT, encoding="utf-8") as f:
                 prev = json.load(f)
-            old = {q["accession"]: q for q in prev.get("quarters", [])}
+            old = {q["accession"]: dict(q) for q in prev.get("quarters", [])}
             for q in prev.get("quarters", []):
                 known_amend.update(q.get("amended_by") or [])
             had_prev = True
             print(f"이미 갖고 있는 분기 {len(old)}개 · "
                   f"이미 아는 정정 공시 {len(known_amend)}건")
         except Exception as e:                         # noqa: BLE001
-            print(f"옛 파일을 읽지 못해 처음부터 받습니다 — {e}")
+            print(f"옛 파일을 읽지 못했습니다. 덮어쓰지 않습니다 — {e}")
+            return 1
 
     filings, amends = list_filings(contact)
     if not filings:
@@ -312,11 +317,13 @@ def main() -> int:
         amend_by.setdefault(x["period"], []).append(x["accession"])
     print(f"정정 공시({FORM}/A) {len(amends)}건 · {len(amend_by)}개 분기")
 
-    quarters, got, failed, prexml = [], 0, 0, []
+    # 제출 목록에서 사라진 접수번호도 기존 기록에서는 보존합니다.
+    # 목록은 탐색용이지, 이미 검산해 저장한 과거를 지우라는 명령이 아닙니다.
+    saved = dict(old)
+    got, failed, prexml = 0, 0, []
     for f in filings:
         keep = old.get(f["accession"])
         if keep:
-            quarters.append(keep)
             continue
         xml, cover = filing_docs(f["accession"], contact)
         if xml is NO_XML:
@@ -365,7 +372,7 @@ def main() -> int:
         if f["period"] in amend_by:
             mark += "  ※ 정정 공시 있음"
 
-        quarters.append(q)
+        saved[f["accession"]] = q
         got += 1
         print(f"  {f['period']}  줄 {len(rows):>4} → 종목 {len(held):>3}  "
               f"금액÷주식수 {ratio:>8.2f} ({'천달러' if scale == 1000 else '달러'})  "
@@ -377,6 +384,7 @@ def main() -> int:
         print("  EDGAR 가 13F 에 XML 을 요구하기 전이라 텍스트 문서입니다.")
         print("  docs/masters-13f.md 의 'XML 이전' 항목을 보세요.")
 
+    quarters = list(saved.values())
     if not quarters:
         print("받은 분기가 하나도 없습니다. 파일을 쓰지 않습니다.")
         return 1
@@ -393,23 +401,29 @@ def main() -> int:
     # 내려받는 분기에만 붙였는데, 공시는 한 번 받으면 다시 안 받으므로
     # **나중에 뜬 정정이 파일에 영영 안 적혔습니다.** 그래서 같은 정정을 매주
     # '새 것'으로 알리는 상태였습니다(시험에서 잡았습니다).
+    # 목록에서 빠졌다는 이유로 이미 확인한 정정 접수번호는 지우지 않습니다.
     for q in quarters:
         got_a = amend_by.get(q["period"])
         if got_a:
-            q["amended_by"] = got_a
-        else:
-            q.pop("amended_by", None)   # 취소된 정정이 남아 있지 않게
+            q["amended_by"] = list(dict.fromkeys([*(q.get("amended_by") or []), *got_a]))
     doc = {
-        "updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "updated": prev.get("updated") if prev else None,
         "source": "SEC Form 13F-HR (public domain)",
         "manager": {"cik": CIK, "name": "Berkshire Hathaway Inc"},
         "note": ("value in USD; rows folded by cusip. 13F shows US-listed long "
                  "positions only, filed 45 days after quarter end."),
         "quarters": quarters,
     }
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    with open(OUT, "w", encoding="utf-8") as f:
-        json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
+    if doc != prev:
+        doc["updated"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        os.makedirs(os.path.dirname(OUT), exist_ok=True)
+        # 쓰는 도중 멈춰도 이전 JSON 은 완전한 상태로 남겨 둡니다.
+        tmp = OUT + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
+        os.replace(tmp, OUT)
+    else:
+        print("공시 내용에 변화 없음 — 파일과 갱신 시각을 그대로 둡니다.")
 
     size = os.path.getsize(OUT)
     bad = [q for q in quarters if "total_mismatch" in q or "lines_mismatch" in q]
