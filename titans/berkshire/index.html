@@ -794,7 +794,13 @@ function build(){
   const list=[...C.values()].map(a=>{
     const p=P.get(a.key);
     const st=startOf(a.key);
-    const dsh=(p&&p.shares>0)?(a.shares/p.shares-1):null;
+    /* 현재 분기도 차트와 같은 분할 보정을 합니다. 분할로 늘어난 주식은
+       매수가 아닙니다 — 증감·계기판·최대 매수 모두 같은 기준이어야 합니다. */
+    const f=p&&p.shares>0&&p.value>0&&a.shares>0&&a.value>0
+      ?splitFactor(a.shares/p.shares,(p.value/p.shares)/(a.value/a.shares)):null;
+    const prevShares=p?p.shares*(f||1):null;
+    const dn=p?a.shares-prevShares:a.shares;
+    const dsh=(prevShares>0)?(a.shares/prevShares-1):null;
     const cb=costBasis(snaps,a.key);
     return {
       ...a,
@@ -814,11 +820,11 @@ function build(){
          섞여 있어 행동을 말해 주지 않는다 — 주식수 차이만 쓴다. */
       /* 가운데 칸에 '몇 주 늘었나'를 적으려면 비율이 아니라 **주식수 차이**가
          필요하다. 비율(dsh)은 판정에, 이 값(dn)은 화면 표기에 쓴다. */
-      dn:p?(a.shares-p.shares):null,
+      dn,
       /* 펼쳤을 때 그릴 분기 시계열. 저장소 파일 하나로 만들어지므로 주 1회
          워크플로가 13F 를 갱신하면 차트도 저절로 따라옵니다. */
       life:lifeOf(snaps,a.key),
-      netUSD:(p?(a.shares-p.shares):a.shares)*(a.shares>0?a.value/a.shares:0)
+      netUSD:dn*(a.shares>0?a.value/a.shares:0)
     };
   }).sort((x,y)=>y.value-x.value);
 
@@ -1085,7 +1091,7 @@ function costBasis(snaps,key){
     if(first===null) first=i;
     if(held>0&&prevP){
       const f=splitFactor(a.shares/held, prevP/p);
-      if(f) held*=f;
+      if(f){ held*=f; prevP/=f; }
     }
     if(held===0){ cost=a.shares*p; held=a.shares; }
     else if(a.shares>held){ cost+=(a.shares-held)*((prevP+p)/2); held=a.shares; }
@@ -1112,7 +1118,12 @@ function lifeOf(snaps,key){
   let held=null,prevP=null;
   for(let i=0;i<snaps.length;i++){
     const a=snaps[i].get(key);
-    if(!a||a.shares<=0||a.value<=0){ held=null;prevP=null;continue; }
+    if(!a||a.shares<=0||a.value<=0){
+      /* 마지막 보유 가격을 매도가로 쓰지 않습니다. 다음 공시는 수량이
+         사라졌다는 것만 알려 주므로 가격 없는 매도 기록을 한 번만 남깁니다. */
+      if(held) out.push({q:QS[i],gi:i,p:null,sh:0,dn:-held,first:false,exit:true});
+      held=null;prevP=null;continue;
+    }
     const p=a.value/a.shares;
     if(held&&prevP){
       const f=splitFactor(a.shares/held, prevP/p);
@@ -1120,7 +1131,7 @@ function lifeOf(snaps,key){
          두면 이번 분기 증감이 `944M - 245M = +699M` 으로 잡혀 **액면분할이 사상
          최대의 매수로 그려집니다**(애플 2020-09 에서 실제로 그랬습니다).
          늘려 두면 `944M - 980M = -36M` 으로, 그 분기에 실제로 판 만큼만 남습니다. */
-      if(f){ for(const o of out){ o.p/=f; o.sh*=f; o.dn*=f; } held*=f; SPLITS.push({key,q:QS[i],f}); }
+      if(f){ for(const o of out){ if(o.p!==null)o.p/=f; o.sh*=f; o.dn*=f; } held*=f; SPLITS.push({key,q:QS[i],f}); }
     }
     /* **`gi` 는 전체 분기 목록에서의 자리입니다.** 배열 첨자로 가로 위치를
        잡으면 안 됩니다 — 뱅크오브아메리카는 2010-09 에 전량 매도하고 2017-09
@@ -1197,7 +1208,8 @@ function chartBody(r, li){
      언제 나갔는지**가 창 안에서 보입니다. 26줄이 같은 창을 쓰므로 줄끼리
      가로축이 맞아 "이 사람이 먼저 샀나" 같은 것도 견줘집니다. */
   const g0=winStart();
-  const L=ALL.filter(o=>o.gi>=g0);
+  const M=ALL.filter(o=>o.gi>=g0);
+  const L=M.filter(o=>!o.exit);       // 가격 없는 매도에는 가격선을 그리지 않습니다
 
   /* **창 밖의 점을 끌어오지 않습니다.** 예전에는 창 안에 점이 하나뿐이면
      바로 앞 점을 하나 끌어와 선을 그렸는데, 그러면 축의 왼쪽 끝이 고른
@@ -1213,8 +1225,8 @@ function chartBody(r, li){
      `2025.09.30` 이면 그 거래는 **그 날짜 이전**입니다. 세우면 화면이 창
      밖의 거래를 창 안에 그리는 셈이고, 왼쪽 끝에 붙어 반쯤 잘려서 눈금과도
      안 맞습니다 — 대신 아래 `prior` 카드가 몇 건이었는지 말합니다. */
-  const mv=L.map(o=>o.gi<=g0?0
-                  :o.first?((o===ALL[0]&&r.preData)?0:o.sh):o.dn);
+  const move=o=>o.first?(o.gi===0?0:o.sh):o.dn;
+  const mv=M.map(o=>o.gi<=g0?0:move(o));
 
   /* **창보다 앞에 있었던 거래는 반투명 카드 한 장으로 요약합니다** (사용자 요청).
      안 그리면 "이 사람은 이 기간에만 움직였다"로 읽히고, 그리면 창 밖의 일이
@@ -1223,7 +1235,7 @@ function chartBody(r, li){
   let pb=0, ps_=0;
   for(const o of ALL){
     if(o.gi>g0) break;
-    const v=o.first?((o===ALL[0]&&r.preData)?0:o.sh):o.dn;
+    const v=move(o);
     if(v>0) pb++; else if(v<0) ps_++;
   }
 
@@ -1262,7 +1274,7 @@ function chartBody(r, li){
      보입니다(실측에서 그렇게 나왔습니다). */
   const bw=Math.min(44, Math.max(2, PX-(PX>6?1.5:0.5)));
   /* 그 분기의 한가운데. 첫 분기는 왼쪽에 직전 공시가 없으므로 더 안 밉니다. */
-  const mid=i=>Math.max(LEFT, x(i)-PX/2);
+  const mid=i=>Math.max(LEFT, xg(M[i].gi)-PX/2);
 
   /* **전량 매도했다가 다시 산 자리에서는 선을 끊습니다**(`o.first`). 이어 그리면
      그동안 안 들고 있었다는 사실이 사라집니다 — 보유 연차를 셀 때와 같은 규칙입니다. */
@@ -1367,8 +1379,8 @@ function chartBody(r, li){
   const ends=[];
   L.forEach((o,i)=>{
     const prev=ALL[ALL.indexOf(o)-1], next=ALL[ALL.indexOf(o)+1];
-    if(o.first && !(o===ALL[0]&&r.preData) && o.gi>g0) ends.push([i,"in"]);
-    if(next && next.gi!==o.gi+1) ends.push([i,"out"]);
+    if(o.first && o.gi>0 && o.gi>g0) ends.push([i,"in"]);
+    if(next && next.exit) ends.push([i,"out"]);
   });
   const marksIO=ends.map(([i,k])=>
     `<circle cx="${x(i).toFixed(1)}" cy="${y(L[i].p).toFixed(1)}" r="4.2"
@@ -1391,7 +1403,7 @@ function chartBody(r, li){
      움직일 때마다 가장 가까운 점을 고르기만 하면 됩니다.
      **`li` 는 매개변수입니다** — 여기서 다시 선언하면 `Identifier 'li' has already
      been declared` 로 화면이 통째로 빕니다(`tag`/`flag` 때와 같은 자리). */
-  LIFES[li]={r, pts:L.map((o,i)=>({x:x(i), y:y(o.p), q:o.q, p:o.p, mv:mv[i]})),
+  LIFES[li]={r, pts:M.map((o,i)=>({x:o.exit?mid(i):xg(o.gi), y:o.exit?zero:y(o.p), q:o.q, p:o.p, mv:mv[i]})),
              top:PADT, bot:PADT+H1+G+B2};
 
   const svg=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img"
@@ -1444,7 +1456,8 @@ function rangeBar(){
 
 /* 창의 왼쪽 끝 — **전체 분기 목록에서** 셉니다. 종목마다 다른 자리에서 시작하면
    줄끼리 가로축이 안 맞아 "언제 들어왔나"를 견줄 수 없습니다. */
-const winStart=()=>Math.max(0, QS.length-LRANGE);
+/* N년은 N×4개 간격이므로 경계 관측점까지 N×4+1개가 필요합니다. */
+const winStart=()=>Math.max(0, QS.length-1-LRANGE);
 
 /* 말풍선은 그림 **바깥**에 있는 형제입니다. 그림만 갈아 끼울 때도 같이 넣어야
    합니다 — 한 번 빠뜨려서 기간 버튼을 누르면 말풍선이 사라졌습니다. */
@@ -1490,7 +1503,8 @@ function rowHTML(r,rank,maxW){
      `%` 가 붙습니다. 그리고 열 머리글이 `이번 분기`·`추정 수익률` 이라고
      이미 갈라 적고 있습니다. */
   let dir="", num;
-  if(r.flat||!r.dn){ num=tx("same"); }
+  if(r.isNew){ num=r.back?tx("evBack"):tx("evNew"); }
+  else if(r.flat||!r.dn){ num=tx("same"); }
   else{
     const up=r.isNew||r.dn>0;
     dir=up?" up":" down";
@@ -1567,12 +1581,13 @@ function readLife(fig, clientX){
   g.classList.add("on");
   g.querySelector(".cx").setAttribute("x1",t.x); g.querySelector(".cx").setAttribute("x2",t.x);
   g.querySelector(".cdot").setAttribute("cx",t.x); g.querySelector(".cdot").setAttribute("cy",t.y);
+  g.querySelector(".cdot").setAttribute("visibility",t.p===null?"hidden":"visible");
   /* **값은 짚은 자리에 띄웁니다** (사용자 요청 — 구석에 두니 "도저히 못 알아보겠다").
      그림 안이 아니라 그림 위에 얹는 HTML 이라 바탕을 깔 수 있고 잘리지 않습니다.
      `.lifescroll` 이 기준 상자라 옆으로 끌면 말풍선도 같이 따라갑니다. */
   const trade=t.mv?`<i class="${t.mv>0?"up":"down"}">${t.mv>0?tx("buy"):tx("sell")}</i> `
     +(t.mv>0?"+":"\u2212")+compShares(Math.abs(t.mv)):"";
-  out.innerHTML=`<em>${fdate(t.q)}</em>${usd(t.p)}${trade?"<br>"+trade:""}`;
+  out.innerHTML=`<em>${fdate(t.q)}</em>${t.p===null?tx("evOut"):usd(t.p)}${trade?"<br>"+trade:""}`;
   out.hidden=false;
   /* 오른쪽 끝 점은 말풍선이 그림 밖으로 나가므로 왼쪽으로 뒤집습니다. */
   const sc=fig.querySelector(".lifescroll");

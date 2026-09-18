@@ -42,9 +42,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/titans/berkshire.json
           if git diff --staged --quiet; then
-            echo "바뀐 내용 없음 — 새 분기가 아직 안 나왔습니다"
+            echo "바뀐 내용 없음 — 공시 내용과 갱신 시각을 그대로 둡니다"
           else
-            # 새 분기가 실제로 들어온 날에만 사이트맵의 titans 줄을 옮긴다.
+            # 분기·정정 표시 등 공시 내용이 실제로 바뀐 날에만 날짜를 옮긴다.
             # 표식(<!-- titans -->) 덕분에 root 줄은 건드리지 않는다.
             sed -i "s#<lastmod>[^<]*</lastmod><!-- titans -->#<lastmod>$(date -u +%Y-%m-%d)</lastmod><!-- titans -->#" sitemap.xml
             git add sitemap.xml
