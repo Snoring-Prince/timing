@@ -463,7 +463,7 @@ document.documentElement.scrollWidth - document.documentElement.clientWidth
 ```
 1  titans/berkshire/ 를 통째로 복사 → titans/<slug>/
 2  <head> 의 canonical·hreflang·og:url·title·description 및 정적 h1·소개를 새 투자자로
-3  파일 위 window.TITAN 블록 여섯 줄을 고친다
+3  파일 위 window.TITAN 블록의 설정을 고친다
 4  scripts/fetch_13f.py 의 CIK·OUT 을 그 투자자로 → data/titans/<slug>.json
 5  sitemap.xml 에 줄 하나 (표식 주석을 꼭 달 것 — CLAUDE.md 6-2)
 ```
@@ -474,14 +474,15 @@ window.TITAN = {
   cik  : "0001067983",                         // 각주에 그대로 찍힘
   data : "../../data/titans/berkshire.json",   // 공시 JSON 자리
   name : { en:"Berkshire Hathaway", ko:"버크셔 해서웨이" },
-  since: 1998                                  // 자료의 첫 해
+  since: 1998,                                 // 자료의 첫 해
+  prices: "../../data/titans/prices.json"       // 투자자들이 공유하는 일별 가격
 };
 ```
 
 **제목·설명·`h1`·`canonical`·각주가 전부 이 블록에서 나옵니다.** 사전 항목이
 문자열이 아니라 **함수**(`docTitle:(n,y)=>…`)인 이유가 그것입니다.
 
-**틀이 실제로 도는지 확인하는 방법**: 폴더를 복사해 **블록 여섯 줄만** 바꾸고
+**틀이 실제로 도는지 확인하는 방법**: 폴더를 복사해 **블록의 설정만** 바꾸고
 띄워 봅니다. 2026-09-17 에 가짜 투자자로 재 봤고 제목·`h1`·`canonical`·각주가
 전부 따라왔습니다(JS 오류 0).
 
@@ -506,8 +507,11 @@ X축에서 매수·매도 모두 위로 그리며 기존 `--up/--down`으로 구
 숫자는 방향 색. 차트 제목·부제·아래 중복 캡션은 넣지 않습니다. 날짜 눈금과 수량
 이름표 수는 화면 폭에 맞추되 글자 토큰을 줄이지 않습니다. 점선과 날짜·가격
 말풍선은 마우스와 터치에 대응하고 창 안에 맞춥니다. 모바일 목록 숫자는 칸 사이에서
-줄바꿈합니다. 현재는 분기 가격이며 일별 종가 연결은 미완성입니다. 공급처 조건과
-선택 가격 설정의 제약은 `CLAUDE.md` 9-3-1의 차트 디자인 후속을 봅니다.
+줄바꿈합니다. 일별 가격을 연결한 뒤 창 끝은 최신 저장 종가 날짜이며, 실제 날짜
+간격을 씁니다. 여러 종류를 합친 줄은 대표 종류의 티커를 말풍선에 표시합니다.
+상장 전 값이나 공시 이후 매매는 만들지 않습니다. 가격 기준 설명은 각주에만 두며
+차트에 제목·캡션을 다시 넣지 않습니다. 실제 데이터 경로와 제약은 `CLAUDE.md`
+9-3-1의 일별 종가 저장·갱신·연결 항목을 봅니다.
 
 ---
 

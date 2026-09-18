@@ -127,6 +127,37 @@ test('price ingestion rejects invalid dates, zero prices and other currencies', 
   assert.equal(run('PRICE_SERIES.EUR'),undefined);
 });
 
+test('stored daily prices cover all current share classes and extend before investor entry', () => {
+  const prices=JSON.parse(fs.readFileSync(path.join(root,'data/titans/prices.json'),'utf8'));
+  const run=page(real);run('const B=build();const before=B.list.find(r=>r.key==="037833").avgCost;');
+  run('acceptPrices('+JSON.stringify(prices)+');');
+  assert.equal(run('B.list.filter(r=>!PRICE_SERIES[r.cusip]).length'),0);
+  run('LRANGE=60;chartBody(B.list.find(r=>r.key==="037833"),0);');
+  assert.ok(run('LIFES[0].pricePts[0].q')<run('B.list.find(r=>r.key==="037833").life[0].q'));
+  assert.ok(run('LIFES[0].pricePts.at(-1).q')>'2026-06-30');
+  assert.equal(run('build().list.find(r=>r.key==="037833").avgCost'),run('before'));
+  run('chartBody(B.list.find(r=>r.key==="02079K"),1);');
+  assert.equal(run('LIFES[1].ticker'),prices.series[run('B.list.find(r=>r.key==="02079K").cusip')].ticker);
+  assert.notEqual(prices.series['02079K107'].ticker,prices.series['02079K305'].ticker);
+  assert.notEqual(prices.series['526057104'].ticker,prices.series['526057302'].ticker);
+});
+
+test('daily chart periods follow the latest market date and trades keep calendar-quarter widths', () => {
+  const run=page(real);run("acceptPrices({method:'split-adjusted-close',series:{'037833100':{ticker:'AAPL',currency:'USD',values:[['2025-09-17',200],['2026-09-17',300]]}}});const B=build();LIFEW=320;LRANGE=4;");
+  assert.equal(run('chartWindow().start'),'2025-09-17');
+  assert.equal(run('chartWindow().end'),'2026-09-17');
+  const svg=run('chartBody(B.list.find(r=>r.key==="037833"),0).svg');
+  const bar=[...svg.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)" data-quarter="([^"]+)"/g)];
+  const partial=bar.find(m=>m[5]==='2025-09-30');
+  const complete=bar.find(m=>m[5]==='2025-12-31');
+  assert.ok(Math.abs(+partial[3]-(300*13/365-1))<.02);
+  assert.ok(Math.abs(+complete[3]-(300*92/365-1))<.02);
+  assert.doesNotMatch(svg,/data-quarter="2026-09-30"/);
+  assert.match(svg,/2025\.09\.17/);assert.match(svg,/2026\.09\.17/);
+  run("PRICE_ASOF='2024-02-29';LRANGE=4;");
+  assert.equal(run('chartWindow().start'),'2023-02-28');
+});
+
 test('largest sale includes full exits valued at the previous snapshot', () => {
   const run=page(real);
   const state={list:[{name:'TRIM',netUSD:-500}],out:[{name:'FULL EXIT',netUSD:-1000}]};

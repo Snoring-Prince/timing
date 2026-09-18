@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-09-19 · Codex · PR #55
+일별 종가 15년치 공유 캐시·장 종료 후 자동 갱신·매수 이전부터 이어지는 실제 주가선
+- 파일: scripts/fetch_prices.py · data/titans/prices.json · update-prices.yml · check-titans.yml · scripts/tests/* · titans/berkshire/index.html · CLAUDE.md · design-system.md · 이 일지
+- 규칙: 공급처·종류 구분·가격/공시 계산 분리·저장 안전성·검증은 CLAUDE.md 9-3-1의 일별 종가 저장·갱신·연결.
+- 굳힘: 공급처 이름은 화면에 추가 안 함(사용자 결정). 가격 눈금선·차트 제목/부제/캡션·목록 스티커·삭제 기간 복구 금지.
+- 넘김: 공개 접근을 재배포 허가로 보고하지 말 것. GitHub 예약은 머지 후 확인 필요. 여러 투자자 13F 수집·정정 병합은 별도 미완성.
+
 ## 2026-09-18 · Codex · PR #54
 차트 막대 높이·분기 폭·상향 방향·점선 말풍선·이전 거래 카드와 중복 문구 정리
 - 파일: titans/berkshire/index.html · scripts/tests/titans.test.cjs · CLAUDE.md · docs/design-system.md · 이 일지
