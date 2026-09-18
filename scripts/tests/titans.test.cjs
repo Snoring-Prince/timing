@@ -72,7 +72,7 @@ test('full exit is recorded once without a price and re-entry resets cost', () =
 });
 test('prior trade counts include full exits; boundary trades stay outside the window', () => {
   const run=page(real);run('const B=build();LRANGE=60;');
-  assert.match(run('chartBody(B.list.find(r=>r.key==="060505"),0).prior'),/SELL 2건/);
+  assert.match(run('chartBody(B.list.find(r=>r.key==="060505"),0).prior'),/매도 <em class="down">2<\/em>건/);
   run('LRANGE=4;');
   run('chartBody(B.list.find(r=>r.key==="037833"),0);');
   assert.equal(run('LIFES[0].pts.find(o=>o.q===QS[winStart()]).mv'),0);
@@ -84,6 +84,47 @@ test('all real holdings and periods render without invented zero-price exits', (
   }
   assert.equal(run('B.list.find(r=>r.key==="674599").life.find(o=>o.exit).q'),'2020-06-30');
   assert.equal(run('B.list.find(r=>r.key==="674599").life.find(o=>o.exit).p'),null);
+});
+
+test('buy and sale bars rise from one baseline and cover their whole quarter', () => {
+  const run=page(real);run('const B=build();LRANGE=4;LIFEW=320;');
+  const svg=run('chartBody(B.list.find(r=>r.key==="037833"),0).svg');
+  const bars=[...svg.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)" data-quarter="([^"]+)" data-shares="([\d]+)" class="(bUp|bDn)"/g)];
+  assert.equal(bars.length,2);
+  for(const bar of bars){
+    assert.equal(bar[7],'bDn');
+    assert.equal(+bar[3],74); // 300px의 시간축 / 네 분기, 경계의 1px만 띄웁니다.
+    assert.ok(+bar[4]>0 && +bar[4]<=27);
+  }
+  assert.ok(Math.abs((+bars[0][2]+ +bars[0][4])-(+bars[1][2]+ +bars[1][4]))<.02);
+  assert.equal(bars[0][5],'2025-09-30');
+  assert.equal(bars[0][6],'41787236');
+  assert.doesNotMatch(run('chartHTML(B.list[0])'),/lifesum|분기별 주식수 변화/);
+});
+
+test('an independent price series covers unheld periods without changing cost or trades', () => {
+  const run=page(book([['2025-03-31',0,0],['2025-06-30',10,100],
+    ['2025-09-30',0,0],['2025-12-31',10,150]]));
+  run('const B=build();const before=B.list[0].avgCost;');
+  run(`acceptPrices({method:'split-adjusted-close',series:{'123456':{ticker:'SAMPLE',currency:'USD',values:[
+    ['2025-03-31',50],['2025-06-30',105],['2025-09-30',115],['2025-10-01',120],['2025-12-31',160]
+  ]}}});chartBody(B.list[0],0);`);
+  assert.equal(run('LIFES[0].pricePts.length'),5);
+  assert.equal(run('LIFES[0].pricePts[0].q'),'2025-03-31');
+  assert.equal(run('LIFES[0].pricePts.find(o=>o.q==="2025-10-01").p'),120);
+  assert.equal(run('LIFES[0].pts.find(o=>o.q==="2025-09-30").mv'),-10);
+  assert.equal(run('LIFES[0].daily'),true);
+  assert.equal(run('build().list[0].avgCost'),run('before'));
+});
+
+test('price ingestion rejects invalid dates, zero prices and other currencies', () => {
+  const run=page(real);
+  run(`acceptPrices({method:'split-adjusted-close',series:{'SAMPLE':{ticker:'X',currency:'USD',values:[
+    ['2026-02-31',100],['2026-06-29',0],['2026-06-30',-2],['2026-06-30',10],['2026-06-30',11]
+  ]},'EUR':{ticker:'E',currency:'EUR',values:[['2026-06-30',99]]}}});`);
+  assert.equal(run('PRICE_SERIES.SAMPLE.values.length'),1);
+  assert.equal(run('PRICE_SERIES.SAMPLE.values[0][1]'),11);
+  assert.equal(run('PRICE_SERIES.EUR'),undefined);
 });
 
 test('largest sale includes full exits valued at the previous snapshot', () => {
