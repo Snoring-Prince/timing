@@ -56,7 +56,8 @@ window.TITAN = {
   cik  : "0001067983",
   data : "../../data/titans/berkshire.json",
   name : { en:"Berkshire Hathaway", ko:"버크셔 해서웨이" },
-  since: 1998
+  since: 1998,
+  prices: "../../data/titans/prices.json"
 };
 </script>
 
@@ -145,6 +146,7 @@ en:{
   lifePrior:(b,s)=>`<span>Earlier</span><span>BUY <em class="up">${b}</em></span><span>SELL <em class="down">${s}</em></span>`,
   close:"Close",
   impliedPrice:"Implied quarter-end price",
+  priceNote:(d)=>`Price lines show daily closing prices through ${fdate(d)}, adjusted for stock splits, without dividend adjustments. For grouped share classes, the tooltip identifies the class shown by its ticker. Trade bars show net changes between filings, not daily trading volume; no trades after the latest filing are inferred.`,
   lifeQuiet:"never bought or sold across this history",
   lifeScroll:"drag sideways for earlier years",
   buy:"BUY", sell:"SELL",
@@ -210,6 +212,7 @@ ko:{
   lifePrior:(b,s)=>`<span>이 기간 이전</span><span>매수 <em class="up">${b}</em>건</span><span>매도 <em class="down">${s}</em>건</span>`,
   close:"종가",
   impliedPrice:"공시 기준 분기말 가격",
+  priceNote:(d)=>`주가선은 ${fdate(d)}까지의 일별 종가이며, 액면분할만 보정하고 배당은 반영하지 않습니다. 여러 종류를 합친 종목은 말풍선의 티커에 해당하는 종류의 가격을 표시합니다. 막대는 공시 사이의 보유 주식수 순변화이며 일별 거래량이 아닙니다. 마지막 공시 이후의 매매는 추정하지 않습니다.`,
   lifeQuiet:"이 기간에 사고판 적이 없습니다",
   lifeScroll:"옆으로 끌면 그 이전이 나옵니다",
   buy:"BUY", sell:"SELL",
@@ -522,7 +525,7 @@ html:not([lang="ko"]) .note{min-width:96px}
 /* 짚은 자리에 뜨는 값. **그림 안(SVG)이 아니라 위에 얹는 HTML** 이라 바탕을
    깔 수 있고 그림 밖으로 잘리지 않습니다. 기준 상자는 `.lifescroll` 이라
    옆으로 끌면 같이 따라갑니다. 마우스를 안 가로채게 `pointer-events:none`. */
-.lifetip{position:absolute;pointer-events:none;z-index:3;white-space:normal;max-width:calc(100% - 8px);box-sizing:border-box;
+.lifetip{position:absolute;pointer-events:none;z-index:3;white-space:normal;width:max-content;max-width:calc(100% - 8px);box-sizing:border-box;
   background:var(--card);border:1px solid var(--rule);padding:4px 7px;
   font-family:var(--mono);font-size:var(--t-num);font-weight:500;line-height:1.45;
   letter-spacing:0;text-transform:none;color:var(--ink)}
@@ -958,9 +961,10 @@ let TICKERS={};
 // 일별 종가는 수량·평균가·추정 수익률 계산과 분리합니다. 공급처가 없으면
 // 실제 공시 가격만 표시하고, 말풍선에도 종가라고 부르지 않습니다.
 let PRICE_SERIES={};
+let PRICE_ASOF="";
 
-// 공개 표시가 허용된 종가 파일이 준비되면 TITAN.prices에 같은 사이트의
-// JSON 주소를 설정합니다. 외부 공급자 요청·API 키는 방문자 화면에 넣지 않습니다.
+// TITAN.prices에는 자체 종가 JSON 주소를 설정합니다. 공급처 조건은 CLAUDE.md에
+// 기록합니다. 외부 공급자 요청·API 키는 방문자 화면에 넣지 않습니다.
 function acceptPrices(book){
   if(!book||book.method!=="split-adjusted-close"||!book.series)return;
   for(const [key,series] of Object.entries(book.series)){
@@ -975,6 +979,7 @@ function acceptPrices(book){
     const clean=[...byDate.values()].sort((a,b)=>a[0].localeCompare(b[0]));
     if(clean.length)PRICE_SERIES[key]={ticker:series.ticker.replace(/[^A-Za-z0-9.^=-]/g,""),values:clean};
   }
+  PRICE_ASOF=Object.values(PRICE_SERIES).map(s=>s.values.at(-1)[0]).sort().at(-1)||"";
 }
 
 
@@ -1213,24 +1218,20 @@ function retPct(r){
 /* 가격 자료는 종목별 실제 관측값만 사용합니다. 일별 종가가 연결되면 투자자의
    첫 매수 이전·전량 매도 이후도 보여 줍니다. 13F 계산에는 이 가격을 넣지 않습니다. */
 function chartBody(r,li){
-  const all=r.life||[],g0=winStart(),end=QS.length-1;
-  const M=all.filter(o=>o.gi>=g0),held=M.filter(o=>!o.exit);
+  const all=r.life||[],g0=winStart(),end=QS.length-1,frame=chartWindow();
+  const M=all.filter(o=>o.q>=frame.start&&o.q<=frame.end),held=M.filter(o=>!o.exit);
   const move=o=>o.first?(o.gi===0?0:o.sh):o.dn;
-  const mv=M.map(o=>o.gi<=g0?0:move(o));
+  const mv=M.map(o=>o.q<=frame.start?0:move(o));
   let bought=0,sold=0;
-  all.filter(o=>o.gi<=g0).forEach(o=>{const n=move(o);if(n>0)bought++;else if(n<0)sold++;});
+  all.filter(o=>o.q<=frame.start).forEach(o=>{const n=move(o);if(n>0)bought++;else if(n<0)sold++;});
   const prior=(bought||sold)?`<b class="lifeprior">${tx("lifePrior",bought,sold)}</b>`:"";
   const W=LIFEW||806,LEFT=10,RIGHT=10,PADT=18,H1=150,PADB=30;
-  const xg=g=>LEFT+(g-g0)/(Math.max(1,end-g0))*(W-LEFT-RIGHT);
-  const stamps=QS.map(q=>Date.parse(q));
-  const position=q=>{
-    const ms=Date.parse(q);let g=g0;
-    while(g<end-1&&stamps[g+1]<ms)g++;
-    return xg(g+(ms-stamps[g])/(stamps[g+1]-stamps[g]||1));
-  };
-  const daily=PRICE_SERIES[r.key];
-  const prices=daily?daily.values.filter(o=>o[0]>=QS[g0]&&o[0]<=QS[end])
-    .map(o=>({q:o[0],p:o[1],x:position(o[0]),first:false}))
+  const t0=Date.parse(frame.start),t1=Date.parse(frame.end);
+  const xd=q=>LEFT+(Date.parse(q)-t0)/Math.max(1,t1-t0)*(W-LEFT-RIGHT);
+  const xg=g=>PRICE_ASOF?xd(QS[g]):LEFT+(g-g0)/(Math.max(1,end-g0))*(W-LEFT-RIGHT);
+  const daily=PRICE_SERIES[r.cusip]||PRICE_SERIES[r.key];
+  const prices=daily?daily.values.filter(o=>o[0]>=frame.start&&o[0]<=frame.end)
+    .map(o=>({q:o[0],p:o[1],x:xd(o[0]),first:false}))
     :held.map(o=>({q:o.q,p:o.p,x:xg(o.gi),first:o.first}));
   const ps=prices.map(o=>o.p),rawLo=ps.length?Math.min(...ps):0,rawHi=ps.length?Math.max(...ps):1;
   const pad=(rawHi-rawLo)*.08||rawHi*.06||1,lo=rawLo-pad,hi=rawHi+pad;
@@ -1242,7 +1243,8 @@ function chartBody(r,li){
   const height=v=>Math.max(2,Math.abs(v)/maxMove*BARMAX);
   const bars=M.map((o,i)=>{
     if(!mv[i])return "";
-    const bx=xg(o.gi-1)+.5,bw=Math.max(.5,xg(o.gi)-xg(o.gi-1)-1),h=height(mv[i]);
+    const begin=Math.max(LEFT,xg(o.gi-1)),finish=Math.min(W-RIGHT,xg(o.gi));
+    const bx=begin+.5,bw=Math.max(.5,finish-begin-1),h=height(mv[i]);
     return `<rect x="${bx.toFixed(2)}" y="${(zero-h).toFixed(2)}" width="${bw.toFixed(2)}" height="${h.toFixed(2)}" data-quarter="${o.q}" data-shares="${Math.abs(mv[i])}" class="${mv[i]>0?"bUp":"bDn"}"/>`;
   }).join("");
   // 이름표는 실제 텍스트 폭에 여유를 둬서 선택합니다. 모바일에서도 글자를 줄이지 않습니다.
@@ -1250,7 +1252,7 @@ function chartBody(r,li){
   const labelLimit=W<430?2:Math.max(2,Math.floor(W/140));
   for(const t of candidates){
     const text=(t.v>0?"+":"−")+compShares(Math.abs(t.v));
-    const width=text.length*6.7+8,cx=Math.max(LEFT+width/2,Math.min(W-RIGHT-width/2,(xg(t.o.gi-1)+xg(t.o.gi))/2));
+    const width=text.length*6.7+8,cx=Math.max(LEFT+width/2,Math.min(W-RIGHT-width/2,(Math.max(LEFT,xg(t.o.gi-1))+xg(t.o.gi))/2));
     if(labels.length>=labelLimit||labels.some(l=>Math.abs(l.cx-cx)<(l.width+width)/2+8))continue;
     labels.push({text,cx,width,yy:zero-height(t.v)-7,cls:t.v>0?"up":"down"});
   }
@@ -1260,7 +1262,10 @@ function chartBody(r,li){
   const tickCount=Math.max(2,Math.min(5,Math.floor((W-LEFT-RIGHT)/128)+1));
   const ticks=Array.from({length:tickCount},(_,i)=>{
     const g=Math.round(g0+(end-g0)*i/(tickCount-1)),anc=i===0?"start":i===tickCount-1?"end":"middle";
-    return `<text x="${xg(g).toFixed(2)}" y="${H-7}" text-anchor="${anc}" class="axL">${axDate(QS[g])}</text>`;
+    const aim=new Date(t0+(t1-t0)*i/(tickCount-1));
+    const day=PRICE_ASOF?(i===0?frame.start:i===tickCount-1?frame.end:
+      new Date(Date.UTC(aim.getUTCFullYear(),Math.floor(aim.getUTCMonth()/3)*3+3,0)).toISOString().slice(0,10)):QS[g];
+    return `<text x="${(PRICE_ASOF?xd(day):xg(g)).toFixed(2)}" y="${H-7}" text-anchor="${anc}" class="axL">${axDate(day)}</text>`;
   }).join("");
   const pts=M.map((o,i)=>({x:xg(o.gi),y:o.exit?zero:y(o.p),q:o.q,p:o.p,mv:mv[i]}));
   const pricePts=prices.map(o=>({...o,y:y(o.p)}));
@@ -1305,6 +1310,13 @@ function rangeBar(){
    줄끼리 가로축이 안 맞아 "언제 들어왔나"를 견줄 수 없습니다. */
 /* N년은 N×4개 간격이므로 경계 관측점까지 N×4+1개가 필요합니다. */
 const winStart=()=>Math.max(0, QS.length-1-LRANGE);
+function chartWindow(){
+  if(!PRICE_ASOF)return {start:QS[winStart()],end:QS.at(-1)};
+  const finish=new Date(PRICE_ASOF+"T00:00:00Z"),start=new Date(finish);
+  const month=start.getUTCMonth();start.setUTCFullYear(start.getUTCFullYear()-LRANGE/4);
+  if(start.getUTCMonth()!==month)start.setUTCDate(0);
+  return {start:start.toISOString().slice(0,10),end:PRICE_ASOF};
+}
 
 /* 말풍선은 그림 **바깥**에 있는 형제입니다. 그림만 갈아 끼울 때도 같이 넣어야
    합니다 — 한 번 빠뜨려서 기간 버튼을 누르면 말풍선이 사라졌습니다. */
@@ -1408,7 +1420,8 @@ function readLife(fig, clientX){
   /* SVG 는 `width` 속성과 `viewBox` 가 같은 값이라 보통 1:1 인데, 좁은 화면에서
      줄어들 수 있으므로 실제 폭으로 환산합니다. */
   const sx=(clientX-box.left)*(svg.viewBox.baseVal.width/(box.width||1));
-  if(!L.pricePts.length)return;
+  if(!L.pricePts.length){clearLife(fig);return;}
+  if(sx<L.pricePts[0].x-2||sx>L.pricePts.at(-1).x+2){clearLife(fig);return;}
   let best=0;
   for(let i=1;i<L.pricePts.length;i++)
     if(Math.abs(L.pricePts[i].x-sx)<Math.abs(L.pricePts[best].x-sx)) best=i;
@@ -1496,7 +1509,7 @@ function settleLife(root){
 function paintFoot(B){
   const el=document.getElementById("footbody");
   if(el) el.innerHTML=tx("foot",FIRSTY,B?B.splits:null,B?B.preNames:null)
-    .map(s=>`<p>${s}</p>`).join("");
+    .concat(PRICE_ASOF?[tx("priceNote",PRICE_ASOF)]:[]).map(s=>`<p>${s}</p>`).join("");
 }
 
 function render(){

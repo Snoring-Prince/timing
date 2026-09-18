@@ -5,9 +5,12 @@ on:
     paths:
       - "titans/**"
       - "scripts/fetch_13f.py"
+      - "scripts/fetch_prices.py"
+      - "data/titans/prices.json"
       - "scripts/tests/**"
       - ".github/workflows/check-titans.yml"
       - ".github/workflows/update-13f.yml"
+      - ".github/workflows/update-prices.yml"
   workflow_dispatch:
 
 permissions:
