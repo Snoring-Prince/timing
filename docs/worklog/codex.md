@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-09-18 · Codex · PR #54
+차트 막대 높이·분기 폭·상향 방향·점선 말풍선·이전 거래 카드와 중복 문구 정리
+- 파일: titans/berkshire/index.html · scripts/tests/titans.test.cjs · CLAUDE.md · docs/design-system.md · 이 일지
+- 규칙: 최종 디자인·가격 자료 상태·25건 검사와 브라우저 검증은 CLAUDE.md 9-3-1의 차트 디자인 후속.
+- 굳힘: 양방향 막대 모두 위로, 최대 34.5/27px. 삭제한 차트 제목·부제·아래 캡션과 기존 금지 항목 복구 금지.
+- 넘김: 일별 종가 미연결. 사용자는 현재 무료만. 공개 표시 허용 공급처 확인·출처 표시·종류별 가격·자동 수집 후 선택 설정 활성화.
+
 ## 2026-09-18 · Codex · PR #53
 공시 기준 표현·모바일 숫자 안내·최대 매도·작은 비중·정적 소개와 자동 검사
 - 파일: titans/berkshire/index.html · scripts/tests/titans.test.cjs · .github/workflows/check-titans.yml · CLAUDE.md · docs/design-system.md · 이 일지
