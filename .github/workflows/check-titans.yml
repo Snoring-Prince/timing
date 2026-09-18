@@ -1,0 +1,31 @@
+name: Check Titans
+
+on:
+  pull_request:
+    paths:
+      - "titans/**"
+      - "scripts/fetch_13f.py"
+      - "scripts/tests/**"
+      - ".github/workflows/check-titans.yml"
+      - ".github/workflows/update-13f.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  titans:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # SEC와 알림 서비스에 접속하지 않습니다. 보존·계산·새 분기를 모의 자료로 검사합니다.
+      - name: 공시 수집 보존 검사
+        run: python -m unittest discover -s scripts/tests -p 'test_*.py'
+      - name: 화면 계산과 새 분기 검사
+        run: node --test scripts/tests/titans.test.cjs

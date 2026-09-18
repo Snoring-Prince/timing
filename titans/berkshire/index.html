@@ -10,7 +10,7 @@
      돌리므로 여기 적힌 **영어**가 검색 결과에 나오는 글자입니다. 한국어
      방문자에게는 applyLang() → paintHead() 가 갈아끼웁니다.
 ═════════════════════════════════════════════════════════════════════ -->
-<meta name="description" content="What Berkshire Hathaway holds right now, and what changed last quarter — position sizes, share counts, how long each has been held, read straight from the SEC 13F filings.">
+<meta name="description" content="Berkshire Hathaway holdings in its latest SEC 13F filing — position sizes, share changes and estimated returns based on quarter-end snapshots.">
 <link rel="canonical" href="https://itpaidoff.com/titans/berkshire/">
 <link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/berkshire/?lang=en">
 <link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/berkshire/?lang=ko">
@@ -20,7 +20,7 @@
 <meta property="og:site_name" content="It paid off">
 <meta property="og:url" content="https://itpaidoff.com/titans/berkshire/">
 <meta property="og:title" content="Berkshire Hathaway portfolio — every 13F filing since 1998">
-<meta property="og:description" content="What Berkshire Hathaway holds right now, and what changed last quarter, read straight from the SEC 13F filings.">
+<meta property="og:description" content="Berkshire Hathaway holdings in its latest SEC 13F filing — position sizes, share changes and estimated returns based on quarter-end snapshots.">
 <meta property="og:locale" content="en_US">
 <meta property="og:locale:alternate" content="ko_KR">
 <meta name="twitter:card" content="summary">
@@ -37,7 +37,7 @@
 <!-- ══ 이 투자자 ══════════════════════════════════════════════════════
      **이 화면은 틀(template)입니다.** 투자자를 한 명 더 넣으려면
      `titans/berkshire/` 폴더를 통째로 복사해서 이름을 바꾸고, **아래 블록
-     여섯 줄과 위 `<head>` 의 주소·제목만** 고치면 됩니다. 화면 코드와 사전은
+     여섯 줄과 위 `<head>`·정적 소개의 주소·이름만** 고치면 됩니다. 화면 코드와 사전은
      이 블록에서 이름을 받아 쓰므로 손댈 곳이 없습니다.
 
      `window.LIVE`·`window.STATS`·`window.SUPPORT`(CLAUDE.md 5번)와 같은
@@ -115,9 +115,12 @@ const D={
 en:{
   locale:"en-US", dir:"ltr", tab:"English",
   docTitle:(n,y)=>`${n} portfolio — every 13F filing since ${y}`,
-  metaDesc:n=>`What ${n} holds right now, and what changed last quarter — position sizes, share counts, how long each has been held, read straight from the SEC 13F filings.`,
+  metaDesc:n=>`${n} holdings in its latest SEC 13F filing — position sizes, share changes and estimated returns based on quarter-end snapshots.`,
   brand:"Titans' picks",
-  tagline:n=>`What ${n} holds now`,
+  tagline:n=>`${n} holdings · latest filing`,
+  intro:n=>`Explore ${n}'s holdings and share changes in SEC Form 13F filings. These are quarter-end snapshots, not live positions; filings are due within 45 days of quarter-end. Cash and short positions are not shown. Average cost and returns are estimates, with dividends excluded.`,
+  mobileGuide:"Numbers, left to right: shares held · share change this quarter · estimated return. Right: value · portfolio weight.",
+  tradeBasis:"Trade amounts are estimates from share changes and quarter-end prices. Full exits use the previous quarter-end value.",
   asOf:d=>`As of ${d}`,
   filedOn:d=>`filed ${d}`,
   quarterHead:"This quarter",
@@ -172,9 +175,12 @@ en:{
 ko:{
   locale:"ko-KR", dir:"ltr", tab:"한국어",
   docTitle:(n,y)=>`${n} 포트폴리오 — ${y}년부터의 13F 공시`,
-  metaDesc:n=>`${n}가 지금 들고 있는 종목과 지난 분기에 바뀐 것 — 비중, 주식수, 보유 기간을 SEC 13F 공시에서 그대로 읽었습니다.`,
+  metaDesc:n=>`${n}의 최근 SEC 13F 공시 기준 보유 종목 — 분기말 기록으로 비중, 주식수 증감과 추정 수익률을 살펴봅니다.`,
   brand:"대가들의 선택",
-  tagline:n=>`${n}가 지금 들고 있는 것`,
+  tagline:n=>`${n} · 최근 공시 기준 보유 종목`,
+  intro:n=>`SEC 13F 공시로 ${n}의 보유 종목과 주식수 변화를 살펴봅니다. 현재 보유가 아닌 분기말 기록이며, 공시는 분기 종료 후 45일 이내에 제출합니다. 현금과 공매도는 포함하지 않습니다. 매수 평균가와 수익률은 추정치이고 배당은 제외합니다.`,
+  mobileGuide:"숫자는 왼쪽부터 보유 주식수 · 이번 분기 주식수 증감 · 추정 수익률입니다. 오른쪽은 금액 · 전체 보유 금액에서의 비중입니다.",
+  tradeBasis:"매매 금액은 주식수 증감과 분기말 가격으로 추정합니다. 전량 매도는 직전 분기말 보유 금액을 사용합니다.",
   asOf:d=>`${d} 기준`,
   filedOn:d=>`${d} 공시`,
   quarterHead:"이번 분기",
@@ -305,6 +311,9 @@ body{
 .masthead h1{margin:0;font-family:var(--cond);font-weight:700;font-size:30px;letter-spacing:-.01em;line-height:1.05}
 .mast-right{display:flex;flex-direction:column;align-items:flex-end;gap:9px}
 .stamp{font-family:var(--mono);font-size:var(--t-small);color:var(--ink-3);text-align:right}
+.intro{margin:0 0 24px;font-family:var(--mono);font-size:var(--t-text);line-height:1.8;color:var(--ink-2)}
+.mobile-guide{display:none}
+.trade-basis{margin:8px 0 0;font-family:var(--mono);font-size:var(--t-small);line-height:1.7;color:var(--ink-3)}
 
 /* ── 언어 탭 ─────────────────────────────────────────────── */
 .seg{display:inline-flex;border:1px solid var(--rule);background:var(--card)}
@@ -612,6 +621,7 @@ body.settled .fade{animation:none}
   /* 좁은 화면에서는 세 칸이 한 줄에 안 서므로 머리글이 가리키는 자리가
      사라집니다. 자리를 못 가리키는 이름표는 없느니만 못합니다. */
   .head{display:none}
+  .mobile-guide{display:block;margin:0 0 12px;font-family:var(--mono);font-size:var(--t-small);line-height:1.7;color:var(--ink-2)}
   .amt{min-width:0}
   .val{font-size:18px}
   .mk{width:26px;height:26px}
@@ -621,7 +631,7 @@ body.settled .fade{animation:none}
      하나가 줄 전체를 차지해 계기판이 아니라 빈칸처럼 보인다. */
   .tally div{min-width:50px;padding:9px 4px}
   .tally .n{font-size:19px}
-  .tally .k{font-size:10.5px;letter-spacing:.06em}
+  .tally .k{font-size:var(--t-micro);letter-spacing:.06em}
   /* 영어 대문자 캡션은 한국어보다 훨씬 길다 — 좁은 화면에서 줄을 바꾸게 둔다 */
   .tally .k{white-space:normal}
 }
@@ -635,18 +645,20 @@ body.settled .fade{animation:none}
       <!-- 브랜드는 눈썹줄로. 번역하지 않는 이름이 아니라 두 언어가 다르므로
            applyLang() 이 채운다(본 사이트의 eyebrow 와 다른 점). -->
       <p class="eyebrow" id="brand">Titans' picks</p>
-      <h1 id="tagline">What Berkshire Hathaway holds now</h1>
+      <h1 id="tagline">Berkshire Hathaway holdings · latest filing</h1>
     </div>
     <div class="mast-right">
       <div class="seg" id="langtabs" role="group" aria-label="Language"></div>
       <div class="stamp" id="stamp"></div>
     </div>
   </header>
+  <p class="intro" id="intro">Explore Berkshire Hathaway's holdings and share changes in SEC Form 13F filings. These are quarter-end snapshots, not live positions; filings are due within 45 days of quarter-end. Cash and short positions are not shown. Average cost and returns are estimates, with dividends excluded.</p>
 
   <section class="panel fade" id="quarter" hidden>
     <h2 id="qhead">This quarter</h2>
     <div class="tally" id="tally"></div>
     <div class="says" id="says"></div>
+    <p class="trade-basis" id="tradebasis"></p>
     <div class="events" id="events" hidden></div>
   </section>
 
@@ -654,6 +666,7 @@ body.settled .fade{animation:none}
     <h2 id="bookhead"></h2>
     <p class="cap" id="bookcut"></p>
     <p class="cap" id="bookcap"></p>
+    <p class="mobile-guide" id="mobileguide"></p>
     <div class="rowin head" id="colhead">
       <div class="who"><b class="caret"></b></div>
       <div class="mid">
@@ -722,6 +735,7 @@ function classTag(a){
 
 const num=n=>Number(n||0).toLocaleString(LOCALE);
 const pct=n=>`${n.toFixed(1)}%`;
+const weightPct=n=>n>0&&n<0.1?"<0.1%":pct(n);
 function money(v){
   const b=v/1e9;
   if(b>=100) return `$${b.toFixed(0)}B`;
@@ -832,7 +846,7 @@ function build(){
   const out=prv?[...P.values()].filter(a=>!C.has(a.key)).map(a=>{
     let i=qs.length-2; const k=a.key;
     while(i>0 && seen[i-1].has(k)) i--;
-    return {...a, years:(qs.length-1-i)/4};
+    return {...a, years:(qs.length-1-i)/4, netUSD:-a.value};
   }).sort((x,y)=>y.value-x.value):[];
 
   /* 각주에 들어갈 두 목록. **둘 다 자료에서 뽑습니다** — 손으로 적어 두면
@@ -863,7 +877,9 @@ function tallyOf(B){
 function says(B,T){
   const p=[];
   const buys=B.list.filter(r=>r.netUSD>0).sort((a,b)=>b.netUSD-a.netUSD);
-  const sells=B.list.filter(r=>r.netUSD<0).sort((a,b)=>a.netUSD-b.netUSD);
+  /* 전량 매도는 이번 분기 가격이 없으므로 직전 분기말 보유 금액으로 비교합니다.
+     실제 매도 대금이 아닙니다 — 화면의 계산 안내에서 기준 차이를 밝힙니다. */
+  const sells=[...B.list.filter(r=>r.netUSD<0),...B.out].sort((a,b)=>a.netUSD-b.netUSD);
   if(buys[0]) p.push(tx("bought",title(buys[0].name),money(buys[0].netUSD)));
   if(sells[0]) p.push(tx("sold",title(sells[0].name),money(-sells[0].netUSD)));
   /* **"한 주도 안 움직인 종목 수" 줄은 뺐습니다** (사용자 요청) — 바로 위
@@ -1545,7 +1561,7 @@ function rowHTML(r,rank,maxW){
       </div>
       <div class="amt">
         <span class="val">${money(r.value)}</span>
-        <span class="wt">${pct(r.w)}</span>
+        <span class="wt">${weightPct(r.w).replace("<","&lt;")}</span>
       </div>
     </div>
     </summary>
@@ -1675,6 +1691,9 @@ function render(){
   const el=id=>document.getElementById(id);
   el("brand").textContent=tx("brand");
   el("tagline").textContent=tx("tagline",tName());
+  el("intro").textContent=tx("intro",tName());
+  el("mobileguide").textContent=tx("mobileGuide");
+  el("tradebasis").textContent=tx("tradeBasis");
   el("foothead").textContent=tx("footTitle");
   /* 각주를 두 번 그립니다. **자료가 없어도 각주는 나와야 하므로** 한 번은
      맨 앞에서 예시 없이 그리고, `build()` 뒤에 분할·집계 전 목록을 채워
@@ -1783,9 +1802,9 @@ function paintHead(){
   set('meta[property="og:locale"]',"content",LANG==="ko"?"ko_KR":"en_US");
   set('meta[property="og:locale:alternate"]',"content",LANG==="ko"?"en_US":"ko_KR");
   const c=document.head.querySelector('link[rel="canonical"]');
-  if(c){ let u=`https://itpaidoff.com/titans/${TT.slug}/`;
-    try{ if(new URLSearchParams(location.search).get("lang")) u+="?lang="+LANG; }catch(e){}
-    c.setAttribute("href",u); }
+  /* 언어는 같은 정적 페이지의 표시 전환입니다. 원본·실행 후·og:url의 대표
+     주소를 맞춥니다. 투자자를 복제할 때는 head와 TT.slug를 함께 바꿉니다. */
+  if(c) c.setAttribute("href",`https://itpaidoff.com/titans/${TT.slug}/`);
 }
 /* 언어를 바꾸면 글자가 바뀌므로 탭은 비우고 다시 그린다(본 사이트와 같은 예외). */
 function paintTabs(){

@@ -462,7 +462,7 @@ document.documentElement.scrollWidth - document.documentElement.clientWidth
 
 ```
 1  titans/berkshire/ 를 통째로 복사 → titans/<slug>/
-2  <head> 의 canonical·hreflang·og:url·title·description 주소를 <slug> 로
+2  <head> 의 canonical·hreflang·og:url·title·description 및 정적 h1·소개를 새 투자자로
 3  파일 위 window.TITAN 블록 여섯 줄을 고친다
 4  scripts/fetch_13f.py 의 CIK·OUT 을 그 투자자로 → data/titans/<slug>.json
 5  sitemap.xml 에 줄 하나 (표식 주석을 꼭 달 것 — CLAUDE.md 6-2)
@@ -491,6 +491,13 @@ window.TITAN = {
 **앞으로 이 화면을 고칠 때는 "버크셔에서 맞나"가 아니라 "여덟 명 누구에게나
 맞나"로 보세요.** 손으로 적은 회사 이름·연도·숫자는 곧 다음 투자자에서
 거짓말이 됩니다 — 각주의 분할 목록을 자료에서 뽑게 고친 것과 같은 이유입니다.
+
+**소개와 모바일 숫자 안내 (2026-09-18).** 머리글 아래 소개는 읽는 글 토큰
+`--t-text`와 `--ink-2`를 씁니다. 정적 영어 본문을 남기고 실행 후 사전의
+`intro(n)`가 설정된 투자자 이름·언어를 채웁니다. 모바일은 열 머리글 대신
+목록 위에 숫자 순서를 한 번만 안내합니다(`--t-small`, `--ink-2`). 같은
+라벨을 매 줄 되풀이하지 않습니다. 요약 계기판 이름표는 모바일도 `--t-micro`(11px).
+실제 동작·검증은 `CLAUDE.md` 9-3-1의 개선 권장 후속 항목을 봅니다.
 
 ---
 
