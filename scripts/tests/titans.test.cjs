@@ -85,3 +85,73 @@ test('all real holdings and periods render without invented zero-price exits', (
   assert.equal(run('B.list.find(r=>r.key==="674599").life.find(o=>o.exit).q'),'2020-06-30');
   assert.equal(run('B.list.find(r=>r.key==="674599").life.find(o=>o.exit).p'),null);
 });
+
+test('largest sale includes full exits valued at the previous snapshot', () => {
+  const run=page(real);
+  const state={list:[{name:'TRIM',netUSD:-500}],out:[{name:'FULL EXIT',netUSD:-1000}]};
+  // 가격·수량의 곱은 실제 매도 대금이 아닙니다. 기준과 비교 결과를 두 언어에서 확인합니다.
+  run(`const saleState=${JSON.stringify(state)};`);
+  assert.match(run('says(saleState,{}).join("")'), /Full Exit/);
+  assert.doesNotMatch(run('says(saleState,{}).join("")'), /Trim/);
+  assert.match(run('tx("tradeBasis")'), /직전/);
+  run('LANG="en";L10N=D.en;');
+  assert.match(run('says(saleState,{}).join("")'), /Full Exit/);
+  assert.match(run('tx("tradeBasis")'), /previous quarter-end/);
+  const exit=page(book([['2026-03-31',10,100],['2026-06-30',0,0]]));
+  assert.equal(exit('build().out[0].netUSD'), -1000);
+  assert.match(exit('says(build(),{}).join("")'), /Fixture/);
+});
+
+test('positive tiny weights are not shown as zero and ordinary weights stay rounded', () => {
+  const run=page(real);
+  assert.equal(run('weightPct(0.00001)'), '<0.1%');
+  assert.equal(run('weightPct(0.0999)'), '<0.1%');
+  assert.equal(run('weightPct(0.1)'), '0.1%');
+  assert.equal(run('weightPct(22.03)'), '22.0%');
+  assert.equal(run('weightPct(0)'), '0.0%');
+  assert.match(run('rowHTML(build().list.at(-1),26,100)'), /class="wt">&lt;0.1%/);
+});
+
+test('a new quarter updates holdings, exits, share changes and chart endpoint', () => {
+  const holding=(cusip,shares,price,name)=>({cusip,shares,value:shares*price,name,class:'COM'});
+  const data={quarters:[
+    {period:'2026-03-31',holdings:[holding('123456789',100,10,'OLD'),holding('234567890',20,10,'KEPT')]},
+    {period:'2026-06-30',holdings:[holding('123456789',60,10,'OLD'),holding('234567890',20,10,'KEPT')]}
+  ]};
+  const before=page(data);
+  assert.equal(before('build().cur.period'),'2026-06-30');
+  data.quarters.push({period:'2026-09-30',filed:'2026-11-12',holdings:[
+    holding('234567890',40,12,'KEPT'),holding('345678901',10,20,'NEW')
+  ]});
+  const after=page(data);after('const B=build();');
+  assert.equal(after('B.cur.period'),'2026-09-30');
+  assert.equal(after('B.cur.filed'),'2026-11-12');
+  assert.equal(after('B.tc'),680);
+  assert.equal(after('B.list.length'),2);
+  assert.equal(after('B.out[0].name'),'OLD');
+  assert.equal(after('B.list.find(r=>r.name==="KEPT").dn'),20);
+  assert.equal(after('B.list.find(r=>r.name==="NEW").isNew'),true);
+  assert.equal(after('B.list.find(r=>r.name==="KEPT").life.at(-1).q'),'2026-09-30');
+  assert.deepEqual(JSON.parse(after('JSON.stringify(tallyOf(B))')), {nw:1,add:1,trim:0,hold:0,out:1});
+});
+
+test('shared text follows investor settings and canonical stays stable across languages', () => {
+  const run=page(real);
+  run('TT.slug="sample";TT.name={en:"Example Capital",ko:"샘플 투자사"};TT.since=2020;');
+  assert.match(run('tx("tagline",tName())'),/샘플 투자사/);
+  assert.match(run('tx("intro",tName())'),/샘플 투자사/);
+  assert.doesNotMatch(run('tx("intro",tName())'),/버크셔/);
+  run('const tags={};document.head={querySelector:sel=>({setAttribute:(attr,val)=>tags[sel+attr]=val})};');
+  for(const lang of ['ko','en']){
+    run(`LANG="${lang}";L10N=D[LANG];location.search="?lang=${lang}";paintHead();`);
+    assert.equal(run('tags[\'link[rel="canonical"]href\']'),'https://itpaidoff.com/titans/sample/');
+  }
+  assert.match(run('tx("intro",tName())'),/Example Capital/);
+});
+
+test('static intro provides the same explanation before JavaScript runs', () => {
+  const run=page(real);run('LANG="en";L10N=D.en;');
+  const intro=html.match(/<p class="intro" id="intro">([^<]+)<\/p>/)[1];
+  assert.equal(intro,run('tx("intro",tName())'));
+  assert.equal(html.match(/<h1 id="tagline">([^<]+)<\/h1>/)[1],run('tx("tagline",tName())'));
+});
