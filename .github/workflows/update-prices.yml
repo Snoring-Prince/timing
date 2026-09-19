@@ -23,10 +23,14 @@ jobs:
           python-version: "3.12"
       - name: 일별 종가 받기
         id: fetch
-        run: python -u scripts/fetch_prices.py
+        # Keep the Python exit code even through tee; retain details for the alert.
+        run: |
+          set -o pipefail
+          python -u scripts/fetch_prices.py 2>&1 | tee prices-fetch.log
       # A partial failure preserves and saves successful updates, then fails visibly.
       # Rebase handles another data workflow committing while this job downloaded.
       - name: 가격 저장
+        id: save
         if: always() && steps.fetch.outcome != 'skipped'
         run: |
           git config user.name "github-actions[bot]"
@@ -37,3 +41,26 @@ jobs:
             git pull --rebase origin main
             git push origin HEAD:main
           fi
+      # Runs after saving successful updates, including when only one stock failed.
+      # PR checks do not run this workflow or send messages.
+      - name: 오류가 생기면 텔레그램으로
+        if: failure()
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT }}
+          FETCH_RESULT: ${{ steps.fetch.outcome }}
+          SAVE_RESULT: ${{ steps.save.outcome }}
+        run: |
+          {
+            if [ "$FETCH_RESULT" = "failure" ]; then
+              printf '%s\n' '종가 수집 또는 종목 식별에 실패했습니다.' '실패 종목의 기존 가격은 보존합니다.'
+            fi
+            if [ "$SAVE_RESULT" = "failure" ]; then
+              printf '%s\n' '가격 파일을 저장소에 올리지 못했습니다. 실행 기록을 확인해 주세요.'
+            fi
+            if [ -f prices-fetch.log ]; then
+              printf '\n%s\n' '수집 기록의 마지막 부분:'
+              tail -n 20 prices-fetch.log
+            fi
+          } > prices-alert.txt
+          python scripts/notify.py --title "대가들의 선택 주가 갱신 오류" --body-file prices-alert.txt

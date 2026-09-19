@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-09-19 · Codex · PR #56
+주가 수집·종목 식별·저장 실패를 기존 텔레그램 알림에 연결
+- 파일: .github/workflows/update-prices.yml · CLAUDE.md · 이 일지
+- 규칙: 실패 알림의 범위·순서·로그·오프라인 검증은 CLAUDE.md 9-3-1 주가 오류 텔레그램 알림 후속.
+- 굳힘: 정상 실행/PR 검사에는 발송 안 함. 성공 자료 저장을 먼저 하고 기존 notify.py·Secrets 사용.
+- 넘김: 실제 메시지 발송/수신은 이번에 확인 안 함. 예약 누락·알림 서비스 장애까지 감지하는 외부 감시는 없음.
+
 ## 2026-09-19 · Codex · PR #55
 일별 종가 15년치 공유 캐시·장 종료 후 자동 갱신·매수 이전부터 이어지는 실제 주가선
 - 파일: scripts/fetch_prices.py · data/titans/prices.json · update-prices.yml · check-titans.yml · scripts/tests/* · titans/berkshire/index.html · CLAUDE.md · design-system.md · 이 일지
