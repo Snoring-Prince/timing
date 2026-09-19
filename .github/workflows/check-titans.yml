@@ -5,7 +5,10 @@ on:
     paths:
       - "titans/**"
       - "scripts/fetch_13f.py"
+      - "scripts/watch_13f.py"
+      - "scripts/titans/**"
       - "scripts/fetch_prices.py"
+      - "data/titans/investors.json"
       - "data/titans/prices.json"
       - "scripts/tests/**"
       - ".github/workflows/check-titans.yml"

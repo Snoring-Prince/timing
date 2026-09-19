@@ -1,20 +1,20 @@
-# 대가들의 선택 — 13F 공시를 받아 저장소에 JSON 으로 둡니다.
-#
-# 공시는 분기마다 한 번, 분기 끝나고 45일 뒤에 나옵니다(2·5·8·11월 중순).
-# 그런데 **하루 차이로 놓치면 다음 분기까지 석 달을 기다립니다.** 스크립트가
-# 이미 받은 분기는 건너뛰므로 자주 돌아도 싸고, 새 것이 없으면 커밋도
-# 안 합니다. 그래서 날짜를 정확히 맞히려 들지 않고 주 1회 돌립니다.
-#
-# 야후·백테스트와 시각을 겹치지 않게 띄웠습니다(일요일).
 name: Update 13F
 
 on:
   schedule:
+    # SEC의 최신 제출 목록만 확인하는 가벼운 감시입니다. 새 접수번호가 있을 때만
+    # 원문과 과거 목록을 받습니다. 미국 동부 평일의 오전·저녁을 넓게 덮습니다.
+    - cron: "15 12,23 * * 1-5"
+    # 최신 목록에서 놓친 경우와 수동 복구를 위한 주 1회 전체 점검입니다.
     - cron: "0 1 * * 0"
   workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: update-13f
+  cancel-in-progress: false
 
 jobs:
   titans:
@@ -28,53 +28,41 @@ jobs:
         with:
           python-version: "3.12"
 
-      # 비밀값이 없으면 종료코드 1 로 끝납니다. SEC 는 이름 없는 요청을
-      # 거절하므로 연락처 없이는 아무것도 받을 수 없습니다.
-      - name: 13F 받기
+      - name: 새 공시 감시 및 수집
         id: fetch
         env:
           SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
-        run: python scripts/fetch_13f.py
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          set -o pipefail
+          mode=()
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$EVENT_SCHEDULE" = "0 1 * * 0" ]; then
+            mode=(--verify-all)
+          fi
+          python -u scripts/watch_13f.py "${mode[@]}" 2>&1 | tee 13f-fetch.log
 
-      - name: 결과 저장
+      - name: 공시 결과 저장
+        id: save
+        if: always() && steps.fetch.outcome != 'skipped'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/titans/berkshire.json
+          git add data/titans/*.json
           if git diff --staged --quiet; then
-            echo "바뀐 내용 없음 — 공시 내용과 갱신 시각을 그대로 둡니다"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "바뀐 공시 없음"
           else
-            # 분기·정정 표시 등 공시 내용이 실제로 바뀐 날에만 날짜를 옮긴다.
-            # 표식(<!-- titans -->) 덕분에 root 줄은 건드리지 않는다.
             sed -i "s#<lastmod>[^<]*</lastmod><!-- titans -->#<lastmod>$(date -u +%Y-%m-%d)</lastmod><!-- titans -->#" sitemap.xml
             git add sitemap.xml
             git commit -m "13F 갱신 $(date -u +%Y-%m-%d)"
+            git pull --rebase
             git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # 로고를 찾는 데 쓰는 티커입니다. **공시를 저장한 뒤에 돌립니다** —
-      # 티커를 못 받는다고 13F 데이터까지 안 올라가면 곤란합니다(6-2 의
-      # "데이터를 먼저 커밋하고 그 뒤에 본다"와 같은 순서).
-      #
-      # 화면은 미국 종목의 ISIN 을 CUSIP 에서 직접 계산하므로 이 표가 필요한 것은
-      # 미국 발행사가 아닌 종목뿐입니다(28년치의 5.8%). 이미 물어본 것은 다시
-      # 묻지 않으므로 보통은 요청이 0건이고 파일도 안 바뀝니다.
-      # **이 두 단계는 실행을 실패시키지 않습니다**(continue-on-error).
-      # 티커는 로고를 찾는 데만 쓰는 곁가지라, 못 받으면 그 종목의 마크가
-      # 글자 타일로 떨어질 뿐 데이터는 멀쩡합니다. 그런데 처음에는 이 단계가
-      # 실행 전체를 빨갛게 만들고 **"13F 받기가 실패했습니다"** 라는 텔레그램까지
-      # 보냈습니다 — 정작 13F 는 성공해서 커밋된 뒤였습니다. 거짓 경보입니다.
-      # 아래 알림은 이제 진짜 13F 실패일 때만 울립니다.
-      # 정정 공시(13F-HR/A)가 **새로 떴을 때만** 알립니다. fetch_13f.py 가
-      # 지난번 파일에 없던 정정만 골라 amend-alert.txt 를 남기므로, 같은 정정으로
-      # 매주 울리지 않습니다(6-2 의 "매주 실패하면 아무도 안 봅니다").
-      #
-      # **공시를 저장한 뒤에 봅니다.** 알림이 안 가는 것이 13F 저장을 막을 이유는
-      # 없습니다(6-2 의 "데이터를 먼저 커밋하고 그 뒤에 본다"와 같은 순서).
-      #
-      # 실패 알림과 달리 이건 **성공했을 때 가는 소식**이라 if: failure() 가 아닙니다.
       - name: 정정 공시가 떴으면 텔레그램으로
-        if: hashFiles('amend-alert.txt') != ''
+        if: always() && hashFiles('amend-alert.txt') != ''
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT }}
@@ -84,58 +72,81 @@ jobs:
             --body-file amend-alert.txt
           rm -f amend-alert.txt
 
+      # 아래 둘은 화면의 이름표와 로고를 보강하는 작업입니다. 실제 공시가 바뀐
+      # 날에만 돌며, 실패해도 이미 받은 13F 저장을 되돌리지 않습니다.
       - name: 티커 받기 (로고용)
+        id: tickers
+        if: steps.save.outputs.changed == 'true'
         continue-on-error: true
-        # SEC 는 이름 없는 요청을 거절합니다. 없으면 SEC 대조만 건너뛰고
-        # OpenFIGI 쪽은 그대로 돕니다(13F 받기와 같은 비밀값입니다).
         env:
           SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
-        # -u 로 버퍼링을 끕니다. 없으면 표준출력이 뭉쳐 나와서 **오류 줄이
-        # 결과 목록보다 먼저 찍힙니다** — 첫 실행 로그가 실제로 그랬습니다.
-        run: python -u scripts/fetch_tickers.py
+        run: |
+          set -o pipefail
+          python -u scripts/fetch_tickers.py 2>&1 | tee ticker-fetch.log
 
       - name: 티커 저장
+        id: save_tickers
+        if: steps.save.outputs.changed == 'true'
         continue-on-error: true
         run: |
           git add data/titans/tickers.json
-          if git diff --staged --quiet; then
-            echo "티커 표에 바뀐 내용 없음"
-          else
+          if ! git diff --staged --quiet; then
             git commit -m "티커 갱신 $(date -u +%Y-%m-%d)"
+            git pull --rebase
             git push
           fi
 
-      # 종목 이름 옆에 적는 업종(SIC)입니다. 티커와 같은 곁가지라 같은 요령으로
-      # 실행을 실패시키지 않고, 이미 아는 발행사는 다시 묻지 않습니다.
       - name: 섹터 받기 (업종 이름표)
+        id: sectors
+        if: steps.save.outputs.changed == 'true'
         continue-on-error: true
         env:
           SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
-        run: python -u scripts/fetch_sectors.py
+        run: |
+          set -o pipefail
+          python -u scripts/fetch_sectors.py 2>&1 | tee sector-fetch.log
 
       - name: 섹터 저장
+        id: save_sectors
+        if: steps.save.outputs.changed == 'true'
         continue-on-error: true
         run: |
           git add data/titans/sectors.json
-          if git diff --staged --quiet; then
-            echo "섹터 표에 바뀐 내용 없음"
-          else
+          if ! git diff --staged --quiet; then
             git commit -m "섹터 갱신 $(date -u +%Y-%m-%d)"
+            git pull --rebase
             git push
           fi
 
-      # 이 프로젝트에서 진짜 위험한 것은 터지는 것이 아니라 **데이터가 조용히
-      # 끊기는 것**입니다(CLAUDE.md 6-2). 비밀값이 없으면 notify.py 는
-      # 조용히 넘어가고, 알림 실패가 실행을 실패시키지도 않습니다.
-      # **진짜 13F 실패일 때만** 울립니다. 예전에는 그냥 `failure()` 였는데,
-      # 곁가지 단계가 넘어져도 "13F 받기가 실패했습니다" 가 가서 거짓 경보가
-      # 됐습니다(CLAUDE.md 9-3). 티커·섹터는 continue-on-error 로 막혀 있지만
-      # 정정 알림 단계는 일부러 안 막았으므로 — 알림이 조용히 실패하면 그 정정은
-      # 파일에 이미 '아는 것' 으로 적혀 다시는 안 울립니다 — 여기서 단계를
-      # 콕 집어 둡니다. 정정 알림이 넘어지면 그 단계만 빨갛게 남습니다.
-      - name: 실패하면 텔레그램으로
-        if: failure() && steps.fetch.outcome == 'failure' 
+      - name: 공시 감시나 저장이 실패하면 텔레그램으로
+        if: failure() && (steps.fetch.outcome == 'failure' || steps.save.outcome == 'failure')
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT }}
-        run: python scripts/notify.py --title "13F 받기가 실패했습니다"
+        run: |
+          tail -n 30 13f-fetch.log > 13f-error.txt 2>/dev/null || true
+          python scripts/notify.py \
+            --title "13F 자동 갱신이 실패했습니다" \
+            --body-file 13f-error.txt
+
+      - name: 티커나 업종 보강이 실패하면 텔레그램으로
+        if: >-
+          always() && (steps.tickers.outcome == 'failure' ||
+          steps.save_tickers.outcome == 'failure' ||
+          steps.sectors.outcome == 'failure' ||
+          steps.save_sectors.outcome == 'failure')
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT }}
+        run: |
+          {
+            echo "ticker fetch: ${{ steps.tickers.outcome }}"
+            echo "ticker save: ${{ steps.save_tickers.outcome }}"
+            echo "sector fetch: ${{ steps.sectors.outcome }}"
+            echo "sector save: ${{ steps.save_sectors.outcome }}"
+            tail -n 12 ticker-fetch.log 2>/dev/null || true
+            tail -n 12 sector-fetch.log 2>/dev/null || true
+          } > 13f-aux-error.txt
+          python scripts/notify.py \
+            --title "13F 티커·업종 보강이 실패했습니다" \
+            --body-file 13f-aux-error.txt

@@ -50,6 +50,14 @@ class PreservationTests(unittest.TestCase):
         with patch.object(fetch, 'get', side_effect=[json.dumps(sub).encode(), None]):
             self.assertEqual(fetch.list_filings('fixture'), ([], []))
 
+    def test_oversized_xml_is_a_failure_not_old_text_format(self):
+        index = {"directory": {"item": [
+            {"name": "primary_doc.xml", "size": "1000"},
+            {"name": "information_table.xml", "size": str(fetch.MAX_BYTES + 1)},
+        ]}}
+        with patch.object(fetch, 'get', return_value=json.dumps(index).encode()):
+            self.assertEqual(fetch.filing_docs('0001', 'fixture'), (None, None))
+
     def test_failed_list_preserves_bytes(self):
         self.assertEqual(self.run_fetch([]), 1)
         self.assertEqual(self.out.read_bytes(), self.before)
@@ -85,6 +93,13 @@ class PreservationTests(unittest.TestCase):
         self.out.write_text('{broken', encoding='utf8')
         self.assertEqual(self.run_fetch([self.latest()]), 1)
         self.assertEqual(self.out.read_text(), '{broken')
+
+    def test_book_from_another_manager_is_never_combined(self):
+        wrong = {**self.book, 'manager': {**self.book['manager'], 'cik': '0000000001'}}
+        self.out.write_text(json.dumps(wrong), encoding='utf8')
+        before = self.out.read_bytes()
+        self.assertEqual(self.run_fetch([self.latest()]), 1)
+        self.assertEqual(self.out.read_bytes(), before)
 
     def test_new_quarter_is_added_without_dropping_history(self):
         last = dt.date.fromisoformat(self.latest()['period'])

@@ -43,9 +43,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fetch_tickers import sec_index, sec_lookup, load_json   # 이름 대조를 함께 씁니다
+from titans.registry import books
 
 ROOT = Path(__file__).resolve().parent.parent
-BOOK = ROOT / "data" / "titans" / "berkshire.json"
 OUT  = ROOT / "data" / "titans" / "sectors.json"
 SUB  = "https://data.sec.gov/submissions/CIK{:010d}.json"
 PAUSE = 0.15        # SEC 한도는 초당 10건 — 넉넉히 아래로
@@ -80,25 +80,34 @@ def sic_of(cik: str, contact: str):
     return (m.group(1), m.group(2).strip()) if m else ("", ""), text[:200]
 
 
+def issuer_names(investor_books):
+    """Return each issuer prefix's newest disclosed name across all investors."""
+    # 발행사(CUSIP 앞 여섯 자리)마다 **가장 최근 분기의 이름**을 씁니다.
+    # 가장 긴 이름을 고르면 옛 텍스트 공시의 찌꺼기가 이깁니다(CLAUDE.md 9-3).
+    name, named_at = {}, {}
+    for book in investor_books:
+        for q in book["quarters"]:
+            period = q.get("period", "")
+            for h in q.get("holdings", []):
+                c = str(h.get("cusip", ""))
+                key = c[:6]
+                if len(c) == 9 and period >= named_at.get(key, ""):
+                    name[key] = h.get("name", "")
+                    named_at[key] = period
+    return name
+
+
 def main():
     contact = os.environ.get("SEC_CONTACT", "").strip()
-    book = load_json(BOOK, None)
-    if not book or not book.get("quarters"):
-        print("berkshire.json 을 못 읽었습니다 — 섹터는 건너뜁니다.")
+    investor_books = books()
+    if not investor_books:
+        print("투자자 공시 파일을 못 읽었습니다 — 섹터는 건너뜁니다.")
         return 0
     if not contact:
         # SEC 는 이름 없는 요청을 거절합니다. 비밀값이 없으면 이 길은 잠깁니다.
         print("SEC_CONTACT 가 없어 섹터를 건너뜁니다.")
         return 0
-
-    # 발행사(CUSIP 앞 여섯 자리)마다 **가장 최근 분기의 이름**을 씁니다.
-    # 가장 긴 이름을 고르면 옛 텍스트 공시의 찌꺼기가 이깁니다(CLAUDE.md 9-3).
-    name = {}
-    for q in book["quarters"]:
-        for h in q.get("holdings", []):
-            c = str(h.get("cusip", ""))
-            if len(c) == 9:
-                name[c[:6]] = h.get("name", "")
+    name = issuer_names(investor_books)
 
     have = load_json(OUT, {})
     asked = have.pop("_asked", "")
