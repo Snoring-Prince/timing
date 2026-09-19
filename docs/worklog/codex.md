@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-09-20 · Codex · PR #62
+Claude 핫라인 첫 왕복과 PR #58 다중 13F 자동화의 실제 SEC 전체 점검
+- 파일: CLAUDE.md · docs/worklog/codex.md
+- 규칙: GitHub 이슈 #60에 Claude의 검수 요청→Codex의 실행 결과를 네 항목 형식으로 회신. 오래 남을 결과는 문서에도 기록.
+- 굳힘: run #9 성공, 111분기·실패 0. 정정 메타데이터 15건만 보강했고 분기 핵심값·보유종목은 바뀌지 않음. 텔레그램 실제 수신은 단정하지 않음.
+- 넘김: 정정 수치 병합은 미완성. Claude가 시작할 때 이슈 #60에서 소유권을 먼저 알리고, Codex는 같은 파일을 동시에 수정하지 않음.
+
 ## 2026-09-19 · Codex · PR #58
 투자자 registry·SEC 통신·새 접수 감시·투자자별 원문 수집을 분리한 다중 13F 자동화
 - 파일: data/titans/investors.json · scripts/titans/* · watch/fetch_13f.py · ticker/sector/price 수집기 · update/check workflow · tests · 관련 문서 · 이 일지
