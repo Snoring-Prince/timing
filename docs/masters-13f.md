@@ -385,8 +385,9 @@ Unit-tested with the **real numbers read off the probe logs** — the three Ally
 rows fold to 900,335,661 / 19,593,812 shares, and the 2016 rows scale to a
 $46.69 AAL price. SH / PRN / Put are kept separate, never summed together.
 
-`.github/workflows/update-13f.yml`: weekly (Sunday), commits only when something
-changed, Telegram on failure.
+The original workflow was weekly. The multi-investor watcher described in §10-1
+now checks each current SEC submission list twice on weekdays and runs the heavy
+collector only when an accession is new. Sunday remains the full safety check.
 
 #### Amendments (`13F-HR/A`) are deliberately NOT fetched
 
@@ -737,6 +738,35 @@ Burry's page needs the staleness line more prominently (§3).
 - **Assistant does not give legal advice.** State facts, let the owner decide
   (`/CLAUDE.md` §11).
 
+### 10-1. Multi-investor automation (2026-09-19)
+
+Keep these pieces separate. A future fix to SEC transport, scheduling, investor
+metadata, or filing parsing must not require copying the whole pipeline.
+
+```
+data/titans/investors.json   one validated list of active managers
+scripts/titans/registry.py   validates that list and opens their saved books
+scripts/titans/sec.py        SEC transport + pure recent-list parser
+scripts/watch_13f.py         compares accessions and dispatches changed managers
+scripts/fetch_13f.py         collects and validates one selected manager
+update-13f.yml               schedule, commits, auxiliary jobs, Telegram
+```
+
+The weekday runs request only `submissions/CIK##########.json` once per active
+manager. A new regular filing or amendment accession selects that manager for the
+full historical-list/filing collector. Sunday and manual runs select every manager
+as a safety check. One manager failing does not prevent another manager's good file
+from being committed; the job still fails and sends the tail of the collection log
+through the existing Telegram channel.
+Ticker/SIC fetch or save failures keep the 13F commit but send a separately named
+Telegram alert, so an auxiliary outage is not reported as a filing failure.
+
+Ticker, SIC-sector, and daily-price collectors read all available books named by
+the registry. Therefore a newly disclosed CUSIP joins those shared caches without
+a Berkshire-specific code change. A manager still needs one registry entry, its
+thin page with unique static SEO, and a sitemap row. Pre-2013 text conversion is
+not generalized, and amendment values are still not merged automatically.
+
 ---
 
 ## 11. Next actions, in order
@@ -756,7 +786,8 @@ Burry's page needs the staleness line more prominently (§3).
 12. DONE  CUSIP→ticker (OpenFIGI + SEC name match), sectors (SEC SIC)
 13. DONE  page shipped at /titans/berkshire/ — holdings list + per-holding chart
 14. Amendments: read the restatement/adds checkbox, then merge (see 11)
-15. Only then, investor #2
+15. DONE  registry + lightweight multi-investor watcher + shared dispatch
+16. Before investor #2: generalize pre-2013 text import if that manager needs it
 ```
 
 ### Per-holding chart (2026-09-16)

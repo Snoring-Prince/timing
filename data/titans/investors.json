@@ -1,0 +1,15 @@
+{
+  "investors": [
+    {
+      "slug": "berkshire",
+      "cik": "0001067983",
+      "filing_name": "Berkshire Hathaway Inc",
+      "name": {
+        "en": "Berkshire Hathaway",
+        "ko": "버크셔 해서웨이"
+      },
+      "since": 1998,
+      "active": true
+    }
+  ]
+}

@@ -42,7 +42,9 @@ import gzip, json, os, re, sys, time, urllib.request, urllib.error, zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-BOOK = ROOT / "data" / "titans" / "berkshire.json"
+sys.path.insert(0, str(ROOT / "scripts"))
+from titans.registry import books  # noqa: E402
+
 OUT  = ROOT / "data" / "titans" / "tickers.json"
 API  = "https://api.openfigi.com/v3/mapping"
 SEC_TICKERS = "https://www.sec.gov/files/company_tickers.json"
@@ -272,20 +274,29 @@ def ask(cusips, id_type="ID_CUSIP"):
     return out, raw
 
 
-def main():
-    book = load_json(BOOK, None)
-    if not book or not book.get("quarters"):
-        print("berkshire.json 을 못 읽었습니다 — 티커는 건너뜁니다.")
-        return 0
+def wanted_tickers(investor_books):
+    """Return CUSIPs and their newest disclosed names across all investors."""
+    # 등록된 모든 투자자의 전 기간에서 모은다. 옛 종목도 '일생' 화면에서 쓴다.
+    wanted, name, named_at = set(), {}, {}
+    for book in investor_books:
+        for q in book["quarters"]:
+            period = q.get("period", "")
+            for h in q.get("holdings", []):
+                c = h.get("cusip", "")
+                if needs_ticker(c):
+                    wanted.add(c)
+                    if period >= named_at.get(c, ""):
+                        name[c] = h.get("name", "")
+                        named_at[c] = period
+    return wanted, name
 
-    # 28년치 전부에서 모은다. 옛 종목도 나중에 '일생' 화면에서 쓴다.
-    wanted, name = set(), {}
-    for q in book["quarters"]:
-        for h in q.get("holdings", []):
-            c = h.get("cusip", "")
-            if needs_ticker(c):
-                wanted.add(c)
-                name[c] = h.get("name", "")
+
+def main():
+    investor_books = books()
+    if not investor_books:
+        print("투자자 공시 파일을 못 읽었습니다 — 티커는 건너뜁니다.")
+        return 0
+    wanted, name = wanted_tickers(investor_books)
 
     have = load_json(OUT, {})
     asked = have.pop("_asked", "")          # 화면이 무시하는 키. 쓸 때 다시 넣는다.

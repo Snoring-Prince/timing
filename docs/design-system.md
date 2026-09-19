@@ -469,7 +469,7 @@ document.documentElement.scrollWidth - document.documentElement.clientWidth
 1  titans/berkshire/index.html의 짧은 투자자 껍데기만 복사 → titans/<slug>/index.html
 2  <head> 의 canonical·hreflang·og:url·title·description 및 정적 h1·소개를 새 투자자로
 3  window.TITAN 블록의 설정을 고친다. 공통 CSS·JS 경로는 그대로 둔다
-4  scripts/fetch_13f.py 의 CIK·OUT 을 그 투자자로 → data/titans/<slug>.json
+4  data/titans/investors.json 에 slug·CIK·공시 법인명·표시 이름·첫 연도를 한 번 등록
 5  sitemap.xml 에 줄 하나 (표식 주석을 꼭 달 것 — CLAUDE.md 6-2)
 ```
 
@@ -487,6 +487,11 @@ window.TITAN = {
 실행 후 제목·설명·`h1`·`canonical`·각주는 이 블록에서 나옵니다. 사전 항목이
 문자열이 아니라 **함수**(`docTitle:(n,y)=>…`)인 이유가 그것입니다. 정적 원본의
 영문 제목·설명·`h1`·소개는 검색엔진을 위해 투자자 페이지에도 직접 둡니다.
+
+공시 쪽 단일 목록은 `data/titans/investors.json`입니다. 감시기·수집기·티커·업종·
+주가 작업은 이 목록을 읽으므로 투자자마다 파이썬 상수나 워크플로 단계를 복사하지
+않습니다. HTML의 `window.TITAN`은 고유 URL의 정적 SEO 문구를 위해 별도로 남습니다.
+두 곳의 slug·CIK·이름·첫 연도는 같아야 하며 PR 검사에서 버크셔 기준을 확인합니다.
 
 **틀이 실제로 도는지 확인하는 방법**: 별도 투자자 설정으로 공통 JS를 실행하고
 이름·제목·`h1`·`canonical`·각주·계산이 따라오는지 검사합니다. 2026-09-19에는

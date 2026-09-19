@@ -11,15 +11,19 @@ import json
 import math
 import os
 import re
+import sys
 from pathlib import Path
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from zoneinfo import ZoneInfo
-from fetch_tickers import norm
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from fetch_tickers import norm  # noqa: E402
+from titans.registry import books  # noqa: E402
+
 OUT = ROOT / "data/titans/prices.json"
 UTC = dt.timezone.utc
 NY = ZoneInfo("America/New_York")
@@ -207,8 +211,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--full", action="store_true")
     args = parser.parse_args()
-    books = [json.loads(p.read_text(encoding="utf-8")) for p in (ROOT / "data/titans").glob("*.json")]
-    required = required_cusips(books)
+    required = required_cusips(books())
     previous = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
     known = json.loads((ROOT / "data/titans/tickers.json").read_text(encoding="utf-8"))
     result, errors = collect(required, previous, dt.datetime.now(UTC), args.full, known)

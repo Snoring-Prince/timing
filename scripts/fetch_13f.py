@@ -1,5 +1,5 @@
 """
-대가들의 선택 — 13F 공시를 받아 JSON 으로 (버크셔부터)
+대가들의 선택 — 등록된 투자자 한 명의 13F 공시를 JSON 으로 저장합니다.
 
 `scripts/probe_sec.py` 가 정찰한 결과로 만든 것입니다. 세 번 돌려서
 알아낸 것이 아래 셋이고, **셋 다 짐작했으면 틀렸을 자리**입니다.
@@ -13,8 +13,7 @@
      만든 표지(xslForm13F_X02/...)이고 종목이 하나도 없다.
 
   2. 한 줄이 한 종목이 아니다
-     버크셔는 자기 것과 자회사 14곳의 것을 함께 낸다. **자회사 조합마다
-     한 줄**이라 같은 회사가 여러 번 나온다(2026-06-30 에 앨리가 세 줄).
+     같은 회사가 여러 관리 주체나 주식 종류 때문에 여러 줄로 나올 수 있다.
      공시의 tableEntryTotal(89)은 **줄 수**이지 종목 수가 아니다.
      cusip 으로 묶어서 더해야 실제 보유가 나온다.
 
@@ -25,71 +24,39 @@
      1 보다 작으면 천 달러로 보고 1000을 곱한다. 종목 50개의 중앙값이라
      한두 종목이 이상해도 흔들리지 않는다.
 
-저장: data/titans/berkshire.json  (금액은 전부 달러로 맞춰 둠)
+투자자·CIK·저장 파일은 data/titans/investors.json 에서 고릅니다.
+금액은 전부 달러로 맞춰 둡니다.
 
 정정 공시(13F-HR/A)는 받지 않습니다. 있는지 없는지만 로그에 알립니다 —
 이유는 list_filings() 안에 적어 뒀습니다.
 
-주가는 아직 안 붙입니다. 13F 는 종목번호(CUSIP)만 주고 티커가 없어서,
-먼저 연차보고서와 총액을 대조해 파이프라인이 맞는지 확인한 뒤에 갑니다.
-
 저장 위치: scripts/fetch_13f.py
 """
 
+import argparse
 import json
 import os
 import re
 import sys
-import time
-import urllib.error
-import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
+from pathlib import Path
 from statistics import median
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from titans.registry import one
+from titans.sec import form_rows, get
 
 OUT = "data/titans/berkshire.json"
 # 정정 공시가 새로 뜨면 이 파일을 남깁니다. 워크플로가 이것을 보고 텔레그램을
 # 보냅니다. **저장소에 커밋하지 않습니다** — 알림용 쪽지일 뿐입니다.
 ALERT = "amend-alert.txt"
 
-# 버크셔 해서웨이. 첫 번째인 이유는 docs/masters-13f.md 4번에 있습니다 —
-# 연차보고서에 보유 종목이 나와 우리 계산을 대조할 수 있는 유일한 곳입니다.
+# 직접 실행과 기존 단위 검사의 기본값입니다. 자동 실행은 registry의 값을 넘깁니다.
 CIK = "0001067983"
+MANAGER_NAME = "Berkshire Hathaway Inc"
 FORM = "13F-HR"
-
-PAUSE = 0.25          # SEC 는 초당 10건을 넘지 말라고 합니다
-MAX_BYTES = 8 * 1024 * 1024
-
-
-def ua(contact: str) -> str:
-    return f"itpaidoff.com 13F fetcher ({contact})"
-
-
-def get(url: str, contact: str, tries: int = 3) -> bytes | None:
-    """받아서 바이트로. 실패하면 None — 부르는 쪽이 판단합니다."""
-    last = None
-    for i in range(tries):
-        try:
-            req = urllib.request.Request(url, headers={
-                "User-Agent": ua(contact),
-                "Accept": "application/json,application/xml,*/*",
-                "Accept-Encoding": "identity",
-            })
-            with urllib.request.urlopen(req, timeout=45) as r:
-                return r.read()
-        except urllib.error.HTTPError as e:            # noqa: PERF203
-            last = f"HTTP {e.code} {e.reason}"
-            # 403 은 User-Agent 를 거절한 것이라 다시 걸어도 같습니다.
-            if e.code not in (429, 500, 502, 503, 504) or i == tries - 1:
-                break
-            time.sleep(3.0 * (i + 1))
-        except Exception as e:                         # noqa: BLE001
-            last = f"{type(e).__name__}: {e}"
-            time.sleep(1.5 * (i + 1))
-        finally:
-            time.sleep(PAUSE)
-    print(f"    받지 못했습니다 — {last}\n      {url}")
-    return None
+MAX_BYTES = 64 * 1024 * 1024
 
 
 def local(tag: str) -> str:
@@ -191,15 +158,10 @@ def list_filings(contact: str) -> tuple[list[dict], list[dict]]:
         blocks.append(json.loads(b))
 
     out, amend = [], []
-    for blk in blocks:
-        forms = blk.get("form") or []
-        for i, form in enumerate(forms):
-            if form not in (FORM, FORM + "/A"):
-                continue
-            g = lambda k: (blk.get(k) or [None] * len(forms))[i]   # noqa: E731
-            row = {"filed": g("filingDate"), "period": g("reportDate"),
-                   "accession": g("accessionNumber")}
-            (out if form == FORM else amend).append(row)
+    for block in blocks:
+        for item in form_rows(block):
+            form = item.pop("form")
+            (out if form == FORM else amend).append(item)
 
     # 정정 공시(13F-HR/A)는 **일부러 안 받습니다.** 정정에는 통째로 다시 쓰는
     # 것과 빠진 것만 덧붙이는 것이 있는데, 둘을 반대로 처리하면 종목이 두 배가
@@ -233,7 +195,7 @@ def filing_docs(acc: str, contact: str):
     if not body:
         return None, None
     items = ((json.loads(body).get("directory") or {}).get("item") or [])
-    best, cover = None, None
+    best, cover, oversized = None, None, False
     for it in items:
         nm = (it.get("name") or "")
         low = nm.lower()
@@ -247,11 +209,14 @@ def filing_docs(acc: str, contact: str):
             cover = nm
             continue
         if size > MAX_BYTES:
+            oversized = True
             continue
         if best is None or size > best[1]:
             best = (nm, size)
     if not best:
-        return NO_XML, None
+        # 새 XML이 너무 큰 것은 옛 텍스트 형식과 다릅니다. 실패로 남겨야
+        # 텔레그램이 울리고 한도가 부족하다는 사실을 알 수 있습니다.
+        return (None, None) if oversized else (NO_XML, None)
     return get(f"{base}/{best[0]}", contact), (get(f"{base}/{cover}", contact)
                                                if cover else None)
 
@@ -274,7 +239,18 @@ def cover_totals(xml: bytes | None) -> tuple[int | None, int | None]:
     return tot, ent
 
 
-def main() -> int:
+def configure(slug):
+    """Select one registered investor without changing parser internals."""
+    global CIK, OUT, MANAGER_NAME  # noqa: PLW0603
+    investor = one(slug)
+    CIK = investor.cik
+    OUT = str(investor.output)
+    MANAGER_NAME = investor.filing_name
+    return investor
+
+
+def main(slug=None) -> int:
+    investor = configure(slug) if slug else None
     contact = os.environ.get("SEC_CONTACT", "").strip()
     if not contact:
         print("받을 수 없습니다 — 비밀값 SEC_CONTACT 가 없습니다.")
@@ -293,6 +269,12 @@ def main() -> int:
         try:
             with open(OUT, encoding="utf-8") as f:
                 prev = json.load(f)
+            saved_raw = str((prev.get("manager") or {}).get("cik") or "")
+            saved_cik = saved_raw.zfill(10) if saved_raw else ""
+            if saved_cik and saved_cik != CIK:
+                print(f"옛 파일의 CIK {saved_cik}가 설정 {CIK}와 다릅니다. "
+                      "서로 다른 투자자 자료를 합치지 않습니다.")
+                return 1
             old = {q["accession"]: dict(q) for q in prev.get("quarters", [])}
             for q in prev.get("quarters", []):
                 known_amend.update(q.get("amended_by") or [])
@@ -409,7 +391,7 @@ def main() -> int:
     doc = {
         "updated": prev.get("updated") if prev else None,
         "source": "SEC Form 13F-HR (public domain)",
-        "manager": {"cik": CIK, "name": "Berkshire Hathaway Inc"},
+        "manager": {"cik": CIK, "name": MANAGER_NAME},
         "note": ("value in USD; rows folded by cusip. 13F shows US-listed long "
                  "positions only, filed 45 days after quarter end."),
         "quarters": quarters,
@@ -445,7 +427,8 @@ def main() -> int:
     # '새 정정'으로 잡혀 알림이 의미를 잃습니다.
     fresh = [x for x in amends if x["accession"] not in known_amend]
     if fresh and had_prev:
-        lines = [f"버크셔 13F 정정 공시(13F-HR/A) {len(fresh)}건이 새로 떴습니다.",
+        label = investor.name["ko"] if investor else "버크셔 해서웨이"
+        lines = [f"{label} 13F 정정 공시(13F-HR/A) {len(fresh)}건이 새로 떴습니다.",
                  "",
                  "화면은 아직 원본 숫자를 쓰고 있습니다. 한 건을 열어 보고",
                  "통째로 다시 쓴 것인지 빠진 것만 덧붙인 것인지 확인해야 합니다.",
@@ -455,7 +438,9 @@ def main() -> int:
             lines.append(f"  {x['period']}  냄 {x['filed']}  {acc}")
             lines.append(f"    https://www.sec.gov/Archives/edgar/data/"
                          f"{int(CIK)}/{acc.replace('-', '')}/")
-        with open(ALERT, "w", encoding="utf-8") as f:
+        with open(ALERT, "a", encoding="utf-8") as f:
+            if f.tell():
+                f.write("\n")
             f.write("\n".join(lines) + "\n")
         print(f"\n*** 새 정정 공시 {len(fresh)}건 — {ALERT} 를 남겼습니다 ***")
         for ln in lines[5:]:
@@ -475,4 +460,6 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--investor", default="berkshire")
+    sys.exit(main(parser.parse_args().investor))
