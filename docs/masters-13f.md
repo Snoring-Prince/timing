@@ -764,8 +764,11 @@ Telegram alert, so an auxiliary outage is not reported as a filing failure.
 Ticker, SIC-sector, and daily-price collectors read all available books named by
 the registry. Therefore a newly disclosed CUSIP joins those shared caches without
 a Berkshire-specific code change. A manager still needs one registry entry, its
-thin page with unique static SEO, and a sitemap row. Pre-2013 text conversion is
-not generalized, and amendment values are still not merged automatically.
+thin page with unique static SEO, and a sitemap row. Pre-2013 text conversion is a
+per-manager one-time job, not part of recurring automation. Fetch the frozen
+filings, use throwaway conversion code, verify quarters/rows/totals, commit the
+JSON, and retain only the validation and format notes. Do not build or maintain a
+shared pre-2013 parser. Amendment values are still not merged automatically.
 
 ---
 
@@ -787,7 +790,7 @@ not generalized, and amendment values are still not merged automatically.
 13. DONE  page shipped at /titans/berkshire/ — holdings list + per-holding chart
 14. Amendments: read the restatement/adds checkbox, then merge (see 11)
 15. DONE  registry + lightweight multi-investor watcher + shared dispatch
-16. Before investor #2: generalize pre-2013 text import if that manager needs it
+16. Per new manager, if needed: one-time verified pre-2013 conversion; do not automate
 ```
 
 ### Per-holding chart (2026-09-16)
