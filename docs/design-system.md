@@ -454,16 +454,21 @@ document.documentElement.scrollWidth - document.documentElement.clientWidth
 
 ## 12-2. 투자자 화면은 틀입니다 (2026-09-17)
 
-`/titans/berkshire/index.html` 은 **버크셔 전용 화면이 아니라 틀(template)**
-입니다. 사용자가 못박았습니다 — *"다른 투자자를 추가할 때마다 같은 서식으로
-해야 하거든. 앞으로 모든 수정은 이 점을 감안해야 해."*
+`/titans/shared/investor.css`와 `/titans/shared/investor.js`가 모든 투자자 화면의
+**단일 공통 틀**입니다. 사용자가 못박았습니다 — *"다른 투자자를 추가할 때마다
+같은 서식으로 해야 하거든. 앞으로 모든 수정은 이 점을 감안해야 해."*
+
+`/titans/berkshire/index.html`에는 버크셔 고유 설정과 검색엔진이 JavaScript 없이도
+읽을 영문 제목·설명만 남습니다. 화면 구조·한국어/영어 문구·디자인·차트·계산은
+공통 두 파일에서만 관리합니다. 이후 디자인을 바꿀 때 투자자 폴더를 순회하며
+복사하거나 같은 수정을 되풀이하지 않습니다.
 
 **한 명 더 넣는 방법**
 
 ```
-1  titans/berkshire/ 를 통째로 복사 → titans/<slug>/
+1  titans/berkshire/index.html의 짧은 투자자 껍데기만 복사 → titans/<slug>/index.html
 2  <head> 의 canonical·hreflang·og:url·title·description 및 정적 h1·소개를 새 투자자로
-3  파일 위 window.TITAN 블록의 설정을 고친다
+3  window.TITAN 블록의 설정을 고친다. 공통 CSS·JS 경로는 그대로 둔다
 4  scripts/fetch_13f.py 의 CIK·OUT 을 그 투자자로 → data/titans/<slug>.json
 5  sitemap.xml 에 줄 하나 (표식 주석을 꼭 달 것 — CLAUDE.md 6-2)
 ```
@@ -479,12 +484,13 @@ window.TITAN = {
 };
 ```
 
-**제목·설명·`h1`·`canonical`·각주가 전부 이 블록에서 나옵니다.** 사전 항목이
-문자열이 아니라 **함수**(`docTitle:(n,y)=>…`)인 이유가 그것입니다.
+실행 후 제목·설명·`h1`·`canonical`·각주는 이 블록에서 나옵니다. 사전 항목이
+문자열이 아니라 **함수**(`docTitle:(n,y)=>…`)인 이유가 그것입니다. 정적 원본의
+영문 제목·설명·`h1`·소개는 검색엔진을 위해 투자자 페이지에도 직접 둡니다.
 
-**틀이 실제로 도는지 확인하는 방법**: 폴더를 복사해 **블록의 설정만** 바꾸고
-띄워 봅니다. 2026-09-17 에 가짜 투자자로 재 봤고 제목·`h1`·`canonical`·각주가
-전부 따라왔습니다(JS 오류 0).
+**틀이 실제로 도는지 확인하는 방법**: 별도 투자자 설정으로 공통 JS를 실행하고
+이름·제목·`h1`·`canonical`·각주·계산이 따라오는지 검사합니다. 2026-09-19에는
+`Example Capital/샘플 투자사` 설정과 실제 버크셔 자료로 공통 계산까지 재 봤습니다.
 
 **간판에는 법인 이름을 씁니다.** 살아 있는 사람 이름을 주소·도메인에 넣지
 않는다는 규칙(CLAUDE.md 9번)이 **화면 글자에도** 걸립니다.

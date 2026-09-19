@@ -6,15 +6,17 @@ const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const root = path.resolve(__dirname, '../..');
 const html = fs.readFileSync(path.join(root, 'titans/berkshire/index.html'), 'utf8');
+const shared = fs.readFileSync(path.join(root, 'titans/shared/investor.js'), 'utf8');
+const sharedCore = shared.slice(0, shared.indexOf('document.getElementById("langtabs").addEventListener'));
 let code = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
-  .map(m => m[1]).join('\n');
+  .map(m => m[1]).join('\n')+'\n'+shared;
 code = code.slice(0, code.indexOf('document.getElementById("langtabs").addEventListener'));
 
-function page(data) {
-  const ctx = {window:{}, console, data, document:{}, navigator:{languages:['ko-KR']},
+function page(data,titan=null) {
+  const ctx = {window:titan?{TITAN:titan}:{}, console, data, document:{}, navigator:{languages:['ko-KR']},
     localStorage:{getItem:()=>null}, location:{search:''}, URLSearchParams};
   vm.createContext(ctx);
-  vm.runInContext(code, ctx);
+  vm.runInContext(titan?sharedCore:code, ctx);
   vm.runInContext('RAW=data; LANG="ko"; L10N=D.ko; LOCALE="ko-KR";', ctx);
   return source => vm.runInContext(source, ctx);
 }
@@ -219,6 +221,20 @@ test('shared text follows investor settings and canonical stays stable across la
     assert.equal(run('tags[\'link[rel="canonical"]href\']'),'https://itpaidoff.com/titans/sample/');
   }
   assert.match(run('tx("intro",tName())'),/Example Capital/);
+});
+
+test('all investor visuals and calculations come from the shared assets', () => {
+  assert.match(html,/href="\.\.\/shared\/investor\.css"/);
+  assert.match(html,/src="\.\.\/shared\/investor\.js"/);
+  assert.doesNotMatch(html,/<style>|function build\(|function chartBody\(/);
+  assert.match(shared,/function build\(/);
+  assert.match(shared,/function chartBody\(/);
+  assert.doesNotMatch(shared,/Berkshire Hathaway|버크셔 해서웨이|berkshire\.json/);
+  const run=page(real,{slug:'sample',cik:'123',data:'sample.json',
+    name:{en:'Example Capital',ko:'샘플 투자사'},since:2020,prices:'prices.json'});
+  assert.equal(run('TT.slug'),'sample');
+  assert.match(run('tx("tagline",tName())'),/샘플 투자사/);
+  assert.equal(run('build().list.length'),26);
 });
 
 test('static intro provides the same explanation before JavaScript runs', () => {

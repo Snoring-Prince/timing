@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-09-19 · Codex · PR #57
+모든 투자자의 디자인·화면·차트·계산을 한 벌의 공통 CSS·JS로 분리
+- 파일: titans/shared/* · titans/berkshire/index.html · scripts/tests/titans.test.cjs · CLAUDE.md · design-system.md · 이 일지
+- 규칙: 투자자별 파일에는 설정·고유 SEO·정적 영문 소개만 둔다. 공통 화면 구조와 디자인은 shared에서만 수정.
+- 굳힘: 검색엔진용 정적 제목·설명·h1·소개는 각 URL에 유지. 기존 화면·계산·금지 디자인은 변경 안 함.
+- 넘김: 여러 투자자 13F 수집 자동화·정정 병합은 미완성. 새 투자자 껍데기 자동 생성은 수집 구조 작업과 함께 검토.
+
 ## 2026-09-19 · Codex · PR #56
 주가 수집·종목 식별·저장 실패를 기존 텔레그램 알림에 연결
 - 파일: .github/workflows/update-prices.yml · CLAUDE.md · 이 일지
