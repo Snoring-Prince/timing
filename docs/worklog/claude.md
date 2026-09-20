@@ -5,6 +5,21 @@
 ---
 
 ## 2026-09-20 · Claude · (이 PR)
+머리글에 투자자 이름표를 달고 이름을 떼어 냄 · 소개 문단 삭제
+- 파일: titans/shared/investor.js · investor.css · titans/berkshire/index.html ·
+  scripts/tests/titans.test.cjs · CLAUDE.md · docs/worklog/claude.md
+- 규칙: 이름표는 **영어 이름의 머리글자**가 기본. 로고 그림은 `window.TITAN.mark`
+  한 줄이고 비우면 타일로 돌아간다. 정적 HTML 의 제목과 JS 가 그리는 제목은
+  글자 하나까지 같아야 한다(검사로 고정).
+- 굳힘: **사용자가 준 BHHS 로고는 안 넣었다** — 버크셔 해서웨이 홈서비스는 부동산
+  중개 가맹 브랜드이고 13F 를 내는 Berkshire Hathaway Inc. 와 다른 회사다.
+  이유는 CLAUDE.md 9-3. 다시 달자고 하지 말 것.
+  `.intro` 문단·사전 키·CSS 는 사용자가 뺀 것이다(한계 설명은 각주에 그대로 있다).
+- 넘김: 각주 12번이 "마크를 바깥에서 안 불러온다"고 하는데 `MARKS.url` 은
+  elbstream 을 가리킨다 — 각주를 고치든 주소를 비우든 **사용자 판단**이라 남겼다.
+  그리고 소개 문단이 빠져 크롤러가 받는 본문이 줄었다(6-2 색인 판정).
+
+## 2026-09-20 · Claude · (이 PR)
 Codex 와의 직접 소통 채널을 끊음 — 이어받기만 남김
 - 파일: AGENTS.md · CLAUDE.md · docs/worklog/README.md · docs/worklog/claude.md
 - 규칙: 둘은 서로를 부르지 않는다. 한 번에 한 쪽만 일하고, 넘길 말은 자기 일지에만.

@@ -42,7 +42,10 @@ window.TITAN = {
   data : "../../data/titans/berkshire.json",
   name : { en:"Berkshire Hathaway", ko:"버크셔 해서웨이" },
   since: 1998,
-  prices: "../../data/titans/prices.json"
+  prices: "../../data/titans/prices.json",
+  // 머리글 이름표. 비워 두면 영어 이름의 머리글자 타일이 나온다.
+  // 진짜 로고를 쓰려면 그림 파일을 저장소에 넣고 그 경로를 여기 한 줄 적는다.
+  mark: ""
 };
 </script>
 <link rel="stylesheet" href="../shared/investor.css">
@@ -52,10 +55,9 @@ window.TITAN = {
   <header class="masthead">
     <div>
       <p class="eyebrow">Titans' picks</p>
-      <h1 id="tagline">Berkshire Hathaway holdings · latest filing</h1>
+      <h1 id="tagline"><span class="tmark" aria-hidden="true">BH</span><span class="ttext"><b class="tname">Berkshire Hathaway</b> holdings · latest filing</span></h1>
     </div>
   </header>
-  <p class="intro" id="intro">Explore Berkshire Hathaway's holdings and share changes in SEC Form 13F filings. These are quarter-end snapshots, not live positions; filings are due within 45 days of quarter-end. Cash and short positions are not shown. Average cost and returns are estimates, with dividends excluded.</p>
 </main>
 <script src="../shared/investor.js"></script>
 </body>

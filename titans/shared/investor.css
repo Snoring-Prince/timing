@@ -45,10 +45,23 @@ body{
   padding-bottom:14px;margin-bottom:22px;border-bottom:2px solid var(--ink)}
 .eyebrow{margin:0 0 6px;font-family:var(--cond);font-weight:600;font-size:var(--t-label);
   letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
-.masthead h1{margin:0;font-family:var(--cond);font-weight:700;font-size:30px;letter-spacing:-.01em;line-height:1.05}
+/* 제목은 [이름표][이름 + 설명] 두 덩어리다. `flex-start` 인 이유는 제목이
+   두세 줄로 접힐 때 이름표가 가운데로 떠오르면 안 되기 때문이다 —
+   이름표는 첫 줄의 것이다. `min-width:0` 이 없으면 좁은 화면에서
+   글자 덩어리가 안 줄어 가로로 넘친다. */
+.masthead h1{margin:0;display:flex;align-items:flex-start;gap:11px;
+  font-family:var(--cond);font-weight:700;font-size:30px;letter-spacing:-.01em;line-height:1.05}
+.ttext{min-width:0;font-weight:600;color:var(--ink-3)}
+.tname{font-weight:700;color:var(--ink)}
+/* 로고 자리. 둥근 모서리는 없다(재료표 5번) — 종목 줄의 `.mk` 와 같은 네모다.
+   다만 거기보다 한 단 진하다: 이건 이 화면 전체의 주인이다. */
+.tmark{width:32px;height:32px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;background:var(--ink);color:var(--card);
+  font-family:var(--cond);font-weight:700;font-size:var(--t-small);letter-spacing:.02em;line-height:1}
+.tmark.img{background:var(--card);border:1px solid var(--rule-2)}
+.tmark img{width:100%;height:100%;object-fit:contain;display:block}
 .mast-right{display:flex;flex-direction:column;align-items:flex-end;gap:9px}
 .stamp{font-family:var(--mono);font-size:var(--t-small);color:var(--ink-3);text-align:right}
-.intro{margin:0 0 24px;font-family:var(--mono);font-size:var(--t-text);line-height:1.8;color:var(--ink-2)}
 .mobile-guide{display:none}
 .trade-basis{margin:8px 0 0;font-family:var(--mono);font-size:var(--t-small);line-height:1.7;color:var(--ink-3)}
 
@@ -343,7 +356,8 @@ body.settled .fade{animation:none}
   .masthead{flex-direction:column;align-items:flex-start;gap:12px}
   .mast-right{align-items:flex-start}
   .stamp{text-align:left}
-  .masthead h1{font-size:24px}
+  .masthead h1{font-size:24px;gap:9px}
+  .tmark{width:26px;height:26px;font-size:var(--t-micro)}
   .panel h2{font-size:16px}
   .says i{min-width:0}
   html:not([lang="ko"]) .says i{min-width:0}
