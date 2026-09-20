@@ -27,7 +27,7 @@
 투자자·CIK·저장 파일은 data/titans/investors.json 에서 고릅니다.
 금액은 전부 달러로 맞춰 둡니다.
 
-정정 공시(13F-HR/A)는 받지 않습니다. 있는지 없는지만 로그에 알립니다 —
+정정 공시(13F-HR/A)는 표지의 종류를 읽어 수치에 반영합니다 —
 이유는 list_filings() 안에 적어 뒀습니다.
 
 저장 위치: scripts/fetch_13f.py
@@ -163,10 +163,9 @@ def list_filings(contact: str) -> tuple[list[dict], list[dict]]:
             form = item.pop("form")
             (out if form == FORM else amend).append(item)
 
-    # 정정 공시(13F-HR/A)는 **일부러 안 받습니다.** 정정에는 통째로 다시 쓰는
-    # 것과 빠진 것만 덧붙이는 것이 있는데, 둘을 반대로 처리하면 종목이 두 배가
-    # 되거나 통째로 사라집니다. 실물을 한 번도 못 봤으므로 짐작해서 짜지 않고,
-    # **있는지 없는지만 여기서 알립니다.** 나오면 그때 한 건을 열어 보고 넣습니다.
+    # 정정 공시(13F-HR/A)는 여기서 **목록만** 모읍니다. 원문을 받아 수치에
+    # 반영하는 일은 `apply_amendments` 가 뒤에서 합니다 — 정정이 달린 분기만
+    # 골라서 받으므로 여기서 미리 받을 이유가 없습니다.
     amend = [x for x in amend if x["accession"] and x["period"]]
     out = [x for x in out if x["accession"] and x["period"]]
     out.sort(key=lambda x: x["period"])
@@ -237,6 +236,174 @@ def cover_totals(xml: bytes | None) -> tuple[int | None, int | None]:
         elif t == "tableEntryTotal":
             ent = num(el.text)
     return tot, ent
+
+
+# ── 정정 공시(13F-HR/A) 병합 ────────────────────────────────────────
+#
+# 정정에는 두 모양이 있고 처리가 **정반대**입니다.
+#
+#     RESTATEMENT    분기 전체를 다시 적어 보냄 → 원본을 버리고 갈아끼움
+#     NEW HOLDINGS   비공개였던 몫만 뒤늦게 보냄 → 원본에 더함
+#
+# 예전에는 이것을 짐작할 수 없어서 일부러 안 합쳤습니다. **지금은 짐작하지
+# 않습니다 — 공시 표지가 스스로 어느 쪽인지 적어 둡니다.** 2026-09-20 에
+# XML 시대 8건의 원문을 전부 받아 확인했습니다(`probe_amendments.py`).
+# 신호 셋이 서로 일치했습니다 — `amendmentType` 이 위 둘 중 하나를 명시하고,
+# `confDeniedExpired` 와 `reasonForNonConfidentiality`(비공개 기간 만료)가
+# NEW HOLDINGS 에만 붙습니다. 줄 수도 맞아떨어집니다(전체 재작성은 원본과
+# 같은 152줄, 추가분은 1~4줄).
+#
+# **모르는 값을 만나면 합치지 않고 그 분기를 그대로 둡니다.** 조용히 넘어가는
+# 것이 이 저장소에서 제일 위험합니다(`CLAUDE.md` 0번).
+AMEND_RESTATE = "RESTATEMENT"
+AMEND_NEW = "NEW HOLDINGS"
+
+
+def amend_info(cover: bytes | None) -> dict:
+    """정정 표지에서 **종류와 차례**를 읽습니다."""
+    out = {"type": None, "no": None}
+    if not cover:
+        return out
+    try:
+        root = ET.fromstring(cover)
+    except ET.ParseError:
+        return out
+    for el in root.iter():
+        t = local(el.tag)
+        if t == "amendmentType" and el.text:
+            out["type"] = el.text.strip().upper()
+        elif t == "amendmentNo" and el.text:
+            out["no"] = num(el.text)
+    return out
+
+
+def one_doc(acc: str, contact: str):
+    """한 건을 받아 줄을 **달러로 환산해서** 돌려줍니다.
+
+    분기마다 금액 단위가 다를 수 있으므로(천 달러/달러) 합치기 전에 먼저
+    달러로 맞춥니다. 섞어 놓고 나중에 한 번에 곱하면 한쪽이 1000배 틀립니다."""
+    xml, cover = filing_docs(acc, contact)
+    if xml is NO_XML:
+        return None, "pre-xml"
+    if not xml:
+        return None, "받지 못함"
+    try:
+        rows = rows_of(xml)
+    except ET.ParseError:
+        return None, "XML 을 읽지 못함"
+    if not rows:
+        return None, "줄이 없음"
+    scale, _ = unit_scale(rows)
+    for r in rows:
+        r["value"] *= scale
+    ctot, cent = cover_totals(cover)
+    return {"acc": acc, "rows": rows, "scale": scale,
+            "total": ctot * scale if ctot else None, "lines": cent,
+            "amend": amend_info(cover)}, None
+
+
+def merge_amendments(base: dict, accs: list[str], contact: str):
+    """원본에 정정을 차례대로 적용합니다. `(결과, 잘못된 이유)` 를 돌려줍니다.
+
+    **차례는 `amended_by` 배열 순서가 아니라 `amendmentNo` 입니다.**
+    2026-09-20 실측으로 2023-09-30 은 배열에 2번이 먼저, 1번이 나중에
+    들어 있었습니다. 배열 순서대로 적용하면 뒤늦게 공개된 한 줄을 더한 뒤
+    전체 재작성이 그것을 통째로 덮어써서 **조용히 사라집니다.**"""
+    plans = []
+    for acc in accs:
+        doc, why = one_doc(acc, contact)
+        if not doc:
+            return None, f"{acc} {why}"
+        kind = doc["amend"]["type"]
+        if kind not in (AMEND_RESTATE, AMEND_NEW):
+            return None, f"{acc} 정정 종류를 모릅니다 ({kind or '표지에 없음'})"
+        plans.append(doc)
+    plans.sort(key=lambda d: (d["amend"]["no"] is None, d["amend"]["no"] or 0,
+                              d["acc"]))
+
+    rows = list(base["rows"])
+    want_total, want_lines = base["total"], base["lines"]
+    applied = []
+    for d in plans:
+        if d["amend"]["type"] == AMEND_RESTATE:
+            rows = list(d["rows"])
+            want_total, want_lines = d["total"], d["lines"]
+        else:
+            rows = rows + list(d["rows"])
+            want_total = (want_total + d["total"]
+                          if want_total is not None and d["total"] is not None
+                          else None)
+            want_lines = (want_lines + d["lines"]
+                          if want_lines is not None and d["lines"] is not None
+                          else None)
+        applied.append({"accession": d["acc"], "type": d["amend"]["type"],
+                        "no": d["amend"]["no"], "lines": len(d["rows"])})
+    return {"rows": rows, "applied": applied,
+            "want_total": want_total, "want_lines": want_lines}, None
+
+
+def apply_amendments(quarters: list[dict], contact: str) -> int:
+    """정정이 달린 분기의 수치를 다시 셉니다.
+
+    **이미 반영한 분기는 다시 받지 않습니다**(`amended_applied` 와 대조).
+    매주 도는 작업이라, 안 그러면 같은 원문을 영원히 다시 받습니다."""
+    done = 0
+    for q in quarters:
+        accs = q.get("amended_by") or []
+        # `amend_gap` 이 적힌 분기는 **영영 못 합치는 것**이라 다시 안 받습니다.
+        if not accs or q.get("amend_gap"):
+            continue
+        if {a.get("accession") for a in (q.get("amended_applied") or [])} == set(accs):
+            continue
+
+        base, why = one_doc(q["accession"], contact)
+        if not base:
+            if why == "pre-xml":
+                # 2013년 중반 이전은 텍스트 공시입니다. 사용자가 **투자자별
+                # 일회성 변환**으로 확정한 영역이라 여기서 자동으로 합치지
+                # 않습니다(`CLAUDE.md` 9-3-1). 한 번 적어 두고 다시 받지
+                # 않습니다 — 매주 수십 건을 헛되이 받지 않게.
+                q["amend_gap"] = "pre-xml"
+                continue
+            print(f"    {q['period']} 정정 병합 보류 — 원본을 {why}")
+            continue
+
+        merged, bad = merge_amendments(base, accs, contact)
+        if bad:
+            # 합치지 않고 **원본 숫자를 그대로 둡니다.** 반쯤 합친 분기를
+            # 남기는 것보다 안 합친 것이 낫습니다.
+            print(f"    {q['period']} 정정 병합 보류 — {bad}")
+            continue
+
+        rows = merged["rows"]
+        held = fold(rows, 1)          # 이미 달러로 맞춰 둔 줄입니다
+        q["lines"] = len(rows)
+        q["total"] = sum(h["value"] for h in held)
+        q["holdings"] = held
+        q["amended_applied"] = merged["applied"]
+        q.pop("amend_gap", None)
+
+        # 합친 결과를 **공시가 스스로 밝힌 총액·줄 수**와 맞춰 봅니다.
+        # 원본을 받을 때 하는 검산과 같은 것입니다.
+        for key in ("total_mismatch", "lines_mismatch"):
+            q.pop(key, None)
+        mark = ""
+        want = merged["want_total"]
+        if want:
+            off = abs(q["total"] - want) / want
+            if off > 0.005:
+                q["total_mismatch"] = want
+                mark += f"  ※ 공시 총액과 {off:.1%} 차이"
+        if merged["want_lines"] and merged["want_lines"] != len(rows):
+            q["lines_mismatch"] = merged["want_lines"]
+            mark += f"  ※ 공시 줄 수 {merged['want_lines']} ≠ {len(rows)}"
+
+        kinds = " + ".join(f"{a['type']}({a['lines']}줄)"
+                           for a in merged["applied"])
+        print(f"  {q['period']}  정정 {len(accs)}건 반영 → 줄 {len(rows)} · "
+              f"종목 {len(held)} · ${q['total']/1e9:,.1f}B   {kinds}{mark}")
+        done += 1
+    return done
 
 
 def configure(slug):
@@ -388,6 +555,14 @@ def main(slug=None) -> int:
         got_a = amend_by.get(q["period"])
         if got_a:
             q["amended_by"] = list(dict.fromkeys([*(q.get("amended_by") or []), *got_a]))
+
+    # 정정을 **실제 수치에 반영합니다.** 표시만 해 두던 것을 2026-09-20 에
+    # 바꿨습니다 — 원문 8건을 받아 보니 표지가 종류를 명시하고 있었습니다.
+    # 이미 반영한 분기는 다시 받지 않으므로 평소 실행에서는 아무 일도 안 합니다.
+    merged_n = apply_amendments(quarters, contact)
+    if merged_n:
+        print(f"정정을 반영한 분기 {merged_n}개")
+
     doc = {
         "updated": prev.get("updated") if prev else None,
         "source": "SEC Form 13F-HR (public domain)",
@@ -418,20 +593,26 @@ def main(slug=None) -> int:
         print(f"정정 공시가 있는 분기 {len(amended)}개 (원본 숫자를 쓰는 중): "
               f"{', '.join(q['period'] for q in amended)}")
     # ── 새로 뜬 정정 공시를 알립니다 ────────────────────────────────
-    # **정정은 자동으로 합치지 않습니다**(list_filings 의 주석 참고). 통째로
-    # 다시 쓰는 것과 빠진 것만 덧붙이는 것이 있는데, 둘을 반대로 처리하면
-    # 종목이 두 배가 되거나 통째로 사라집니다. 실물을 한 번도 못 봤으므로
-    # **사람이 한 건을 열어 보게 알리는 것**이 지금 할 수 있는 최선입니다.
+    # 정정은 이제 **자동으로 반영됩니다**(`apply_amendments`). 그래도 알립니다 —
+    # 값이 바뀌었다는 사실 자체를 사람이 알아야 하고, 합치지 못한 경우
+    # (표지에 종류가 없거나 2013년 이전 텍스트)에는 그 분기가 원본 숫자로
+    # 남기 때문입니다.
     #
     # 처음 받는 실행(옛 파일이 없음)에서는 알리지 않습니다 — 28년치가 통째로
     # '새 정정'으로 잡혀 알림이 의미를 잃습니다.
     fresh = [x for x in amends if x["accession"] not in known_amend]
     if fresh and had_prev:
         label = investor.name["ko"] if investor else "버크셔 해서웨이"
+        applied_all = {a.get("accession")
+                       for q in quarters for a in (q.get("amended_applied") or [])}
+        stuck = [x for x in fresh if x["accession"] not in applied_all]
         lines = [f"{label} 13F 정정 공시(13F-HR/A) {len(fresh)}건이 새로 떴습니다.",
                  "",
-                 "화면은 아직 원본 숫자를 쓰고 있습니다. 한 건을 열어 보고",
-                 "통째로 다시 쓴 것인지 빠진 것만 덧붙인 것인지 확인해야 합니다.",
+                 (f"{len(fresh) - len(stuck)}건은 화면 수치에 반영했습니다."
+                  if len(stuck) < len(fresh) else "반영한 것은 없습니다."),
+                 (f"{len(stuck)}건은 합치지 못해 그 분기가 원본 숫자로 남아 "
+                  "있습니다 — 열어 보셔야 합니다." if stuck else
+                  "합치지 못한 것은 없습니다."),
                  ""]
         for x in sorted(fresh, key=lambda v: v["period"]):
             acc = x["accession"]

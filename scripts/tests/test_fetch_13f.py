@@ -30,10 +30,15 @@ class PreservationTests(unittest.TestCase):
         self.out.write_text(json.dumps(self.book), encoding='utf8')
         self.before = self.out.read_bytes()
 
-    def run_fetch(self, filings, amendments=()):
+    def run_fetch(self, filings, amendments=(), docs=(None, None)):
+        # 정정 병합이 생기면서 원문을 받는 자리가 하나 늘었습니다. 이 파일은
+        # **SEC 요청 없이 도는 것이 약속**이므로(맨 위 설명) 기본값으로 막습니다.
+        # (None, None) 은 '받지 못함'이라 병합을 보류하고 분기를 그대로 둡니다 —
+        # 기존 검사들이 기대하는 '아무것도 안 바뀜'이 그대로 유지됩니다.
         with patch.dict(os.environ, {'SEC_CONTACT': 'fixture-only'}), \
                 patch.object(fetch, 'OUT', str(self.out)), \
                 patch.object(fetch, 'ALERT', str(self.alert)), \
+                patch.object(fetch, 'filing_docs', return_value=docs), \
                 patch.object(fetch, 'list_filings', return_value=(filings, list(amendments))), \
                 contextlib.redirect_stdout(io.StringIO()):
             return fetch.main()
@@ -110,9 +115,8 @@ class PreservationTests(unittest.TestCase):
                'accession': 'fixture-new'}
         rows = [{'cusip': '123456789', 'name': 'Fixture', 'class': 'COM',
                  'type': 'SH', 'putCall': '', 'shares': 100, 'value': 10000}]
-        with patch.object(fetch, 'filing_docs', return_value=(b'fixture', None)), \
-                patch.object(fetch, 'rows_of', return_value=rows):
-            self.assertEqual(self.run_fetch([new]), 0)
+        with patch.object(fetch, 'rows_of', return_value=rows):
+            self.assertEqual(self.run_fetch([new], docs=(b'fixture', None)), 0)
         after = json.loads(self.out.read_text())
         self.assertEqual(len(after['quarters']), len(self.book['quarters']) + 1)
         self.assertEqual(after['quarters'][:-1], self.book['quarters'])
