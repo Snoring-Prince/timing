@@ -212,15 +212,14 @@ test('a new quarter updates holdings, exits, share changes and chart endpoint', 
 test('shared text follows investor settings and canonical stays stable across languages', () => {
   const run=page(real);
   run('TT.slug="sample";TT.name={en:"Example Capital",ko:"샘플 투자사"};TT.since=2020;');
-  assert.match(run('tx("tagline",tName())'),/샘플 투자사/);
-  assert.match(run('tx("intro",tName())'),/샘플 투자사/);
-  assert.doesNotMatch(run('tx("intro",tName())'),/버크셔/);
+  assert.match(run('taglineHTML()'),/샘플 투자사/);
+  assert.doesNotMatch(run('taglineHTML()'),/버크셔/);
   run('const tags={};document.head={querySelector:sel=>({setAttribute:(attr,val)=>tags[sel+attr]=val})};');
   for(const lang of ['ko','en']){
     run(`LANG="${lang}";L10N=D[LANG];location.search="?lang=${lang}";paintHead();`);
     assert.equal(run('tags[\'link[rel="canonical"]href\']'),'https://itpaidoff.com/titans/sample/');
   }
-  assert.match(run('tx("intro",tName())'),/Example Capital/);
+  assert.match(run('taglineHTML()'),/Example Capital/);
 });
 
 test('all investor visuals and calculations come from the shared assets', () => {
@@ -237,9 +236,24 @@ test('all investor visuals and calculations come from the shared assets', () => 
   assert.equal(run('build().list.length'),26);
 });
 
-test('static intro provides the same explanation before JavaScript runs', () => {
+test('the static headline is byte-identical to what JavaScript paints', () => {
   const run=page(real);run('LANG="en";L10N=D.en;');
-  const intro=html.match(/<p class="intro" id="intro">([^<]+)<\/p>/)[1];
-  assert.equal(intro,run('tx("intro",tName())'));
-  assert.equal(html.match(/<h1 id="tagline">([^<]+)<\/h1>/)[1],run('tx("tagline",tName())'));
+  // 크롤러가 받는 글자와 방문자가 보는 글자가 갈라지면 안 된다. 이름표·이름
+  // 강조까지 같은 마크업이어야 하므로 통째로 비교한다.
+  assert.equal(html.match(/<h1 id="tagline">([\s\S]*?)<\/h1>/)[1],run('taglineHTML()'));
+});
+
+test('the headline mark falls back to initials and never leaves the repository', () => {
+  const run=page(real,{slug:'sample',cik:'123',data:'sample.json',
+    name:{en:'Example Capital',ko:'샘플 투자사'},since:2020,prices:'prices.json'});
+  // 설정이 비어 있으면 **영어 이름의 머리글자**다. 언어를 바꿔도 같아야 한다 —
+  // 같은 투자자의 같은 표식이고, monogram() 은 A-Z 만 본다.
+  assert.match(run('titanMark()'),/>EC</);
+  run('LANG="ko";L10N=D.ko;');
+  assert.match(run('titanMark()'),/>EC</);
+  assert.doesNotMatch(run('titanMark()'),/https?:/);
+  // 경로를 적으면 그림을 쓰되, 못 받으면 같은 타일로 떨어진다.
+  run('TT.mark="logo.png";');
+  assert.match(run('titanMark()'),/<img src="logo\.png"/);
+  assert.match(run('titanMark()'),/onerror=/);
 });

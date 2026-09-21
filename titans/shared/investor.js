@@ -9,6 +9,8 @@ const TT = Object.assign(
   window.TITAN||{});
 /* 지금 언어로 된 이름. `applyLang()` 이 언어를 바꾸면 따라 바뀝니다. */
 const tName=()=>TT.name[LANG]||TT.name.en;
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
 const D={
 en:{
@@ -17,7 +19,6 @@ en:{
   metaDesc:n=>`${n} holdings in its latest SEC 13F filing — position sizes, share changes and estimated returns based on quarter-end snapshots.`,
   brand:"Titans' picks",
   tagline:n=>`${n} holdings · latest filing`,
-  intro:n=>`Explore ${n}'s holdings and share changes in SEC Form 13F filings. These are quarter-end snapshots, not live positions; filings are due within 45 days of quarter-end. Cash and short positions are not shown. Average cost and returns are estimates, with dividends excluded.`,
   mobileGuide:"Numbers, left to right: shares held · share change this quarter · estimated return. Right: value · portfolio weight.",
   tradeBasis:"Trade amounts are estimates from share changes and quarter-end prices. Full exits use the previous quarter-end value.",
   asOf:d=>`As of ${d}`,
@@ -80,7 +81,6 @@ ko:{
   metaDesc:n=>`${n}의 최근 SEC 13F 공시 기준 보유 종목 — 분기말 기록으로 비중, 주식수 증감과 추정 수익률을 살펴봅니다.`,
   brand:"대가들의 선택",
   tagline:n=>`${n} · 최근 공시 기준 보유 종목`,
-  intro:n=>`SEC 13F 공시로 ${n}의 보유 종목과 주식수 변화를 살펴봅니다. 현재 보유가 아닌 분기말 기록이며, 공시는 분기 종료 후 45일 이내에 제출합니다. 현금과 공매도는 포함하지 않습니다. 매수 평균가와 수익률은 추정치이고 배당은 제외합니다.`,
   mobileGuide:"숫자는 왼쪽부터 보유 주식수 · 이번 분기 주식수 증감 · 추정 수익률입니다. 오른쪽은 금액 · 전체 보유 금액에서의 비중입니다.",
   tradeBasis:"매매 금액은 주식수 증감과 분기말 가격으로 추정합니다. 전량 매도는 직전 분기말 보유 금액을 사용합니다.",
   asOf:d=>`${d} 기준`,
@@ -173,6 +173,9 @@ function mountInvestorShell(){
       <!-- 브랜드는 눈썹줄로. 번역하지 않는 이름이 아니라 두 언어가 다르므로
            applyLang() 이 채운다(본 사이트의 eyebrow 와 다른 점). -->
       <p class="eyebrow" id="brand">Titans' picks</p>
+      <!-- render() 가 taglineHTML() 로 갈아끼운다. 투자자 이름만 진한 잉크로
+           떼어 놓고 앞에 이름표를 단다 — 어느 투자자의 화면인지가 제목에서
+           바로 읽혀야 한다. -->
       <h1 id="tagline">This investor holdings · latest filing</h1>
     </div>
     <div class="mast-right">
@@ -180,8 +183,6 @@ function mountInvestorShell(){
       <div class="stamp" id="stamp"></div>
     </div>
   </header>
-  <p class="intro" id="intro">Explore this investor's holdings and share changes in SEC Form 13F filings.</p>
-
   <section class="panel fade" id="quarter" hidden>
     <h2 id="qhead">This quarter</h2>
     <div class="tally" id="tally"></div>
@@ -588,6 +589,33 @@ function monogram(name){
   if(!w.length) return String(name).replace(/[^A-Za-z]/g,"").slice(0,2).toUpperCase()||"?";
   return (w.length>1?w[0][0]+w[1][0]:w[0].slice(0,2)).toUpperCase();
 }
+/* ══ 머리글의 투자자 이름표 ════════════════════════════════════════
+   **글자만 있는 제목은 어느 투자자의 화면인지 늦게 읽힙니다.** 그래서
+   이름 앞에 네모 하나를 두고, 이름만 `--ink`(제일 진한 잉크) 로 떼어 놓고
+   나머지 설명은 `--ink-3` 으로 물립니다. **색을 새로 만들지 않았습니다** —
+   이미 쓰는 잉크 세 단계 그대로입니다(재료표의 "색을 늘리지 마세요").
+
+   기본은 **머리글자 타일**입니다. 진짜 로고 그림이 필요하면 투자자 파일의
+   `window.TITAN.mark` 에 저장소 안 경로를 한 줄 적으면 됩니다 —
+   `LIVE`·`STATS`·`SUPPORT` 와 같은 요령이라 **비우면 타일로 돌아갑니다.**
+   그림을 못 받아도 `onerror` 가 같은 타일로 떨어지므로 화면이 비지 않습니다.
+
+   **머리글자는 늘 영어 이름에서 뽑습니다.** `monogram()` 이 A-Z 만 보므로
+   한글 이름을 주면 `?` 가 나옵니다. 그리고 이름표는 언어를 따라 바뀌면
+   안 됩니다 — 같은 투자자의 같은 표식입니다. */
+function titanMark(){
+  const src=String(TT.mark||"").trim(), mono=monogram(TT.name.en||TT.slug||"");
+  if(src) return `<span class="tmark img" aria-hidden="true"><img src="${esc(src)}" alt=""`
+    +` onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('${mono}')"></span>`;
+  return `<span class="tmark" aria-hidden="true">${mono}</span>`;
+}
+/* 사전의 `tagline` 에 **이름 자리**를 통째로 넘깁니다. 언어마다 이름이 앞에
+   오기도 뒤에 오기도 하므로, 문장을 쪼개지 않고 이름만 감싸는 쪽이 안전합니다. */
+function taglineHTML(){
+  return titanMark()+`<span class="ttext">`
+    +tx("tagline",`<b class="tname">${esc(tName())}</b>`)+`</span>`;
+}
+
 /* 뒤로 물러나는 순서: 바깥 그림 → 저장소의 simple-icons → 글자 타일.
    그래서 바깥 서버가 죽어도 화면은 이 기능을 켜기 전 모습 그대로가 된다. */
 function localMark(r){
@@ -1035,8 +1063,7 @@ function paintFoot(B){
 function render(){
   const el=id=>document.getElementById(id);
   el("brand").textContent=tx("brand");
-  el("tagline").textContent=tx("tagline",tName());
-  el("intro").textContent=tx("intro",tName());
+  el("tagline").innerHTML=taglineHTML();
   el("mobileguide").textContent=tx("mobileGuide");
   el("tradebasis").textContent=tx("tradeBasis");
   el("foothead").textContent=tx("footTitle");
