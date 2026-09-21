@@ -55,24 +55,20 @@ en:{
   prevTick:"tick marks last quarter's share",
   noData:"Could not load the filings.",
   aboutH:"How to read this",
-  footTitle:"Source and limits",
-  /* 각주는 **함수**입니다 — 첫 공시 연도·분할 목록·집계 전 종목이 자료에서
-     오므로, 분기가 새로 나와 그것들이 바뀌면 글도 같이 바뀝니다. */
-  /* 각주는 **중요한 순서**입니다. 맨 위 넷이 이 화면을 오해하게 만드는
-     것들이고(지금 보유가 아님 · 전부가 아님 · 추정 · 막대의 뜻), 나머지는
-     확인용입니다. 14문단에서 8문단으로 줄였습니다 — 사용자: "너무 장황한데,
-     이걸 누가 읽겠어." */
-  foot:(firstY,splits,pre,asof)=>[
-    "These are not current holdings. A 13F records a single day — the last day of the quarter — and is filed within 45 days of it, so the positions may already have changed.",
-    "This is not everything they own. Only US-listed stock appears in a 13F. Cash, bonds, foreign listings, wholly owned businesses and short positions are not in it.",
-    "Average cost and return are estimates. A 13F carries no trade prices, so each quarter's change is priced from the filing itself (value \u00F7 shares) and can be off by a wide margin. Dividends are not included.",
-    "Trade bars mean \u201Csomewhere in here\u201D. A 13F cannot say when inside a quarter a trade happened, so each bar spans from the previous filing to that one. It is the net change in shares held, not trading volume.",
-    asof?`Price lines are daily closes through ${fdate(asof)} (split-adjusted, no dividends). Where a line groups share classes, the tooltip names the one shown. After the latest filing there is price only \u2014 no trades are inferred.`:"",
-    `Share classes of one issuer share a line, marked A+C and so on; preferred stock keeps its own. \u201C${D.en.noRetOld}\u201D means the holding was already in our first filing (${firstY||"1998"}), so no cost or return can be worked out${pre&&pre.length?` \u2014 right now ${pre.join(", ")}`:""}.`,
-    `Source: SEC Form 13F-HR filed by ${TT.name.en} (CIK ${TT.cik}) \u2014 US government work, public domain. Sector labels are the SEC's SIC industry code. Splits are found in the filings themselves${splits&&splits.length?`: ${splits.join(", ")}`:""}.`,
-    markNote("en"),
-    "This page reports what was filed. It is not advice, and nothing here is a recommendation to buy or sell."
-  ].filter(Boolean)
+  footTitle:"Disclaimer",
+  /* 각주는 **네 문단**입니다. 사용자가 직접 줄여서 문장을 적어 줬습니다 —
+     *"너무 장황한데 … 이정도면 충분할 듯."* 순서는 출처 → 자료의 성격 →
+     추정 → 면책입니다.
+
+     **여기서 빠진 것들이 화면에서 아주 사라지지는 않습니다** —
+     `배당 제외` 는 목록 캡션(`costArrow`)이 이미 적고, 날짜와 기간은
+     차트 축이 적습니다. 다시 늘리고 싶어지면 그것부터 확인하세요. */
+  foot:()=>[
+    `Source: Form 13F-HR filed with the SEC by ${TT.name.en} (CIK ${TT.cik})`,
+    "A 13F records a single day \u2014 the last day of the quarter \u2014 and is filed within 45 days of it, so the holdings may already have changed. Only US-listed stock appears in a 13F; cash, bonds, foreign listings, wholly owned businesses and short positions are not included.",
+    "Average cost and return are estimates. A 13F carries no trade prices, so both are worked out from value \u00F7 shares and can be off by a wide margin.",
+    "Nothing on this site is an offer, a solicitation or a recommendation to buy or sell any security. Every investment decision, and its outcome, rests entirely with the investor."
+  ]
 },
 ko:{
   locale:"ko-KR", dir:"ltr", tab:"한국어",
@@ -119,18 +115,13 @@ ko:{
   prevTick:"눈금은 직전 분기 비중",
   noData:"공시를 불러오지 못했습니다.",
   aboutH:"보는 법",
-  footTitle:"출처와 한계",
-  foot:(firstY,splits,pre,asof)=>[
-    "지금 들고 있는 것이 아닙니다. 13F 는 분기의 마지막 날 하루를 적은 것이고, 공시는 그로부터 45일 안에 냅니다. 그 사이에 이미 바뀌었을 수 있습니다.",
-    "가진 것 전부도 아닙니다. 13F 에는 미국 상장 주식만 실립니다 \u2014 현금\u00B7채권\u00B7해외 주식\u00B7통째로 소유한 회사\u00B7공매도는 여기 없습니다.",
-    "매수 평균가와 수익률은 추정입니다. 13F 에는 체결가가 없어서 금액\u00F7주식수로 어림한 값이라 크게 빗나갈 수 있습니다. 배당도 들어 있지 않습니다.",
-    "매매 막대는 \u2018이 사이 어딘가\u2019 라는 뜻입니다. 분기 안에서 언제 사고팔았는지는 13F 가 말하지 않으므로 막대가 직전 공시부터 그 공시까지를 덮습니다. 거래량이 아니라 보유 주식수의 순변화입니다.",
-    asof?`주가선은 ${fdate(asof)}까지의 일별 종가입니다(액면분할만 보정 \u00B7 배당 미반영). 여러 종류를 묶은 줄은 말풍선이 어느 종류인지 적습니다. 마지막 공시 뒤로는 가격만 있고 매매는 추정하지 않습니다.`:"",
-    `같은 회사의 여러 종류 주식은 한 줄로 묶고 A+C 처럼 표시합니다(우선주는 따로). \u2018${D.ko.noRetOld}\u2019 는 첫 공시(${firstY||"1998"}년)에 이미 들어 있어 매수가도 수익률도 낼 수 없다는 뜻입니다${pre&&pre.length?` \u2014 지금은 ${pre.join(" \u00B7 ")}`:""}.`,
-    `출처: ${TT.name.ko}(CIK ${TT.cik})가 SEC 에 낸 Form 13F-HR \u2014 미국 정부 저작물이라 퍼블릭 도메인입니다. 섹터는 SEC 의 업종 코드(SIC)이고, 액면분할은 공시 자체에서 찾아낸 것입니다${splits&&splits.length?`: ${splits.join(", ")}`:""}.`,
-    markNote("ko"),
-    "이 화면은 공시된 내용을 그대로 옮길 뿐입니다. 투자 자문이 아니고, 무엇을 사거나 팔라는 뜻도 아닙니다."
-  ].filter(Boolean)
+  footTitle:"Disclaimer",
+  foot:()=>[
+    `출처: ${TT.name.ko}(CIK ${TT.cik})가 SEC 에 낸 Form 13F-HR`,
+    "13F 공시는 분기의 마지막 날 하루를 적은 것이고, 공시는 그로부터 45일 안에 냅니다. 그 사이에 이미 바뀌었을 수 있습니다. 13F 공시에는 미국 상장 주식만 실립니다 \u2014 현금\u00B7채권\u00B7해외 주식\u00B7통째로 소유한 회사\u00B7공매도는 포함되어 있지 않습니다.",
+    "매수 평균가와 수익률은 추정입니다. 13F 공시에는 체결가가 없어서 금액\u00F7주식수로 어림한 값이라 크게 빗나갈 수 있습니다.",
+    "본 사이트는 특정 금융상품이나 자산에 대한 투자 권유나 추천이 아니며, 투자의 최종 판단과 책임은 전적으로 투자자 본인에게 있습니다."
+  ]
 }
 };
 
@@ -221,7 +212,7 @@ if(document.body)mountInvestorShell();
    화면은 자기 집 파일만 읽습니다. Actions 가 주 1회 SEC 에서 받아
    window.TITAN.data가 가리키는 파일에 저장합니다(scripts/fetch_13f.py).
 ══════════════════════════════════════════════════════════════════════ */
-let RAW=null, LOADED=false, FIRSTY="";
+let RAW=null, LOADED=false;
 
 /* 같은 발행사의 여러 종류 주식을 한 줄로 묶는다.
    CUSIP 아홉 자리 중 **앞 여섯 자리가 발행사**다. 알파벳 A(02079K305)와
@@ -327,7 +318,6 @@ function build(){
   /* 평균단가는 첫 분기부터 되짚어야 나온다 — 111개 분기를 한 번만 묶어 둔다 */
   const snaps=qs.map(merge);
   QS=qs.map(q=>String(q.period));      // lifeOf 가 분기 이름을 붙일 때 씁니다
-  SPLITS=[];                           // 각주용. lifeOf 가 아래 map 에서 채웁니다
 
   const list=[...C.values()].map(a=>{
     const p=P.get(a.key);
@@ -373,15 +363,7 @@ function build(){
     return {...a, years:(qs.length-1-i)/4, netUSD:-a.value};
   }).sort((x,y)=>y.value-x.value):[];
 
-  /* 각주에 들어갈 두 목록. **둘 다 자료에서 뽑습니다** — 손으로 적어 두면
-     분할이 한 번 더 일어나거나 코카콜라를 파는 날 조용히 거짓말이 됩니다
-     (CLAUDE.md 9-3 의 "사람이 붙어야 하는 표는 결국 낡습니다"). */
-  const splits=[];
-  for(const r of list) for(const sp of SPLITS)
-    if(sp.key===r.key) splits.push(`${title(r.name)} ${sp.f}:1(${String(sp.q).slice(0,4)})`);
-  const preNames=list.filter(r=>r.preData).map(r=>title(r.name));
-
-  return {cur,prv,list,out,tc,tp,splits,preNames};
+  return {cur,prv,list,out,tc,tp};
 }
 
 function tallyOf(B){
@@ -462,7 +444,6 @@ function usISIN(cusip){
 let QS=[];
 /* 각주에 적는 액면분할 목록입니다. **손으로 적어 두면 다음 분할 때 낡습니다** —
    코드가 이미 찾아내고 있으므로 찾은 것을 그대로 적습니다(`lifeOf` 가 채웁니다). */
-let SPLITS=[];
 /* 마우스를 올렸을 때 읽어 줄 좌표. 차트마다 한 칸이고 `<figure data-life>` 가
    그 첨자를 들고 있습니다. **SVG 속성에 넣지 않습니다** — 111분기짜리가 스물몇
    개면 HTML 이 통째로 무거워집니다. */
@@ -583,20 +564,6 @@ function monogram(name){
   if(!w.length) return String(name).replace(/[^A-Za-z]/g,"").slice(0,2).toUpperCase()||"?";
   return (w.length>1?w[0][0]+w[1][0]:w[0].slice(0,2)).toUpperCase();
 }
-/* 회사 마크 각주는 **설정을 읽어서** 씁니다. 예전에는 "저장소에 넣어 둔
-   것이고 바깥에서 불러오지 않습니다" 라고 손으로 적혀 있었는데, 그동안
-   `window.MARKS.url` 은 바깥 서비스를 가리키고 있었습니다 — **각주가
-   거짓말을 하고 있었습니다.** 설정을 비우면 이 문장도 저절로 바뀝니다. */
-function markNote(lang){
-  let host=""; try{ host=new URL((window.MARKS&&window.MARKS.url)||"").host; }catch(e){}
-  if(lang==="ko") return host
-    ? `회사 마크는 바깥 서비스(${host})에서 받아옵니다 \u2014 이 화면을 열면 그쪽으로 요청이 나갑니다. 없으면 저장소의 simple-icons(CC0-1.0)나 머리글자로 대신합니다. 상표는 각 회사 것입니다.`
-    : `회사 마크는 저장소에 넣어 둔 simple-icons(CC0-1.0)이고 바깥에서 불러오지 않습니다. 없으면 머리글자로 대신합니다. 상표는 각 회사 것입니다.`;
-  return host
-    ? `Company marks are loaded from ${host}, so opening this page reaches that service. Where it has none, a mark from simple-icons (CC0-1.0) stored here, or the initials, is used. The trademarks belong to their owners.`
-    : `Company marks are from simple-icons (CC0-1.0), stored in this repository and not loaded from anywhere else. Companies it does not cover show initials instead. The trademarks belong to their owners.`;
-}
-
 /* ══ 머리글의 투자자 이름표 ════════════════════════════════════════
    **글자만 있는 제목은 어느 투자자의 화면인지 늦게 읽힙니다.** 그래서
    이름 앞에 네모 하나를 두고, 이름만 `--ink`(제일 진한 잉크) 로 떼어 놓고
@@ -731,7 +698,7 @@ function lifeOf(snaps,key){
          두면 이번 분기 증감이 `944M - 245M = +699M` 으로 잡혀 **액면분할이 사상
          최대의 매수로 그려집니다**(애플 2020-09 에서 실제로 그랬습니다).
          늘려 두면 `944M - 980M = -36M` 으로, 그 분기에 실제로 판 만큼만 남습니다. */
-      if(f){ for(const o of out){ if(o.p!==null)o.p/=f; o.sh*=f; o.dn*=f; } held*=f; SPLITS.push({key,q:QS[i],f}); }
+      if(f){ for(const o of out){ if(o.p!==null)o.p/=f; o.sh*=f; o.dn*=f; } held*=f; }
     }
     /* **`gi` 는 전체 분기 목록에서의 자리입니다.** 배열 첨자로 가로 위치를
        잡으면 안 됩니다 — 뱅크오브아메리카는 2010-09 에 전량 매도하고 2017-09
@@ -1062,10 +1029,9 @@ function settleLife(root){
 /* 각주. 분할 목록과 '집계 전' 종목은 자료에서 오므로 **새 분기가 들어오면
    글도 따라 바뀝니다** — 새 분할이 잡히면 저절로 실리고, 집계 전 종목을
    팔면 그 이름이 저절로 빠집니다. */
-function paintFoot(B){
+function paintFoot(){
   const el=document.getElementById("footbody");
-  if(el) el.innerHTML=tx("foot",FIRSTY,B?B.splits:null,B?B.preNames:null,PRICE_ASOF)
-    .map(s=>`<p>${s}</p>`).join("");
+  if(el) el.innerHTML=tx("foot").map(s=>`<p>${s}</p>`).join("");
 }
 
 function render(){
@@ -1075,17 +1041,15 @@ function render(){
   el("mobileguide").textContent=tx("mobileGuide");
   el("tradebasis").textContent=tx("tradeBasis");
   el("foothead").textContent=tx("footTitle");
-  /* 각주를 두 번 그립니다. **자료가 없어도 각주는 나와야 하므로** 한 번은
-     맨 앞에서 예시 없이 그리고, `build()` 뒤에 분할·집계 전 목록을 채워
-     다시 그립니다. */
-  paintFoot(null);
+  /* 각주는 이제 자료를 안 읽습니다(문장이 네 개로 줄면서 분할·집계 전 목록이
+     빠졌습니다). 그래서 `build()` 뒤에 한 번 더 그리지 않습니다 —
+     자료가 없어도 각주는 그대로 나옵니다. */
+  paintFoot();
   el("legend").textContent=tx("prevTick");
   el("qhead").textContent=tx("quarterHead");
   if(!RAW){ el("stamp").textContent=LOADED?tx("noData"):""; return; }
 
-  FIRSTY=String(RAW.quarters[0].period).slice(0,4);
   const B=build(), T=tallyOf(B);
-  paintFoot(B);
   el("stamp").innerHTML=`${tx("asOf",fdate(B.cur.period))}<br>${tx("filedOn",fdate(B.cur.filed))}`;
 
   /* 직전 분기가 없으면 비교할 대상이 없다. 그대로 그리면 전 종목이 '신규'로
