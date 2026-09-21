@@ -5,6 +5,18 @@
 ---
 
 ## 2026-09-21 · Claude · (이 PR)
+문구 다섯 · 직전 분기 눈금 삭제 (사용자 지정)
+- 파일: titans/shared/investor.js · investor.css · CLAUDE.md · docs/worklog/claude.md
+- 규칙: 분기 이름표(`2026년 2분기`)와 `더 보기` 개수는 **자료에서 셉니다**.
+  두 줄로 끊는 자리는 사전의 `\n` + `white-space:pre-line` 이 정합니다.
+  `.mid>span` 을 이기려면 선택자를 `.mid>.note` 로 써야 합니다.
+- 굳힘: 줄 배치 문턱은 **810px 그대로**다. 칸이 좁아져서 640 으로 되돌려 봤는데
+  641px 에서 영어 이름이 10줄 밀린다(실측). 되돌리지 말 것.
+  직전 분기 눈금·설명줄·`wPrev` 는 사용자가 지운 것이다.
+- 넘김: 정정 병합(PR #64)의 실제 SEC 실행은 아직 0회 — 일요일 01:00 UTC 전체
+  점검이 첫 실행. SEO 분석 · 영어 `--up` 대비 4.49 가 미착수.
+
+## 2026-09-21 · Claude · (이 PR)
 각주 9문단 → 4문단 (사용자가 문장을 직접 써 줌) · 제목 `Disclaimer`
 - 파일: titans/shared/investor.js · CLAUDE.md · docs/worklog/claude.md
 - 규칙: 각주는 이제 **자료를 안 읽는다**. 그래서 `build()` 뒤에 다시 그리지 않는다.

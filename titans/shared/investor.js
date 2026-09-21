@@ -23,7 +23,7 @@ en:{
   tradeBasis:"Trade amounts are estimates from share changes and quarter-end prices. Full exits use the previous quarter-end value.",
   asOf:d=>`As of ${d}`,
   filedOn:d=>`filed ${d}`,
-  quarterHead:"This quarter",
+  quarterHead:d=>`This quarter (${qLabel("en",d)})`,
   kNew:"new", kAdd:"added", kTrim:"trimmed", kHold:"held", kOut:"exited",
   positions:n=>`${n} positions`,
   bought:(n,v)=>`<i>Largest buy</i><span>${n}</span><em>${v} est.</em>`,
@@ -34,7 +34,7 @@ en:{
   /* 가운데 칸은 좁다. **왜 숫자가 없는지만** 짧게 적고, 긴 설명은 각주가 한다.
      `집계 전` 은 우리 자료(1998년 첫 공시)보다 먼저 들고 있던 종목이다 —
      연도를 줄마다 적어 봐야 방문자는 그 해가 무슨 뜻인지 모른다(사용자 지적). */
-  noRetOld:"held before records", noRetNew:"just in",
+  noRetOld:"held before\nrecords", noRetNew:"just in",
   yr:n=>n<1?`${Math.round(n*12)} mo`:(n%1?`${n.toFixed(1)} yr`:`${n} yr`),
   /* 목록 머리글. **안 변하는 말은 머리에 한 번만** 적는다(4번 성적표와 같은 판단). */
   colShares:"Shares held", colQtr:"This quarter", colRet:"Est. return", colVal:"Value · weight",
@@ -49,10 +49,9 @@ en:{
   lifeScroll:"drag sideways for earlier years",
   buy:"BUY", sell:"SELL",
   same:"held",
-  topOnly:(n,p)=>`Top ${n} shown — ${p} of the portfolio`,
+  topOnly:(n,p)=>`Top ${n} — ${p} of the total value`,
   allShown:n=>`All ${n} positions shown`,
-  foldOpen:n=>"Show more",
-  prevTick:"tick marks last quarter's share",
+  foldOpen:n=>`Show ${n} more`,
   noData:"Could not load the filings.",
   aboutH:"How to read this",
   footTitle:"Disclaimer",
@@ -80,7 +79,7 @@ ko:{
   tradeBasis:"매매 금액은 주식수 증감과 분기말 가격으로 추정합니다. 전량 매도는 직전 분기말 보유 금액을 사용합니다.",
   asOf:d=>`${d} 기준`,
   filedOn:d=>`${d} 공시`,
-  quarterHead:"이번 분기",
+  quarterHead:d=>`이번 분기 (${qLabel("ko",d)})`,
   kNew:"신규", kAdd:"확대", kTrim:"축소", kHold:"유지", kOut:"전량매도",
   positions:n=>`${n}종목`,
   /* **줄글이 아니라 이름표 + 값입니다** (사용자 요청). 한 화면에 나란히 놓이는
@@ -94,7 +93,7 @@ ko:{
   /* 가운데 칸은 좁다. **왜 숫자가 없는지만** 짧게 적고, 긴 설명은 각주가 한다.
      `1998년 이전` 이라고 적었더니 사용자가 "의미를 잘 모르겠다"고 했다 —
      방문자는 1998년이 우리 자료의 시작이라는 걸 알 길이 없다. */
-  noRetOld:"집계 전부터 보유", noRetNew:"이번 분기",
+  noRetOld:"집계 전부터\n보유", noRetNew:"이번 분기",
   yr:n=>n<1?`${Math.round(n*12)}개월`:(n%1?`${n.toFixed(1)}년`:`${n}년`),
   /* 목록 머리글. **안 변하는 말은 머리에 한 번만** 적는다(4번 성적표와 같은 판단). */
   colShares:"보유 주식 수", colQtr:"이번 분기", colRet:"추정 수익률", colVal:"금액 · 비중",
@@ -109,13 +108,12 @@ ko:{
   lifeScroll:"옆으로 끌면 그 이전이 나옵니다",
   buy:"BUY", sell:"SELL",
   same:"유지",
-  topOnly:(n,p)=>`상위 ${n}종목만 · 전체의 ${p}`,
+  topOnly:(n,p)=>`상위 ${n}종목 · 전체 투자 금액의 ${p}`,
   allShown:n=>`${n}종목 전부 펼침`,
-  foldOpen:n=>"더 보기",
-  prevTick:"눈금은 직전 분기 비중",
+  foldOpen:n=>`${n}개 종목 더 보기`,
   noData:"공시를 불러오지 못했습니다.",
   aboutH:"보는 법",
-  footTitle:"Disclaimer",
+  footTitle:"유의사항",
   foot:()=>[
     `출처: ${TT.name.ko}(CIK ${TT.cik})가 SEC 에 낸 Form 13F-HR`,
     "13F 공시는 분기의 마지막 날 하루를 적은 것이고, 공시는 그로부터 45일 안에 냅니다. 그 사이에 이미 바뀌었을 수 있습니다. 13F 공시에는 미국 상장 주식만 실립니다 \u2014 현금\u00B7채권\u00B7해외 주식\u00B7통째로 소유한 회사\u00B7공매도는 포함되어 있지 않습니다.",
@@ -195,7 +193,6 @@ function mountInvestorShell(){
       <summary><span id="foldttl"></span></summary>
       <ul class="rows" id="rest"></ul>
     </details>
-    <p class="legend"><i></i><span id="legend"></span></p>
   </section>
 
   <footer class="foot">
@@ -276,6 +273,12 @@ function shortShares(n){
   if(n>=1e6) return `${(n/1e6).toFixed(1)}M`;
   return num(n);
 }
+/* `2026-06-30` → 한국어 `2026년 2분기` / 영어 `Q2 2026`.
+   **손으로 적지 않습니다** — 새 분기 공시가 들어오면 저절로 따라옵니다. */
+function qLabel(lang,iso){
+  const y=String(iso).slice(0,4), q=Math.ceil(Number(String(iso).slice(5,7))/3)||1;
+  return lang==="ko"?`${y}년 ${q}분기`:`Q${q} ${y}`;
+}
 function fdate(iso){
   if(LANG==="ko") return String(iso).replace(/-/g,".");
   try{ return new Intl.DateTimeFormat(LOCALE,{year:"numeric",month:"short",day:"numeric"})
@@ -333,7 +336,6 @@ function build(){
     return {
       ...a,
       w:a.value/tc*100,
-      wPrev:p?p.value/tp*100:null,
       dsh,
       flat:dsh!==null&&Math.abs(dsh)<5e-4,
       isNew:!p,
@@ -873,7 +875,6 @@ function drawLife(fig){
 function rowHTML(r,rank,maxW){
   const tag=classTag(r), sec=sectorOf(r);
   const barW=Math.max(0,Math.min(100,r.w/maxW*100));
-  const tickW=r.wPrev===null?null:Math.max(0,Math.min(100,r.wPrev/maxW*100));
 
   /* 가운데 둘째 칸 — 이번 분기에 **몇 주** 사고팔았나. **숫자 한 줄**이고
      색이 방향을 말합니다(사용자 요청 — `BUY`/`SELL` 스티커 삭제).
@@ -904,12 +905,11 @@ function rowHTML(r,rank,maxW){
 
   /* 줄을 누르면 그 종목의 일생이 펼쳐집니다. `<details>` 를 쓰므로 키보드와
      여닫이가 공짜로 따라옵니다 — 아래 '더 보기' 와 같은 어휘입니다.
-     **비중 막대와 직전 분기 표식은 `<summary>` 안**에 둡니다. `<li>` 에 두면
-     펼친 차트 높이까지 막대가 늘어나 줄이 아니라 기둥처럼 보입니다. */
+     **비중 막대는 `<summary>` 안**에 둡니다. `<li>` 에 두면 펼친 차트
+     높이까지 막대가 늘어나 줄이 아니라 기둥처럼 보입니다. */
   return `<li class="row"><details class="lf">
     <summary class="rowline">
     <span class="bar" style="width:${barW.toFixed(2)}%"></span>
-    ${tickW===null?"":`<span class="tick" style="left:${tickW.toFixed(2)}%"></span>`}
     <div class="rowin">
       <div class="who">
         <b class="caret"></b>
@@ -1045,11 +1045,11 @@ function render(){
      빠졌습니다). 그래서 `build()` 뒤에 한 번 더 그리지 않습니다 —
      자료가 없어도 각주는 그대로 나옵니다. */
   paintFoot();
-  el("legend").textContent=tx("prevTick");
-  el("qhead").textContent=tx("quarterHead");
+
   if(!RAW){ el("stamp").textContent=LOADED?tx("noData"):""; return; }
 
   const B=build(), T=tallyOf(B);
+  el("qhead").textContent=tx("quarterHead",B.cur.period);
   el("stamp").innerHTML=`${tx("asOf",fdate(B.cur.period))}<br>${tx("filedOn",fdate(B.cur.filed))}`;
 
   /* 직전 분기가 없으면 비교할 대상이 없다. 그대로 그리면 전 종목이 '신규'로
