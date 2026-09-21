@@ -34,7 +34,7 @@ en:{
   /* 가운데 칸은 좁다. **왜 숫자가 없는지만** 짧게 적고, 긴 설명은 각주가 한다.
      `집계 전` 은 우리 자료(1998년 첫 공시)보다 먼저 들고 있던 종목이다 —
      연도를 줄마다 적어 봐야 방문자는 그 해가 무슨 뜻인지 모른다(사용자 지적). */
-  noRetOld:"pre-records", noRetNew:"just in",
+  noRetOld:"held before records", noRetNew:"just in",
   yr:n=>n<1?`${Math.round(n*12)} mo`:(n%1?`${n.toFixed(1)} yr`:`${n} yr`),
   /* 목록 머리글. **안 변하는 말은 머리에 한 번만** 적는다(4번 성적표와 같은 판단). */
   colShares:"Shares held", colQtr:"This quarter", colRet:"Est. return", colVal:"Value · weight",
@@ -45,7 +45,6 @@ en:{
   lifePrior:(b,s)=>`<span>Earlier</span><span>BUY <em class="up">${b}</em></span><span>SELL <em class="down">${s}</em></span>`,
   close:"Close",
   impliedPrice:"Implied quarter-end price",
-  priceNote:(d)=>`Price lines show daily closing prices through ${fdate(d)}, adjusted for stock splits, without dividend adjustments. For grouped share classes, the tooltip identifies the class shown by its ticker. Trade bars show net changes between filings, not daily trading volume; no trades after the latest filing are inferred.`,
   lifeQuiet:"never bought or sold across this history",
   lifeScroll:"drag sideways for earlier years",
   buy:"BUY", sell:"SELL",
@@ -59,21 +58,21 @@ en:{
   footTitle:"Source and limits",
   /* 각주는 **함수**입니다 — 첫 공시 연도·분할 목록·집계 전 종목이 자료에서
      오므로, 분기가 새로 나와 그것들이 바뀌면 글도 같이 바뀝니다. */
-  foot:(firstY,splits,pre)=>[
-    `Source: SEC Form 13F-HR, filed by ${TT.name.en} (CIK ${TT.cik}). US government work \u2014 public domain.`,
-    "A 13F is filed 45 days after the quarter ends, so these holdings are at least six weeks old and may already have changed.",
-    "A 13F shows US-listed long equity positions only. Bonds, cash, foreign listings, wholly owned businesses and short positions are not in it.",
-    "Values are what the filing states for the quarter-end date. Dividing value by share count gives an implied quarter-end price — not a trade price.",
-    "A 13F is a quarter-end snapshot, so when inside the quarter a trade happened is not knowable. The chart\u2019s trade bars therefore span the whole stretch from the previous filing to that one \u2014 they mean \u201Csomewhere in here\u201D, not a single day.",
-    "Share classes of one issuer are shown on one line (marked A+C and so on) because one decision usually moves both. Preferred stock is kept on its own line.",
-    `“pre-records” marks a holding that was already in the first filing we have (${firstY||"1998"}), so the buying is not visible and no cost or return can be worked out for it.${pre&&pre.length?` Right now that is ${pre.join(", ")}.`:""}`,
-    "Average cost is an estimate. Each quarter's share change is priced at the midpoint of that quarter's and the previous quarter's implied price, then carried forward on an average-cost basis. Actual trades happened at prices we cannot see, so the estimate can be off by a wide margin.",
-    `Stock splits are detected from the filings themselves — a whole-number jump in share count matched by the same drop in implied price.${splits&&splits.length?` Among the holdings shown: ${splits.join(", ")}.`:""}`,
-    "The return shown is price only. Dividends received over the years are not in it, so the real outcome was better than the number.",
-    "Sector labels come from the SIC industry code the SEC assigns each company. One code per company, so a holding that spans several businesses is filed under one of them.",
-    "Company marks are from simple-icons (CC0-1.0) and are stored in this repository, not loaded from anywhere else. The shapes are public domain; the trademarks belong to their owners and are used here only to identify a holding. Companies that set does not cover are shown as initials instead.",
+  /* 각주는 **중요한 순서**입니다. 맨 위 넷이 이 화면을 오해하게 만드는
+     것들이고(지금 보유가 아님 · 전부가 아님 · 추정 · 막대의 뜻), 나머지는
+     확인용입니다. 14문단에서 8문단으로 줄였습니다 — 사용자: "너무 장황한데,
+     이걸 누가 읽겠어." */
+  foot:(firstY,splits,pre,asof)=>[
+    "These are not current holdings. A 13F records a single day — the last day of the quarter — and is filed within 45 days of it, so the positions may already have changed.",
+    "This is not everything they own. Only US-listed stock appears in a 13F. Cash, bonds, foreign listings, wholly owned businesses and short positions are not in it.",
+    "Average cost and return are estimates. A 13F carries no trade prices, so each quarter's change is priced from the filing itself (value \u00F7 shares) and can be off by a wide margin. Dividends are not included.",
+    "Trade bars mean \u201Csomewhere in here\u201D. A 13F cannot say when inside a quarter a trade happened, so each bar spans from the previous filing to that one. It is the net change in shares held, not trading volume.",
+    asof?`Price lines are daily closes through ${fdate(asof)} (split-adjusted, no dividends). Where a line groups share classes, the tooltip names the one shown. After the latest filing there is price only \u2014 no trades are inferred.`:"",
+    `Share classes of one issuer share a line, marked A+C and so on; preferred stock keeps its own. \u201C${D.en.noRetOld}\u201D means the holding was already in our first filing (${firstY||"1998"}), so no cost or return can be worked out${pre&&pre.length?` \u2014 right now ${pre.join(", ")}`:""}.`,
+    `Source: SEC Form 13F-HR filed by ${TT.name.en} (CIK ${TT.cik}) \u2014 US government work, public domain. Sector labels are the SEC's SIC industry code. Splits are found in the filings themselves${splits&&splits.length?`: ${splits.join(", ")}`:""}.`,
+    markNote("en"),
     "This page reports what was filed. It is not advice, and nothing here is a recommendation to buy or sell."
-  ]
+  ].filter(Boolean)
 },
 ko:{
   locale:"ko-KR", dir:"ltr", tab:"한국어",
@@ -99,7 +98,7 @@ ko:{
   /* 가운데 칸은 좁다. **왜 숫자가 없는지만** 짧게 적고, 긴 설명은 각주가 한다.
      `1998년 이전` 이라고 적었더니 사용자가 "의미를 잘 모르겠다"고 했다 —
      방문자는 1998년이 우리 자료의 시작이라는 걸 알 길이 없다. */
-  noRetOld:"집계 전", noRetNew:"이번 분기",
+  noRetOld:"집계 전부터 보유", noRetNew:"이번 분기",
   yr:n=>n<1?`${Math.round(n*12)}개월`:(n%1?`${n.toFixed(1)}년`:`${n}년`),
   /* 목록 머리글. **안 변하는 말은 머리에 한 번만** 적는다(4번 성적표와 같은 판단). */
   colShares:"보유 주식 수", colQtr:"이번 분기", colRet:"추정 수익률", colVal:"금액 · 비중",
@@ -110,7 +109,6 @@ ko:{
   lifePrior:(b,s)=>`<span>이 기간 이전</span><span>매수 <em class="up">${b}</em>건</span><span>매도 <em class="down">${s}</em>건</span>`,
   close:"종가",
   impliedPrice:"공시 기준 분기말 가격",
-  priceNote:(d)=>`주가선은 ${fdate(d)}까지의 일별 종가이며, 액면분할만 보정하고 배당은 반영하지 않습니다. 여러 종류를 합친 종목은 말풍선의 티커에 해당하는 종류의 가격을 표시합니다. 막대는 공시 사이의 보유 주식수 순변화이며 일별 거래량이 아닙니다. 마지막 공시 이후의 매매는 추정하지 않습니다.`,
   lifeQuiet:"이 기간에 사고판 적이 없습니다",
   lifeScroll:"옆으로 끌면 그 이전이 나옵니다",
   buy:"BUY", sell:"SELL",
@@ -122,21 +120,17 @@ ko:{
   noData:"공시를 불러오지 못했습니다.",
   aboutH:"보는 법",
   footTitle:"출처와 한계",
-  foot:(firstY,splits,pre)=>[
-    `출처: ${TT.name.ko}(CIK ${TT.cik})가 SEC 에 낸 Form 13F-HR. 미국 정부 저작물이라 퍼블릭 도메인입니다.`,
-    "13F 는 분기가 끝나고 45일 뒤에 냅니다. 그래서 여기 보이는 것은 최소 6주 전의 상태이고, 그 사이에 이미 바뀌었을 수 있습니다.",
-    "13F 에는 미국 상장 주식의 매수 포지션만 나옵니다. 채권·현금·해외 상장·통째로 소유한 회사·공매도는 들어 있지 않습니다.",
-    "금액은 공시에 적힌 분기말 값입니다. 금액을 주식수로 나누면 분기말 가격이 나오는데, 실제 체결가가 아닙니다.",
-    "13F 는 분기말 스냅샷뿐이라 그 분기 안에서 언제 사고팔았는지는 알 수 없습니다. 그래서 차트의 매매 막대는 한 점이 아니라 직전 공시부터 그 공시까지를 통째로 덮습니다 — ‘이 사이 어딘가’ 라는 뜻입니다.",
-    "같은 회사의 여러 종류 주식은 한 줄로 묶었습니다(A+C 처럼 표시). 한 번의 결정이 대개 둘을 같이 움직이기 때문입니다. 우선주는 성격이 다르므로 따로 둡니다.",
-    `‘집계 전’ 은 우리가 가진 첫 공시(${firstY||"1998"}년)에 이미 들어 있던 종목입니다. 사들이는 장면이 안 보이므로 매수가도 수익률도 낼 수 없습니다.${pre&&pre.length?` 지금은 ${pre.join(" · ")} 가 여기 해당합니다.`:""}`,
-    "매수 평균가는 추정치입니다. 분기마다 늘어난 주식수를 그 분기와 직전 분기 가격의 중간값으로 사들인 것으로 보고, 이동평균 방식으로 이어 계산했습니다. 실제 체결가는 공시에 없으므로 추정이 크게 빗나갈 수 있습니다.",
-    `액면분할은 공시 자체에서 찾아냅니다 — 주식수가 정수 배수로 뛰면서 가격이 꼭 그만큼 내려간 분기입니다.${splits&&splits.length?` 지금 보이는 종목 중에는 ${splits.join(", ")} 가 있습니다.`:""}`,
-    "수익률에는 배당이 들어 있지 않습니다. 여러 해 받은 배당만큼 실제 결과는 여기 적힌 숫자보다 낫습니다.",
-    "섹터는 SEC 가 회사마다 매기는 업종 코드(SIC)를 옮긴 것입니다. 회사당 하나뿐이라, 여러 사업을 하는 회사도 그중 하나로 적힙니다.",
-    "회사 마크는 simple-icons(CC0-1.0)에서 가져와 이 저장소에 넣어 둔 것입니다. 바깥에서 불러오지 않습니다. 도형은 퍼블릭 도메인이고 상표는 각 회사 것이며, 여기서는 어느 회사를 들고 있는지 가리키는 용도로만 씁니다. 그 세트에 없는 회사는 이름 첫 글자로 대신합니다.",
+  foot:(firstY,splits,pre,asof)=>[
+    "지금 들고 있는 것이 아닙니다. 13F 는 분기의 마지막 날 하루를 적은 것이고, 공시는 그로부터 45일 안에 냅니다. 그 사이에 이미 바뀌었을 수 있습니다.",
+    "가진 것 전부도 아닙니다. 13F 에는 미국 상장 주식만 실립니다 \u2014 현금\u00B7채권\u00B7해외 주식\u00B7통째로 소유한 회사\u00B7공매도는 여기 없습니다.",
+    "매수 평균가와 수익률은 추정입니다. 13F 에는 체결가가 없어서 금액\u00F7주식수로 어림한 값이라 크게 빗나갈 수 있습니다. 배당도 들어 있지 않습니다.",
+    "매매 막대는 \u2018이 사이 어딘가\u2019 라는 뜻입니다. 분기 안에서 언제 사고팔았는지는 13F 가 말하지 않으므로 막대가 직전 공시부터 그 공시까지를 덮습니다. 거래량이 아니라 보유 주식수의 순변화입니다.",
+    asof?`주가선은 ${fdate(asof)}까지의 일별 종가입니다(액면분할만 보정 \u00B7 배당 미반영). 여러 종류를 묶은 줄은 말풍선이 어느 종류인지 적습니다. 마지막 공시 뒤로는 가격만 있고 매매는 추정하지 않습니다.`:"",
+    `같은 회사의 여러 종류 주식은 한 줄로 묶고 A+C 처럼 표시합니다(우선주는 따로). \u2018${D.ko.noRetOld}\u2019 는 첫 공시(${firstY||"1998"}년)에 이미 들어 있어 매수가도 수익률도 낼 수 없다는 뜻입니다${pre&&pre.length?` \u2014 지금은 ${pre.join(" \u00B7 ")}`:""}.`,
+    `출처: ${TT.name.ko}(CIK ${TT.cik})가 SEC 에 낸 Form 13F-HR \u2014 미국 정부 저작물이라 퍼블릭 도메인입니다. 섹터는 SEC 의 업종 코드(SIC)이고, 액면분할은 공시 자체에서 찾아낸 것입니다${splits&&splits.length?`: ${splits.join(", ")}`:""}.`,
+    markNote("ko"),
     "이 화면은 공시된 내용을 그대로 옮길 뿐입니다. 투자 자문이 아니고, 무엇을 사거나 팔라는 뜻도 아닙니다."
-  ]
+  ].filter(Boolean)
 }
 };
 
@@ -589,6 +583,20 @@ function monogram(name){
   if(!w.length) return String(name).replace(/[^A-Za-z]/g,"").slice(0,2).toUpperCase()||"?";
   return (w.length>1?w[0][0]+w[1][0]:w[0].slice(0,2)).toUpperCase();
 }
+/* 회사 마크 각주는 **설정을 읽어서** 씁니다. 예전에는 "저장소에 넣어 둔
+   것이고 바깥에서 불러오지 않습니다" 라고 손으로 적혀 있었는데, 그동안
+   `window.MARKS.url` 은 바깥 서비스를 가리키고 있었습니다 — **각주가
+   거짓말을 하고 있었습니다.** 설정을 비우면 이 문장도 저절로 바뀝니다. */
+function markNote(lang){
+  let host=""; try{ host=new URL((window.MARKS&&window.MARKS.url)||"").host; }catch(e){}
+  if(lang==="ko") return host
+    ? `회사 마크는 바깥 서비스(${host})에서 받아옵니다 \u2014 이 화면을 열면 그쪽으로 요청이 나갑니다. 없으면 저장소의 simple-icons(CC0-1.0)나 머리글자로 대신합니다. 상표는 각 회사 것입니다.`
+    : `회사 마크는 저장소에 넣어 둔 simple-icons(CC0-1.0)이고 바깥에서 불러오지 않습니다. 없으면 머리글자로 대신합니다. 상표는 각 회사 것입니다.`;
+  return host
+    ? `Company marks are loaded from ${host}, so opening this page reaches that service. Where it has none, a mark from simple-icons (CC0-1.0) stored here, or the initials, is used. The trademarks belong to their owners.`
+    : `Company marks are from simple-icons (CC0-1.0), stored in this repository and not loaded from anywhere else. Companies it does not cover show initials instead. The trademarks belong to their owners.`;
+}
+
 /* ══ 머리글의 투자자 이름표 ════════════════════════════════════════
    **글자만 있는 제목은 어느 투자자의 화면인지 늦게 읽힙니다.** 그래서
    이름 앞에 네모 하나를 두고, 이름만 `--ink`(제일 진한 잉크) 로 떼어 놓고
@@ -1056,8 +1064,8 @@ function settleLife(root){
    팔면 그 이름이 저절로 빠집니다. */
 function paintFoot(B){
   const el=document.getElementById("footbody");
-  if(el) el.innerHTML=tx("foot",FIRSTY,B?B.splits:null,B?B.preNames:null)
-    .concat(PRICE_ASOF?[tx("priceNote",PRICE_ASOF)]:[]).map(s=>`<p>${s}</p>`).join("");
+  if(el) el.innerHTML=tx("foot",FIRSTY,B?B.splits:null,B?B.preNames:null,PRICE_ASOF)
+    .map(s=>`<p>${s}</p>`).join("");
 }
 
 function render(){
