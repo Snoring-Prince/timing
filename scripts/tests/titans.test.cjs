@@ -322,7 +322,25 @@ test('the record ignores the period buttons and never says "trade"', () => {
   run('LRANGE=4;'); const one=n();
   run('LRANGE=60;'); assert.equal(n(),one);
   // 13F 는 분기말 스냅샷뿐이라 한 줄은 체결이 아니라 그 분기의 순변화다.
-  assert.doesNotMatch(run('tx("recTitle",3)'),/거래/);
+  assert.doesNotMatch(run('tx("recShow")+tx("recHide")'),/거래/);
   run('LANG="en";L10N=D.en;');
-  assert.doesNotMatch(run('tx("recTitle",3)'),/trade/i);
+  assert.doesNotMatch(run('tx("recShow")+tx("recHide")'),/trade/i);
+});
+
+test('the toggle says what the next click does, and the caret is a real triangle', () => {
+  const run=page(real);run('LANG="ko";L10N=D.ko;');
+  const h=run('recordHTML(build().list.find(r=>r.key==="037833"))');
+  // 두 이름표가 다 들어 있고 CSS 가 여닫이에 따라 하나만 보여 준다.
+  assert.match(h,/class="recbtn">분기별 보유 변화 보기</);
+  assert.match(h,/class="recbtn open">분기별 보유 변화 숨기기</);
+  // 건수는 단추 밖이다 — 누르기 전에 분량을 알려 주는 값이지 단추 이름이 아니다.
+  assert.match(h,/class="reccnt">26개 분기</);
+  // 아래 설명 줄은 유의사항과 겹쳐서 지웠다.
+  assert.doesNotMatch(h,/recnote/);
+  // **CSS 이스케이프가 파이썬 8진수로 먹혀 `B8`·`BE` 가 찍힌 적이 있다.**
+  // 캐럿은 진짜 삼각형이어야 하고, 그 자리에 제어문자가 있으면 안 된다.
+  const css=fs.readFileSync(path.join(root,'titans/shared/investor.css'),'utf8');
+  assert.match(css,/\.recbtn::before\{content:"\\25B8"/);
+  assert.match(css,/details\.rec\[open\] \.recbtn::before\{content:"\\25BE"\}/);
+  assert.doesNotMatch(css,/[\x00-\x08\x0b-\x1f]/);
 });

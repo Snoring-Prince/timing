@@ -5,6 +5,20 @@
 ---
 
 ## 2026-09-22 · Claude · (이 PR)
+보유 변화 표를 단추로 · 캐럿 `B8` 버그 · 아래 설명 줄 삭제 (사용자 지적)
+- 파일: titans/shared/investor.js · investor.css · scripts/tests/titans.test.cjs ·
+  CLAUDE.md · docs/worklog/claude.md
+- 규칙: **CSS 를 파이썬으로 쓸 때 `\25B8` 은 8진수로 먹힌다** — 원시 문자열을
+  쓰고, 쓴 뒤 `grep -nP '[\x00-\x08\x0b-\x1f]'` 로 제어문자를 훑을 것.
+  여닫이 이름표는 **CSS 로 뒤집는다**(JS 로 갈아 끼우면 초점을 잃는다).
+  건수는 단추 밖에 둔다 — 단추 이름이 아니라 분량 예고다.
+- 굳힘: **이 화면에 색 단추를 놓지 않는다.** 사용자가 빨강을 물었고, 빨강은
+  이미 상승·하락의 뜻이며 언어를 따라 뒤집혀서(6번) 단추가 값으로 읽힌다.
+  계층은 색이 아니라 **모양**(테두리 단추)으로 준다.
+- 넘김: 정정 병합(PR #64)의 실제 SEC 실행은 아직 0회 — 일요일 01:00 UTC 전체
+  점검이 첫 실행. SEO 분석 · 영어 `--up` 대비 4.49(비중 막대 위)가 미착수.
+
+## 2026-09-22 · Claude · (이 PR)
 되돌릴 자리 `backup/v1.0` · 종목마다 분기별 보유 변화 표 (사용자 요청)
 - 파일: titans/shared/investor.js · investor.css · scripts/tests/titans.test.cjs ·
   CLAUDE.md · docs/worklog/claude.md

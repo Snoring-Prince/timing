@@ -47,10 +47,10 @@ en:{
   impliedPrice:"Implied quarter-end price",
   /* **`Trade record` 라고 쓰지 않습니다.** 13F 는 분기 마지막 날의 스냅샷뿐이라
      한 줄은 체결이 아니라 그 분기 동안의 순변화입니다. */
-  recTitle:n=>`Quarter-by-quarter record · ${n}`,
+  recShow:"Show quarter-by-quarter record", recHide:"Hide quarter-by-quarter record",
+  recCount:n=>`${n} quarters`,
   rcDate:"Filing", rcMove:"Change", rcPrice:"Quarter-end price", rcValue:"Value",
   rcIn:"Entered", rcBack:"Back in", rcOut:"Sold out", rcPre:"Held before records",
-  recNote:"Each line is the net change over that quarter, not a single trade \u2014 13F reports only the last day of the quarter. Quarters with no change in share count are left out.",
   lifeQuiet:"never bought or sold across this history",
   lifeScroll:"drag sideways for earlier years",
   buy:"BUY", sell:"SELL",
@@ -110,10 +110,10 @@ ko:{
   lifePrior:(b,s)=>`<span>이 기간 이전</span><span>매수 <em class="up">${b}</em>건</span><span>매도 <em class="down">${s}</em>건</span>`,
   close:"종가",
   impliedPrice:"공시 기준 분기말 가격",
-  recTitle:n=>`분기별 보유 변화 ${n}건`,
+  recShow:"분기별 보유 변화 보기", recHide:"분기별 보유 변화 숨기기",
+  recCount:n=>`${n}개 분기`,
   rcDate:"공시 분기", rcMove:"변화", rcPrice:"분기말 가격", rcValue:"평가 금액",
   rcIn:"진입", rcBack:"재진입", rcOut:"전량매도", rcPre:"집계 전부터 보유",
-  recNote:"한 줄은 그 분기 동안의 순변화이고 한 번의 거래가 아닙니다 \u2014 13F 는 분기 마지막 날 하루만 적습니다. 주식수가 그대로인 분기는 뺐습니다.",
   lifeQuiet:"이 기간에 사고판 적이 없습니다",
   lifeScroll:"옆으로 끌면 그 이전이 나옵니다",
   buy:"BUY", sell:"SELL",
@@ -904,12 +904,22 @@ function recordHTML(r){
       +`<td class="rcp">${o.p===null?"\u2014":usd(o.p)}</td>`
       +`<td class="rcv">${o.p===null?"\u2014":money(o.sh*o.p)}</td></tr>`;
   }).join("");
-  return `<details class="rec"><summary>${tx("recTitle",mv.length)}</summary>
+  /* **누르면 뭐가 나오는지 글자로 말합니다** (사용자 지적 — "클릭하면 뭐가 나올지
+     알 수가 없게끔 만들어져 있네"). `보기`/`숨기기` 는 여닫이를 따라 뒤집히고,
+     건수는 **단추 밖**에 둡니다 — 누르기 전에 분량을 알려 주는 값이지 단추 이름이
+     아닙니다. 아래 설명 줄은 **지웠습니다**: 앞부분(13F 는 분기 마지막 날 하루만
+     적는다)을 유의사항 1번이 이미 적고 있고, 뒷부분은 제목 `분기별 보유 변화` 와
+     열 이름 `변화` 가 이미 말합니다. */
+  return `<details class="rec"><summary>
+      <span class="recbtn">${tx("recShow")}</span>
+      <span class="recbtn open">${tx("recHide")}</span>
+      <b class="reccnt">${tx("recCount",mv.length)}</b>
+    </summary>
     <div class="recwrap"><table class="rectbl"><thead><tr>`
     +`<th class="rcq">${tx("rcDate")}</th><th class="rcm">${tx("rcMove")}</th>`
     +`<th class="rch">${tx("colShares")}</th><th class="rcp">${tx("rcPrice")}</th>`
     +`<th class="rcv">${tx("rcValue")}</th></tr></thead><tbody>${body}</tbody></table></div>
-    <p class="recnote">${tx("recNote")}</p></details>`;
+  </details>`;
 }
 
 function chartHTML(r){
