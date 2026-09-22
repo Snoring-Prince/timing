@@ -88,6 +88,46 @@ body{
 #bookcut:empty{display:none}
 #quarter h2{margin-bottom:14px}
 
+/* ── 투자자 소개 ─────────────────────────────────────────────
+   머리글 바로 아래. **왼쪽 그림 한 장 + 오른쪽 글**입니다.
+
+   **글은 여기 없습니다 — 투자자의 index.html 에 글자로 박혀 있습니다.**
+   사전(D)으로 옮기면 JS 가 그리게 되고, JS 를 안 돌리는 크롤러가 받는
+   페이지에서 통째로 사라집니다(CLAUDE.md 6-2 의 `.about` 과 같은 이유).
+   공통 파일인 여기는 **자리와 크기만** 잡습니다 — 다음 투자자는 자기
+   파일에 자기 글과 자기 그림을 씁니다.
+
+   **그림이 없으면 그림 칸이 통째로 빠집니다**(`.nofigure`). 파일을 아직
+   안 넣었거나 못 받아도 글이 폭을 다 쓰고 깨진 그림이 안 남습니다 —
+   `LIVE`·`MARKS` 와 같은 요령입니다. */
+.bio{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:start}
+.bio.nofigure{grid-template-columns:minmax(0,1fr)}
+/* 1:1 상자에 `cover` 로 앉힙니다 — 4:5 를 가져와도 판이 안 깨집니다.
+   `50% 22%` 는 가운데 **위쪽**이라 상자보다 긴 그림에서 머리가 안 잘립니다.
+   둥근 모서리는 없습니다(재료표 5번 — 이 화면의 동그라미는 ⓘ 와 표시등뿐). */
+.bio-face{display:block;width:240px;height:240px;object-fit:cover;object-position:50% 22%;
+  border:1px solid var(--rule-2);background:var(--card)}
+/* **`gap` 이지 `margin` 이 아닙니다.** 두 언어를 다 넣어 두고 한쪽을
+   `display:none` 으로 감추므로, `*+*` 로 여백을 주면 감춰진 형제 때문에
+   **첫 줄에도 윗여백이 붙습니다.** `gap` 은 상자 없는 것을 안 셉니다. */
+.bio-text{display:flex;flex-direction:column;gap:15px;min-width:0}
+.bio-text p{margin:0;font-size:var(--t-text);line-height:1.75;color:var(--ink-2)}
+/* 인용은 조용하게 — 큰 따옴표 그림 대신 왼쪽에 잉크 선 하나입니다.
+   크기는 자에 있는 값(`--t-name`)을 그대로 씁니다. 새 치수를 만들지 않습니다. */
+.bio-quote{margin:0;padding-left:13px;border-left:2px solid var(--ink)}
+.bio-quote p{font-family:var(--cond);font-weight:600;font-size:var(--t-name);
+  line-height:1.5;color:var(--ink)}
+/* 출처 줄은 **고정폭이 아니라 `--cond`** 입니다. 작은 고정폭에 한글을 넣으면
+   자간이 벌어져 "2008년  10월  16일" 처럼 띄어쓰기가 두 칸씩 보입니다 —
+   본 사이트에서 면책 문구를 고정폭으로 뒀다가 되돌린 것과 같은 자리입니다. */
+.bio-quote cite{display:block;margin-top:5px;font-style:normal;
+  font-family:var(--cond);font-weight:600;font-size:var(--t-label);
+  letter-spacing:.02em;color:var(--ink-3)}
+/* 본 사이트의 `.about` 과 같은 규칙입니다 — 두 언어를 다 넣어 두고 CSS 가
+   한쪽만 보여 줍니다. JS 를 안 돌리는 크롤러에게도 글이 그대로 보입니다. */
+html[lang="ko"]       .bio [data-lang="en"]{display:none}
+html:not([lang="ko"]) .bio [data-lang="ko"]{display:none}
+
 /* ── 이번 분기 요약 ──────────────────────────────────────── */
 .tally{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--rule-2);margin-bottom:16px}
 .tally div{flex:1 1 0;min-width:76px;padding:10px 12px;text-align:center}
@@ -517,6 +557,10 @@ body.settled .fade{animation:none}
   /* 이름표와 마크는 **첫 줄에 맞춥니다.** 가운데 맞춤으로 두면 이름이 석 줄로
      접힌 줄에서 둘이 그 덩어리의 한가운데까지 내려가 허공에 뜹니다. */
   .ev .evwho{align-items:start}
+  /* 좁은 화면에서는 위아래로 쌓습니다. 240px 짜리를 옆에 두면 글 칸이
+     138px 밖에 안 남아 한 줄에 열 글자가 못 들어갑니다(실측). */
+  .bio{grid-template-columns:minmax(0,1fr);gap:15px}
+  .bio-face{width:140px;height:140px}
   .val{font-size:18px}
   .mk{width:26px;height:26px}
   .mk svg{width:16px;height:16px}

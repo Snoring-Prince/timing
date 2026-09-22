@@ -5,6 +5,25 @@
 ---
 
 ## 2026-09-22 · Claude · (이 PR)
+머리글 아래에 투자자 소개 — 왼쪽 그림 · 오른쪽 글과 명언 둘 (사용자 요청)
+- 파일: titans/berkshire/index.html · titans/shared/investor.css · investor.js ·
+  scripts/tests/titans.test.cjs · docs/design-system.md · CLAUDE.md · 이 일지
+- 규칙: **소개 글은 투자자의 HTML 에 글자로 박는다.** 사전(`D`)에 넣으면 JS 가
+  그리게 되고 크롤러가 받는 페이지에서 사라진다(본 사이트 `.about` 과 같은 자리).
+  두 언어를 다 넣고 CSS 가 한쪽만 보인다. 공통 JS 는 이 덩어리를 **들어냈다가**
+  머리글 아래 도로 넣을 뿐 내용을 모른다. 인용은 `<cite>` 출처 없이 싣지 않는다.
+- 굳힘: 감춰진 형제 때문에 `*+*` 여백은 첫 줄에도 붙는다 → `gap` 을 쓴다.
+  작은 고정폭에 한글을 넣으면 자간이 벌어진다 → 출처 줄은 `--cond`.
+  그림이 없으면 `.nofigure` 가 그림 칸을 통째로 뺀다(깨진 그림 0).
+- 넘김: **그림 파일이 아직 없다** — `titans/berkshire/portrait.png` 에 1:1
+  (1024×1024)로 넣으면 그 자리에 나온다. 사용자가 다른 AI 로 만들어 온다.
+  정정 병합(PR #64)은 2026-09-20 일요일 실행에서 **7분기 반영 · 43분기
+  `pre-xml` 표시**로 예행값과 일치했다(확인 끝). SEO 분석 · 영어 `--up`
+  대비 4.49(비중 막대 위)가 미착수.
+
+---
+
+## 2026-09-22 · Claude
 사건 줄(재진입·전량매도)에 로고·섹터 · 사건 블록을 한 격자로 (사용자 요청)
 - 파일: titans/shared/investor.js · investor.css · scripts/tests/titans.test.cjs ·
   CLAUDE.md · docs/worklog/claude.md
