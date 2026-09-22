@@ -100,13 +100,14 @@ body{
    **그림이 없으면 그림 칸이 통째로 빠집니다**(`.nofigure`). 파일을 아직
    안 넣었거나 못 받아도 글이 폭을 다 쓰고 깨진 그림이 안 남습니다 —
    `LIVE`·`MARKS` 와 같은 요령입니다. */
-.bio{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:start}
+.bio{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}
 .bio.nofigure{grid-template-columns:minmax(0,1fr)}
-/* 1:1 상자에 `cover` 로 앉힙니다 — 4:5 를 가져와도 판이 안 깨집니다.
-   `50% 22%` 는 가운데 **위쪽**이라 상자보다 긴 그림에서 머리가 안 잘립니다.
-   둥근 모서리는 없습니다(재료표 5번 — 이 화면의 동그라미는 ⓘ 와 표시등뿐). */
-.bio-face{display:block;width:240px;height:240px;object-fit:cover;object-position:50% 22%;
-  border:1px solid var(--rule-2);background:var(--card)}
+/* 3:2 상자입니다 — 그림의 흰 여백을 잘라 낸 실제 비율이 거기였습니다.
+   **테두리를 두르지 않습니다.** 그림 바탕이 카드와 같은 순백이라 테두리만
+   네모로 떠서 없는 상자를 그려 놓은 꼴이 됩니다(실측으로 확인).
+   `cover`·`50% 30%` 는 다른 비율을 가져와도 머리가 안 잘리게 하는 보험입니다. */
+.bio-face{display:block;width:300px;height:200px;object-fit:cover;object-position:50% 30%;
+  background:var(--card)}
 /* **`gap` 이지 `margin` 이 아닙니다.** 두 언어를 다 넣어 두고 한쪽을
    `display:none` 으로 감추므로, `*+*` 로 여백을 주면 감춰진 형제 때문에
    **첫 줄에도 윗여백이 붙습니다.** `gap` 은 상자 없는 것을 안 셉니다. */
@@ -560,7 +561,7 @@ body.settled .fade{animation:none}
   /* 좁은 화면에서는 위아래로 쌓습니다. 240px 짜리를 옆에 두면 글 칸이
      138px 밖에 안 남아 한 줄에 열 글자가 못 들어갑니다(실측). */
   .bio{grid-template-columns:minmax(0,1fr);gap:15px}
-  .bio-face{width:140px;height:140px}
+  .bio-face{width:100%;max-width:260px;height:auto;aspect-ratio:3/2}
   .val{font-size:18px}
   .mk{width:26px;height:26px}
   .mk svg{width:16px;height:16px}
