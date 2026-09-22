@@ -5,6 +5,20 @@
 ---
 
 ## 2026-09-22 · Claude · (이 PR)
+사건 줄(재진입·전량매도)에 로고·섹터 · 사건 블록을 한 격자로 (사용자 요청)
+- 파일: titans/shared/investor.js · investor.css · scripts/tests/titans.test.cjs ·
+  CLAUDE.md · docs/worklog/claude.md
+- 규칙: 사건 줄은 목록이 쓰는 `markHTML()`·`sectorOf()` 를 **그대로** 쓴다.
+  **격자는 줄이 아니라 `.events` 블록이 쥔다**(`.ev{display:contents}`) —
+  줄마다 두면 이름표 폭이 달라 마크가 줄마다 다른 자리에서 시작한다.
+  `display:contents` 요소는 상자가 없다: 여백은 부모 `row-gap`, 글꼴은 자식이
+  직접, **검수에서 `getBoundingClientRect()` 는 자식을 재야 한다.**
+- 굳힘: 전량매도 줄도 마크·섹터가 나온다(`B.out` 이 cusip·key 를 들고 있다).
+  못 찾으면 글자 타일 + 빈 섹터 — 틀린 것을 적지 않는다.
+- 넘김: 정정 병합(PR #64)의 실제 SEC 실행은 아직 0회 — 일요일 01:00 UTC 전체
+  점검이 첫 실행. SEO 분석 · 영어 `--up` 대비 4.49(비중 막대 위)가 미착수.
+
+## 2026-09-22 · Claude · (이 PR)
 보유 변화 표를 단추로 · 캐럿 `B8` 버그 · 아래 설명 줄 삭제 (사용자 지적)
 - 파일: titans/shared/investor.js · investor.css · scripts/tests/titans.test.cjs ·
   CLAUDE.md · docs/worklog/claude.md

@@ -1139,11 +1139,24 @@ function render(){
   el("says").innerHTML=says(B,T).map(s=>`<p>${s}</p>`).join("");
 
   /* 사건은 접히지 않는다. 이번 분기 신규가 26위($400만)라 크기로 접으면 사라진다. */
-  const evs=[];
+  /* **목록 줄과 같은 조각을 씁니다** (2026-09-22, 사용자 요청 — "종목 로고랑
+     카테고리도 적어주면 더 좋겠네"). 마크와 섹터는 목록이 쓰는 `markHTML()`·
+     `sectorOf()` 그대로입니다 — 같은 회사가 두 자리에서 다르게 보이면 안 됩니다.
+     **전량매도 줄도 됩니다**: 둘 다 CUSIP 을 들고 있어서(실측) 마크는 ISIN 으로
+     만들어지고 섹터는 앞 여섯 자리로 찾습니다. 못 찾으면 목록과 똑같이
+     글자 타일로 떨어지고 섹터 칸은 비웁니다 — **틀린 것을 적지는 않습니다.** */
+  const evs=[], evLine=(cls,tag,r,sub)=>{
+    const sec=sectorOf(r);
+    return `<div class="ev ${cls}"><span class="tag">${tag}</span>${markHTML(r)}`
+      +`<span class="evwho"><span class="nm">${title(r.name)}</span>`
+      +`${sec?`<span class="sec">${sec}</span>`:""}</span>`
+      +`<span class="sub">${sub}</span></div>`;
+  };
   for(const r of B.list.filter(x=>x.isNew))
-    evs.push(`<div class="ev in"><span class="tag">${r.back?tx("evBack"):tx("evNew")}</span><span class="nm">${title(r.name)}</span><span class="sub">${money(r.value)}</span></div>`);
+    evs.push(evLine("in", r.back?tx("evBack"):tx("evNew"), r, money(r.value)));
   for(const r of B.out)
-    evs.push(`<div class="ev out"><span class="tag">${tx("evOut")}</span><span class="nm">${title(r.name)}</span><span class="sub">${tx("heldFor")} ${tx("yr",Math.round(r.years*10)/10)} · ${money(r.value)}</span></div>`);
+    evs.push(evLine("out", tx("evOut"), r,
+      `${tx("heldFor")} ${tx("yr",Math.round(r.years*10)/10)} · ${money(r.value)}`));
   el("events").innerHTML=evs.join("");
   el("events").hidden=!evs.length;
   el("quarter").hidden=false;

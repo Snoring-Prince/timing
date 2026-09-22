@@ -112,16 +112,34 @@ body{
 html:not([lang="ko"]) .says i{min-width:88px}
 
 /* 사건(신규·재진입·전량매도)은 크기가 아니라 사건이라 접히지 않고 늘 위에 있다 */
-.events{border-top:1px solid var(--rule-2);padding-top:12px}
-.ev{display:flex;align-items:baseline;gap:10px;font-family:var(--mono);font-size:var(--t-num);
-  line-height:1.9;color:var(--ink-2);flex-wrap:wrap}
+/* **격자는 줄마다가 아니라 블록 하나가 쥡니다.** 줄마다 따로 두면 이름표 폭이
+   달라서(`재진입` 48px vs `전량매도` 60px) **마크가 줄마다 다른 자리에서 시작**
+   합니다 — 계측기·측량 도면이라는 이 화면의 언어가 거기서 무너집니다(실측).
+   한 격자에 두면 네 칸이 두 줄에서 같은 자리에 섭니다. */
+.events{border-top:1px solid var(--rule-2);padding-top:12px;
+  display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;
+  align-items:center;gap:7px 9px}
+/* **`flex` 가 아니라 `grid` 입니다.** 회사 마크가 들어오면서 조각이 넷이 됐는데,
+   `flex-wrap` 으로 두었더니 좁은 화면에서 **마크만 따로 한 줄에 떨어지고
+   이름표와 섹터가 붙는** 뒤죽박죽이 됐습니다(320px 에서 실측). 격자는 칸이
+   정해져 있어 좁아져도 순서가 안 흐트러집니다 — 목록 줄과 같은 판단입니다.
+
+   `baseline` 도 아닙니다: 30px 짜리 그림을 기준선에 맞추면 글자 밑으로 처집니다.
+   간격 9px·`center` 는 목록 줄(`.who`)에서 그대로 가져온 값입니다. */
+.ev{display:contents;font-family:var(--mono);font-size:var(--t-num);
+  line-height:1.9;color:var(--ink-2)}
 .ev .tag{font-family:var(--cond);font-weight:600;font-size:var(--t-micro);letter-spacing:.1em;
-  text-transform:uppercase;border:1px solid currentColor;padding:1px 5px;flex:0 0 auto}
+  text-transform:uppercase;border:1px solid currentColor;padding:1px 5px;
+  justify-self:start;white-space:nowrap}
 .ev.in .tag{color:var(--up)} .ev.out .tag{color:var(--down)}
-.ev .nm{color:var(--ink);flex:1 1 auto;min-width:0}
-.ev .sub{color:var(--ink-3);flex:0 0 auto}
-/* 두 사건이 붙어 있어 한 줄처럼 보였습니다 — 사이를 띄웁니다(사용자 요청). */
-.ev+.ev{margin-top:7px}
+/* 이름과 섹터는 **한 덩어리**입니다 — 목록의 `.who` 와 같은 짜임이라
+   좁은 화면에서 섹터가 이름 아래로 접히는 모양도 같습니다. */
+.ev .evwho{display:flex;align-items:center;gap:4px 9px;min-width:0;flex-wrap:wrap}
+.ev .nm{color:var(--ink);min-width:0}
+.ev .sub{color:var(--ink-3);font-family:var(--mono);font-size:var(--t-num);
+  justify-self:end;white-space:nowrap}
+/* 두 사건 사이는 격자의 `row-gap` 이 띄웁니다 — `.ev` 는 상자가 없어
+   `margin` 을 못 씁니다(`display:contents`). */
 
 /* ── 접힘 ─────────────────────────────────────────────────
    **지우지 마세요.** 한 번 지웠다가 되살렸습니다 — 상위 10개만 남기고 나머지를
@@ -490,6 +508,15 @@ body.settled .fade{animation:none}
   .says i{min-width:0}
   html:not([lang="ko"]) .says i{min-width:0}
   .nm{font-size:15px}
+  /* **사건 줄의 금액을 둘째 줄로 내립니다.** 320px 에서 이름표·마크·금액이
+     먼저 자리를 가져가 이름에 44px 밖에 안 남습니다 — 그러면 회사 이름이
+     세로로 쪼개집니다(실측). 금액을 이름 칸(셋째) 아래로 내리면 왼쪽
+     두 칸은 그대로 있고 이름이 제 너비를 갖습니다. */
+  .events{grid-template-columns:auto auto minmax(0,1fr);align-items:start}
+  .ev .sub{grid-column:3;justify-self:start;white-space:normal}
+  /* 이름표와 마크는 **첫 줄에 맞춥니다.** 가운데 맞춤으로 두면 이름이 석 줄로
+     접힌 줄에서 둘이 그 덩어리의 한가운데까지 내려가 허공에 뜹니다. */
+  .ev .evwho{align-items:start}
   .val{font-size:18px}
   .mk{width:26px;height:26px}
   .mk svg{width:16px;height:16px}

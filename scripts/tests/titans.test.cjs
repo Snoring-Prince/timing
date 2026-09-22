@@ -344,3 +344,25 @@ test('the toggle says what the next click does, and the caret is a real triangle
   assert.match(css,/details\.rec\[open\] \.recbtn::before\{content:"\\25BE"\}/);
   assert.doesNotMatch(css,/[\x00-\x08\x0b-\x1f]/);
 });
+
+test('event rows can show the same mark and sector as the list', () => {
+  const run=page(real);run('LANG="ko";L10N=D.ko;');
+  // **전량매도 줄이 걱정거리였다** — 그 종목은 이번 분기 목록에 없다.
+  // 마크는 CUSIP 으로, 섹터는 앞 여섯 자리로 찾으므로 둘 다 살아 있어야 한다.
+  run('const O=build().out[0];');
+  assert.ok(run('O&&O.cusip'),'전량매도 줄에 CUSIP 이 있어야 한다');
+  assert.ok(run('O.key'),'전량매도 줄에 섹터 열쇠가 있어야 한다');
+  assert.match(run('markHTML(O)'),/class="mk/);
+  run('const I=build().list.find(r=>r.isNew);');
+  assert.match(run('markHTML(I)'),/class="mk/);
+  // 검사에서는 섹터 표를 안 읽으므로(화면만 받는다) 표를 끼워 길이 확인한다.
+  // 실제 값은 브라우저에서 쟀다 — 음료 · 주택건설.
+  run('SECTORS={[O.key]:{sic:"2084"},[I.key]:{sic:"1531"}};');
+  assert.ok(run('sectorOf(O)').length>0,'전량매도 줄도 섹터가 나와야 한다');
+  assert.ok(run('sectorOf(I)').length>0);
+  run('SECTORS={};');
+  assert.equal(run('sectorOf(O)'),'','모르면 비운다 — 틀린 것을 적지 않는다');
+  // 마크를 못 찾아도 화면은 돈다 — 목록과 똑같이 글자 타일로 떨어진다.
+  run('TICKERS={};');
+  assert.match(run('markHTML({cusip:"G1234567",key:"G12345",name:"Example Ltd"})'),/class="mk/);
+});
