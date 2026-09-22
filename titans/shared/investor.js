@@ -45,6 +45,12 @@ en:{
   lifePrior:(b,s)=>`<span>Earlier</span><span>BUY <em class="up">${b}</em></span><span>SELL <em class="down">${s}</em></span>`,
   close:"Close",
   impliedPrice:"Implied quarter-end price",
+  /* **`Trade record` 라고 쓰지 않습니다.** 13F 는 분기 마지막 날의 스냅샷뿐이라
+     한 줄은 체결이 아니라 그 분기 동안의 순변화입니다. */
+  recTitle:n=>`Quarter-by-quarter record · ${n}`,
+  rcDate:"Filing", rcMove:"Change", rcPrice:"Quarter-end price", rcValue:"Value",
+  rcIn:"Entered", rcBack:"Back in", rcOut:"Sold out", rcPre:"Held before records",
+  recNote:"Each line is the net change over that quarter, not a single trade \u2014 13F reports only the last day of the quarter. Quarters with no change in share count are left out.",
   lifeQuiet:"never bought or sold across this history",
   lifeScroll:"drag sideways for earlier years",
   buy:"BUY", sell:"SELL",
@@ -104,6 +110,10 @@ ko:{
   lifePrior:(b,s)=>`<span>이 기간 이전</span><span>매수 <em class="up">${b}</em>건</span><span>매도 <em class="down">${s}</em>건</span>`,
   close:"종가",
   impliedPrice:"공시 기준 분기말 가격",
+  recTitle:n=>`분기별 보유 변화 ${n}건`,
+  rcDate:"공시 분기", rcMove:"변화", rcPrice:"분기말 가격", rcValue:"평가 금액",
+  rcIn:"진입", rcBack:"재진입", rcOut:"전량매도", rcPre:"집계 전부터 보유",
+  recNote:"한 줄은 그 분기 동안의 순변화이고 한 번의 거래가 아닙니다 \u2014 13F 는 분기 마지막 날 하루만 적습니다. 주식수가 그대로인 분기는 뺐습니다.",
   lifeQuiet:"이 기간에 사고판 적이 없습니다",
   lifeScroll:"옆으로 끌면 그 이전이 나옵니다",
   buy:"BUY", sell:"SELL",
@@ -860,6 +870,48 @@ function chartWindow(){
    합니다 — 한 번 빠뜨려서 기간 버튼을 누르면 말풍선이 사라졌습니다. */
 const TIP=`<b class="lifetip" aria-live="polite" hidden></b>`;
 
+/* ── 분기별 보유 변화 ──────────────────────────────────────────────
+   차트가 그림으로 말하는 것을 숫자로 한 번 더 적습니다. **새 자료가 한 톨도
+   필요 없습니다** — `lifeOf()` 가 차트를 그리려고 이미 만들어 둔 시계열
+   그대로이고, 액면분할 보정도 거기서 끝나 있습니다.
+
+   **움직인 분기만 싣습니다.** 코카콜라는 111분기를 들고 있는데 주식수가 실제로
+   바뀐 것은 2번뿐이라, 다 적으면 같은 숫자가 109줄 되풀이됩니다. 실측으로
+   지금 26묶음의 중앙값이 6줄이고 제일 많은 애플이 26줄입니다 — 표 하나에
+   들어갈 분량이라 별도 페이지를 만들지 않았습니다.
+
+   **기간 버튼을 안 탑니다.** 차트는 고른 창을 보여 주고 이 표는 전부입니다.
+   `drawLife()` 가 `.lifescroll` 안만 갈아 끼우므로 그 형제인 이 표는 그대로
+   남습니다 — 기간을 바꿔도 다시 그릴 것이 없습니다.
+
+   **기본은 접어 둡니다.** 그림만 보려던 사람의 줄이 길어지면 안 되므로,
+   제목에 건수를 적어 누르기 전에 분량을 알 수 있게 합니다. */
+function recordHTML(r){
+  const L=r.life||[];
+  const mv=L.filter(o=>o.exit||o.first||o.dn);
+  if(!mv.length) return "";
+  const body=mv.slice().reverse().map(o=>{
+    let dir="",move;
+    if(o.exit){ dir=" down"; move=tx("rcOut"); }
+    /* 첫 공시에 이미 들어 있던 종목은 **사들이는 장면이 안 보입니다** —
+       거기에 `진입` 이라고 적으면 그 분기에 샀다는 거짓말이 됩니다
+       (목록 칸의 `집계 전부터 보유` 와 같은 자리). */
+    else if(o.first) move=o!==L[0]?tx("rcBack"):(o.q===QS[0]?tx("rcPre"):tx("rcIn"));
+    else{ dir=o.dn>0?" up":" down";
+          move=(o.dn>0?"+":"\u2212")+shortShares(Math.abs(o.dn)); }
+    return `<tr><td class="rcq">${axDate(o.q)}</td><td class="rcm${dir}">${move}</td>`
+      +`<td class="rch">${o.exit?"\u2014":shortShares(o.sh)}</td>`
+      +`<td class="rcp">${o.p===null?"\u2014":usd(o.p)}</td>`
+      +`<td class="rcv">${o.p===null?"\u2014":money(o.sh*o.p)}</td></tr>`;
+  }).join("");
+  return `<details class="rec"><summary>${tx("recTitle",mv.length)}</summary>
+    <div class="recwrap"><table class="rectbl"><thead><tr>`
+    +`<th class="rcq">${tx("rcDate")}</th><th class="rcm">${tx("rcMove")}</th>`
+    +`<th class="rch">${tx("colShares")}</th><th class="rcp">${tx("rcPrice")}</th>`
+    +`<th class="rcv">${tx("rcValue")}</th></tr></thead><tbody>${body}</tbody></table></div>
+    <p class="recnote">${tx("recNote")}</p></details>`;
+}
+
 function chartHTML(r){
   const L=r.life||[];
   if(!L.length&&!PRICE_SERIES[r.key]) return `<p class="lifenote">${tx("lifeThin")}</p>`;
@@ -943,6 +995,7 @@ function rowHTML(r,rank,maxW){
     </div>
     </summary>
     ${chartHTML(r)}
+    ${recordHTML(r)}
   </details></li>`;
 }
 
