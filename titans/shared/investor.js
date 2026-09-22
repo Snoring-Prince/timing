@@ -213,7 +213,16 @@ function mountInvestorShell(){
 
 </div>`;
 }
-if(document.body)mountInvestorShell();
+/* **투자자 소개는 그 투자자의 index.html 에 글자로 있습니다**(공통 CSS 의
+   `.bio` 주석 참고 — 사전에 넣으면 크롤러가 받는 페이지에서 사라집니다).
+   껍데기가 `body` 를 통째로 갈아끼우므로, **먼저 들어냈다가** 머리글 아래
+   제자리에 도로 넣습니다. 없는 투자자는 아무 일도 일어나지 않습니다. */
+if(document.body){
+  const bio=document.getElementById("titan-bio");
+  if(bio) bio.remove();
+  mountInvestorShell();
+  if(bio){ const q=document.getElementById("quarter"); q.parentNode.insertBefore(bio,q); }
+}
 
 /* ══ 데이터 ═══════════════════════════════════════════════════════════
    화면은 자기 집 파일만 읽습니다. Actions 가 주 1회 SEC 에서 받아
@@ -1227,6 +1236,10 @@ function applyLang(lang,remember){
   const p=REDUP.has(LANG)?PAL.redUp:PAL.greenUp;
   r.style.setProperty("--up",p.up); r.style.setProperty("--down",p.down);
   r.style.setProperty("--up-rgb",p.upRGB); r.style.setProperty("--down-rgb",p.downRGB);
+  /* 소개 그림은 한 장이지만 **화면 낭독기가 읽는 말은 두 벌**입니다.
+     글자와 같이 안 바뀌면 한국어 화면에서 영어를 읽어 줍니다. */
+  if(document.querySelectorAll) for(const im of document.querySelectorAll("img[data-alt-ko]"))
+    im.alt=(LANG==="ko"?im.dataset.altKo:im.dataset.altEn)||im.alt;
   document.title=tx("docTitle",tName(),TT.since);
   paintHead(); paintTabs(); render();
 }

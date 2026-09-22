@@ -366,3 +366,29 @@ test('event rows can show the same mark and sector as the list', () => {
   run('TICKERS={};');
   assert.match(run('markHTML({cusip:"G1234567",key:"G12345",name:"Example Ltd"})'),/class="mk/);
 });
+
+test('the investor blurb is prose in the page, not strings in the shared screen', () => {
+  const css=fs.readFileSync(path.join(root,'titans/shared/investor.css'),'utf8');
+  // 사전에 넣으면 JS 가 그리게 되고, JS 를 안 돌리는 크롤러가 받는 페이지에서
+  // 통째로 사라진다(본 사이트의 `.about` 과 같은 자리 — CLAUDE.md 6-2).
+  assert.doesNotMatch(shared,/Warren Buffett|워런 버핏|holding period is forever/);
+  assert.doesNotMatch(css,/Warren Buffett|워런 버핏/);
+  const bio=html.match(/<section class="panel bio" id="titan-bio">([\s\S]*?)<\/section>/)[1];
+  assert.match(bio,/data-lang="en"/); assert.match(bio,/data-lang="ko"/);
+  // 두 언어가 같은 조각 수를 가져야 한쪽만 고치는 실수가 드러난다.
+  const count=lg=>bio.match(new RegExp(`data-lang="${lg}"`,'g')).length;
+  assert.equal(count('en'),count('ko'));
+  // 인용은 출처 없이 싣지 않는다.
+  const quotes=bio.match(/<blockquote[\s\S]*?<\/blockquote>/g);
+  assert.equal(quotes.length,4);
+  for(const q of quotes) assert.match(q,/<cite>[^<]+<\/cite>/);
+  // 화면에 보이는 쪽은 CSS 가 고른다 — 한쪽 언어만 보여야 한다.
+  assert.match(css,/html\[lang="ko"\][^{]*\.bio \[data-lang="en"\]\{display:none\}/);
+  assert.match(css,/html:not\(\[lang="ko"\]\)[^{]*\.bio \[data-lang="ko"\]\{display:none\}/);
+  // 그림이 없으면 그림 칸만 빠지고 깨진 그림이 안 남는다.
+  assert.match(bio,/onerror="this\.closest\('\.bio'\)\.classList\.add\('nofigure'\)/);
+  assert.match(css,/\.bio\.nofigure\{grid-template-columns:minmax\(0,1fr\)\}/);
+  // 공통 JS 는 이 덩어리를 머리글 아래 제자리로 옮길 뿐이다.
+  assert.match(shared,/getElementById\("titan-bio"\)/);
+  assert.match(shared,/insertBefore\(bio,q\)/);
+});
