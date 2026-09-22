@@ -257,3 +257,29 @@ test('the headline mark falls back to initials and never leaves the repository',
   assert.match(run('titanMark()'),/<img src="logo\.png"/);
   assert.match(run('titanMark()'),/onerror=/);
 });
+
+test('the quarter heading spells out the span it was computed from', () => {
+  const run=page(real);
+  // **손으로 적지 않습니다.** 끝날은 공시가 적은 그 날짜이고, 첫날만 분기에서
+  // 셉니다 — 새 분기가 들어오면 제목이 저절로 따라옵니다.
+  run('LANG="ko";L10N=D.ko;');
+  assert.equal(run('tx("quarterHead","2026-06-30")'),
+    '2026년 2분기 (2026. 04. 01 ~ 2026. 06. 30)');
+  assert.equal(run('tx("quarterHead","2019-03-31")'),
+    '2019년 1분기 (2019. 01. 01 ~ 2019. 03. 31)');
+  run('LANG="en";L10N=D.en;');
+  assert.equal(run('tx("quarterHead","2026-06-30")'),'Q2 2026 (Apr 1 – Jun 30, 2026)');
+  assert.equal(run('tx("quarterHead","2020-12-31")'),'Q4 2020 (Oct 1 – Dec 31, 2020)');
+  // 제목은 늘 실제 마지막 분기에서 나온다.
+  assert.equal(run('tx("quarterHead",build().cur.period)'),'Q2 2026 (Apr 1 – Jun 30, 2026)');
+});
+
+test('the fold label says what the next click will do', () => {
+  const run=page(real);
+  run('LANG="ko";L10N=D.ko;');
+  assert.equal(run('tx("foldOpen",16)'),'16개 종목 더 보기');
+  assert.equal(run('tx("foldClose",16)'),'16개 종목 숨기기');
+  run('LANG="en";L10N=D.en;');
+  assert.equal(run('tx("foldOpen",16)'),'Show 16 more');
+  assert.equal(run('tx("foldClose",16)'),'Hide 16');
+});

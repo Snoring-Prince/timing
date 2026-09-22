@@ -23,7 +23,7 @@ en:{
   tradeBasis:"Trade amounts are estimates from share changes and quarter-end prices. Full exits use the previous quarter-end value.",
   asOf:d=>`As of ${d}`,
   filedOn:d=>`filed ${d}`,
-  quarterHead:d=>`This quarter (${qLabel("en",d)})`,
+  quarterHead:d=>`${qLabel("en",d)} (${qSpan("en",d)})`,
   kNew:"new", kAdd:"added", kTrim:"trimmed", kHold:"held", kOut:"exited",
   positions:n=>`${n} positions`,
   bought:(n,v)=>`<i>Largest buy</i><span>${n}</span><em>${v} est.</em>`,
@@ -51,7 +51,7 @@ en:{
   same:"held",
   topOnly:(n,p)=>`Top ${n} — ${p} of the total value`,
   allShown:n=>`All ${n} positions shown`,
-  foldOpen:n=>`Show ${n} more`,
+  foldOpen:n=>`Show ${n} more`, foldClose:n=>`Hide ${n}`,
   noData:"Could not load the filings.",
   aboutH:"How to read this",
   footTitle:"Disclaimer",
@@ -79,7 +79,7 @@ ko:{
   tradeBasis:"매매 금액은 주식수 증감과 분기말 가격으로 추정합니다. 전량 매도는 직전 분기말 보유 금액을 사용합니다.",
   asOf:d=>`${d} 기준`,
   filedOn:d=>`${d} 공시`,
-  quarterHead:d=>`이번 분기 (${qLabel("ko",d)})`,
+  quarterHead:d=>`${qLabel("ko",d)} (${qSpan("ko",d)})`,
   kNew:"신규", kAdd:"확대", kTrim:"축소", kHold:"유지", kOut:"전량매도",
   positions:n=>`${n}종목`,
   /* **줄글이 아니라 이름표 + 값입니다** (사용자 요청). 한 화면에 나란히 놓이는
@@ -110,7 +110,7 @@ ko:{
   same:"유지",
   topOnly:(n,p)=>`상위 ${n}종목 · 전체 투자 금액의 ${p}`,
   allShown:n=>`${n}종목 전부 펼침`,
-  foldOpen:n=>`${n}개 종목 더 보기`,
+  foldOpen:n=>`${n}개 종목 더 보기`, foldClose:n=>`${n}개 종목 숨기기`,
   noData:"공시를 불러오지 못했습니다.",
   aboutH:"보는 법",
   footTitle:"유의사항",
@@ -278,6 +278,19 @@ function shortShares(n){
 function qLabel(lang,iso){
   const y=String(iso).slice(0,4), q=Math.ceil(Number(String(iso).slice(5,7))/3)||1;
   return lang==="ko"?`${y}년 ${q}분기`:`Q${q} ${y}`;
+}
+const MON="Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");
+/* 그 분기가 **언제부터 언제까지인가**. 첫날은 분기에서 계산하고(4~6월이면
+   04-01), 끝날은 계산하지 않고 **공시가 적은 그 날짜를 그대로** 씁니다 —
+   13F 는 분기 마지막 날의 스냅샷이라 그 날짜가 곧 자료의 사실입니다.
+   한 분기는 해를 넘지 않으므로 영어는 연도를 한 번만 적습니다.
+   `fdate`/`Intl` 을 쓰지 않는 이유는 그쪽이 전역 `LANG`·`LOCALE` 을 보기
+   때문입니다 — 여기 `lang` 은 사전이 건네는 값이라 서로 어긋날 수 있습니다. */
+function qSpan(lang,iso){
+  const s=String(iso), y=s.slice(0,4), m=Number(s.slice(5,7)), d=Number(s.slice(8,10));
+  const q=Math.ceil(m/3)||1, m1=3*(q-1)+1;
+  if(lang==="ko") return `${y}. ${String(m1).padStart(2,"0")}. 01 ~ ${y}. ${s.slice(5,7)}. ${s.slice(8,10)}`;
+  return `${MON[m1-1]} 1 – ${MON[m-1]} ${d}, ${y}`;
 }
 function fdate(iso){
   if(LANG==="ko") return String(iso).replace(/-/g,".");
@@ -1098,12 +1111,16 @@ function render(){
   const shown=top.reduce((s,r)=>s+r.value,0)/B.tc*100;
   const fold=el("fold");
   if(rest.length){
-    el("foldttl").textContent=tx("foldOpen",rest.length);
     fold.hidden=false;
     /* **펼치면 '상위 10종목만' 이 거짓말이 됩니다.** 접힘을 열어 둔 채로 그 줄을
-       그대로 두면 화면이 자기 말을 어깁니다. 여는 순간 문장을 바꿉니다. */
-    const cut=()=>el("bookcut").textContent=
-      fold.open?tx("allShown",B.list.length):tx("topOnly",top.length,pct(shown));
+       그대로 두면 화면이 자기 말을 어깁니다. 여는 순간 문장을 바꿉니다.
+       **접기 이름표도 같이 뒤집습니다** — 펼쳐 놓고도 `더 보기` 라고 적혀
+       있으면 그 버튼이 무슨 일을 할지 거꾸로 읽힙니다. */
+    const cut=()=>{
+      el("foldttl").textContent=tx(fold.open?"foldClose":"foldOpen",rest.length);
+      el("bookcut").textContent=
+        fold.open?tx("allShown",B.list.length):tx("topOnly",top.length,pct(shown));
+    };
     cut(); fold.ontoggle=cut;
   }else{
     fold.hidden=true; fold.open=false; fold.ontoggle=null;
