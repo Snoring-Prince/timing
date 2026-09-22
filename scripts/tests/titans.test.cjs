@@ -283,3 +283,46 @@ test('the fold label says what the next click will do', () => {
   assert.equal(run('tx("foldOpen",16)'),'Show 16 more');
   assert.equal(run('tx("foldClose",16)'),'Hide 16');
 });
+
+test('the record lists only quarters that moved, newest first', () => {
+  const run=page(real);run('LANG="ko";L10N=D.ko;');
+  // 코카콜라는 111분기를 들고 있지만 분할 보정을 하면 주식수가 한 번도 안 바뀐다.
+  // 다 적으면 같은 숫자가 110줄 되풀이되므로 **움직인 분기만** 싣는다.
+  const ko=run('recordHTML(build().list.find(r=>r.key==="191216"))');
+  assert.equal((ko.match(/<tr><td/g)||[]).length,1);
+  assert.match(ko,/집계 전부터 보유/);
+  // 첫 공시에 이미 있던 종목에 '진입' 이라고 적으면 그 분기에 샀다는 거짓말이 된다.
+  assert.doesNotMatch(ko,/>진입</);
+  const ap=run('recordHTML(build().list.find(r=>r.key==="037833"))');
+  const dates=[...ap.matchAll(/class="rcq">([\d.]+)</g)].map(m=>m[1]);
+  assert.equal(dates.length,26);
+  assert.deepEqual(dates,[...dates].sort().reverse());   // 최신이 맨 위
+  assert.equal(dates.at(-1),'2016.03.31');
+  assert.match(ap,/class="rcq">2016\.03\.31<\/td><td class="rcm">진입/);
+});
+
+test('a full exit is recorded without inventing a sale price', () => {
+  const run=page(real);run('LANG="ko";L10N=D.ko;');
+  // 옥시덴탈은 2020 년에 전량 매도하고 2022 년에 다시 샀다. 다음 공시는 수량이
+  // 사라졌다는 것만 알려 주므로 가격·금액 칸은 비운다(9-3-1 의 규칙과 같은 자리).
+  const h=run('recordHTML(build().list.find(r=>r.key==="674599"))');
+  const out=h.match(/<tr><td class="rcq">([\d.]+)<\/td><td class="rcm down">전량매도<\/td>(.*?)<\/tr>/);
+  assert.ok(out,'전량매도 줄이 있어야 한다');
+  assert.equal(out[1],'2020.06.30');
+  assert.equal((out[2].match(/—/g)||[]).length,3);   // 보유·가격·금액 셋 다 비움
+  assert.match(h,/class="rcm">재진입/);
+  run('LANG="en";L10N=D.en;');
+  assert.match(run('recordHTML(build().list.find(r=>r.key==="674599"))'),/class="rcm down">Sold out/);
+});
+
+test('the record ignores the period buttons and never says "trade"', () => {
+  const run=page(real);run('LANG="ko";L10N=D.ko;const R=build().list.find(r=>r.key==="037833");');
+  // 차트는 고른 창을 보여 주고 이 표는 전부다. 기간을 바꿔도 줄 수가 같아야 한다.
+  const n=()=>(run('recordHTML(R)').match(/<tr><td/g)||[]).length;
+  run('LRANGE=4;'); const one=n();
+  run('LRANGE=60;'); assert.equal(n(),one);
+  // 13F 는 분기말 스냅샷뿐이라 한 줄은 체결이 아니라 그 분기의 순변화다.
+  assert.doesNotMatch(run('tx("recTitle",3)'),/거래/);
+  run('LANG="en";L10N=D.en;');
+  assert.doesNotMatch(run('tx("recTitle",3)'),/trade/i);
+});

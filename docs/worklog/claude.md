@@ -5,6 +5,21 @@
 ---
 
 ## 2026-09-22 · Claude · (이 PR)
+되돌릴 자리 `backup/v1.0` · 종목마다 분기별 보유 변화 표 (사용자 요청)
+- 파일: titans/shared/investor.js · investor.css · scripts/tests/titans.test.cjs ·
+  CLAUDE.md · docs/worklog/claude.md
+- 규칙: 큰 것을 만들기 전에 **먼저 `backup/vN.N` 브랜치로 지금 자리를 찍는다.**
+  태그는 여전히 403(2026-09-22 재확인) — 브랜치만 된다. 이름을 덮어쓰지 말 것.
+  표는 `lifeOf()` 가 이미 만든 시계열만 읽는다(새 자료 0). **움직인 분기만** 싣고
+  전량 매도 줄은 가격을 지어내지 않는다. 기간 버튼을 안 탄다 —
+  `drawLife()` 는 `.lifescroll` 안만 갈아 끼우므로 형제인 표는 그대로다.
+  **`거래 기록` 이라고 쓰지 말 것** — 13F 는 분기말 스냅샷뿐이라 한 줄은 순변화다.
+- 굳힘: 종목별 **별도 페이지를 만들지 않는다.** 실측 중앙값 6줄·최대 26줄이라
+  페이지 분량이 아니고, 얇은 페이지 26장은 색인 판정(6-2)을 나쁘게 만든다.
+- 넘김: 정정 병합(PR #64)의 실제 SEC 실행은 아직 0회 — 일요일 01:00 UTC 전체
+  점검이 첫 실행. SEO 분석 · 영어 `--up` 대비 4.49(비중 막대 위)가 미착수.
+
+## 2026-09-22 · Claude · (이 PR)
 분기 제목에 기간 · 접기 이름표 여닫이 · 한글 줄간 (사용자 지정)
 - 파일: titans/shared/investor.js · investor.css · scripts/tests/titans.test.cjs ·
   CLAUDE.md · docs/worklog/claude.md
