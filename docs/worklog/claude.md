@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-09-22 · Claude · (이 PR)
+분기 제목에 기간 · 접기 이름표 여닫이 · 한글 줄간 (사용자 지정)
+- 파일: titans/shared/investor.js · investor.css · scripts/tests/titans.test.cjs ·
+  CLAUDE.md · docs/worklog/claude.md
+- 규칙: `qSpan()` 은 **첫날만 분기에서 세고 끝날은 공시 날짜를 그대로** 쓴다.
+  `fdate`·`Intl` 을 부르지 않는다 — 그쪽은 전역 `LANG`/`LOCALE` 을 본다.
+  접기 이름표와 위 캡션은 **같은 `ontoggle` 한 곳**에서 같이 뒤집는다.
+  한글 줄간은 `html[lang="ko"]` 로만 건다. **잉크 간격이 같아도 한글이 더
+  붙어 보인다**(네모를 꽉 채우는 글자) — 숫자만 보고 반박하지 말 것.
+- 굳힘: 줄 배치 문턱 **810px** 그대로. 영어 줄간 1.15 그대로.
+- 넘김: 정정 병합(PR #64)의 실제 SEC 실행은 아직 0회 — 일요일 01:00 UTC 전체
+  점검이 첫 실행. SEO 분석 · 영어 `--up` 대비 4.49 가 미착수.
+
 ## 2026-09-21 · Claude · (이 PR)
 문구 다섯 · 직전 분기 눈금 삭제 (사용자 지정)
 - 파일: titans/shared/investor.js · investor.css · CLAUDE.md · docs/worklog/claude.md
