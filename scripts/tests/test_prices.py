@@ -2,6 +2,7 @@ import datetime as dt
 import importlib.util
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -213,6 +214,48 @@ class PricesTests(unittest.TestCase):
         self.assertEqual(len(errors), 1)
         self.assertIn("unexpectedly shorter", errors[0])
         self.assertEqual(result["series"]["123456100"]["values"], kept)
+
+    def test_a_sold_holding_leaves_the_visitor_file(self):
+        # 방문자가 받는 파일에 안 쓰는 종목을 쌓지 않는다. 화면이 읽는 것은
+        # 지금 보유 종목뿐이라, 팔린 종목의 종가는 한 번도 안 읽힌다.
+        old = {"series": {"123456100": {"ticker": "AAPL", "values": [["2026-09-16", 100]], "splits": {}},
+                          "999999100": {"ticker": "GONE", "values": [["2026-09-16", 50]], "splits": {}}}}
+        with patch.object(p, "request", return_value=chart()), patch.object(p.time, "sleep"):
+            result, errors = p.collect({"123456100": {"name": "Issuer", "class": "COM"}}, old,
+                                       dt.datetime(2026, 9, 18, 19, tzinfo=p.UTC))
+        self.assertEqual(errors, [])
+        self.assertEqual(list(result["series"]), ["123456100"])
+
+    def test_a_re_entry_is_scanned_from_its_first_filing_again(self):
+        # 팔면서 버렸으므로 다시 들어오면 파일에 없다. 그때는 새 종목과 같은
+        # 길로 **처음 공시 분기까지** 다시 훑는다(요청 1번).
+        now = dt.datetime(2026, 9, 18, 19, tzinfo=p.UTC)
+        old = {"series": {"123456100": {"ticker": "AAPL", "values": [["2026-09-16", 100]], "splits": {}}}}
+        required = {c: {"name": "Issuer", "class": "COM"} for c in ["123456100", "999999100"]}
+        with patch.object(p, "resolve", return_value={"999999100": "BACK"}), \
+                patch.object(p, "request", return_value=chart(symbol="BACK")) as req, \
+                patch.object(p.time, "sleep"):
+            result, errors = p.collect(required, old, now,
+                                       since={"999999100": "2004-03-31", "123456100": "2004-03-31"})
+        asked = int(dt.datetime.combine(dt.date(2004, 3, 31), dt.time(), p.NY).timestamp())
+        back = [c for c in req.call_args_list if "BACK" in c[0][0]]
+        self.assertEqual(len(back), 1)
+        self.assertIn(f"period1={asked}", back[0][0][0])
+        self.assertEqual(result["series"]["999999100"]["splitsFrom"], "2004-03-31")
+
+    def test_an_unreadable_book_never_empties_the_price_cache(self):
+        # 공시책을 한 권도 못 읽으면 보유 목록이 비고, 위 규칙이 파일을 통째로
+        # 비운다. 그 전에 멈춰야 한다.
+        # **검사는 진짜 파일을 건드리면 안 된다.** 이 가드를 되돌려 확인하는
+        # 순간 main() 이 실제 prices.json 을 비워 버린다(실제로 겪었다).
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "prices.json"
+            out.write_text('{"series":{"123456100":{}}}', encoding="utf-8")
+            with patch.object(p, "books", return_value=[]), patch.object(p, "OUT", out), \
+                    patch.object(p.sys, "argv", ["fetch_prices.py"]):
+                with self.assertRaises(SystemExit):
+                    p.main()
+            self.assertIn("123456100", out.read_text(encoding="utf-8"))
 
     def test_february_anniversary_and_winter_close_cutoff(self):
         self.assertEqual(p.years_before(dt.date(2024, 2, 29)), dt.date(2009, 2, 28))
