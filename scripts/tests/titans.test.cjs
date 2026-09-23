@@ -508,3 +508,59 @@ test('one filing on its own does not turn every holding into a new buy', () => {
   // 가운데 칸은 '쓸 값이 없다'는 뜻의 줄표만 적는다.
   assert.match(run('rowHTML(build().list[0],26,100)'), /class="act">—</);
 });
+
+// 진짜 분할 기록은 `data/titans/prices.json` 에 이미 들어 있다. 화면이 그것을
+// 읽게 하면 추측할 필요가 없어진다 — 단, 야후의 `splits` 는 분할 목록이 아니다.
+const priceBook = JSON.parse(fs.readFileSync(path.join(root,'data/titans/prices.json'),'utf8'));
+function withPrices(data){
+  const run = page(data);
+  run('__P=' + JSON.stringify(priceBook) + ';acceptPrices(__P);');
+  return run;
+}
+
+test('a spin-off is not a split, however Yahoo files it', () => {
+  const run = page(real);
+  // 진짜 액면분할 — 기약분수로 줄이면 작은 정수다.
+  assert.equal(run('splitRatio("2.0:1.0")'), 2);
+  assert.equal(run('splitRatio("4.0:1.0")'), 4);
+  assert.equal(run('splitRatio("7.0:1.0")'), 7);
+  assert.equal(run('splitRatio("20.0:1.0")'), 20);
+  assert.equal(run('splitRatio("3:2")'), 1.5);
+  assert.equal(run('splitRatio("5:4")'), 1.25);
+  assert.equal(run('splitRatio("4:3")'), 4/3);
+  assert.equal(run('splitRatio("1.0:10.0")'), 0.1);       // 역분할
+  // 분할이 아닌 것 — 전부 실제 저장된 값이다.
+  for (const notSplit of ['1046.0:1000.0',   // 제퍼리스 2023 스핀오프
+                          '1017.0:1000.0',   // 레나 2017
+                          '102.0:100.0',     // 레나B 2017 → 51:50
+                          '10000.0:9983.0',  // 옥시덴탈 2016
+                          '310.0:1.0',       // Ally 전환
+                          '2002.0:1000.0',   // 구글 C주 배분
+                          '1.0:1.0', '', 'x:y', '0:1'])
+    assert.equal(run(`splitRatio(${JSON.stringify(notSplit)})`), null, notSplit+' 를 분할로 받았다');
+});
+
+test('the real split record replaces the guess where the data reaches', () => {
+  const run = withPrices(real);
+  // 애플: 2014 년 7:1 과 2020 년 4:1 이 둘 다 실제로 적혀 있다.
+  // vm 밖으로 나온 배열은 프로토타입이 달라 deepEqual 이 걸린다 — 값으로 본다.
+  const days = run('JSON.stringify([...SPLIT_BOOK["037833"].days.entries()])');
+  assert.equal(days, JSON.stringify([['2014-06-09',7],['2020-08-31',4]]));
+  // 그 분할이 든 분기만 배수가 나오고, 없는 분기는 1 이다.
+  assert.equal(run('realSplit("037833","2020-06-30","2020-09-30")'), 4);
+  assert.equal(run('realSplit("037833","2021-06-30","2021-09-30")'), 1);
+  // **자료가 못 미치는 옛 분기는 `undefined` 여야 한다** — 1 이라고 답하면
+  // 아메리칸익스프레스 2000 년 3:1 이 통째로 사라진다.
+  assert.equal(run('realSplit("025816","2000-03-31","2000-06-30")'), undefined);
+  assert.equal(run('realSplit("없는키","2020-06-30","2020-09-30")'), undefined);
+  // 스핀오프는 받지 않으므로 제퍼리스에는 분할이 하나도 없다.
+  assert.equal(run('(SPLIT_BOOK["47233W"]||{days:new Map()}).days.size'), 0);
+});
+
+test('switching to the real record does not move a single holding', () => {
+  const guessed = page(real), measured = withPrices(real);
+  const pick = 'JSON.stringify(build().list.map(r=>[r.key,r.avgCost,r.dn,r.shares]))';
+  assert.equal(measured(pick), guessed(pick));
+  // 애플은 두 길 모두 같은 값이어야 한다(분할 ×4 를 양쪽이 똑같이 잡는다).
+  assert.ok(Math.abs(measured('build().list.find(r=>r.key==="037833").avgCost')-39.59171393884013)<1e-9);
+});

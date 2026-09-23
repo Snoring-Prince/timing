@@ -1,0 +1,68 @@
+# 대가들의 선택 — 액면분할 이력 정찰
+#
+# 개발 환경에서 야후는 프록시가 끊습니다(`CLAUDE.md` 3번 실측). 러너에서는 됩니다.
+# 그래서 **응답이 어떻게 생겼는지 짐작해서 수집기를 고치지 않고**, 여기서 한 번
+# 받아 원본을 아티팩트로 올려 둡니다. probe-sec.yml·probe-amendments.yml 과
+# 같은 요령입니다.
+#
+# 답할 질문은 하나입니다: period1 을 아주 옛날로 주면 야후가 그 시절 분할까지
+# 돌려주는가. 돌려주면 `fetch_prices.py` 의 창만 넓히면 되고, 지금 2011년
+# 이전을 추측으로 메우던 자리가 닫힙니다.
+#
+# 예약 실행은 없습니다. Actions 탭에서 손으로 누를 때만 돕니다.
+# 저장소에 아무것도 커밋하지 않습니다(`contents: read`). 비밀값도 안 씁니다
+# — 야후 공개 경로라 열쇠가 필요 없습니다.
+name: Probe Splits
+
+on:
+  workflow_dispatch:
+    inputs:
+      tickers:
+        description: "쉼표로 구분 (기본은 2011년 이전에 분할한 현재 보유 종목)"
+        required: false
+        default: "AXP,MCO,KO,AAPL,JEF"
+      since:
+        description: "period1 — 이 날부터 (기본은 최대한 옛날)"
+        required: false
+        default: "1970-01-01"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 내려받기
+        uses: actions/checkout@v4
+
+      - name: 파이썬 준비
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # 한 종목이라도 못 받으면 종료코드 1 로 끝납니다 — 손으로 돌린 것은
+      # "되는지 확인해 달라"는 뜻이라, 조용히 넘어가면 초록불인데 빈손이 됩니다.
+      - name: 정찰
+        env:
+          # 입력값을 명령줄에 바로 끼워 넣지 않습니다. 손으로 적는 칸이라
+          # 따옴표 하나로 셸 명령이 되는 자리입니다.
+          TICKERS: ${{ inputs.tickers }}
+          SINCE: ${{ inputs.since }}
+        run: |
+          set -o pipefail
+          python -u scripts/probe_splits.py \
+            --tickers "$TICKERS" --since "$SINCE" 2>&1 \
+            | tee split-probe-console.log
+
+      # 실패해도 받아 온 데까지는 올립니다. 무엇을 받다 막혔는지가 곧 답입니다.
+      - name: 원본 올리기
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: split-probe
+          path: |
+            split-probe/
+            split-probe-console.log
+          if-no-files-found: warn
+          retention-days: 14

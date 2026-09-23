@@ -381,8 +381,10 @@ function build(){
     const st=startOf(a.key);
     /* 현재 분기도 차트와 같은 분할 보정을 합니다. 분할로 늘어난 주식은
        매수가 아닙니다 — 증감·계기판·최대 매수 모두 같은 기준이어야 합니다. */
-    const f=p&&p.shares>0&&p.value>0&&a.shares>0&&a.value>0
-      ?splitFactor(a.shares/p.shares,(p.value/p.shares)/(a.value/a.shares)):null;
+    const real=p?realSplit(a.key,prv.period,cur.period):undefined;
+    const f=!(p&&p.shares>0&&p.value>0&&a.shares>0&&a.value>0)?null
+      :real===undefined?splitFactor(a.shares/p.shares,(p.value/p.shares)/(a.value/a.shares))
+      :(real!==1?real:null);
     const prevShares=p?p.shares*(f||1):null;
     const dn=p?a.shares-prevShares:a.shares;
     const dsh=(prevShares>0)?(a.shares/prevShares-1):null;
@@ -518,6 +520,45 @@ let TICKERS={};
 // 실제 공시 가격만 표시하고, 말풍선에도 종가라고 부르지 않습니다.
 let PRICE_SERIES={};
 let PRICE_ASOF="";
+/* 발행사(CUSIP 앞 여섯 자리)별 **진짜 액면분할**. `{from, days:Map(날짜→배수)}`
+   — `from` 은 자료가 시작하는 날이라 그 이전 분기는 알 수 없습니다. */
+let SPLIT_BOOK={};
+
+/* ══ 야후의 `splits` 는 분할 목록이 아닙니다 ═══════════════════════
+   **'주가를 보정해야 하는 사건' 목록**이라 스핀오프·특별배당이 섞여 있습니다.
+   실측으로 확인했습니다 — 제퍼리스 2023-01-17 `1046:1000` 이 적혀 있는데
+   버크셔의 주식수는 그 분기 내내 **433,558 주 그대로**였습니다(스핀오프라
+   주가만 내려간 것). 그대로 쓰면 **없는 분할을 적용하게 됩니다.**
+
+   **갈라내는 법은 기약분수입니다.**
+
+     진짜 분할   2:1 · 4:1 · 7:1 · 20:1 · 1:10       ← 줄이면 작은 정수
+     분할 아님   1017:1000 · 523:500 · 267:250 ·
+                 10000:9983 · 310:1 · 1001:500       ← 레나·옥시덴탈·제퍼리스
+                                                        스핀오프 · Ally 전환 ·
+                                                        구글 C주 배분
+══════════════════════════════════════════════════════════════════ */
+const SPLIT_MAX=20;
+function splitRatio(text){
+  const m=/^(\d+(?:\.0+)?):(\d+(?:\.0+)?)$/.exec(String(text||""));
+  if(!m)return null;
+  const n=Number(m[1]), d=Number(m[2]);
+  if(!Number.isInteger(n)||!Number.isInteger(d)||n<=0||d<=0)return null;
+  const gcd=(a,b)=>b?gcd(b,a%b):a, k=gcd(n,d), a=n/k, b=d/k;
+  /* 역분할(1:10)도 여기서 걸러집니다 — 추측으로는 아예 못 잡던 것입니다. */
+  return (a===b||a>SPLIT_MAX||b>SPLIT_MAX)?null:a/b;
+}
+
+/* 두 공시 날짜 사이의 진짜 분할 배수. 자료가 그 구간을 안 덮으면
+   `undefined` 를 돌려주어 **추측기로 넘깁니다** — 모르는 것을 1 이라고
+   답하면 옛 분기의 분할이 통째로 사라집니다. */
+function realSplit(key,from,to){
+  const book=SPLIT_BOOK[key];
+  if(!book||!from||from<book.from)return undefined;
+  let f=1;
+  for(const [day,v] of book.days) if(day>from&&day<=to) f*=v;
+  return f;
+}
 
 // TITAN.prices에는 자체 종가 JSON 주소를 설정합니다. 공급처 조건은 CLAUDE.md에
 // 기록합니다. 외부 공급자 요청·API 키는 방문자 화면에 넣지 않습니다.
@@ -533,8 +574,25 @@ function acceptPrices(book){
       if(Number.isFinite(ms)&&new Date(ms).toISOString().slice(0,10)===o[0])byDate.set(o[0],[o[0],o[1]]);
     }
     const clean=[...byDate.values()].sort((a,b)=>a[0].localeCompare(b[0]));
-    if(clean.length)PRICE_SERIES[key]={ticker:series.ticker.replace(/[^A-Za-z0-9.^=-]/g,""),values:clean};
+    if(!clean.length)continue;
+    PRICE_SERIES[key]={ticker:series.ticker.replace(/[^A-Za-z0-9.^=-]/g,""),values:clean};
+    /* 분할은 **발행사 단위로** 모읍니다 — 목록이 알파벳 A·C 를 한 줄로 묶으므로
+       계산도 같은 열쇠를 씁니다. 두 종류가 같은 날 **다른 배수**를 말하면
+       그 날은 버리고 추측기로 넘깁니다(한쪽만 쪼개진 것을 합산 주식수에
+       그대로 곱하면 틀립니다). */
+    const kk=key.slice(0,6), book=SPLIT_BOOK[kk]||(SPLIT_BOOK[kk]={from:"",days:new Map(),bad:new Set()});
+    /* 한 묶음에 종류가 여럿이면 **가장 늦게 시작하는 것**에 맞춥니다 — 한쪽만
+       덮인 구간을 덮었다고 치면 다른 쪽 분할을 못 보고 지나갑니다. */
+    if(clean[0][0]>book.from) book.from=clean[0][0];
+    for(const [day,text] of Object.entries(series.splits||{})){
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(day))continue;
+      const f=splitRatio(text);
+      if(f===null)continue;
+      if(book.days.has(day)&&book.days.get(day)!==f) book.bad.add(day);
+      book.days.set(day,f);
+    }
   }
+  for(const book of Object.values(SPLIT_BOOK)) for(const day of book.bad) book.days.delete(day);
   PRICE_ASOF=Object.values(PRICE_SERIES).map(s=>s.values.at(-1)[0]).sort().at(-1)||"";
 }
 
@@ -741,7 +799,10 @@ function costBasis(snaps,key){
     const p=a.value/a.shares;
     if(first===null) first=i;
     if(held>0&&prevP){
-      const f=splitFactor(a.shares/held, prevP/p);
+      /* **진짜 분할 기록이 있으면 추측하지 않습니다.** 주가 파일이 그 구간을
+         덮을 때만이고, 못 덮으면 `undefined` 라 예전처럼 추측합니다. */
+      const real=realSplit(key,QS[i-1],QS[i]);
+      const f=real===undefined?splitFactor(a.shares/held, prevP/p):(real!==1?real:null);
       if(f){ held*=f; prevP/=f; }
     }
     if(held===0){ cost=a.shares*p; held=a.shares; }
@@ -772,7 +833,8 @@ function lifeOf(snaps,key){
     }
     const p=a.value/a.shares;
     if(held&&prevP){
-      const f=splitFactor(a.shares/held, prevP/p);
+      const real=realSplit(key,QS[i-1],QS[i]);
+      const f=real===undefined?splitFactor(a.shares/held, prevP/p):(real!==1?real:null);
       /* **직전 주식수도 같이 늘려야 합니다.** 지난 분기들만 고치고 `held` 를 그대로
          두면 이번 분기 증감이 `944M - 245M = +699M` 으로 잡혀 **액면분할이 사상
          최대의 매수로 그려집니다**(애플 2020-09 에서 실제로 그랬습니다).
