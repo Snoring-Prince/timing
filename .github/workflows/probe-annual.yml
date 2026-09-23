@@ -31,7 +31,7 @@ on:
       show:
         description: "로그에 찍을 줄 수 (아티팩트는 받기 어렵습니다)"
         required: false
-        default: "6"
+        default: "8"
 
 permissions:
   contents: read

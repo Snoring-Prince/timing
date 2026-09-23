@@ -77,6 +77,12 @@ MAX_BYTES = 12 * 1024 * 1024
 # XBRL 이 만든 낱장 보고서 중 받아 볼 것. **태그 이름을 짐작하지 않습니다** —
 # 목차(FilingSummary.xml)가 주는 이름으로 고릅니다.
 REPORT_HINT = re.compile(r"invest|equit|securit|fair value|cost", re.I)
+# `Cybersecurity` 가 `securit` 으로 걸립니다. 첫 실행에서 실제로 걸려 받아 볼
+# 자리를 한 칸 잡아먹었습니다(run 35881516841).
+REPORT_SKIP = re.compile(r"cybersecurit", re.I)
+# 그중에서도 **먼저** 열어 볼 것. 첫 실행이 알려 준 이름 그대로입니다 —
+# 10-K 도 10-Q 도 `Investments in equity securities` 였습니다.
+WANT_DEFAULT = "equity securit"
 
 # 본문에서 취득원가 자리를 찾는 말. 넓게 걸고, 걸린 자리의 글자를 그대로 찍습니다.
 COST_HINT = re.compile(r"\bcost\b|cost basis|amortized cost", re.I)
@@ -153,6 +159,10 @@ def text_of(body):
     txt = re.sub(r"<[^>]+>", " ", txt)
     txt = html.unescape(txt)
     txt = re.sub(r"[ \t ]+", " ", txt)
+    # **빈 칸이 줄을 길게 만듭니다.** 버크셔 표는 칸 사이에 빈 칸을 잔뜩
+    # 끼워 넣어서, 첫 실행에서 취득원가 줄이 글자 수 제한에 걸려 통째로
+    # 빠졌습니다. 이어지는 칸 경계를 하나로 줄입니다.
+    txt = re.sub(r"(?:\│[ ]*){2,}", "│ ", txt)
     return re.sub(r"\n{2,}", "\n", txt)
 
 
@@ -165,12 +175,12 @@ def hits(txt, names, limit=40):
     out = []
     for line in txt.splitlines():
         s = line.strip()
-        if len(s) < 8 or len(s) > 400:
+        if len(s) < 8 or len(s) > 1200:
             continue
         who = [n for n in names if n in s.upper()]
         if who and COST_HINT.search(s):
             out.append({"line": s, "names": who})
-        elif who and re.search(r"\d[\d,]{4,}", s) and "│" in s:
+        elif who and re.search(r"\$?\s?\d[\d,]{2,}", s) and "│" in s:
             # 이름과 큰 수가 한 줄에 있고 표의 칸 경계가 보이는 자리.
             # `cost` 는 표 머리글에만 있을 수 있습니다.
             out.append({"line": s, "names": who})
@@ -209,7 +219,7 @@ def filings_of(sub, forms):
     return out
 
 
-def one_filing(cik_int, filing, contact, names, show, notes):
+def one_filing(cik_int, filing, contact, names, show, notes, want, deep):
     """한 건의 제출 폴더를 훑습니다.
 
     **파일 이름을 짐작하지 않습니다** — 목차(index.json)가 주는 이름만 씁니다.
@@ -280,12 +290,21 @@ def one_filing(cik_int, filing, contact, names, show, notes):
                     named.append({"name": html.unescape(short.group(1)).strip(),
                                   "file": (fname.group(1).strip() if fname else "")})
             item["reports"] = named
-            picked = [n for n in named if REPORT_HINT.search(n["name"]) and n["file"]]
+            picked = [n for n in named
+                      if n["file"] and REPORT_HINT.search(n["name"])
+                      and not REPORT_SKIP.search(n["name"])]
+            # **이름은 전부 찍습니다.** 스물몇 줄이면 아무것도 아니고, 이 목록이
+            # 곧 어느 낱장을 열어야 하는지의 지도입니다. 첫 실행에서 절반만
+            # 찍는 바람에 `(Details)` 낱장들이 목록에서 잘렸습니다.
             print(f"    B 낱장 보고서 {len(named)}개 · 이름이 걸린 것 {len(picked)}개")
-            for n in picked[:show * 2]:
+            for n in picked:
                 print(f"        {n['file']:<12} {n['name']}")
             # ── B-2. 걸린 낱장을 실제로 받아 봅니다 (작습니다) ──
-            for n in picked[:show]:
+            # 먼저 열 것을 앞으로 당깁니다 — 첫 실행이 알려 준 이름입니다.
+            hit = re.compile(re.escape(want), re.I) if want else None
+            order = ([n for n in picked if hit and hit.search(n["name"])]
+                     + [n for n in picked if not (hit and hit.search(n["name"]))])
+            for n in order[:show]:
                 rr = get(f"{base}/{n['file']}", contact)
                 notes.append(save(rr, f"{tag}/{safe(n['file'])}"))
                 if not rr["ok"]:
@@ -294,9 +313,17 @@ def one_filing(cik_int, filing, contact, names, show, notes):
                          if l.strip()]
                 n["bytes"] = rr["bytes"]
                 n["lines"] = len(lines)
-                print(f"        ── {n['file']} ({n['name']}) {rr['bytes']:,}b")
-                for l in lines[:24]:
-                    print(f"           {l[:240]}")
+                print(f"        ── {n['file']} ({n['name']}) {rr['bytes']:,}b · {len(lines)}줄")
+                for l in lines[:12]:
+                    print(f"           {l[:400]}")
+                # **여기가 핵심입니다.** 앞머리만 찍으면 표 앞의 설명 문단에서
+                # 끝납니다(첫 실행이 그랬습니다). 보유 종목 이름이 걸린 줄을
+                # 따로 모아 찍습니다 — 취득원가 표가 있다면 그 줄들입니다.
+                marked = [l for l in lines if any(x in l.upper() for x in names)]
+                n["name_lines"] = len(marked)
+                print(f"           ── 보유 종목 이름이 걸린 줄 {len(marked)}개")
+                for l in marked[:deep]:
+                    print(f"           · {l[:400]}")
         else:
             print(f"    B FilingSummary.xml 을 못 받았습니다 — {r['error']}")
     else:
@@ -313,8 +340,12 @@ def main():
                     help="받을 서식. 10-Q 는 '얼마나 자주 잴 수 있나'의 답입니다")
     ap.add_argument("--count", type=int, default=1,
                     help="서식마다 최근 몇 건을 받을지")
-    ap.add_argument("--show", type=int, default=6,
+    ap.add_argument("--show", type=int, default=8,
                     help="로그에 찍을 줄 수 (아티팩트를 개발 환경에서 못 받습니다)")
+    ap.add_argument("--want", default=WANT_DEFAULT,
+                    help="이 이름이 든 낱장을 먼저 엽니다 (빈 칸이면 순서대로)")
+    ap.add_argument("--lines", type=int, default=80,
+                    help="낱장에서 이름이 걸린 줄을 몇 개까지 찍을지")
     ap.add_argument("--cik", default="", help="registry 에 없을 때만")
     a = ap.parse_args()
 
@@ -385,7 +416,8 @@ def main():
     result = []
     for form in forms:
         for filing in [f for f in found if f["form"] == form][:a.count]:
-            result.append(one_filing(cik_int, filing, contact, names, a.show, notes))
+            result.append(one_filing(cik_int, filing, contact, names, a.show, notes,
+                                     a.want, a.lines))
 
     summary = {
         "probed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
