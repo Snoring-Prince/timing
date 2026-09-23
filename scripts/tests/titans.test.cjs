@@ -547,8 +547,9 @@ test('the real split record replaces the guess where the data reaches', () => {
   const days = run('JSON.stringify([...SPLIT_BOOK["037833"].days.entries()])');
   assert.equal(days, JSON.stringify([['2014-06-09',7],['2020-08-31',4]]));
   // 그 분할이 든 분기만 배수가 나오고, 없는 분기는 1 이다.
-  assert.equal(run('realSplit("037833","2020-06-30","2020-09-30")'), 4);
-  assert.equal(run('realSplit("037833","2021-06-30","2021-09-30")'), 1);
+  assert.equal(run('realSplit("037833","2020-06-30","2020-09-30").sh'), 4);
+  assert.equal(run('realSplit("037833","2020-06-30","2020-09-30").px'), 4);
+  assert.equal(run('realSplit("037833","2021-06-30","2021-09-30").sh'), 1);
   // **자료가 못 미치는 옛 분기는 `undefined` 여야 한다** — 1 이라고 답하면
   // 아메리칸익스프레스 2000 년 3:1 이 통째로 사라진다.
   assert.equal(run('realSplit("025816","2000-03-31","2000-06-30")'), undefined);
@@ -567,17 +568,87 @@ test('a deeper split scan opens the quarters the guess used to own', () => {
   }
   const run = page(real);
   run('__P=' + JSON.stringify(deep) + ';acceptPrices(__P);');
-  assert.equal(run('realSplit("025816","2000-03-31","2000-06-30")'), 3);
+  assert.equal(run('realSplit("025816","2000-03-31","2000-06-30").sh'), 3);
   // 분할이 없던 옛 분기는 1 이다 — 덮은 구간 안이므로 추측기로 넘기지 않는다.
-  assert.equal(run('realSplit("025816","2001-03-31","2001-06-30")'), 1);
+  assert.equal(run('realSplit("025816","2001-03-31","2001-06-30").sh'), 1);
   // **표식이 없는 옛 파일은 예전 그대로** 가격 시작일까지만 덮는다.
   assert.equal(withPrices(real)('realSplit("025816","2000-03-31","2000-06-30")'), undefined);
 });
 
-test('switching to the real record does not move a single holding', () => {
+test('a spin-off moves the price basis but never the share count', () => {
+  const run = withPrices(real);
+  // 제퍼리스 2023-01-17 `1046:1000` — 주식수는 433,558 주 그대로였다.
+  const jef = JSON.parse(run('JSON.stringify(realSplit("47233W","2022-09-30","2023-03-31"))'));
+  assert.equal(jef.sh, 1);
+  assert.ok(Math.abs(jef.px-1.046)<1e-12, '가격 보정이 1.046 이 아니다');
+  // 애플 액면분할은 둘이 같다 — 주식수도 가격도 4 배.
+  assert.equal(run('realSplit("037833","2020-06-30","2020-09-30").sh'), 4);
+  assert.equal(run('realSplit("037833","2020-06-30","2020-09-30").px'), 4);
+});
+
+test('only the spun-off holding moves, and by exactly the event factor', () => {
   const guessed = page(real), measured = withPrices(real);
-  const pick = 'JSON.stringify(build().list.map(r=>[r.key,r.avgCost,r.dn,r.shares]))';
-  assert.equal(measured(pick), guessed(pick));
-  // 애플은 두 길 모두 같은 값이어야 한다(분할 ×4 를 양쪽이 똑같이 잡는다).
+  const pick = k => `JSON.stringify(build().list.map(r=>[r.key,r.${k}]))`;
+  // 주식수·증감은 **한 줄도** 안 움직인다 — 인적분할은 주식수를 안 건드린다.
+  assert.equal(measured(pick('dn')), guessed(pick('dn')));
+  assert.equal(measured(pick('shares')), guessed(pick('shares')));
+  // 평균단가가 달라지는 줄은 제퍼리스 하나뿐이고, 비가 정확히 1.046 이다.
+  const A = JSON.parse(guessed(pick('avgCost'))), B = JSON.parse(measured(pick('avgCost')));
+  const moved = A.filter(([k,v],i)=>Math.abs(v-B[i][1])>1e-9).map(([k])=>k);
+  assert.deepEqual(JSON.parse(JSON.stringify(moved)), ['47233W']);
+  const [, before] = A.find(([k])=>k==='47233W'), [, after] = B.find(([k])=>k==='47233W');
+  assert.ok(Math.abs(before/after-1.046)<1e-9, `제프리스 비가 1.046 이 아니다: ${before/after}`);
+  // 애플은 그대로다(분할 ×4 를 양쪽이 똑같이 잡는다).
   assert.ok(Math.abs(measured('build().list.find(r=>r.key==="037833").avgCost')-39.59171393884013)<1e-9);
+});
+
+test('a spin-off restates the price column but leaves every share count alone', () => {
+  const guessed = page(real), measured = withPrices(real);
+  const life = run => JSON.parse(run('JSON.stringify(build().list.find(r=>r.key==="47233W").life)'));
+  const A = life(guessed), B = life(measured);
+  assert.equal(A.length, B.length);
+  // 주식수와 증감은 한 점도 안 움직인다.
+  assert.deepEqual(JSON.parse(JSON.stringify(A.map(o=>[o.q,o.sh,o.dn]))),
+                   JSON.parse(JSON.stringify(B.map(o=>[o.q,o.sh,o.dn]))));
+  // 스핀오프 이전 분기의 가격만 정확히 1.046 배로 내려간다.
+  const before = A.filter((o,i)=>o.p!==null&&Math.abs(o.p-B[i].p)>1e-9);
+  assert.ok(before.length >= 1, '가격이 움직인 분기가 없다');
+  for (const o of before) {
+    const b = B[A.indexOf(o)];
+    assert.ok(o.q < '2023-01-17', `${o.q} 는 사건 이후인데 가격이 바뀌었다`);
+    assert.ok(Math.abs(o.p/b.p-1.046)<1e-9, `${o.q} 비가 1.046 이 아니다: ${o.p/b.p}`);
+  }
+});
+
+test('an event in the newest quarter never fakes a share change', () => {
+  // 애플은 이번 분기에 한 주도 안 건드렸다. 그 사이에 인적분할이 하나 있었다고
+  // 쳐도 `이번 분기` 칸은 0 이어야 한다 — 주식수를 안 건드리는 사건이므로.
+  const book = JSON.parse(JSON.stringify(priceBook));
+  for (const [key, one] of Object.entries(book.series)) {
+    one.splitsFrom = '1998-12-31';
+    if (key.startsWith('037833')) one.splits = {...one.splits, '2026-05-01': '1046.0:1000.0'};
+  }
+  const run = page(real);
+  run('__P=' + JSON.stringify(book) + ';acceptPrices(__P);');
+  assert.equal(run('build().list.find(r=>r.key==="037833").dn'), 0);
+  assert.equal(run('build().list.find(r=>r.key==="037833").shares'), 227917808);
+});
+
+test('the adjusted 13F price lands exactly on the stored close', () => {
+  // 이 변경의 근거다 — 13F 값 ÷ (그 날짜 이후 사건 전부) == 야후 종가.
+  const run = withPrices(real);
+  let checked = 0;
+  for (const q of real.quarters) for (const h of q.holdings) {
+    const s = priceBook.series[h.cusip];
+    if (!s || !h.shares || !h.value) continue;
+    const close = new Map(s.values).get(q.period);
+    if (close === undefined) continue;
+    let f = 1;
+    for (const [day, text] of Object.entries(s.splits || {}))
+      if (day > q.period) f *= run(`adjRatio(${JSON.stringify(text)})`) || 1;
+    assert.ok(Math.abs(h.value/h.shares/f - close) <= Math.max(0.01, close*0.001),
+      `${s.ticker} ${q.period}: ${h.value/h.shares/f} vs ${close}`);
+    checked++;
+  }
+  assert.ok(checked > 400, `대조한 분기가 너무 적다: ${checked}`);
 });
