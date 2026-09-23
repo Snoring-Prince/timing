@@ -557,6 +557,23 @@ test('the real split record replaces the guess where the data reaches', () => {
   assert.equal(run('(SPLIT_BOOK["47233W"]||{days:new Map()}).days.size'), 0);
 });
 
+test('a deeper split scan opens the quarters the guess used to own', () => {
+  // 수집기가 상장 때부터 훑으면 `splitsFrom` 이 붙고 15년 창 밖의 분할이 실려 온다.
+  // 아메리칸익스프레스 2000-05-11 3:1 이 그 자리다.
+  const deep = JSON.parse(JSON.stringify(priceBook));
+  for (const [key, one] of Object.entries(deep.series)) {
+    one.splitsFrom = '1970-01-01';
+    if (key.startsWith('025816')) one.splits = {...one.splits, '2000-05-11': '3.0:1.0'};
+  }
+  const run = page(real);
+  run('__P=' + JSON.stringify(deep) + ';acceptPrices(__P);');
+  assert.equal(run('realSplit("025816","2000-03-31","2000-06-30")'), 3);
+  // 분할이 없던 옛 분기는 1 이다 — 덮은 구간 안이므로 추측기로 넘기지 않는다.
+  assert.equal(run('realSplit("025816","2001-03-31","2001-06-30")'), 1);
+  // **표식이 없는 옛 파일은 예전 그대로** 가격 시작일까지만 덮는다.
+  assert.equal(withPrices(real)('realSplit("025816","2000-03-31","2000-06-30")'), undefined);
+});
+
 test('switching to the real record does not move a single holding', () => {
   const guessed = page(real), measured = withPrices(real);
   const pick = 'JSON.stringify(build().list.map(r=>[r.key,r.avgCost,r.dn,r.shares]))';

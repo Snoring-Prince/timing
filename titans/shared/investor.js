@@ -582,8 +582,12 @@ function acceptPrices(book){
        그대로 곱하면 틀립니다). */
     const kk=key.slice(0,6), book=SPLIT_BOOK[kk]||(SPLIT_BOOK[kk]={from:"",days:new Map(),bad:new Set()});
     /* 한 묶음에 종류가 여럿이면 **가장 늦게 시작하는 것**에 맞춥니다 — 한쪽만
-       덮인 구간을 덮었다고 치면 다른 쪽 분할을 못 보고 지나갑니다. */
-    if(clean[0][0]>book.from) book.from=clean[0][0];
+       덮인 구간을 덮었다고 치면 다른 쪽 분할을 못 보고 지나갑니다.
+       덮은 구간은 **가격이 시작하는 날이 아니라 분할을 훑은 날**입니다
+       (`splitsFrom`) — 가격은 15년치만 저장하지만 분할은 상장 때부터
+       훑습니다. 표식이 없는 옛 파일은 예전처럼 가격 시작일로 봅니다. */
+    const scanned=/^\d{4}-\d{2}-\d{2}$/.test(series.splitsFrom||"")?series.splitsFrom:clean[0][0];
+    if(scanned>book.from) book.from=scanned;
     for(const [day,text] of Object.entries(series.splits||{})){
       if(!/^\d{4}-\d{2}-\d{2}$/.test(day))continue;
       const f=splitRatio(text);

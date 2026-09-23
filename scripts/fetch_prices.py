@@ -27,6 +27,11 @@ from titans.registry import books  # noqa: E402
 OUT = ROOT / "data/titans/prices.json"
 UTC = dt.timezone.utc
 NY = ZoneInfo("America/New_York")
+# 가격은 15년치만 저장하지만 **분할은 상장 때부터** 훑는다. 13F 는 1998년부터
+# 있는데 분할 기록이 15년치뿐이면 그 이전 분기는 추측에 맡기게 된다.
+# 월봉으로 싸게 받을 수는 없다 — 정찰(2026-09-23)에서 AXP 1983-02-11 4:3 이
+# 월봉 응답에만 빠져 있었다. 그래서 일봉으로 받고 옛 바는 버린다.
+DEEP = dt.date(1970, 1, 1)
 
 
 def from_epoch(stamp):
@@ -145,7 +150,7 @@ def merge_series(old, values, splits, start, full):
         if max(incoming) < max(previous):
             raise ValueError("full refresh would remove newer saved closing prices")
         expected = [day for day in previous if day >= start and day <= max(incoming)]
-        if len(incoming) < len(expected)*.98:
+        if len([day for day in incoming if day >= start]) < len(expected)*.98:
             raise ValueError("full refresh is unexpectedly shorter than saved history")
     merged = incoming if full else previous | incoming
     return {"values": [[day, merged[day]] for day in sorted(merged) if day >= start], "splits": splits}
@@ -170,7 +175,7 @@ def collect(required, previous, now, full=False, known=None):
             if not ticker:
                 raise ValueError("exact CUSIP mapping unavailable")
             refresh = full or not old.get("values") or now.weekday() == 5
-            first = start if refresh else dt.date.fromisoformat(old["values"][-1][0])-dt.timedelta(days=10)
+            first = DEEP if refresh else dt.date.fromisoformat(old["values"][-1][0])-dt.timedelta(days=10)
             def download(day):
                 p1 = int(dt.datetime.combine(day, dt.time(), NY).timestamp())
                 url = ("https://query1.finance.yahoo.com/v8/finance/chart/"+urllib.parse.quote(ticker, safe="")+
@@ -178,8 +183,8 @@ def collect(required, previous, now, full=False, known=None):
                 payload = request(url)
                 parsed = parse_chart(payload, ticker, now)
                 first_trade = payload["chart"]["result"][0]["meta"].get("firstTradeDate")
-                if day == start and first_trade:
-                    expected = max(start, from_epoch(first_trade).astimezone(NY).date())
+                if day == DEEP and first_trade:
+                    expected = max(DEEP, from_epoch(first_trade).astimezone(NY).date())
                     if dt.date.fromisoformat(parsed[0][0][0]) > expected+dt.timedelta(days=14):
                         raise ValueError("response starts too late for a full history")
                     elapsed = (dt.date.fromisoformat(parsed[0][-1][0])-expected).days
@@ -192,13 +197,15 @@ def collect(required, previous, now, full=False, known=None):
             if not refresh:
                 if any(old.get("splits", {}).get(day) != ratio for day, ratio in splits.items()):
                     refresh = True
-                    values, splits = download(start)
+                    values, splits = download(DEEP)
                 else:
                     splits = old.get("splits", {}) | splits
             if (now.astimezone(NY).date()-dt.date.fromisoformat(values[-1][0])).days > 7:
                 raise ValueError("last closing price is more than seven days old")
+            scanned = DEEP.isoformat() if refresh else old.get("splitsFrom")
             series[cusip] = {**identity, "ticker": ticker, "currency": "USD",
-                            **merge_series(old, values, splits, start.isoformat(), refresh)}
+                            **merge_series(old, values, splits, start.isoformat(), refresh),
+                            **({"splitsFrom": scanned} if scanned else {})}
             print(f"{cusip} {ticker}: {len(series[cusip]['values'])} days, last {series[cusip]['values'][-1][0]}", flush=True)
         except Exception as exc:
             errors.append(f"{cusip} {ticker or '?'}: {exc}")
