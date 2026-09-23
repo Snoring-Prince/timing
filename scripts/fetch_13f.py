@@ -342,12 +342,20 @@ def merge_amendments(base: dict, accs: list[str], contact: str):
             "want_total": want_total, "want_lines": want_lines}, None
 
 
-def apply_amendments(quarters: list[dict], contact: str) -> int:
+def apply_amendments(quarters: list[dict], contact: str) -> tuple[int, list[str]]:
     """정정이 달린 분기의 수치를 다시 셉니다.
 
     **이미 반영한 분기는 다시 받지 않습니다**(`amended_applied` 와 대조).
-    매주 도는 작업이라, 안 그러면 같은 원문을 영원히 다시 받습니다."""
+    매주 도는 작업이라, 안 그러면 같은 원문을 영원히 다시 받습니다.
+
+    돌려주는 것은 (반영한 분기 수, **합치지 못한 분기 목록**)입니다.
+    합치지 못한 분기는 원본 숫자로 남으므로 **조용히 넘어가면 안 됩니다** —
+    예전에는 여기서 `continue` 만 하고 종료코드가 0 이라, 워크플로가 초록불인데
+    그 분기만 틀린 채로 있었습니다. `amend_gap`(2013년 이전 텍스트)은 영영 못
+    합치는 **알려진 상태**라 여기 안 넣습니다 — 넣으면 매주 43건이 실패로 울려
+    진짜 실패가 묻힙니다(CLAUDE.md 6-2)."""
     done = 0
+    unmerged: list[str] = []
     for q in quarters:
         accs = q.get("amended_by") or []
         # `amend_gap` 이 적힌 분기는 **영영 못 합치는 것**이라 다시 안 받습니다.
@@ -366,6 +374,7 @@ def apply_amendments(quarters: list[dict], contact: str) -> int:
                 q["amend_gap"] = "pre-xml"
                 continue
             print(f"    {q['period']} 정정 병합 보류 — 원본을 {why}")
+            unmerged.append(f"{q['period']} (원본을 {why})")
             continue
 
         merged, bad = merge_amendments(base, accs, contact)
@@ -373,6 +382,7 @@ def apply_amendments(quarters: list[dict], contact: str) -> int:
             # 합치지 않고 **원본 숫자를 그대로 둡니다.** 반쯤 합친 분기를
             # 남기는 것보다 안 합친 것이 낫습니다.
             print(f"    {q['period']} 정정 병합 보류 — {bad}")
+            unmerged.append(f"{q['period']} ({bad})")
             continue
 
         rows = merged["rows"]
@@ -403,7 +413,7 @@ def apply_amendments(quarters: list[dict], contact: str) -> int:
         print(f"  {q['period']}  정정 {len(accs)}건 반영 → 줄 {len(rows)} · "
               f"종목 {len(held)} · ${q['total']/1e9:,.1f}B   {kinds}{mark}")
         done += 1
-    return done
+    return done, unmerged
 
 
 def configure(slug):
@@ -559,7 +569,7 @@ def main(slug=None) -> int:
     # 정정을 **실제 수치에 반영합니다.** 표시만 해 두던 것을 2026-09-20 에
     # 바꿨습니다 — 원문 8건을 받아 보니 표지가 종류를 명시하고 있었습니다.
     # 이미 반영한 분기는 다시 받지 않으므로 평소 실행에서는 아무 일도 안 합니다.
-    merged_n = apply_amendments(quarters, contact)
+    merged_n, unmerged = apply_amendments(quarters, contact)
     if merged_n:
         print(f"정정을 반영한 분기 {merged_n}개")
 
@@ -590,8 +600,14 @@ def main(slug=None) -> int:
     print(f"공시 총액과 어긋나는 분기: {len(bad)}개" +
           (f" — {', '.join(q['period'] for q in bad)}" if bad else " (전부 일치)"))
     if amended:
-        print(f"정정 공시가 있는 분기 {len(amended)}개 (원본 숫자를 쓰는 중): "
-              f"{', '.join(q['period'] for q in amended)}")
+        # 예전에는 **합쳐 놓고도** `원본 숫자를 쓰는 중` 이라고 찍었습니다.
+        # 반영한 것과 못 한 것을 갈라 적습니다.
+        done_q = [q for q in amended if q.get("amended_applied")]
+        raw_q = [q for q in amended if not q.get("amended_applied")]
+        print(f"정정 공시가 있는 분기 {len(amended)}개"
+              + (f" · 반영함 {len(done_q)}개" if done_q else "")
+              + (f" · 원본 숫자 그대로 {len(raw_q)}개 "
+                 f"({', '.join(q['period'] for q in raw_q)})" if raw_q else ""))
     # ── 새로 뜬 정정 공시를 알립니다 ────────────────────────────────
     # 정정은 이제 **자동으로 반영됩니다**(`apply_amendments`). 그래도 알립니다 —
     # 값이 바뀌었다는 사실 자체를 사람이 알아야 하고, 합치지 못한 경우
@@ -637,6 +653,25 @@ def main(slug=None) -> int:
     for h in last["holdings"][:10]:
         print(f"    {h['name'][:34]:<34} ${h['value']/1e9:>7.2f}B  "
               f"{h['shares']:>14,}주  줄{h['lines']}")
+
+    # ── 반쪽짜리 실행은 **빨간불로 끝냅니다** ─────────────────────────
+    # 예전에는 `failed and not got` 일 때만 실패였습니다. 즉 **한 분기라도
+    # 성공하면** 나머지가 실패해도 종료코드 0 이었고, 빠진 분기가 있는 JSON 이
+    # 조용히 커밋됐습니다. 그러면 화면이 두 분기치 증감을 `이번 분기` 라고
+    # 적습니다(9-3-1 의 '빠진 분기' 항목).
+    #
+    # **받은 것은 그대로 저장한 뒤에** 실패로 끝냅니다 — 6-2 의 "데이터를 먼저
+    # 커밋하고 그 뒤에 본다"와 같은 순서이고, 워크플로의 저장 단계가
+    # `if: always()` 라 이 종료코드가 자료를 막지 않습니다.
+    why = []
+    if failed:
+        why.append(f"원문을 못 받은 분기 {failed}개")
+    if unmerged:
+        why.append(f"정정을 못 합친 분기 {len(unmerged)}개 — {', '.join(unmerged)}")
+    if why:
+        print("\n*** 반쪽짜리 실행입니다: " + " · ".join(why) + " ***")
+        print("    받은 것은 저장했습니다. 빠진 분기는 다음 실행에서 다시 받습니다.")
+        return 1
     return 0
 
 

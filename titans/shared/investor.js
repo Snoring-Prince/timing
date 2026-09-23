@@ -20,26 +20,37 @@ en:{
   brand:"Titans' picks",
   tagline:n=>`${n} holdings · latest filing`,
   mobileGuide:"Numbers, left to right: shares held · share change this quarter · estimated return. Right: value · portfolio weight.",
-  tradeBasis:"Trade amounts are estimates from share changes and quarter-end prices. Full exits use the previous quarter-end value.",
+  tradeBasis:"Trade amounts are estimated from share changes and quarter-end prices. Full exits use the previous quarter-end value.",
   asOf:d=>`As of ${d}`,
   filedOn:d=>`filed ${d}`,
   quarterHead:d=>`${qLabel("en",d)} (${qSpan("en",d)})`,
-  kNew:"new", kAdd:"added", kTrim:"trimmed", kHold:"held", kOut:"exited",
-  positions:n=>`${n} positions`,
+  /* **`held` 를 여기 쓰지 않습니다.** 열 머리글이 이미 `Shares held` 이고
+     전량매도 줄이 `held 1.5 years` 를 씁니다 — 한 화면에서 같은 낱말이
+     세 가지를 가리켰습니다. 한국어는 `보유`/`유지` 로 갈라져 있습니다. */
+  kNew:"new", kAdd:"added", kTrim:"trimmed", kHold:"unchanged", kOut:"exited",
+  /* 영어는 단수를 따로 적는다. 한국어는 `26종목` 하나로 끝난다. */
+  positions:n=>`${n} position${n===1?"":"s"}`,
   bought:(n,v)=>`<i>Largest buy</i><span>${n}</span><em>${v} est.</em>`,
   sold:(n,v)=>`<i>Largest sale</i><span>${n}</span><em>${v} est.</em>`,
-  evNew:"New", evBack:"Back in", evOut:"Sold out",
+  /* **계기판과 같은 말을 씁니다.** 위에서 `EXITED` 라고 세어 놓고 여기서만
+     `Sold out` 이라고 부르면 한 사건이 두 이름을 갖습니다. 그리고 영어
+     `sold out` 은 "품절"로 먼저 읽힙니다. */
+  evNew:"New", evBack:"Re-entered", evOut:"Exited",
   heldFor:"held",
   costArrow:d=>`return = estimated average cost \u2192 price on ${d} · before dividends`,
   /* 가운데 칸은 좁다. **왜 숫자가 없는지만** 짧게 적고, 긴 설명은 각주가 한다.
      `집계 전` 은 우리 자료(1998년 첫 공시)보다 먼저 들고 있던 종목이다 —
      연도를 줄마다 적어 봐야 방문자는 그 해가 무슨 뜻인지 모른다(사용자 지적). */
   noRetOld:"held before\nrecords", noRetNew:"just in",
-  yr:n=>n<1?`${Math.round(n*12)} mo`:(n%1?`${n.toFixed(1)} yr`:`${n} yr`),
+  yr:n=>{ if(n<1){ const m=Math.round(n*12); return `${m} month${m===1?"":"s"}`; }
+          const v=n%1?n.toFixed(1):String(n); return `${v} year${v==="1"?"":"s"}`; },
   /* 목록 머리글. **안 변하는 말은 머리에 한 번만** 적는다(4번 성적표와 같은 판단). */
   colShares:"Shares held", colQtr:"This quarter", colRet:"Est. return", colVal:"Value · weight",
-  lifeSum:(n,lo,hi)=>`${n} quarters · low ${lo} → high ${hi}`,
-  lifeThin:"only one filing — nothing to draw yet",
+  /* 빠진 분기가 있으면 `This quarter` 라고 쓸 수 없습니다 — 그 증감은 두
+     분기치입니다. 머리글과 카드의 안내 줄이 같이 바뀝니다. */
+  colQtrGap:"Since last filing",
+  gapNote:(d,n)=>`The previous filing is ${qLabel("en",d)}, not the quarter before this one \u2014 the changes below cover ${n} quarters.`,
+  lifeThin:"Only one filing — nothing to draw yet.",
   lifeSpans:["1Y","5Y","10Y","15Y"],
   lifeSpanLab:"how far back to show",
   lifePrior:(b,s)=>`<span>Earlier</span><span>BUY <em class="up">${b}</em></span><span>SELL <em class="down">${s}</em></span>`,
@@ -48,18 +59,17 @@ en:{
   /* **`Trade record` 라고 쓰지 않습니다.** 13F 는 분기 마지막 날의 스냅샷뿐이라
      한 줄은 체결이 아니라 그 분기 동안의 순변화입니다. */
   recShow:"Show quarter-by-quarter record", recHide:"Hide quarter-by-quarter record",
-  recCount:n=>`${n} quarters`,
-  rcDate:"Filing", rcMove:"Change", rcPrice:"Quarter-end price", rcValue:"Value",
-  rcIn:"Entered", rcBack:"Back in", rcOut:"Sold out", rcPre:"Held before records",
-  lifeQuiet:"never bought or sold across this history",
-  lifeScroll:"drag sideways for earlier years",
-  buy:"BUY", sell:"SELL",
-  same:"held",
+  recCount:n=>`${n} quarter${n===1?"":"s"}`,
+  /* **`Filing` 이 아닙니다.** 그 칸에 찍히는 것은 분기 마지막 날이고,
+     화면 머리에는 `filed Aug 14, 2026` 이 따로 있습니다 — 같은 화면이
+     `filing` 을 두 날짜로 쓰게 됩니다. 한국어 `공시 분기` 와 같은 뜻. */
+  rcDate:"Quarter end", rcMove:"Change", rcPrice:"Quarter-end price", rcValue:"Value",
+  rcIn:"Entered", rcBack:"Re-entered", rcOut:"Exited", rcPre:"Held before records",
+  same:"unchanged",
   topOnly:(n,p)=>`Top ${n} — ${p} of the total value`,
   allShown:n=>`All ${n} positions shown`,
   foldOpen:n=>`Show ${n} more`, foldClose:n=>`Hide ${n}`,
   noData:"Could not load the filings.",
-  aboutH:"How to read this",
   footTitle:"Disclaimer",
   /* 각주는 **네 문단**입니다. 사용자가 직접 줄여서 문장을 적어 줬습니다 —
      *"너무 장황한데 … 이정도면 충분할 듯."* 순서는 출처 → 자료의 성격 →
@@ -78,11 +88,11 @@ en:{
 ko:{
   locale:"ko-KR", dir:"ltr", tab:"한국어",
   docTitle:(n,y)=>`${n} 포트폴리오 — ${y}년부터의 13F 공시`,
-  metaDesc:n=>`${n}의 최근 SEC 13F 공시 기준 보유 종목 — 분기말 기록으로 비중, 주식수 증감과 추정 수익률을 살펴봅니다.`,
+  metaDesc:n=>`${n}의 최근 SEC 13F 공시 기준 보유 종목 — 분기말 기록으로 비중, 주식 수 증감과 추정 수익률을 살펴봅니다.`,
   brand:"대가들의 선택",
   tagline:n=>`${n} · 최근 공시 기준 보유 종목`,
-  mobileGuide:"숫자는 왼쪽부터 보유 주식수 · 이번 분기 주식수 증감 · 추정 수익률입니다. 오른쪽은 금액 · 전체 보유 금액에서의 비중입니다.",
-  tradeBasis:"매매 금액은 주식수 증감과 분기말 가격으로 추정합니다. 전량 매도는 직전 분기말 보유 금액을 사용합니다.",
+  mobileGuide:"숫자는 왼쪽부터 보유 주식 수 · 이번 분기 주식 수 증감 · 추정 수익률입니다. 오른쪽은 금액 · 전체 보유 금액에서의 비중입니다.",
+  tradeBasis:"매매 금액은 주식 수 증감과 분기말 가격으로 추정합니다. 전량 매도는 직전 분기말 보유 금액을 사용합니다.",
   asOf:d=>`${d} 기준`,
   filedOn:d=>`${d} 공시`,
   quarterHead:d=>`${qLabel("ko",d)} (${qSpan("ko",d)})`,
@@ -103,8 +113,9 @@ ko:{
   yr:n=>n<1?`${Math.round(n*12)}개월`:(n%1?`${n.toFixed(1)}년`:`${n}년`),
   /* 목록 머리글. **안 변하는 말은 머리에 한 번만** 적는다(4번 성적표와 같은 판단). */
   colShares:"보유 주식 수", colQtr:"이번 분기", colRet:"추정 수익률", colVal:"금액 · 비중",
-  lifeSum:(n,lo,hi)=>`${n}분기 · 최저 ${lo} → 최고 ${hi}`,
-  lifeThin:"공시가 한 번뿐이라 아직 그릴 것이 없습니다",
+  colQtrGap:"직전 공시 대비",
+  gapNote:(d,n)=>`직전 공시가 바로 앞 분기가 아니라 ${qLabel("ko",d)}입니다 \u2014 아래 증감은 ${n}개 분기치입니다.`,
+  lifeThin:"공시가 한 번뿐이라 아직 그릴 것이 없습니다.",
   lifeSpans:["1년","5년","10년","15년"],
   lifeSpanLab:"얼마나 거슬러 볼까",
   lifePrior:(b,s)=>`<span>이 기간 이전</span><span>매수 <em class="up">${b}</em>건</span><span>매도 <em class="down">${s}</em>건</span>`,
@@ -114,20 +125,16 @@ ko:{
   recCount:n=>`${n}개 분기`,
   rcDate:"공시 분기", rcMove:"변화", rcPrice:"분기말 가격", rcValue:"평가 금액",
   rcIn:"진입", rcBack:"재진입", rcOut:"전량매도", rcPre:"집계 전부터 보유",
-  lifeQuiet:"이 기간에 사고판 적이 없습니다",
-  lifeScroll:"옆으로 끌면 그 이전이 나옵니다",
-  buy:"BUY", sell:"SELL",
   same:"유지",
   topOnly:(n,p)=>`상위 ${n}종목 · 전체 투자 금액의 ${p}`,
   allShown:n=>`${n}종목 전부 펼침`,
   foldOpen:n=>`${n}개 종목 더 보기`, foldClose:n=>`${n}개 종목 숨기기`,
   noData:"공시를 불러오지 못했습니다.",
-  aboutH:"보는 법",
   footTitle:"유의사항",
   foot:()=>[
     `출처: ${TT.name.ko}(CIK ${TT.cik})가 SEC 에 낸 Form 13F-HR`,
     "13F 공시는 분기의 마지막 날 하루를 적은 것이고, 공시는 그로부터 45일 안에 냅니다. 그 사이에 이미 바뀌었을 수 있습니다. 13F 공시에는 미국 상장 주식만 실립니다 \u2014 현금\u00B7채권\u00B7해외 주식\u00B7통째로 소유한 회사\u00B7공매도는 포함되어 있지 않습니다.",
-    "매수 평균가와 수익률은 추정입니다. 13F 공시에는 체결가가 없어서 금액\u00F7주식수로 어림한 값이라 크게 빗나갈 수 있습니다.",
+    "매수 평균가와 수익률은 추정입니다. 13F 공시에는 체결가가 없어서 금액\u00F7주식 수로 어림한 값이라 크게 빗나갈 수 있습니다.",
     "본 사이트는 특정 금융상품이나 자산에 대한 투자 권유나 추천이 아니며, 투자의 최종 판단과 책임은 전적으로 투자자 본인에게 있습니다."
   ]
 }
@@ -178,6 +185,8 @@ function mountInvestorShell(){
   </header>
   <section class="panel fade" id="quarter" hidden>
     <h2 id="qhead">This quarter</h2>
+    <!-- 자료에 구멍이 났을 때만 나옵니다. 평소에는 hidden 이라 자리도 안 씁니다. -->
+    <p class="gapnote" id="gapnote" hidden></p>
     <div class="tally" id="tally"></div>
     <div class="says" id="says"></div>
     <p class="trade-basis" id="tradebasis"></p>
@@ -333,9 +342,22 @@ function title(s){
 }
 
 /* ══ 그리기 ══════════════════════════════════════════════════════════ */
+/* 두 공시 사이에 분기가 몇 개인가. 바로 앞 분기면 1 이다.
+   **수집이 한 분기를 놓치면 `qs[len-2]` 가 두 분기 전이 됩니다** — 그대로
+   두면 두 분기치 증감을 `이번 분기` 라고 적습니다(실측: 2026Q1 을 빼면
+   BoA 감소량이 3,023만주 대신 3,390만주로 찍힙니다). 자료에 구멍이 났다는
+   것을 화면이 스스로 말하게 하려고 셉니다. */
+const qIndex=iso=>{
+  const y=+String(iso).slice(0,4), m=+String(iso).slice(5,7);
+  return y*4+Math.floor((m-1)/3);
+};
+const qGap=(a,b)=>qIndex(b)-qIndex(a);
+
 function build(){
   const qs=RAW.quarters;
   const cur=qs[qs.length-1], prv=qs[qs.length-2];
+  /* 1 = 정상 · 2 이상 = 사이에 빠진 분기가 있음 · 0 = 직전 공시가 아예 없음 */
+  const gap=prv?qGap(prv.period,cur.period):0;
   const C=merge(cur), P=prv?merge(prv):new Map();
   const tc=[...C.values()].reduce((s,a)=>s+a.value,0);
   const tp=[...P.values()].reduce((s,a)=>s+a.value,0);
@@ -359,8 +381,10 @@ function build(){
     const st=startOf(a.key);
     /* 현재 분기도 차트와 같은 분할 보정을 합니다. 분할로 늘어난 주식은
        매수가 아닙니다 — 증감·계기판·최대 매수 모두 같은 기준이어야 합니다. */
-    const f=p&&p.shares>0&&p.value>0&&a.shares>0&&a.value>0
-      ?splitFactor(a.shares/p.shares,(p.value/p.shares)/(a.value/a.shares)):null;
+    const real=p?realSplit(a.key,prv.period,cur.period):undefined;
+    const f=!(p&&p.shares>0&&p.value>0&&a.shares>0&&a.value>0)?null
+      :real===undefined?splitFactor(a.shares/p.shares,(p.value/p.shares)/(a.value/a.shares))
+      :(real!==1?real:null);
     const prevShares=p?p.shares*(f||1):null;
     const dn=p?a.shares-prevShares:a.shares;
     const dsh=(prevShares>0)?(a.shares/prevShares-1):null;
@@ -370,8 +394,12 @@ function build(){
       w:a.value/tc*100,
       dsh,
       flat:dsh!==null&&Math.abs(dsh)<5e-4,
-      isNew:!p,
-      back:!p&&everBefore(a.key),
+      /* **직전 공시가 없으면 `신규` 라고 부를 수 없습니다.** 비교할 대상이
+         없는 것이지 이번에 처음 산 것이 아닙니다 — 그대로 두면 첫 공시
+         하나만 있는 투자자의 전 종목이 `신규` 로 찍힙니다. */
+      noPrev:!prv,
+      isNew:!!prv&&!p,
+      back:!!prv&&!p&&everBefore(a.key),
       start:st.period, years:st.qtrs/4,
       avgCost:cb.avg, nowPrice:cb.last,
       /* 첫 공시(1998-12-31)에 이미 들어 있던 종목은 사들이는 장면이 안 보인다.
@@ -397,7 +425,7 @@ function build(){
     return {...a, years:(qs.length-1-i)/4, netUSD:-a.value};
   }).sort((x,y)=>y.value-x.value):[];
 
-  return {cur,prv,list,out,tc,tp};
+  return {cur,prv,gap,list,out,tc,tp};
 }
 
 function tallyOf(B){
@@ -492,6 +520,45 @@ let TICKERS={};
 // 실제 공시 가격만 표시하고, 말풍선에도 종가라고 부르지 않습니다.
 let PRICE_SERIES={};
 let PRICE_ASOF="";
+/* 발행사(CUSIP 앞 여섯 자리)별 **진짜 액면분할**. `{from, days:Map(날짜→배수)}`
+   — `from` 은 자료가 시작하는 날이라 그 이전 분기는 알 수 없습니다. */
+let SPLIT_BOOK={};
+
+/* ══ 야후의 `splits` 는 분할 목록이 아닙니다 ═══════════════════════
+   **'주가를 보정해야 하는 사건' 목록**이라 스핀오프·특별배당이 섞여 있습니다.
+   실측으로 확인했습니다 — 제퍼리스 2023-01-17 `1046:1000` 이 적혀 있는데
+   버크셔의 주식수는 그 분기 내내 **433,558 주 그대로**였습니다(스핀오프라
+   주가만 내려간 것). 그대로 쓰면 **없는 분할을 적용하게 됩니다.**
+
+   **갈라내는 법은 기약분수입니다.**
+
+     진짜 분할   2:1 · 4:1 · 7:1 · 20:1 · 1:10       ← 줄이면 작은 정수
+     분할 아님   1017:1000 · 523:500 · 267:250 ·
+                 10000:9983 · 310:1 · 1001:500       ← 레나·옥시덴탈·제퍼리스
+                                                        스핀오프 · Ally 전환 ·
+                                                        구글 C주 배분
+══════════════════════════════════════════════════════════════════ */
+const SPLIT_MAX=20;
+function splitRatio(text){
+  const m=/^(\d+(?:\.0+)?):(\d+(?:\.0+)?)$/.exec(String(text||""));
+  if(!m)return null;
+  const n=Number(m[1]), d=Number(m[2]);
+  if(!Number.isInteger(n)||!Number.isInteger(d)||n<=0||d<=0)return null;
+  const gcd=(a,b)=>b?gcd(b,a%b):a, k=gcd(n,d), a=n/k, b=d/k;
+  /* 역분할(1:10)도 여기서 걸러집니다 — 추측으로는 아예 못 잡던 것입니다. */
+  return (a===b||a>SPLIT_MAX||b>SPLIT_MAX)?null:a/b;
+}
+
+/* 두 공시 날짜 사이의 진짜 분할 배수. 자료가 그 구간을 안 덮으면
+   `undefined` 를 돌려주어 **추측기로 넘깁니다** — 모르는 것을 1 이라고
+   답하면 옛 분기의 분할이 통째로 사라집니다. */
+function realSplit(key,from,to){
+  const book=SPLIT_BOOK[key];
+  if(!book||!from||from<book.from)return undefined;
+  let f=1;
+  for(const [day,v] of book.days) if(day>from&&day<=to) f*=v;
+  return f;
+}
 
 // TITAN.prices에는 자체 종가 JSON 주소를 설정합니다. 공급처 조건은 CLAUDE.md에
 // 기록합니다. 외부 공급자 요청·API 키는 방문자 화면에 넣지 않습니다.
@@ -507,8 +574,25 @@ function acceptPrices(book){
       if(Number.isFinite(ms)&&new Date(ms).toISOString().slice(0,10)===o[0])byDate.set(o[0],[o[0],o[1]]);
     }
     const clean=[...byDate.values()].sort((a,b)=>a[0].localeCompare(b[0]));
-    if(clean.length)PRICE_SERIES[key]={ticker:series.ticker.replace(/[^A-Za-z0-9.^=-]/g,""),values:clean};
+    if(!clean.length)continue;
+    PRICE_SERIES[key]={ticker:series.ticker.replace(/[^A-Za-z0-9.^=-]/g,""),values:clean};
+    /* 분할은 **발행사 단위로** 모읍니다 — 목록이 알파벳 A·C 를 한 줄로 묶으므로
+       계산도 같은 열쇠를 씁니다. 두 종류가 같은 날 **다른 배수**를 말하면
+       그 날은 버리고 추측기로 넘깁니다(한쪽만 쪼개진 것을 합산 주식수에
+       그대로 곱하면 틀립니다). */
+    const kk=key.slice(0,6), book=SPLIT_BOOK[kk]||(SPLIT_BOOK[kk]={from:"",days:new Map(),bad:new Set()});
+    /* 한 묶음에 종류가 여럿이면 **가장 늦게 시작하는 것**에 맞춥니다 — 한쪽만
+       덮인 구간을 덮었다고 치면 다른 쪽 분할을 못 보고 지나갑니다. */
+    if(clean[0][0]>book.from) book.from=clean[0][0];
+    for(const [day,text] of Object.entries(series.splits||{})){
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(day))continue;
+      const f=splitRatio(text);
+      if(f===null)continue;
+      if(book.days.has(day)&&book.days.get(day)!==f) book.bad.add(day);
+      book.days.set(day,f);
+    }
   }
+  for(const book of Object.values(SPLIT_BOOK)) for(const day of book.bad) book.days.delete(day);
   PRICE_ASOF=Object.values(PRICE_SERIES).map(s=>s.values.at(-1)[0]).sort().at(-1)||"";
 }
 
@@ -667,21 +751,40 @@ function markHTML(r){
    나옵니다.** 실측으로 확인한 숫자입니다 — 분할을 안 잡으면 이 화면은 거짓말을 합니다.
 
    분할은 공시 자체에서 찾습니다: 주식수가 f 배로 뛰면서 가격이 꼭 1/f 로 내려간 분기.
-   **정수 배수만 인정합니다.** 1.5 배를 후보에 넣었더니 '55% 더 산 분기'(애플 2016-06)와
-   '주식을 크게 늘린 분기'(레너드 2026-03)가 분할로 잡혔습니다. 정수만 두면
-   현재 26묶음에서 다섯 건이 정확히 잡히고 오탐이 없습니다 —
-   애플 ×4(2020-09) · 아멕스 ×3(2000-06) · 코카콜라 ×2(2012-09) ·
-   무디스 ×2(2005-06) · 다비타 ×2(2013-09).
+
+   ── 3:2 를 2:1 로 읽고 있었습니다 (2026-09-23 고침) ──────────────
+   허용차가 ±30% 인데 **1.5 ÷ 2 = 0.75, 정확히 25% 차이**라 **진짜 3:2 분할이
+   2:1 의 밴드 안으로 들어왔습니다.** 잡아 놓고 틀린 배수로 '고치는' 것이라
+   안 잡는 것보다 나쁩니다 — 33% 오차가 조용히 박힙니다. 버크셔 28년에도 이미
+   네 건 있었습니다(컴캐스트·아이언마운틴 2007, 토치마크 2011·2014).
+   실측: 비율 1.45~1.80 이 전부 f=2 로 잡혔습니다.
+
+   **고친 방법은 "2배 미만은 정확히 맞을 때만"입니다.** 1.30~1.70 구간을 전부
+   뽑아 보니 갈라졌습니다 — 진짜 분할은 주식수 비가 **정확히 1.500000** 이고,
+   오탐(그냥 많이 산 분기)은 1.36~1.55 로 흩어져 있습니다. **사람의 매매는
+   1.500000 에 안 떨어집니다.** 그래서 f<2 는 ±1%, f>=2 는 ±20% 입니다.
+
+   **동그란 숫자로 사면 똑같이 떨어집니다** — GM 2012-09 가 10,000,000 →
+   15,000,000 입니다. 그래서 가격 거부권이 같이 필요합니다(그 분기에 주가가
+   올라서 걸러집니다). 가격 쪽 여유가 넉넉한 것은 분기 중에 시세가 움직이기
+   때문입니다 — 애플은 분할과 같은 분기에 주가가 27% 올랐습니다.
+
+   **`5:4`·`4:3` 은 넣지 마세요.** 넣어 봤더니 12건이 오탐이었습니다
+   (셰브런 2021-09 `주×1.2413 가÷1.032` 은 그냥 24% 더 산 것입니다).
+   1.25 근처에서는 가격 거부권이 힘을 못 씁니다 — 5:4 분할이면 주가가 20%
+   내리는데 분기 중 시세가 그만큼 움직이는 건 흔합니다. **13F 만으로는 풀 수
+   없는 자리**라 잡지 않고 넘어갑니다. 안 잡으면 큰 매수 막대로 **눈에 보이고**,
+   틀린 배수로 고치면 안 보입니다. **역분할도 안 잡습니다**(후보가 전부 1보다 큼).
 ══════════════════════════════════════════════════════════════════ */
-const SPLITF=[2,3,4,5,6,7,8,10,15,20];
-/* 가격 쪽 여유가 넉넉한 것은 분기 중에 시세가 움직이기 때문입니다 —
-   애플은 분할과 같은 분기에 주가가 27% 올랐습니다. */
+const SPLITF=[1.5,2,3,4,5,6,7,8,10,15,20];
 function splitFactor(rShares,rPrice){
-  let best=null;
+  let best=null,bd=Infinity;
   for(const f of SPLITF){
-    if(Math.abs(rShares/f-1)<.30 && Math.abs(rPrice/f-1)<.30){
-      if(best===null||Math.abs(rShares/f-1)<Math.abs(rShares/best-1)) best=f;
-    }
+    /* 2배 미만은 '많이 샀다'와 구별이 안 되므로 정확히 맞을 때만 인정합니다. */
+    const tolS=f<2?.01:.20;
+    const dS=Math.abs(rShares/f-1), dP=Math.abs(rPrice/f-1);
+    /* 먼저 맞는 것이 아니라 **제일 잘 맞는 것**을 고릅니다. */
+    if(dS<tolS && dP<.30 && dS<bd){ bd=dS; best=f; }
   }
   return best;
 }
@@ -696,7 +799,10 @@ function costBasis(snaps,key){
     const p=a.value/a.shares;
     if(first===null) first=i;
     if(held>0&&prevP){
-      const f=splitFactor(a.shares/held, prevP/p);
+      /* **진짜 분할 기록이 있으면 추측하지 않습니다.** 주가 파일이 그 구간을
+         덮을 때만이고, 못 덮으면 `undefined` 라 예전처럼 추측합니다. */
+      const real=realSplit(key,QS[i-1],QS[i]);
+      const f=real===undefined?splitFactor(a.shares/held, prevP/p):(real!==1?real:null);
       if(f){ held*=f; prevP/=f; }
     }
     if(held===0){ cost=a.shares*p; held=a.shares; }
@@ -727,7 +833,8 @@ function lifeOf(snaps,key){
     }
     const p=a.value/a.shares;
     if(held&&prevP){
-      const f=splitFactor(a.shares/held, prevP/p);
+      const real=realSplit(key,QS[i-1],QS[i]);
+      const f=real===undefined?splitFactor(a.shares/held, prevP/p):(real!==1?real:null);
       /* **직전 주식수도 같이 늘려야 합니다.** 지난 분기들만 고치고 `held` 를 그대로
          두면 이번 분기 증감이 `944M - 245M = +699M` 으로 잡혀 **액면분할이 사상
          최대의 매수로 그려집니다**(애플 2020-09 에서 실제로 그랬습니다).
@@ -745,18 +852,18 @@ function lifeOf(snaps,key){
 }
 
 /* 주당 가격. 금액(money)과 자릿수가 다르다 — $66.0B 와 $289.36 은 다른 자입니다. */
-/* 차트 안에서 쓰는 주식수. **`K`·`M`·`B` 로 줄이되 소수 둘째 자리까지**
-   적습니다 (사용자 요청 — "너무 디테일하게 쓰는데 대충 줄여줘").
-   `+136,373,000` 은 아홉 글자라 12px 간격의 막대 위에서 이웃을 밀어내고,
-   정확한 자릿수는 말풍선이 아니라 **목록 줄**이 이미 말합니다.
-   단위 글자는 언어를 안 탑니다 — `K`·`M` 은 한국어 화면에서도 그대로 씁니다. */
-function compShares(n){
-  const a=Math.abs(n);
-  if(a>=1e9) return (n/1e9).toFixed(2)+"B";
-  if(a>=1e6) return (n/1e6).toFixed(2)+"M";
-  if(a>=1e3) return (n/1e3).toFixed(2)+"K";
-  return Math.round(n).toLocaleString(LOCALE);
-}
+/* 차트 막대 위의 주식수. **바로 아래 표(`분기별 보유 변화`)와 같은 자를
+   씁니다** (사용자 결정 — "차트를 표에 맞추자"). 표가 생기기 전에는 차트만
+   `K`·`M`·`B` 를 썼는데, 지금은 **한 줄을 펼치면 같은 분기의 같은 수가
+   차트에서는 `−389.37M`, 표에서는 `−3.89억주` 로** 두 번 다르게 찍혔습니다.
+   줄여 적는다는 원래 뜻(`+136,373,000` 은 아홉 글자라 이웃을 밀어냄)은
+   `shortShares()` 가 그대로 지킵니다. */
+const compShares=n=>shortShares(n);
+
+/* 고정폭 11px 에서 이름표가 차지하는 폭. **한글은 두 칸을 씁니다** —
+   글자 수로만 세면 `−1,029만주` 가 영문과 같은 폭으로 잡혀 이웃과 겹칩니다
+   (CLAUDE.md 9-3 의 "한글은 고정폭에서도 영문의 두 배"). */
+const labWidth=t=>[...String(t)].reduce((w,c)=>w+(/[\uAC00-\uD7A3\u3130-\u318F]/.test(c)?2:1),0)*6.7+8;
 
 /* 가로축 눈금의 날짜. **`26 Q1` 이 아니라 `2026.03.31` 입니다** (사용자 요청) —
    `Q1` 은 주린이에게 통하는 말이 아니고, 13F 는 실제로 그날의 스냅샷입니다.
@@ -809,7 +916,7 @@ function chartBody(r,li){
   const labelLimit=W<430?2:Math.max(2,Math.floor(W/140));
   for(const t of candidates){
     const text=(t.v>0?"+":"−")+compShares(Math.abs(t.v));
-    const width=text.length*6.7+8,cx=Math.max(LEFT+width/2,Math.min(W-RIGHT-width/2,(Math.max(LEFT,xg(t.o.gi-1))+xg(t.o.gi))/2));
+    const width=labWidth(text),cx=Math.max(LEFT+width/2,Math.min(W-RIGHT-width/2,(Math.max(LEFT,xg(t.o.gi-1))+xg(t.o.gi))/2));
     if(labels.length>=labelLimit||labels.some(l=>Math.abs(l.cx-cx)<(l.width+width)/2+8))continue;
     labels.push({text,cx,width,yy:zero-height(t.v)-7,cls:t.v>0?"up":"down"});
   }
@@ -968,7 +1075,10 @@ function rowHTML(r,rank,maxW){
      `%` 가 붙습니다. 그리고 열 머리글이 `이번 분기`·`추정 수익률` 이라고
      이미 갈라 적고 있습니다. */
   let dir="", num;
-  if(r.isNew){ num=r.back?tx("evBack"):tx("evNew"); }
+  /* 표의 전량매도 줄과 같은 어휘입니다 — `\u2014` 는 "쓸 값이 없다"는 뜻이지
+     "0" 이 아닙니다. 여기서는 비교할 직전 공시가 없다는 뜻입니다. */
+  if(r.noPrev){ num="\u2014"; }
+  else if(r.isNew){ num=r.back?tx("evBack"):tx("evNew"); }
   else if(r.flat||!r.dn){ num=tx("same"); }
   else{
     const up=r.isNew||r.dn>0;
@@ -1135,6 +1245,11 @@ function render(){
 
   const B=build(), T=tallyOf(B);
   el("qhead").textContent=tx("quarterHead",B.cur.period);
+  /* **빠진 분기가 있으면 화면이 스스로 밝힙니다.** 조용히 넘어가면 두 분기치
+     증감이 `이번 분기` 로 찍혀 아무도 모른 채 틀립니다. */
+  const gapped=B.gap>1;
+  el("gapnote").hidden=!gapped;
+  if(gapped) el("gapnote").textContent=tx("gapNote",B.prv.period,B.gap);
   el("stamp").innerHTML=`${tx("asOf",fdate(B.cur.period))}<br>${tx("filedOn",fdate(B.cur.filed))}`;
 
   /* 직전 분기가 없으면 비교할 대상이 없다. 그대로 그리면 전 종목이 '신규'로
@@ -1178,7 +1293,9 @@ function render(){
      같은 말이 78번 나오고, 라벨이 숫자보다 자리를 더 차지합니다(4번 성적표에서
      이미 같은 판단을 했습니다). 줄마다 바뀌는 `BUY`/`SELL` 만 줄 안에 둡니다. */
   el("c1").textContent=tx("colShares");
-  el("c2").textContent=tx("colQtr");
+  /* 빠진 분기가 있으면 머리글도 같이 바뀝니다 — 카드 안내 줄만 고치고
+     여기를 그대로 두면 표가 자기 말을 어깁니다. */
+  el("c2").textContent=tx(gapped?"colQtrGap":"colQtr");
   el("c3").textContent=tx("colRet");
   el("c4").textContent=tx("colVal");
   /* 상위 10종목을 펴고 **나머지는 접습니다 — 지우는 것이 아닙니다.**

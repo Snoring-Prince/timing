@@ -169,7 +169,8 @@ class ApplyToBookTests(unittest.TestCase):
             return docs.get(acc, (None, None))
         with patch.object(fetch, 'filing_docs', side_effect=fake), \
                 contextlib.redirect_stdout(io.StringIO()):
-            return fetch.apply_amendments(quarters, 'fixture')
+            # (반영한 분기 수, 못 합친 분기 목록) 을 돌려줍니다.
+            return fetch.apply_amendments(quarters, 'fixture')[0]
 
     def test_merged_quarter_records_what_was_applied(self):
         q = self.quarter()
@@ -199,7 +200,7 @@ class ApplyToBookTests(unittest.TestCase):
             return docs.get(acc, (None, None))
         with patch.object(fetch, 'filing_docs', side_effect=counting), \
                 contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(fetch.apply_amendments([q], 'fixture'), 0)
+            self.assertEqual(fetch.apply_amendments([q], 'fixture'), (0, []))
         self.assertEqual(calls, [], '이미 반영했는데 원문을 다시 받았습니다')
         self.assertEqual(json.dumps(q, sort_keys=True), snapshot)
 

@@ -38,7 +38,7 @@ test('new and re-entered rows are not labelled held in either language', () => {
   const run = page(real);
   assert.match(run('rowHTML(build().list.find(r=>r.isNew),26,100)'), /class="act">재진입/);
   run('LANG="en";L10N=D.en;');
-  assert.match(run('rowHTML(build().list.find(r=>r.isNew),26,100)'), /class="act">Back in/);
+  assert.match(run('rowHTML(build().list.find(r=>r.isNew),26,100)'), /class="act">Re-entered/);
   const fresh = page(book([['2026-03-31',0,0],['2026-06-30',10,50]]));
   assert.match(fresh('rowHTML(build().list[0],1,100)'), /class="act">신규/);
 });
@@ -312,7 +312,7 @@ test('a full exit is recorded without inventing a sale price', () => {
   assert.equal((out[2].match(/—/g)||[]).length,3);   // 보유·가격·금액 셋 다 비움
   assert.match(h,/class="rcm">재진입/);
   run('LANG="en";L10N=D.en;');
-  assert.match(run('recordHTML(build().list.find(r=>r.key==="674599"))'),/class="rcm down">Sold out/);
+  assert.match(run('recordHTML(build().list.find(r=>r.key==="674599"))'),/class="rcm down">Exited/);
 });
 
 test('the record ignores the period buttons and never says "trade"', () => {
@@ -391,4 +391,176 @@ test('the investor blurb is prose in the page, not strings in the shared screen'
   // 공통 JS 는 이 덩어리를 머리글 아래 제자리로 옮길 뿐이다.
   assert.match(shared,/getElementById\("titan-bio"\)/);
   assert.match(shared,/insertBefore\(bio,q\)/);
+});
+
+test('english counts say "1 quarter", not "1 quarters"', () => {
+  const run = page(real);
+  run('LANG="en";L10N=D.en;');
+  assert.equal(run('tx("recCount",1)'), '1 quarter');
+  assert.equal(run('tx("recCount",2)'), '2 quarters');
+  assert.equal(run('tx("positions",1)'), '1 position');
+  assert.equal(run('tx("positions",26)'), '26 positions');
+  assert.equal(run('tx("yr",1)'), '1 year');
+  assert.equal(run('tx("yr",1.5)'), '1.5 years');
+  assert.equal(run('tx("yr",0.5)'), '6 months');
+  // 한국어는 수를 세지 않으므로 그대로다.
+  run('LANG="ko";L10N=D.ko;');
+  assert.equal(run('tx("recCount",1)'), '1개 분기');
+});
+
+test('one word never has to mean three things on the same screen', () => {
+  const run = page(real);
+  run('LANG="en";L10N=D.en;');
+  // 열 머리글은 `Shares held`, 전량매도 줄은 `held 1.5 years` 를 쓴다. 그러니
+  // "이번 분기에 안 움직였다"를 또 `held` 라고 부르면 한 낱말이 세 가지가 된다.
+  assert.equal(run('tx("same")'), 'unchanged');
+  assert.equal(run('tx("kHold")'), 'unchanged');
+  // 같은 사건을 계기판과 사건 줄이 다른 이름으로 부르지 않는다.
+  assert.equal(run('tx("evOut")'), 'Exited');
+  assert.equal(run('tx("rcOut")'), 'Exited');
+  assert.match(run('tx("kOut")'), /^exited$/i);
+  assert.equal(run('tx("evBack")'), run('tx("rcBack")'));
+  // 그 칸에 찍히는 것은 분기 마지막 날이지 공시일이 아니다.
+  assert.doesNotMatch(run('tx("rcDate")'), /filing/i);
+});
+
+test('the chart labels a quarter with the same number the record shows', () => {
+  for (const lang of ['ko','en']) {
+    const run = page(real);
+    run(`LANG="${lang}";L10N=D.${lang};LOCALE=D.${lang}.locale;`);
+    // 애플 2024.06.30 은 −389,368,450 주. 차트 막대 이름표와 표의 `변화` 칸이
+    // 같은 수를 두 가지로 적으면 한 줄 안에서 화면이 자기 말을 어긴다.
+    assert.equal(run('compShares(389368450)'), run('shortShares(389368450)'));
+    assert.equal(run('compShares(333856)'), run('shortShares(333856)'));
+  }
+  const ko = page(real); ko('LANG="ko";L10N=D.ko;LOCALE="ko-KR";');
+  assert.equal(ko('compShares(389368450)'), '3.89억주');
+  // 한글은 고정폭에서도 두 칸을 쓴다 — 글자 수로 재면 이웃과 겹친다.
+  assert.ok(ko('labWidth("3.89억주")') > ko('labWidth("389.4M")'));
+});
+
+test('no dictionary entry is left behind after a feature is removed', () => {
+  const a = shared.indexOf('const D={'), b = shared.indexOf('\nconst REDUP');
+  const dict = shared.slice(a, b), rest = shared.slice(0, a) + shared.slice(b);
+  const keys = [...new Set([...dict.matchAll(/^ {2}([a-zA-Z][a-zA-Z0-9]*)\s*:/gm)].map(m => m[1]))];
+  const dead = keys.filter(k => !new RegExp('["\'.]' + k + '\\b').test(rest));
+  assert.deepEqual(dead, [], '화면이 안 읽는 사전 키: ' + dead.join(', '));
+  // 두 언어가 같은 열쇠를 갖는지도 같이 본다 — 한쪽만 지우는 실수가 제일 잦다.
+  const run = page(real);
+  assert.deepEqual(run('Object.keys(D.en).sort()'), run('Object.keys(D.ko).sort()'));
+});
+
+test('a real 3:2 split is not read as 2:1', () => {
+  const run = page(real);
+  // 허용차가 ±30% 인데 1.5 ÷ 2 = 0.75, 정확히 25% 차이라 진짜 3:2 가 2:1 의
+  // 밴드 안으로 들어왔다. 틀린 배수로 '고치면' 33% 오차가 조용히 박힌다.
+  assert.equal(run('splitFactor(1.5, 1.5)'), 1.5);
+  // 퍼싱 스퀘어 브룩필드 2025Q4 — 41,020,231 → 61,403,089 주, 가격 ÷1.5
+  assert.equal(run('splitFactor(61403089/41020231, 1.5)'), 1.5);
+  // 2배 미만은 정확히 맞을 때만. 사람의 매매는 1.500000 에 안 떨어진다.
+  assert.equal(run('splitFactor(1.552, 1.140)'), null);   // 애플 2016-06 — 55% 더 산 것
+  assert.equal(run('splitFactor(1.429, 1.182)'), null);   // 레너드 2026-03
+  // 동그란 숫자로 사면 비율이 정확히 1.5 다 — 가격이 거부권을 쥔다.
+  assert.equal(run('splitFactor(1.5, 0.867)'), null);     // GM 2012-09, 주가가 오른 분기
+  // 5:4·4:3 은 후보에 없다. 1.25 근처에서는 가격 거부권이 힘을 못 쓴다.
+  assert.equal(run('splitFactor(1.2413, 1.032)'), null);  // 셰브런 2021-09
+  assert.equal(run('splitFactor(1.25, 1.25)'), null);
+  // 진짜 큰 분할은 그대로 잡힌다 — 애플 2020-09 는 분기 중 주가가 27% 올랐다.
+  assert.equal(run('splitFactor(3.852, 3.150)'), 4);
+  assert.equal(run('splitFactor(2, 2)'), 2);
+});
+
+test('the known holdings keep the estimates the split fix must not move', () => {
+  const run = page(real);
+  // 지금 보유 26종목은 이번 변경으로 하나도 안 움직여야 한다.
+  assert.ok(Math.abs(run('build().list.find(r=>r.key==="037833").avgCost')-39.59171393884013)<1e-9);
+  assert.equal(run('build().list.length'), 26);
+  assert.equal(run('build().tc'), 299253556246);
+  assert.equal(run('build().gap'), 1);   // 빠진 분기 없음
+});
+
+test('a missing quarter is never passed off as "this quarter"', () => {
+  const full = page(real);
+  const q = real.quarters.map(x=>x.period);
+  const bofa = '060505';
+  const trueQ2 = full(`build().list.find(r=>r.key==="${bofa}").dn`);
+  // 2026Q1 을 빼면 qs[len-2] 가 두 분기 전이 된다.
+  const holed = {...real, quarters: real.quarters.filter(x=>x.period!=='2026-03-31')};
+  const run = page(holed);
+  assert.equal(run('build().gap'), 2, '빠진 분기를 세지 못했다');
+  const twoQ = run(`build().list.find(r=>r.key==="${bofa}").dn`);
+  assert.notEqual(twoQ, trueQ2, '두 분기치가 한 분기치와 같을 수 없다');
+  // 머리글과 안내 문구가 '이번 분기'라고 우기지 않는다.
+  run('LANG="ko";L10N=D.ko;');
+  assert.notEqual(run('tx("colQtrGap")'), run('tx("colQtr")'));
+  assert.match(run('tx("gapNote","2025-12-31",2)'), /2025년 4분기/);
+  run('LANG="en";L10N=D.en;');
+  assert.match(run('tx("gapNote","2025-12-31",2)'), /Q4 2025[\s\S]*2 quarters/);
+  void q;
+});
+
+test('one filing on its own does not turn every holding into a new buy', () => {
+  const only = {...real, quarters: real.quarters.slice(-1)};
+  const run = page(only);
+  assert.equal(run('build().gap'), 0);
+  assert.equal(run('build().list.filter(r=>r.isNew).length'), 0, '비교할 공시가 없는데 신규로 찍혔다');
+  assert.equal(run('build().list.filter(r=>r.noPrev).length'), 26);
+  // 가운데 칸은 '쓸 값이 없다'는 뜻의 줄표만 적는다.
+  assert.match(run('rowHTML(build().list[0],26,100)'), /class="act">—</);
+});
+
+// 진짜 분할 기록은 `data/titans/prices.json` 에 이미 들어 있다. 화면이 그것을
+// 읽게 하면 추측할 필요가 없어진다 — 단, 야후의 `splits` 는 분할 목록이 아니다.
+const priceBook = JSON.parse(fs.readFileSync(path.join(root,'data/titans/prices.json'),'utf8'));
+function withPrices(data){
+  const run = page(data);
+  run('__P=' + JSON.stringify(priceBook) + ';acceptPrices(__P);');
+  return run;
+}
+
+test('a spin-off is not a split, however Yahoo files it', () => {
+  const run = page(real);
+  // 진짜 액면분할 — 기약분수로 줄이면 작은 정수다.
+  assert.equal(run('splitRatio("2.0:1.0")'), 2);
+  assert.equal(run('splitRatio("4.0:1.0")'), 4);
+  assert.equal(run('splitRatio("7.0:1.0")'), 7);
+  assert.equal(run('splitRatio("20.0:1.0")'), 20);
+  assert.equal(run('splitRatio("3:2")'), 1.5);
+  assert.equal(run('splitRatio("5:4")'), 1.25);
+  assert.equal(run('splitRatio("4:3")'), 4/3);
+  assert.equal(run('splitRatio("1.0:10.0")'), 0.1);       // 역분할
+  // 분할이 아닌 것 — 전부 실제 저장된 값이다.
+  for (const notSplit of ['1046.0:1000.0',   // 제퍼리스 2023 스핀오프
+                          '1017.0:1000.0',   // 레나 2017
+                          '102.0:100.0',     // 레나B 2017 → 51:50
+                          '10000.0:9983.0',  // 옥시덴탈 2016
+                          '310.0:1.0',       // Ally 전환
+                          '2002.0:1000.0',   // 구글 C주 배분
+                          '1.0:1.0', '', 'x:y', '0:1'])
+    assert.equal(run(`splitRatio(${JSON.stringify(notSplit)})`), null, notSplit+' 를 분할로 받았다');
+});
+
+test('the real split record replaces the guess where the data reaches', () => {
+  const run = withPrices(real);
+  // 애플: 2014 년 7:1 과 2020 년 4:1 이 둘 다 실제로 적혀 있다.
+  // vm 밖으로 나온 배열은 프로토타입이 달라 deepEqual 이 걸린다 — 값으로 본다.
+  const days = run('JSON.stringify([...SPLIT_BOOK["037833"].days.entries()])');
+  assert.equal(days, JSON.stringify([['2014-06-09',7],['2020-08-31',4]]));
+  // 그 분할이 든 분기만 배수가 나오고, 없는 분기는 1 이다.
+  assert.equal(run('realSplit("037833","2020-06-30","2020-09-30")'), 4);
+  assert.equal(run('realSplit("037833","2021-06-30","2021-09-30")'), 1);
+  // **자료가 못 미치는 옛 분기는 `undefined` 여야 한다** — 1 이라고 답하면
+  // 아메리칸익스프레스 2000 년 3:1 이 통째로 사라진다.
+  assert.equal(run('realSplit("025816","2000-03-31","2000-06-30")'), undefined);
+  assert.equal(run('realSplit("없는키","2020-06-30","2020-09-30")'), undefined);
+  // 스핀오프는 받지 않으므로 제퍼리스에는 분할이 하나도 없다.
+  assert.equal(run('(SPLIT_BOOK["47233W"]||{days:new Map()}).days.size'), 0);
+});
+
+test('switching to the real record does not move a single holding', () => {
+  const guessed = page(real), measured = withPrices(real);
+  const pick = 'JSON.stringify(build().list.map(r=>[r.key,r.avgCost,r.dn,r.shares]))';
+  assert.equal(measured(pick), guessed(pick));
+  // 애플은 두 길 모두 같은 값이어야 한다(분할 ×4 를 양쪽이 똑같이 잡는다).
+  assert.ok(Math.abs(measured('build().list.find(r=>r.key==="037833").avgCost')-39.59171393884013)<1e-9);
 });

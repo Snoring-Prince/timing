@@ -64,6 +64,11 @@ body{
 .stamp{font-family:var(--mono);font-size:var(--t-small);color:var(--ink-3);text-align:right}
 .mobile-guide{display:none}
 .trade-basis{margin:8px 0 0;font-family:var(--mono);font-size:var(--t-small);line-height:1.7;color:var(--ink-3)}
+/* 자료에 구멍이 났을 때만 나오는 줄. 값이 아니라 경고이므로 --ink-2 로
+   본문만큼 진하게 두되, 색은 새로 만들지 않습니다(상승·하락 색과 섞이면
+   안 됩니다 — 재료표 13). hidden 이면 자리도 안 씁니다. */
+.gapnote{margin:0 0 12px;font-family:var(--mono);font-size:var(--t-small);line-height:1.7;color:var(--ink-2)}
+.gapnote[hidden]{display:none}
 
 /* ── 언어 탭 ─────────────────────────────────────────────── */
 .seg{display:inline-flex;border:1px solid var(--rule);background:var(--card)}
