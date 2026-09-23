@@ -1,0 +1,78 @@
+# 대가들의 선택 — 연차보고서(10-K) 취득원가 정찰
+#
+# 화면의 수익률은 **추정 매수 평균가**에서 나오는데, 그 가정을 한 번도 바깥
+# 자료와 맞춰 본 적이 없습니다. 버크셔를 첫 투자자로 고른 이유가 바로
+# **연차보고서가 실제 취득원가를 적는 거의 유일한 곳**이라는 것이었습니다.
+#
+# 개발 환경에서는 SEC 에 닿지 않습니다(프록시가 끊습니다). 러너에서는 됩니다.
+# 그래서 **연차보고서가 무엇을 어떻게 적는지 짐작해서 대조 코드를 짜지 않고**,
+# 여기서 한 번 받아 원본을 아티팩트로 올리고 핵심은 로그에도 찍습니다.
+# probe-sec.yml · probe-amendments.yml 과 같은 요령입니다.
+#
+# 예약 실행은 없습니다. Actions 탭에서 손으로 누를 때만 돕니다.
+# 저장소에 아무것도 커밋하지 않습니다(`contents: read`).
+name: Probe Annual
+
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "투자자 (data/titans/<slug>.json)"
+        required: false
+        default: "berkshire"
+      forms:
+        description: "받을 서식 (10-Q 는 '얼마나 자주 잴 수 있나'의 답)"
+        required: false
+        default: "10-K,10-Q"
+      count:
+        description: "서식마다 최근 몇 건"
+        required: false
+        default: "1"
+      show:
+        description: "로그에 찍을 줄 수 (아티팩트는 받기 어렵습니다)"
+        required: false
+        default: "6"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 내려받기
+        uses: actions/checkout@v4
+
+      - name: 파이썬 준비
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # 비밀값이 없으면 여기서 종료코드 1 로 끝납니다. 손으로 돌린 것은
+      # "되는지 확인해 달라"는 뜻이라, 조용히 넘어가면 초록불인데 빈손이 됩니다.
+      - name: 정찰
+        env:
+          SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
+          # 입력값을 명령줄에 바로 끼워 넣지 않습니다. 손으로 적는 칸이라
+          # 따옴표 하나로 셸 명령이 되는 자리입니다.
+          SLUG: ${{ inputs.slug }}
+          FORMS: ${{ inputs.forms }}
+          COUNT: ${{ inputs.count }}
+          SHOW: ${{ inputs.show }}
+        run: |
+          set -o pipefail
+          python -u scripts/probe_annual.py \
+            --slug "$SLUG" --forms "$FORMS" --count "$COUNT" --show "$SHOW" 2>&1 \
+            | tee annual-probe-console.log
+
+      # 실패해도 받아 온 데까지는 올립니다. 무엇을 받다 막혔는지가 곧 답입니다.
+      - name: 원본 올리기
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: annual-probe
+          path: |
+            annual-probe/
+            annual-probe-console.log
+          if-no-files-found: warn
+          retention-days: 14
