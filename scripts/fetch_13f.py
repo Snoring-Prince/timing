@@ -17,12 +17,10 @@
      공시의 tableEntryTotal(89)은 **줄 수**이지 종목 수가 아니다.
      cusip 으로 묶어서 더해야 실제 보유가 나온다.
 
-  3. 금액 단위가 도중에 바뀌었다
-       2026-06-30  금액÷주식수 = 45.95     → 달러
-       2016-12-31  금액÷주식수 = 0.0467    → 천 달러 (×1000 하면 46.69)
-     날짜를 외워서 박지 않는다. **매 분기 금액÷주식수의 중앙값을 재서**
-     1 보다 작으면 천 달러로 보고 1000을 곱한다. 종목 50개의 중앙값이라
-     한두 종목이 이상해도 흔들리지 않는다.
+  3. 금액 단위는 SEC 제출 규격을 따른다
+     2023-01-03 EDGAR 22.4.1부터 천 달러 대신 달러로 제출한다.
+     보고 분기가 아니라 각 원본·정정의 제출일로 판단한다. 저가주나
+     고가주 포트폴리오는 금액÷주식수로 단위를 추측하면 1000배 틀린다.
 
 투자자·CIK·저장 파일은 data/titans/investors.json 에서 고릅니다.
 금액은 전부 달러로 맞춰 둡니다.
@@ -39,7 +37,7 @@ import os
 import re
 import sys
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from statistics import median
 
@@ -96,17 +94,17 @@ def rows_of(xml: bytes) -> list[dict]:
     return out
 
 
-def unit_scale(rows: list[dict]) -> tuple[int, float]:
-    """금액이 달러인지 천 달러인지 **재서** 정합니다.
+def unit_scale(rows: list[dict], filed: str) -> tuple[int, float]:
+    """SEC EDGAR 22.4.1 (2023-01-03): thousands → dollars by filing date.
 
-    주식(SH)만 보고 금액÷주식수의 중앙값을 냅니다. 그것이 곧 주가여야
-    하므로, 1 보다 작으면 금액이 천 달러 단위라는 뜻입니다."""
+    SEC: https://content.govdelivery.com/accounts/USSEC/bulletins/3401c41
+    An amendment to an older quarter follows its own submission date.
+    The median is diagnostic only; unknown dates must not guess a unit.
+    """
+    submitted = date.fromisoformat(filed)
     r = [x["value"] / x["shares"] for x in rows
          if x["type"] == "SH" and x["shares"] > 0 and x["value"] > 0]
-    if not r:
-        return 1, 0.0
-    m = median(r)
-    return (1000, m) if m < 1.0 else (1, m)
+    return (1000 if submitted < date(2023, 1, 3) else 1), (median(r) if r else 0.0)
 
 
 def fold(rows: list[dict], scale: int) -> list[dict]:
@@ -277,7 +275,7 @@ def amend_info(cover: bytes | None) -> dict:
     return out
 
 
-def one_doc(acc: str, contact: str):
+def one_doc(acc: str, contact: str, filed=None):
     """한 건을 받아 줄을 **달러로 환산해서** 돌려줍니다.
 
     분기마다 금액 단위가 다를 수 있으므로(천 달러/달러) 합치기 전에 먼저
@@ -293,7 +291,10 @@ def one_doc(acc: str, contact: str):
         return None, "XML 을 읽지 못함"
     if not rows:
         return None, "줄이 없음"
-    scale, _ = unit_scale(rows)
+    try:
+        scale, _ = unit_scale(rows, filed)
+    except (TypeError, ValueError):
+        return None, "제출일을 몰라 금액 단위를 정하지 못함"
     for r in rows:
         r["value"] *= scale
     ctot, cent = cover_totals(cover)
@@ -302,7 +303,7 @@ def one_doc(acc: str, contact: str):
             "amend": amend_info(cover)}, None
 
 
-def merge_amendments(base: dict, accs: list[str], contact: str):
+def merge_amendments(base: dict, accs: list[str], contact: str, filing_dates=None):
     """원본에 정정을 차례대로 적용합니다. `(결과, 잘못된 이유)` 를 돌려줍니다.
 
     **차례는 `amended_by` 배열 순서가 아니라 `amendmentNo` 입니다.**
@@ -311,7 +312,7 @@ def merge_amendments(base: dict, accs: list[str], contact: str):
     전체 재작성이 그것을 통째로 덮어써서 **조용히 사라집니다.**"""
     plans = []
     for acc in accs:
-        doc, why = one_doc(acc, contact)
+        doc, why = one_doc(acc, contact, (filing_dates or {}).get(acc))
         if not doc:
             return None, f"{acc} {why}"
         kind = doc["amend"]["type"]
@@ -342,7 +343,7 @@ def merge_amendments(base: dict, accs: list[str], contact: str):
             "want_total": want_total, "want_lines": want_lines}, None
 
 
-def apply_amendments(quarters: list[dict], contact: str) -> tuple[int, list[str]]:
+def apply_amendments(quarters: list[dict], contact: str, filing_dates=None) -> tuple[int, list[str]]:
     """정정이 달린 분기의 수치를 다시 셉니다.
 
     **이미 반영한 분기는 다시 받지 않습니다**(`amended_applied` 와 대조).
@@ -364,7 +365,7 @@ def apply_amendments(quarters: list[dict], contact: str) -> tuple[int, list[str]
         if {a.get("accession") for a in (q.get("amended_applied") or [])} == set(accs):
             continue
 
-        base, why = one_doc(q["accession"], contact)
+        base, why = one_doc(q["accession"], contact, q.get("filed"))
         if not base:
             if why == "pre-xml":
                 # 2013년 중반 이전은 텍스트 공시입니다. 사용자가 **투자자별
@@ -377,7 +378,7 @@ def apply_amendments(quarters: list[dict], contact: str) -> tuple[int, list[str]
             unmerged.append(f"{q['period']} (원본을 {why})")
             continue
 
-        merged, bad = merge_amendments(base, accs, contact)
+        merged, bad = merge_amendments(base, accs, contact, filing_dates)
         if bad:
             # 합치지 않고 **원본 숫자를 그대로 둡니다.** 반쯤 합친 분기를
             # 남기는 것보다 안 합친 것이 낫습니다.
@@ -466,11 +467,18 @@ def main(slug=None) -> int:
     if not filings:
         print("제출 목록을 받지 못했습니다. 아무것도 쓰지 않습니다.")
         return 1
+    if investor:
+        filings = [f for f in filings if f["period"] >= f"{investor.since}-01-01"]
+        amends = [f for f in amends if f["period"] >= f"{investor.since}-01-01"]
+    if not filings:
+        print("설정한 시작 연도 이후의 공시가 없습니다. 파일을 쓰지 않습니다.")
+        return 1
+    filing_dates = {f["accession"]: f.get("filed") for f in filings + amends}
+    skipped = {f["accession"]: f for f in (prev or {}).get("skipped_filings", [])}
+    known_amend.update(skipped)
     print(f"{FORM} {len(filings)}건 ({filings[0]['period']} ~ {filings[-1]['period']})")
 
-    # 정정 공시가 난 분기는 **원본만으로는 불완전할 수 있습니다.** 아직 합치지
-    # 않으므로, 어느 분기가 그런지 데이터에 표시해 두고 화면에서 밝힐 수 있게
-    # 합니다. 조용히 넘어가면 그 분기만 소리 없이 틀립니다.
+    # 정정은 아래 apply_amendments에서 반영합니다. 접수번호도 보존합니다.
     amend_by = {}
     for x in amends:
         amend_by.setdefault(x["period"], []).append(x["accession"])
@@ -482,13 +490,14 @@ def main(slug=None) -> int:
     got, failed, prexml = 0, 0, []
     for f in filings:
         keep = old.get(f["accession"])
-        if keep:
+        if keep or f["accession"] in skipped:
             continue
         xml, cover = filing_docs(f["accession"], contact)
         if xml is NO_XML:
             # 고장이 아니라 옛 형식입니다. 따로 셉니다 — 실패로 세면
             # 매주 수십 건이 찍혀 진짜 실패가 묻힙니다.
             prexml.append(f["period"])
+            skipped[f["accession"]] = {**f, "reason": "pre-xml"}
             continue
         if not xml:
             failed += 1
@@ -503,7 +512,12 @@ def main(slug=None) -> int:
             print(f"    {f['period']} 줄이 하나도 없습니다 — 건너뜁니다")
             failed += 1
             continue
-        scale, ratio = unit_scale(rows)
+        try:
+            scale, ratio = unit_scale(rows, f.get("filed"))
+        except (TypeError, ValueError):
+            print(f"    {f['period']} 제출일이 없어 금액 단위를 정하지 못했습니다")
+            failed += 1
+            continue
         held = fold(rows, scale)
         total = sum(h["value"] for h in held)
 
@@ -569,7 +583,7 @@ def main(slug=None) -> int:
     # 정정을 **실제 수치에 반영합니다.** 표시만 해 두던 것을 2026-09-20 에
     # 바꿨습니다 — 원문 8건을 받아 보니 표지가 종류를 명시하고 있었습니다.
     # 이미 반영한 분기는 다시 받지 않으므로 평소 실행에서는 아무 일도 안 합니다.
-    merged_n, unmerged = apply_amendments(quarters, contact)
+    merged_n, unmerged = apply_amendments(quarters, contact, filing_dates)
     if merged_n:
         print(f"정정을 반영한 분기 {merged_n}개")
 
@@ -581,6 +595,21 @@ def main(slug=None) -> int:
                  "positions only, filed 45 days after quarter end."),
         "quarters": quarters,
     }
+    # 원본이 텍스트라 제외한 분기의 정정도 한 번 확인해 기록합니다.
+    # 통신 실패·새 XML 정정은 제외 처리하지 않습니다.
+    skipped_periods = {f["period"] for f in skipped.values()}
+    saved_periods = {q["period"] for q in quarters}
+    for f in amends:
+        if (f["period"] in skipped_periods and f["period"] not in saved_periods
+                and f["accession"] not in skipped):
+            xml, _ = filing_docs(f["accession"], contact)
+            if xml is NO_XML:
+                skipped[f["accession"]] = {**f, "reason": "pre-xml"}
+            else:
+                failed += 1
+                print(f"    {f['period']} 정정의 원본 분기가 없습니다: {f['accession']}")
+    if skipped:
+        doc["skipped_filings"] = sorted(skipped.values(), key=lambda f: (f["period"], f["accession"]))
     if doc != prev:
         doc["updated"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
         os.makedirs(os.path.dirname(OUT), exist_ok=True)

@@ -6,10 +6,11 @@
 > conversation with the owner is Korean.** Owner is a non-developer: no terminal,
 > no git. See `/CLAUDE.md` §0.
 
-STATUS as of 2026-09-14: **111 quarters committed, 1998-12-31 … 2026-06-30, no gaps.**
+Historical snapshot as of 2026-09-14: **111 quarters committed, 1998-12-31 … 2026-06-30, no gaps.**
 `SEC_CONTACT` is set; run #1 (2026-09-14, 12s) came back **200 on every request**.
-What it found is in §5-2 — read that before anything else. Nothing is parsed yet,
-no schema exists, no page exists. Everything below §4 is decided, not speculative.
+Current implementation, measurements and unfinished work are recorded only in
+`CLAUDE.md` §9-3-1, including the 2026-09-24 audit fixes. The dated sections below
+retain the investigation history; they are not the current task list.
 
 ---
 
@@ -357,8 +358,8 @@ Writes `data/titans/berkshire.json`. **No prices yet** — reconcile totals firs
 list_filings()   recent + every filings.files chunk → all 13F-HR, oldest first
 holdings_xml()   read index.json, take the LARGEST .xml that is not
                  primary_doc.xml. Never a hardcoded name, never primaryDocument.
-unit_scale()     median(value/shares) over SH rows. <1 → thousands, ×1000.
-                 Median over ~50 names, so one odd ticker cannot flip it.
+unit_scale()     uses the submission date under the SEC format rule; median
+                 value/shares is diagnostic only. See CLAUDE.md audit follow-up.
 fold()           group by (cusip, class, sshPrnamtType, putCall), sum value and
                  shares, keep `lines` = how many rows collapsed.
 ```
@@ -389,7 +390,10 @@ The original workflow was weekly. The multi-investor watcher described in §10-1
 now checks each current SEC submission list twice on weekdays and runs the heavy
 collector only when an accession is new. Sunday remains the full safety check.
 
-#### Amendments (`13F-HR/A`) are deliberately NOT fetched
+#### Historical decision before 2026-09-20: amendments were not merged
+
+Superseded by the XML amendment merger documented in `CLAUDE.md` §9-3-1.
+The following records the original reasoning, not a present-day restriction.
 
 The fetcher matches `13F-HR` exactly, so amendments are skipped. **This is a
 decision, not an oversight.** An amendment can be either a *restatement* (replaces
@@ -589,9 +593,11 @@ Branches → trash); it was 6.5 MB of raw filings and has served its purpose.
 `scripts/onetime/convert_13f_text.py` is kept, clearly marked as run-once, **only**
 so the old numbers can be audited later. Do not maintain it, do not re-run it.
 
-#### Still open
+#### Historical open items from the one-time text conversion
 
-- **Amendments are still not merged.** 85 were converted and 83 reconcile, but the
+Current XML amendment handling and intentional pre-XML limitations are in `CLAUDE.md`.
+
+- **At this stage amendments were not merged.** 85 were converted and 83 reconcile, but the
   merge rule (restate vs. add) is unused. Good news: the old paper form has explicit
   checkboxes — `This Amendment ... [ ] is a restatement. [ ] adds new holdings
   entries.` — so **the filing declares its own type** and the rule can be read
@@ -761,18 +767,18 @@ through the existing Telegram channel.
 Ticker/SIC fetch or save failures keep the 13F commit but send a separately named
 Telegram alert, so an auxiliary outage is not reported as a filing failure.
 
-Ticker, SIC-sector, and daily-price collectors read all available books named by
+Ticker, SIC-sector, and daily-price collectors require all active books named by
 the registry. Therefore a newly disclosed CUSIP joins those shared caches without
 a Berkshire-specific code change. A manager still needs one registry entry, its
 thin page with unique static SEO, and a sitemap row. Pre-2013 text conversion is a
 per-manager one-time job, not part of recurring automation. Fetch the frozen
 filings, use throwaway conversion code, verify quarters/rows/totals, commit the
 JSON, and retain only the validation and format notes. Do not build or maintain a
-shared pre-2013 parser. Amendment values are still not merged automatically.
+shared pre-2013 parser. Current amendment processing is documented in `CLAUDE.md`.
 
 ---
 
-## 11. Next actions, in order
+## 11. Historical build checklist (current handoff: CLAUDE.md and worklogs)
 
 ```
 1. DONE  SEC_CONTACT secret set by owner
@@ -785,10 +791,10 @@ shared pre-2013 parser. Amendment values are still not merged automatically.
 8. DONE  first real run — 53 quarters committed (§5-8)
 9. DONE  self-check confirmed: 0 total mismatches
 10. DONE  pre-2013 converted — 111 quarters, no gaps (§5-9)
-11. Amendments: read the restatement/adds checkbox, then merge
+11. DONE for XML amendments; intentional pre-XML gap is documented in CLAUDE.md
 12. DONE  CUSIP→ticker (OpenFIGI + SEC name match), sectors (SEC SIC)
 13. DONE  page shipped at /titans/berkshire/ — holdings list + per-holding chart
-14. Amendments: read the restatement/adds checkbox, then merge (see 11)
+14. See 11; do not restart recurring pre-2013 parsing
 15. DONE  registry + lightweight multi-investor watcher + shared dispatch
 16. Per new manager, if needed: one-time verified pre-2013 conversion; do not automate
 ```

@@ -212,7 +212,7 @@ timing/
 ├── titans/
 │   ├── index.html         튕기는 자리 — /titans/berkshire/ 로 보냄
 │   └── berkshire/
-│       └── index.html     대가들의 선택 · 버크셔 (단일 파일)
+│       └── index.html     대가들의 선택 · 버크셔 (설정·정적 소개, 공통 틀은 shared/)
 ├── workers/live.js    Cloudflare Worker (실시간 중계)
 ├── scripts/           데이터 수집 · 백테스트 · 검사 · 알림
 ├── data/              봇이 갱신하는 JSON

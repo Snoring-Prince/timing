@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-09-24 · Codex · (이 PR)
+검수 잔여 수정 — 주식/옵션 분리·공시 단위·보강 재시도·누락 책 보존·실제 두 투자자 검증
+- 파일: shared/investor.js · 수집/감시/registry · tests · update/check workflow · CLAUDE.md · 안내 문서 · 이 일지
+- 규칙: 현재 동작·측정·제한은 CLAUDE.md의 2026-09-24 검수 후속이 정본. 소통·검수 요청은 하지 않음.
+- 굳힘: 기존 화면 결정과 PR #80 캐시 정리 유지. 텍스트 공시는 일회성. 연차보고서 취득원가 대조를 다시 계획하지 않음.
+- 넘김: 09-26 예약 주가 수집의 운영 splitsFrom·커밋 확인. 연차 보유 금액 정기 대조는 사용자 판단 대기. 실제 Telegram 발송 시험은 안 함.
+
 ## 2026-09-19 · Codex · PR #58
 투자자 registry·SEC 통신·새 접수 감시·투자자별 원문 수집을 분리한 다중 13F 자동화
 - 파일: data/titans/investors.json · scripts/titans/* · watch/fetch_13f.py · ticker/sector/price 수집기 · update/check workflow · tests · 관련 문서 · 이 일지

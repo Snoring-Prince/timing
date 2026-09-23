@@ -73,14 +73,14 @@ ADDED = table([('GAMMA CORP', '333333333', 7000, 35)])
 class AmendmentMergeTests(unittest.TestCase):
     """`merge_amendments` 자체. 원문 받기만 흉내 냅니다."""
 
-    def merge(self, docs, accs):
+    def merge(self, docs, accs, original_filed="2023-11-14"):
         """docs: 접수번호 → (정보표, 표지)"""
         def fake(acc, _contact):
             return docs[acc]
         with patch.object(fetch, 'filing_docs', side_effect=fake):
-            base, why = fetch.one_doc('orig', 'fixture')
+            base, why = fetch.one_doc('orig', 'fixture', original_filed)
             self.assertIsNone(why)
-            return fetch.merge_amendments(base, accs, 'fixture')
+            return fetch.merge_amendments(base, accs, 'fixture', {acc: '2024-02-14' for acc in accs})
 
     def test_restatement_replaces_the_original(self):
         got, bad = self.merge({
@@ -148,7 +148,7 @@ class AmendmentMergeTests(unittest.TestCase):
         got, bad = self.merge({
             'orig': (thousands, cover(total=20, lines=1)),
             'a1': (ADDED, cover(amend='NEW HOLDINGS', no=1, total=7000, lines=1)),
-        }, ['a1'])
+        }, ['a1'], original_filed='2022-11-14')
         self.assertIsNone(bad)
         self.assertEqual(sum(r['value'] for r in got['rows']), 27000)
 
@@ -170,7 +170,7 @@ class ApplyToBookTests(unittest.TestCase):
         with patch.object(fetch, 'filing_docs', side_effect=fake), \
                 contextlib.redirect_stdout(io.StringIO()):
             # (반영한 분기 수, 못 합친 분기 목록) 을 돌려줍니다.
-            return fetch.apply_amendments(quarters, 'fixture')[0]
+            return fetch.apply_amendments(quarters, 'fixture', {acc: '2024-02-14' for acc in docs})[0]
 
     def test_merged_quarter_records_what_was_applied(self):
         q = self.quarter()

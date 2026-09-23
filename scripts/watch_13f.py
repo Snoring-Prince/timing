@@ -18,12 +18,15 @@ def known_accessions(path):
     book = json.loads(Path(path).read_text(encoding="utf-8"))
     known = {q["accession"] for q in book.get("quarters", []) if q.get("accession")}
     known.update(a for q in book.get("quarters", []) for a in q.get("amended_by", []))
+    known.update(f["accession"] for f in book.get("skipped_filings", [])
+                 if f.get("reason") == "pre-xml")
     return known
 
 
 def changed(investor, rows):
     known = known_accessions(investor.output)
-    return [row for row in rows if row["accession"] not in known]
+    return [row for row in rows if row["period"] >= f"{investor.since}-01-01"
+            and row["accession"] not in known]
 
 
 def main(argv=None):

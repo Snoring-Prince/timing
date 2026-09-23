@@ -21,20 +21,21 @@ from titans.sec import form_rows, recent_filings  # noqa: E402
 class RegistryTests(unittest.TestCase):
     def test_registry_is_the_source_for_active_investors(self):
         investors = load()
-        self.assertEqual([investor.slug for investor in investors], ["berkshire"])
-        self.assertEqual(investors[0].cik, "0001067983")
-        self.assertEqual(investors[0].output.name, "berkshire.json")
+        self.assertIn("berkshire", [investor.slug for investor in investors])
+        self.assertEqual(one("berkshire").cik, "0001067983")
+        self.assertEqual(one("berkshire").output.name, "berkshire.json")
 
     def test_registry_matches_the_investor_page_settings(self):
-        investor = one("berkshire")
-        html = (SCRIPTS.parent / "titans" / investor.slug / "index.html").read_text(
-            encoding="utf-8")
-        self.assertIn(f'slug : "{investor.slug}"', html)
-        self.assertIn(f'cik  : "{investor.cik}"', html)
-        self.assertIn(f'data : "../../data/titans/{investor.slug}.json"', html)
-        self.assertIn(f'since: {investor.since}', html)
-        self.assertIn(investor.name["en"], html)
-        self.assertIn(investor.name["ko"], html)
+        for investor in load():
+            with self.subTest(investor=investor.slug):
+                html = (SCRIPTS.parent / "titans" / investor.slug / "index.html").read_text(
+                    encoding="utf-8")
+                self.assertIn(f'slug : "{investor.slug}"', html)
+                self.assertIn(f'cik  : "{investor.cik}"', html)
+                self.assertIn(f'data : "../../data/titans/{investor.slug}.json"', html)
+                self.assertIn(f'since: {investor.since}', html)
+                self.assertIn(investor.name["en"], html)
+                self.assertIn(investor.name["ko"], html)
 
     def test_registry_rejects_duplicate_slug_and_bad_cik(self):
         rows = [

@@ -8,6 +8,8 @@ on:
       - "scripts/watch_13f.py"
       - "scripts/titans/**"
       - "scripts/fetch_prices.py"
+      - "scripts/fetch_tickers.py"
+      - "scripts/fetch_sectors.py"
       - "data/titans/investors.json"
       - "data/titans/prices.json"
       - "scripts/tests/**"
