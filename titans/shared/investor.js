@@ -20,26 +20,33 @@ en:{
   brand:"Titans' picks",
   tagline:n=>`${n} holdings · latest filing`,
   mobileGuide:"Numbers, left to right: shares held · share change this quarter · estimated return. Right: value · portfolio weight.",
-  tradeBasis:"Trade amounts are estimates from share changes and quarter-end prices. Full exits use the previous quarter-end value.",
+  tradeBasis:"Trade amounts are estimated from share changes and quarter-end prices. Full exits use the previous quarter-end value.",
   asOf:d=>`As of ${d}`,
   filedOn:d=>`filed ${d}`,
   quarterHead:d=>`${qLabel("en",d)} (${qSpan("en",d)})`,
-  kNew:"new", kAdd:"added", kTrim:"trimmed", kHold:"held", kOut:"exited",
-  positions:n=>`${n} positions`,
+  /* **`held` 를 여기 쓰지 않습니다.** 열 머리글이 이미 `Shares held` 이고
+     전량매도 줄이 `held 1.5 years` 를 씁니다 — 한 화면에서 같은 낱말이
+     세 가지를 가리켰습니다. 한국어는 `보유`/`유지` 로 갈라져 있습니다. */
+  kNew:"new", kAdd:"added", kTrim:"trimmed", kHold:"unchanged", kOut:"exited",
+  /* 영어는 단수를 따로 적는다. 한국어는 `26종목` 하나로 끝난다. */
+  positions:n=>`${n} position${n===1?"":"s"}`,
   bought:(n,v)=>`<i>Largest buy</i><span>${n}</span><em>${v} est.</em>`,
   sold:(n,v)=>`<i>Largest sale</i><span>${n}</span><em>${v} est.</em>`,
-  evNew:"New", evBack:"Back in", evOut:"Sold out",
+  /* **계기판과 같은 말을 씁니다.** 위에서 `EXITED` 라고 세어 놓고 여기서만
+     `Sold out` 이라고 부르면 한 사건이 두 이름을 갖습니다. 그리고 영어
+     `sold out` 은 "품절"로 먼저 읽힙니다. */
+  evNew:"New", evBack:"Re-entered", evOut:"Exited",
   heldFor:"held",
   costArrow:d=>`return = estimated average cost \u2192 price on ${d} · before dividends`,
   /* 가운데 칸은 좁다. **왜 숫자가 없는지만** 짧게 적고, 긴 설명은 각주가 한다.
      `집계 전` 은 우리 자료(1998년 첫 공시)보다 먼저 들고 있던 종목이다 —
      연도를 줄마다 적어 봐야 방문자는 그 해가 무슨 뜻인지 모른다(사용자 지적). */
   noRetOld:"held before\nrecords", noRetNew:"just in",
-  yr:n=>n<1?`${Math.round(n*12)} mo`:(n%1?`${n.toFixed(1)} yr`:`${n} yr`),
+  yr:n=>{ if(n<1){ const m=Math.round(n*12); return `${m} month${m===1?"":"s"}`; }
+          const v=n%1?n.toFixed(1):String(n); return `${v} year${v==="1"?"":"s"}`; },
   /* 목록 머리글. **안 변하는 말은 머리에 한 번만** 적는다(4번 성적표와 같은 판단). */
   colShares:"Shares held", colQtr:"This quarter", colRet:"Est. return", colVal:"Value · weight",
-  lifeSum:(n,lo,hi)=>`${n} quarters · low ${lo} → high ${hi}`,
-  lifeThin:"only one filing — nothing to draw yet",
+  lifeThin:"Only one filing — nothing to draw yet.",
   lifeSpans:["1Y","5Y","10Y","15Y"],
   lifeSpanLab:"how far back to show",
   lifePrior:(b,s)=>`<span>Earlier</span><span>BUY <em class="up">${b}</em></span><span>SELL <em class="down">${s}</em></span>`,
@@ -48,18 +55,17 @@ en:{
   /* **`Trade record` 라고 쓰지 않습니다.** 13F 는 분기 마지막 날의 스냅샷뿐이라
      한 줄은 체결이 아니라 그 분기 동안의 순변화입니다. */
   recShow:"Show quarter-by-quarter record", recHide:"Hide quarter-by-quarter record",
-  recCount:n=>`${n} quarters`,
-  rcDate:"Filing", rcMove:"Change", rcPrice:"Quarter-end price", rcValue:"Value",
-  rcIn:"Entered", rcBack:"Back in", rcOut:"Sold out", rcPre:"Held before records",
-  lifeQuiet:"never bought or sold across this history",
-  lifeScroll:"drag sideways for earlier years",
-  buy:"BUY", sell:"SELL",
-  same:"held",
+  recCount:n=>`${n} quarter${n===1?"":"s"}`,
+  /* **`Filing` 이 아닙니다.** 그 칸에 찍히는 것은 분기 마지막 날이고,
+     화면 머리에는 `filed Aug 14, 2026` 이 따로 있습니다 — 같은 화면이
+     `filing` 을 두 날짜로 쓰게 됩니다. 한국어 `공시 분기` 와 같은 뜻. */
+  rcDate:"Quarter end", rcMove:"Change", rcPrice:"Quarter-end price", rcValue:"Value",
+  rcIn:"Entered", rcBack:"Re-entered", rcOut:"Exited", rcPre:"Held before records",
+  same:"unchanged",
   topOnly:(n,p)=>`Top ${n} — ${p} of the total value`,
   allShown:n=>`All ${n} positions shown`,
   foldOpen:n=>`Show ${n} more`, foldClose:n=>`Hide ${n}`,
   noData:"Could not load the filings.",
-  aboutH:"How to read this",
   footTitle:"Disclaimer",
   /* 각주는 **네 문단**입니다. 사용자가 직접 줄여서 문장을 적어 줬습니다 —
      *"너무 장황한데 … 이정도면 충분할 듯."* 순서는 출처 → 자료의 성격 →
@@ -78,11 +84,11 @@ en:{
 ko:{
   locale:"ko-KR", dir:"ltr", tab:"한국어",
   docTitle:(n,y)=>`${n} 포트폴리오 — ${y}년부터의 13F 공시`,
-  metaDesc:n=>`${n}의 최근 SEC 13F 공시 기준 보유 종목 — 분기말 기록으로 비중, 주식수 증감과 추정 수익률을 살펴봅니다.`,
+  metaDesc:n=>`${n}의 최근 SEC 13F 공시 기준 보유 종목 — 분기말 기록으로 비중, 주식 수 증감과 추정 수익률을 살펴봅니다.`,
   brand:"대가들의 선택",
   tagline:n=>`${n} · 최근 공시 기준 보유 종목`,
-  mobileGuide:"숫자는 왼쪽부터 보유 주식수 · 이번 분기 주식수 증감 · 추정 수익률입니다. 오른쪽은 금액 · 전체 보유 금액에서의 비중입니다.",
-  tradeBasis:"매매 금액은 주식수 증감과 분기말 가격으로 추정합니다. 전량 매도는 직전 분기말 보유 금액을 사용합니다.",
+  mobileGuide:"숫자는 왼쪽부터 보유 주식 수 · 이번 분기 주식 수 증감 · 추정 수익률입니다. 오른쪽은 금액 · 전체 보유 금액에서의 비중입니다.",
+  tradeBasis:"매매 금액은 주식 수 증감과 분기말 가격으로 추정합니다. 전량 매도는 직전 분기말 보유 금액을 사용합니다.",
   asOf:d=>`${d} 기준`,
   filedOn:d=>`${d} 공시`,
   quarterHead:d=>`${qLabel("ko",d)} (${qSpan("ko",d)})`,
@@ -103,8 +109,7 @@ ko:{
   yr:n=>n<1?`${Math.round(n*12)}개월`:(n%1?`${n.toFixed(1)}년`:`${n}년`),
   /* 목록 머리글. **안 변하는 말은 머리에 한 번만** 적는다(4번 성적표와 같은 판단). */
   colShares:"보유 주식 수", colQtr:"이번 분기", colRet:"추정 수익률", colVal:"금액 · 비중",
-  lifeSum:(n,lo,hi)=>`${n}분기 · 최저 ${lo} → 최고 ${hi}`,
-  lifeThin:"공시가 한 번뿐이라 아직 그릴 것이 없습니다",
+  lifeThin:"공시가 한 번뿐이라 아직 그릴 것이 없습니다.",
   lifeSpans:["1년","5년","10년","15년"],
   lifeSpanLab:"얼마나 거슬러 볼까",
   lifePrior:(b,s)=>`<span>이 기간 이전</span><span>매수 <em class="up">${b}</em>건</span><span>매도 <em class="down">${s}</em>건</span>`,
@@ -114,20 +119,16 @@ ko:{
   recCount:n=>`${n}개 분기`,
   rcDate:"공시 분기", rcMove:"변화", rcPrice:"분기말 가격", rcValue:"평가 금액",
   rcIn:"진입", rcBack:"재진입", rcOut:"전량매도", rcPre:"집계 전부터 보유",
-  lifeQuiet:"이 기간에 사고판 적이 없습니다",
-  lifeScroll:"옆으로 끌면 그 이전이 나옵니다",
-  buy:"BUY", sell:"SELL",
   same:"유지",
   topOnly:(n,p)=>`상위 ${n}종목 · 전체 투자 금액의 ${p}`,
   allShown:n=>`${n}종목 전부 펼침`,
   foldOpen:n=>`${n}개 종목 더 보기`, foldClose:n=>`${n}개 종목 숨기기`,
   noData:"공시를 불러오지 못했습니다.",
-  aboutH:"보는 법",
   footTitle:"유의사항",
   foot:()=>[
     `출처: ${TT.name.ko}(CIK ${TT.cik})가 SEC 에 낸 Form 13F-HR`,
     "13F 공시는 분기의 마지막 날 하루를 적은 것이고, 공시는 그로부터 45일 안에 냅니다. 그 사이에 이미 바뀌었을 수 있습니다. 13F 공시에는 미국 상장 주식만 실립니다 \u2014 현금\u00B7채권\u00B7해외 주식\u00B7통째로 소유한 회사\u00B7공매도는 포함되어 있지 않습니다.",
-    "매수 평균가와 수익률은 추정입니다. 13F 공시에는 체결가가 없어서 금액\u00F7주식수로 어림한 값이라 크게 빗나갈 수 있습니다.",
+    "매수 평균가와 수익률은 추정입니다. 13F 공시에는 체결가가 없어서 금액\u00F7주식 수로 어림한 값이라 크게 빗나갈 수 있습니다.",
     "본 사이트는 특정 금융상품이나 자산에 대한 투자 권유나 추천이 아니며, 투자의 최종 판단과 책임은 전적으로 투자자 본인에게 있습니다."
   ]
 }
@@ -745,18 +746,18 @@ function lifeOf(snaps,key){
 }
 
 /* 주당 가격. 금액(money)과 자릿수가 다르다 — $66.0B 와 $289.36 은 다른 자입니다. */
-/* 차트 안에서 쓰는 주식수. **`K`·`M`·`B` 로 줄이되 소수 둘째 자리까지**
-   적습니다 (사용자 요청 — "너무 디테일하게 쓰는데 대충 줄여줘").
-   `+136,373,000` 은 아홉 글자라 12px 간격의 막대 위에서 이웃을 밀어내고,
-   정확한 자릿수는 말풍선이 아니라 **목록 줄**이 이미 말합니다.
-   단위 글자는 언어를 안 탑니다 — `K`·`M` 은 한국어 화면에서도 그대로 씁니다. */
-function compShares(n){
-  const a=Math.abs(n);
-  if(a>=1e9) return (n/1e9).toFixed(2)+"B";
-  if(a>=1e6) return (n/1e6).toFixed(2)+"M";
-  if(a>=1e3) return (n/1e3).toFixed(2)+"K";
-  return Math.round(n).toLocaleString(LOCALE);
-}
+/* 차트 막대 위의 주식수. **바로 아래 표(`분기별 보유 변화`)와 같은 자를
+   씁니다** (사용자 결정 — "차트를 표에 맞추자"). 표가 생기기 전에는 차트만
+   `K`·`M`·`B` 를 썼는데, 지금은 **한 줄을 펼치면 같은 분기의 같은 수가
+   차트에서는 `−389.37M`, 표에서는 `−3.89억주` 로** 두 번 다르게 찍혔습니다.
+   줄여 적는다는 원래 뜻(`+136,373,000` 은 아홉 글자라 이웃을 밀어냄)은
+   `shortShares()` 가 그대로 지킵니다. */
+const compShares=n=>shortShares(n);
+
+/* 고정폭 11px 에서 이름표가 차지하는 폭. **한글은 두 칸을 씁니다** —
+   글자 수로만 세면 `−1,029만주` 가 영문과 같은 폭으로 잡혀 이웃과 겹칩니다
+   (CLAUDE.md 9-3 의 "한글은 고정폭에서도 영문의 두 배"). */
+const labWidth=t=>[...String(t)].reduce((w,c)=>w+(/[\uAC00-\uD7A3\u3130-\u318F]/.test(c)?2:1),0)*6.7+8;
 
 /* 가로축 눈금의 날짜. **`26 Q1` 이 아니라 `2026.03.31` 입니다** (사용자 요청) —
    `Q1` 은 주린이에게 통하는 말이 아니고, 13F 는 실제로 그날의 스냅샷입니다.
@@ -809,7 +810,7 @@ function chartBody(r,li){
   const labelLimit=W<430?2:Math.max(2,Math.floor(W/140));
   for(const t of candidates){
     const text=(t.v>0?"+":"−")+compShares(Math.abs(t.v));
-    const width=text.length*6.7+8,cx=Math.max(LEFT+width/2,Math.min(W-RIGHT-width/2,(Math.max(LEFT,xg(t.o.gi-1))+xg(t.o.gi))/2));
+    const width=labWidth(text),cx=Math.max(LEFT+width/2,Math.min(W-RIGHT-width/2,(Math.max(LEFT,xg(t.o.gi-1))+xg(t.o.gi))/2));
     if(labels.length>=labelLimit||labels.some(l=>Math.abs(l.cx-cx)<(l.width+width)/2+8))continue;
     labels.push({text,cx,width,yy:zero-height(t.v)-7,cls:t.v>0?"up":"down"});
   }

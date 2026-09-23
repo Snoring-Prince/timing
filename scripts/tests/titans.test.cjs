@@ -38,7 +38,7 @@ test('new and re-entered rows are not labelled held in either language', () => {
   const run = page(real);
   assert.match(run('rowHTML(build().list.find(r=>r.isNew),26,100)'), /class="act">재진입/);
   run('LANG="en";L10N=D.en;');
-  assert.match(run('rowHTML(build().list.find(r=>r.isNew),26,100)'), /class="act">Back in/);
+  assert.match(run('rowHTML(build().list.find(r=>r.isNew),26,100)'), /class="act">Re-entered/);
   const fresh = page(book([['2026-03-31',0,0],['2026-06-30',10,50]]));
   assert.match(fresh('rowHTML(build().list[0],1,100)'), /class="act">신규/);
 });
@@ -312,7 +312,7 @@ test('a full exit is recorded without inventing a sale price', () => {
   assert.equal((out[2].match(/—/g)||[]).length,3);   // 보유·가격·금액 셋 다 비움
   assert.match(h,/class="rcm">재진입/);
   run('LANG="en";L10N=D.en;');
-  assert.match(run('recordHTML(build().list.find(r=>r.key==="674599"))'),/class="rcm down">Sold out/);
+  assert.match(run('recordHTML(build().list.find(r=>r.key==="674599"))'),/class="rcm down">Exited/);
 });
 
 test('the record ignores the period buttons and never says "trade"', () => {
@@ -391,4 +391,61 @@ test('the investor blurb is prose in the page, not strings in the shared screen'
   // 공통 JS 는 이 덩어리를 머리글 아래 제자리로 옮길 뿐이다.
   assert.match(shared,/getElementById\("titan-bio"\)/);
   assert.match(shared,/insertBefore\(bio,q\)/);
+});
+
+test('english counts say "1 quarter", not "1 quarters"', () => {
+  const run = page(real);
+  run('LANG="en";L10N=D.en;');
+  assert.equal(run('tx("recCount",1)'), '1 quarter');
+  assert.equal(run('tx("recCount",2)'), '2 quarters');
+  assert.equal(run('tx("positions",1)'), '1 position');
+  assert.equal(run('tx("positions",26)'), '26 positions');
+  assert.equal(run('tx("yr",1)'), '1 year');
+  assert.equal(run('tx("yr",1.5)'), '1.5 years');
+  assert.equal(run('tx("yr",0.5)'), '6 months');
+  // 한국어는 수를 세지 않으므로 그대로다.
+  run('LANG="ko";L10N=D.ko;');
+  assert.equal(run('tx("recCount",1)'), '1개 분기');
+});
+
+test('one word never has to mean three things on the same screen', () => {
+  const run = page(real);
+  run('LANG="en";L10N=D.en;');
+  // 열 머리글은 `Shares held`, 전량매도 줄은 `held 1.5 years` 를 쓴다. 그러니
+  // "이번 분기에 안 움직였다"를 또 `held` 라고 부르면 한 낱말이 세 가지가 된다.
+  assert.equal(run('tx("same")'), 'unchanged');
+  assert.equal(run('tx("kHold")'), 'unchanged');
+  // 같은 사건을 계기판과 사건 줄이 다른 이름으로 부르지 않는다.
+  assert.equal(run('tx("evOut")'), 'Exited');
+  assert.equal(run('tx("rcOut")'), 'Exited');
+  assert.match(run('tx("kOut")'), /^exited$/i);
+  assert.equal(run('tx("evBack")'), run('tx("rcBack")'));
+  // 그 칸에 찍히는 것은 분기 마지막 날이지 공시일이 아니다.
+  assert.doesNotMatch(run('tx("rcDate")'), /filing/i);
+});
+
+test('the chart labels a quarter with the same number the record shows', () => {
+  for (const lang of ['ko','en']) {
+    const run = page(real);
+    run(`LANG="${lang}";L10N=D.${lang};LOCALE=D.${lang}.locale;`);
+    // 애플 2024.06.30 은 −389,368,450 주. 차트 막대 이름표와 표의 `변화` 칸이
+    // 같은 수를 두 가지로 적으면 한 줄 안에서 화면이 자기 말을 어긴다.
+    assert.equal(run('compShares(389368450)'), run('shortShares(389368450)'));
+    assert.equal(run('compShares(333856)'), run('shortShares(333856)'));
+  }
+  const ko = page(real); ko('LANG="ko";L10N=D.ko;LOCALE="ko-KR";');
+  assert.equal(ko('compShares(389368450)'), '3.89억주');
+  // 한글은 고정폭에서도 두 칸을 쓴다 — 글자 수로 재면 이웃과 겹친다.
+  assert.ok(ko('labWidth("3.89억주")') > ko('labWidth("389.4M")'));
+});
+
+test('no dictionary entry is left behind after a feature is removed', () => {
+  const a = shared.indexOf('const D={'), b = shared.indexOf('\nconst REDUP');
+  const dict = shared.slice(a, b), rest = shared.slice(0, a) + shared.slice(b);
+  const keys = [...new Set([...dict.matchAll(/^ {2}([a-zA-Z][a-zA-Z0-9]*)\s*:/gm)].map(m => m[1]))];
+  const dead = keys.filter(k => !new RegExp('["\'.]' + k + '\\b').test(rest));
+  assert.deepEqual(dead, [], '화면이 안 읽는 사전 키: ' + dead.join(', '));
+  // 두 언어가 같은 열쇠를 갖는지도 같이 본다 — 한쪽만 지우는 실수가 제일 잦다.
+  const run = page(real);
+  assert.deepEqual(run('Object.keys(D.en).sort()'), run('Object.keys(D.ko).sort()'));
 });
