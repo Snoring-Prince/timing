@@ -175,34 +175,46 @@ def collect(required, previous, now, full=False, known=None):
             if not ticker:
                 raise ValueError("exact CUSIP mapping unavailable")
             refresh = full or not old.get("values") or now.weekday() == 5
-            first = DEEP if refresh else dt.date.fromisoformat(old["values"][-1][0])-dt.timedelta(days=10)
-            def download(day):
+            # 상장 때부터는 **종목마다 한 번만** 훑는다. 1983년 분할은 앞으로도
+            # 1983년 분할이라, 매주 40년치 바를 다시 받아 같은 답을 얻는 것은
+            # 낭비다(주 1회 10.8MB → 33MB). 이미 훑어 둔 종목은 예전처럼 15년
+            # 창만 받고, 창 밖 분할은 저장된 책에서 가져온다.
+            scanned = old.get("splitsFrom") if old.get("ticker") == ticker else None
+            deep = scanned != DEEP.isoformat()
+            first = ((DEEP if deep else start) if refresh
+                     else dt.date.fromisoformat(old["values"][-1][0])-dt.timedelta(days=10))
+            def download(day, verify=False):
                 p1 = int(dt.datetime.combine(day, dt.time(), NY).timestamp())
                 url = ("https://query1.finance.yahoo.com/v8/finance/chart/"+urllib.parse.quote(ticker, safe="")+
                        f"?period1={p1}&period2={int(now.timestamp())}&interval=1d&events=splits")
                 payload = request(url)
                 parsed = parse_chart(payload, ticker, now)
                 first_trade = payload["chart"]["result"][0]["meta"].get("firstTradeDate")
-                if day == DEEP and first_trade:
-                    expected = max(DEEP, from_epoch(first_trade).astimezone(NY).date())
+                if verify and first_trade:
+                    expected = max(day, from_epoch(first_trade).astimezone(NY).date())
                     if dt.date.fromisoformat(parsed[0][0][0]) > expected+dt.timedelta(days=14):
                         raise ValueError("response starts too late for a full history")
                     elapsed = (dt.date.fromisoformat(parsed[0][-1][0])-expected).days
                     if len(parsed[0]) < elapsed/365.25*252*.75:
                         raise ValueError("full history has unexpectedly few daily prices")
                 return parsed
-            values, splits = download(first)
+            values, splits = download(first, refresh)
             # Incremental responses only contain recent split events. Compare those;
             # a newly reported or changed event forces an entire history download.
             if not refresh:
                 if any(old.get("splits", {}).get(day) != ratio for day, ratio in splits.items()):
                     refresh = True
-                    values, splits = download(DEEP)
+                    values, splits = download(DEEP if deep else start, True)
                 else:
                     splits = old.get("splits", {}) | splits
+            if refresh and not deep:
+                # 이 응답에는 창 밖 분할이 없다. 지우지 말고 책에서 되살린다.
+                splits = {d: v for d, v in old.get("splits", {}).items()
+                          if d < start.isoformat()} | splits
             if (now.astimezone(NY).date()-dt.date.fromisoformat(values[-1][0])).days > 7:
                 raise ValueError("last closing price is more than seven days old")
-            scanned = DEEP.isoformat() if refresh else old.get("splitsFrom")
+            if refresh and deep:
+                scanned = DEEP.isoformat()
             series[cusip] = {**identity, "ticker": ticker, "currency": "USD",
                             **merge_series(old, values, splits, start.isoformat(), refresh),
                             **({"splitsFrom": scanned} if scanned else {})}

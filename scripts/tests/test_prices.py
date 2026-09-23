@@ -116,6 +116,38 @@ class PricesTests(unittest.TestCase):
         self.assertEqual(row["splits"], {"1985-06-03": "3:1"})
         self.assertEqual(row["splitsFrom"], "1970-01-01")
 
+    def test_a_scanned_ticker_does_not_redownload_forty_years_every_week(self):
+        # 옛 분할은 변하지 않는다. 이미 훑어 둔 종목은 주 1회 전체 재수집에서도
+        # 15년 창만 받고, 창 밖 분할은 저장된 책에서 되살린다.
+        saturday = dt.datetime(2026, 9, 19, 19, tzinfo=p.UTC)
+        self.assertEqual(saturday.weekday(), 5)
+        old = {"series": {"123456100": {"ticker": "AAPL", "splitsFrom": "1970-01-01",
+                                        "values": [["2026-09-16", 100], ["2026-09-17", 101]],
+                                        "splits": {"1985-06-03": "3:1"}}}}
+        with patch.object(p, "resolve", return_value={"123456100": "AAPL"}), \
+                patch.object(p, "request", return_value=chart()) as req, patch.object(p.time, "sleep"):
+            result, errors = p.collect({"123456100": {"name": "Issuer", "class": "COM"}}, old, saturday)
+        self.assertEqual((errors, req.call_count), ([], 1))
+        asked = int(dt.datetime.combine(
+            p.years_before(dt.date(2026, 9, 19))-dt.timedelta(days=7), dt.time(), p.NY).timestamp())
+        deep = int(dt.datetime.combine(p.DEEP, dt.time(), p.NY).timestamp())
+        self.assertIn(f"period1={asked}", req.call_args[0][0])
+        self.assertNotIn(f"period1={deep}", req.call_args[0][0])
+        row = result["series"]["123456100"]
+        self.assertEqual(row["splits"], {"1985-06-03": "3:1"})
+        self.assertEqual(row["splitsFrom"], "1970-01-01")
+
+    def test_a_renamed_ticker_is_scanned_from_listing_again(self):
+        # 표식은 그 티커의 것이다. 종목이 바뀌면 남의 분할을 물려받으면 안 된다.
+        old = {"series": {"123456100": {"ticker": "OLD", "splitsFrom": "1970-01-01",
+                                        "values": [["2026-09-16", 100]], "splits": {"1985-06-03": "3:1"}}}}
+        with patch.object(p, "resolve", return_value={"123456100": "AAPL"}), \
+                patch.object(p, "request", return_value=chart()), patch.object(p.time, "sleep"):
+            result, errors = p.collect({"123456100": {"name": "Issuer", "class": "COM"}}, old,
+                                       dt.datetime(2026, 9, 19, 19, tzinfo=p.UTC))
+        self.assertEqual(errors, [])
+        self.assertEqual(result["series"]["123456100"]["splits"], {})
+
     def test_incremental_run_keeps_the_deep_scan_marker_and_old_splits(self):
         old = {"series": {"123456100": {"ticker": "AAPL", "splitsFrom": "1970-01-01",
                                         "values": [["2026-09-16", 100]], "splits": {"1985-06-03": "3:1"}}}}
