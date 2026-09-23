@@ -27,6 +27,11 @@ from titans.registry import books  # noqa: E402
 OUT = ROOT / "data/titans/prices.json"
 UTC = dt.timezone.utc
 NY = ZoneInfo("America/New_York")
+# 가격은 15년치만 저장하지만 **분할은 그 종목이 공시에 처음 나온 분기까지**
+# 훑는다. 화면은 붙어 있는 두 공시 사이만 묻고(`realSplit(key, QS[i-1], QS[i])`),
+# 그 종목을 들고 있기 시작한 분기보다 옛 분할은 물어볼 일이 아예 없다.
+# 월봉으로 싸게 받을 수는 없다 — 정찰(2026-09-23)에서 AXP 1983-02-11 4:3 이
+# 월봉 응답에만 빠져 있었다. 그래서 일봉으로 받고 창 밖의 옛 바는 버린다.
 
 
 def from_epoch(stamp):
@@ -55,6 +60,17 @@ def request(url, payload=None):
             if attempt == 2:
                 raise
             time.sleep(5*(attempt+1))
+
+
+def first_seen(books):
+    """종목마다 **처음 공시에 나온 분기** — 분할을 얼마나 깊이 훑을지 정한다."""
+    seen = {}
+    for book in books:
+        for quarter in book.get("quarters", []):
+            for h in quarter["holdings"]:
+                if seen.get(h["cusip"], "9999") > quarter["period"]:
+                    seen[h["cusip"]] = quarter["period"]
+    return seen
 
 
 def required_cusips(books):
@@ -145,13 +161,13 @@ def merge_series(old, values, splits, start, full):
         if max(incoming) < max(previous):
             raise ValueError("full refresh would remove newer saved closing prices")
         expected = [day for day in previous if day >= start and day <= max(incoming)]
-        if len(incoming) < len(expected)*.98:
+        if len([day for day in incoming if day >= start]) < len(expected)*.98:
             raise ValueError("full refresh is unexpectedly shorter than saved history")
     merged = incoming if full else previous | incoming
     return {"values": [[day, merged[day]] for day in sorted(merged) if day >= start], "splits": splits}
 
 
-def collect(required, previous, now, full=False, known=None):
+def collect(required, previous, now, full=False, known=None, since=None):
     saved = previous.get("series", {})
     # Weekly/full verification also catches ticker changes of the same security.
     missing = [c for c in required if full or now.weekday() == 5 or not saved.get(c, {}).get("ticker")]
@@ -170,35 +186,51 @@ def collect(required, previous, now, full=False, known=None):
             if not ticker:
                 raise ValueError("exact CUSIP mapping unavailable")
             refresh = full or not old.get("values") or now.weekday() == 5
-            first = start if refresh else dt.date.fromisoformat(old["values"][-1][0])-dt.timedelta(days=10)
-            def download(day):
+            # 상장 때부터는 **종목마다 한 번만** 훑는다. 1983년 분할은 앞으로도
+            # 1983년 분할이라, 매주 40년치 바를 다시 받아 같은 답을 얻는 것은
+            # 낭비다(주 1회 10.8MB → 33MB). 이미 훑어 둔 종목은 예전처럼 15년
+            # 창만 받고, 창 밖 분할은 저장된 책에서 가져온다.
+            # 15년 창보다 늦게 들어온 종목이라도 가격은 창을 채워야 한다.
+            need = min((since or {}).get(cusip, start.isoformat()), start.isoformat())
+            scanned = old.get("splitsFrom") if old.get("ticker") == ticker else None
+            deep = not scanned or scanned > need
+            first = ((dt.date.fromisoformat(need) if deep else start) if refresh
+                     else dt.date.fromisoformat(old["values"][-1][0])-dt.timedelta(days=10))
+            def download(day, verify=False):
                 p1 = int(dt.datetime.combine(day, dt.time(), NY).timestamp())
                 url = ("https://query1.finance.yahoo.com/v8/finance/chart/"+urllib.parse.quote(ticker, safe="")+
                        f"?period1={p1}&period2={int(now.timestamp())}&interval=1d&events=splits")
                 payload = request(url)
                 parsed = parse_chart(payload, ticker, now)
                 first_trade = payload["chart"]["result"][0]["meta"].get("firstTradeDate")
-                if day == start and first_trade:
-                    expected = max(start, from_epoch(first_trade).astimezone(NY).date())
+                if verify and first_trade:
+                    expected = max(day, from_epoch(first_trade).astimezone(NY).date())
                     if dt.date.fromisoformat(parsed[0][0][0]) > expected+dt.timedelta(days=14):
                         raise ValueError("response starts too late for a full history")
                     elapsed = (dt.date.fromisoformat(parsed[0][-1][0])-expected).days
                     if len(parsed[0]) < elapsed/365.25*252*.75:
                         raise ValueError("full history has unexpectedly few daily prices")
                 return parsed
-            values, splits = download(first)
+            values, splits = download(first, refresh)
             # Incremental responses only contain recent split events. Compare those;
             # a newly reported or changed event forces an entire history download.
             if not refresh:
                 if any(old.get("splits", {}).get(day) != ratio for day, ratio in splits.items()):
                     refresh = True
-                    values, splits = download(start)
+                    values, splits = download(dt.date.fromisoformat(need) if deep else start, True)
                 else:
                     splits = old.get("splits", {}) | splits
+            if refresh and not deep:
+                # 이 응답에는 창 밖 분할이 없다. 지우지 말고 책에서 되살린다.
+                splits = {d: v for d, v in old.get("splits", {}).items()
+                          if d < start.isoformat()} | splits
             if (now.astimezone(NY).date()-dt.date.fromisoformat(values[-1][0])).days > 7:
                 raise ValueError("last closing price is more than seven days old")
+            if refresh and deep:
+                scanned = need
             series[cusip] = {**identity, "ticker": ticker, "currency": "USD",
-                            **merge_series(old, values, splits, start.isoformat(), refresh)}
+                            **merge_series(old, values, splits, start.isoformat(), refresh),
+                            **({"splitsFrom": scanned} if scanned else {})}
             print(f"{cusip} {ticker}: {len(series[cusip]['values'])} days, last {series[cusip]['values'][-1][0]}", flush=True)
         except Exception as exc:
             errors.append(f"{cusip} {ticker or '?'}: {exc}")
@@ -211,10 +243,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--full", action="store_true")
     args = parser.parse_args()
-    required = required_cusips(books())
+    catalog = books()
+    required = required_cusips(catalog)
     previous = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
     known = json.loads((ROOT / "data/titans/tickers.json").read_text(encoding="utf-8"))
-    result, errors = collect(required, previous, dt.datetime.now(UTC), args.full, known)
+    result, errors = collect(required, previous, dt.datetime.now(UTC), args.full, known,
+                             first_seen(catalog))
     if result["series"] != previous.get("series", {}):
         tmp = OUT.with_suffix(".tmp")
         tmp.write_text(json.dumps(result, ensure_ascii=False, separators=(",", ":"))+"\n", encoding="utf-8")

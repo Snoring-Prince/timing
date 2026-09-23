@@ -384,7 +384,7 @@ function build(){
     const real=p?realSplit(a.key,prv.period,cur.period):undefined;
     const f=!(p&&p.shares>0&&p.value>0&&a.shares>0&&a.value>0)?null
       :real===undefined?splitFactor(a.shares/p.shares,(p.value/p.shares)/(a.value/a.shares))
-      :(real!==1?real:null);
+      :(real.sh!==1?real.sh:null);
     const prevShares=p?p.shares*(f||1):null;
     const dn=p?a.shares-prevShares:a.shares;
     const dsh=(prevShares>0)?(a.shares/prevShares-1):null;
@@ -539,6 +539,18 @@ let SPLIT_BOOK={};
                                                         구글 C주 배분
 ══════════════════════════════════════════════════════════════════ */
 const SPLIT_MAX=20;
+/* 야후가 적어 둔 사건의 배수 — **종가는 이미 이 값으로 나뉘어 있습니다.**
+   13F 값(금액÷주식수)에 같은 것을 적용하면 두 자료가 정확히 같은 자가 됩니다
+   (버크셔 465분기 전부 일치, 어긋남 0건 — CLAUDE.md 9-3).
+   그래서 **가격은 모든 사건을, 주식수는 진짜 액면분할만** 따릅니다:
+   인적·물적 분할은 주식수를 안 건드리고 주가만 내립니다. */
+function adjRatio(text){
+  const m=/^(\d+(?:\.\d+)?):(\d+(?:\.\d+)?)$/.exec(String(text||""));
+  if(!m)return null;
+  const n=Number(m[1]), d=Number(m[2]);
+  return (n>0&&d>0&&n!==d)?n/d:null;
+}
+
 function splitRatio(text){
   const m=/^(\d+(?:\.0+)?):(\d+(?:\.0+)?)$/.exec(String(text||""));
   if(!m)return null;
@@ -552,12 +564,15 @@ function splitRatio(text){
 /* 두 공시 날짜 사이의 진짜 분할 배수. 자료가 그 구간을 안 덮으면
    `undefined` 를 돌려주어 **추측기로 넘깁니다** — 모르는 것을 1 이라고
    답하면 옛 분기의 분할이 통째로 사라집니다. */
+/* 두 배수를 같이 돌려줍니다 — `sh` 는 주식수(진짜 액면분할만), `px` 는
+   가격(인적·물적 분할까지). 덮지 못하는 옛 구간은 `undefined` 라 추측기로
+   넘어가고, 추측기는 하나뿐이라 그때는 둘이 같은 값입니다. */
 function realSplit(key,from,to){
   const book=SPLIT_BOOK[key];
   if(!book||!from||from<book.from)return undefined;
-  let f=1;
-  for(const [day,v] of book.days) if(day>from&&day<=to) f*=v;
-  return f;
+  let sh=1,px=1;
+  for(const [day,v] of book.adj) if(day>from&&day<=to){ px*=v; sh*=(book.days.get(day)||1); }
+  return {sh,px};
 }
 
 // TITAN.prices에는 자체 종가 JSON 주소를 설정합니다. 공급처 조건은 CLAUDE.md에
@@ -580,19 +595,24 @@ function acceptPrices(book){
        계산도 같은 열쇠를 씁니다. 두 종류가 같은 날 **다른 배수**를 말하면
        그 날은 버리고 추측기로 넘깁니다(한쪽만 쪼개진 것을 합산 주식수에
        그대로 곱하면 틀립니다). */
-    const kk=key.slice(0,6), book=SPLIT_BOOK[kk]||(SPLIT_BOOK[kk]={from:"",days:new Map(),bad:new Set()});
+    const kk=key.slice(0,6), book=SPLIT_BOOK[kk]||(SPLIT_BOOK[kk]={from:"",days:new Map(),adj:new Map(),bad:new Set()});
     /* 한 묶음에 종류가 여럿이면 **가장 늦게 시작하는 것**에 맞춥니다 — 한쪽만
-       덮인 구간을 덮었다고 치면 다른 쪽 분할을 못 보고 지나갑니다. */
-    if(clean[0][0]>book.from) book.from=clean[0][0];
+       덮인 구간을 덮었다고 치면 다른 쪽 분할을 못 보고 지나갑니다.
+       덮은 구간은 **가격이 시작하는 날이 아니라 분할을 훑은 날**입니다
+       (`splitsFrom`) — 가격은 15년치만 저장하지만 분할은 상장 때부터
+       훑습니다. 표식이 없는 옛 파일은 예전처럼 가격 시작일로 봅니다. */
+    const scanned=/^\d{4}-\d{2}-\d{2}$/.test(series.splitsFrom||"")?series.splitsFrom:clean[0][0];
+    if(scanned>book.from) book.from=scanned;
     for(const [day,text] of Object.entries(series.splits||{})){
       if(!/^\d{4}-\d{2}-\d{2}$/.test(day))continue;
-      const f=splitRatio(text);
-      if(f===null)continue;
-      if(book.days.has(day)&&book.days.get(day)!==f) book.bad.add(day);
-      book.days.set(day,f);
+      const px=adjRatio(text);
+      if(px===null)continue;
+      const sh=splitRatio(text);      // `days` 에는 **진짜 액면분할만** 들어갑니다
+      if(book.adj.has(day)&&book.adj.get(day)!==px) book.bad.add(day);
+      book.adj.set(day,px); if(sh!==null) book.days.set(day,sh);
     }
   }
-  for(const book of Object.values(SPLIT_BOOK)) for(const day of book.bad) book.days.delete(day);
+  for(const book of Object.values(SPLIT_BOOK)) for(const day of book.bad){ book.days.delete(day); book.adj.delete(day); }
   PRICE_ASOF=Object.values(PRICE_SERIES).map(s=>s.values.at(-1)[0]).sort().at(-1)||"";
 }
 
@@ -802,8 +822,13 @@ function costBasis(snaps,key){
       /* **진짜 분할 기록이 있으면 추측하지 않습니다.** 주가 파일이 그 구간을
          덮을 때만이고, 못 덮으면 `undefined` 라 예전처럼 추측합니다. */
       const real=realSplit(key,QS[i-1],QS[i]);
-      const f=real===undefined?splitFactor(a.shares/held, prevP/p):(real!==1?real:null);
-      if(f){ held*=f; prevP/=f; }
+      const g=real===undefined?splitFactor(a.shares/held, prevP/p):null;
+      const fs=real?real.sh:(g||1), fp=real?real.px:(g||1);
+      /* **쌓아 둔 원가도 같이 옮깁니다.** 평균 = 원가÷주식수 이므로
+         주식수가 `fs` 배, 가격이 `1/fp` 배가 되면 원가는 `fs/fp` 배여야
+         합니다. 액면분할은 둘이 같아 원가가 그대로이고(예전 그대로),
+         인적분할은 주식수가 안 변해 원가만 내려갑니다. */
+      if(fs!==1||fp!==1){ cost*=fs/fp; held*=fs; prevP/=fp; }
     }
     if(held===0){ cost=a.shares*p; held=a.shares; }
     else if(a.shares>held){ cost+=(a.shares-held)*((prevP+p)/2); held=a.shares; }
@@ -834,12 +859,13 @@ function lifeOf(snaps,key){
     const p=a.value/a.shares;
     if(held&&prevP){
       const real=realSplit(key,QS[i-1],QS[i]);
-      const f=real===undefined?splitFactor(a.shares/held, prevP/p):(real!==1?real:null);
+      const g=real===undefined?splitFactor(a.shares/held, prevP/p):null;
+      const fs=real?real.sh:(g||1), fp=real?real.px:(g||1);
       /* **직전 주식수도 같이 늘려야 합니다.** 지난 분기들만 고치고 `held` 를 그대로
          두면 이번 분기 증감이 `944M - 245M = +699M` 으로 잡혀 **액면분할이 사상
          최대의 매수로 그려집니다**(애플 2020-09 에서 실제로 그랬습니다).
          늘려 두면 `944M - 980M = -36M` 으로, 그 분기에 실제로 판 만큼만 남습니다. */
-      if(f){ for(const o of out){ if(o.p!==null)o.p/=f; o.sh*=f; o.dn*=f; } held*=f; }
+      if(fs!==1||fp!==1){ for(const o of out){ if(o.p!==null)o.p/=fp; o.sh*=fs; o.dn*=fs; } held*=fs; }
     }
     /* **`gi` 는 전체 분기 목록에서의 자리입니다.** 배열 첨자로 가로 위치를
        잡으면 안 됩니다 — 뱅크오브아메리카는 2010-09 에 전량 매도하고 2017-09
