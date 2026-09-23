@@ -430,8 +430,10 @@ def main():
     kinds = {}
     for name in ((sub.get("filings") or {}).get("recent") or {}).get("form") or []:
         kinds[name] = kinds.get(name, 0) + 1
+    # **자르지 않습니다.** 3차 실행에서 18개로 잘라 찍는 바람에 "주주 서한(ARS)이
+    # 아예 없다"를 확정하지 못했습니다 — 건수가 적은 서식이 잘린 자리에 숨습니다.
     print("    서식별 건수: " + " · ".join(
-        f"{k} {v}" for k, v in sorted(kinds.items(), key=lambda kv: -kv[1])[:18]))
+        f"{k} {v}" for k, v in sorted(kinds.items(), key=lambda kv: -kv[1])))
 
     forms = [f.strip() for f in a.forms.split(",") if f.strip()]
     found = filings_of(sub, set(forms))
