@@ -171,7 +171,15 @@ def collect(required, previous, now, full=False, known=None, since=None):
     saved = previous.get("series", {})
     # Weekly/full verification also catches ticker changes of the same security.
     missing = [c for c in required if full or now.weekday() == 5 or not saved.get(c, {}).get("ticker")]
-    series = dict(saved)
+    # **팔린 종목은 방문자 파일에 안 쌓는다.** 이 파일은 방문자가 통째로 받는
+    # 것인데 화면이 읽는 것은 지금 보유 종목뿐이다. 그대로 두면 버크셔 한
+    # 명만으로 242종목 18MB, 여덟 명이면 73MB 가 된다(2026-09-23 실측).
+    # 버리는 값은 재진입 때 한 번 다시 받는 것뿐이고(28년에 37번 · 요청 1번 ·
+    # 74KB), 그 길은 새 종목이 처음 들어올 때와 같은 길이라 이미 돈다 —
+    # 파일에 없으면 **그 종목이 공시에 처음 나온 분기까지** 다시 훑으므로
+    # 안 들고 있던 사이의 분할·분사도 그 한 번에 같이 들어온다.
+    # 받기에 실패한 종목은 보유 목록에 그대로 있으므로 옛 값이 남는다.
+    series = {c: saved[c] for c in required if c in saved}
     errors = []
     try:
         mapped = resolve(missing, required, known or {}) if missing else {}
@@ -245,6 +253,12 @@ def main():
     args = parser.parse_args()
     catalog = books()
     required = required_cusips(catalog)
+    # 공시책을 한 권도 못 읽었는데 그대로 나아가면, 위에서 팔린 종목을 버리는
+    # 규칙이 **파일을 통째로 비운다.** `books()` 가 파일 없는 투자자를 조용히
+    # 건너뛰므로 실제로 일어날 수 있다. 반쪽짜리 파일을 올리지 않는다는
+    # `fetch_long.py` 와 같은 장치다.
+    if not required:
+        raise SystemExit("no investor book holds anything: refusing to rewrite the price cache")
     previous = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
     known = json.loads((ROOT / "data/titans/tickers.json").read_text(encoding="utf-8"))
     result, errors = collect(required, previous, dt.datetime.now(UTC), args.full, known,
