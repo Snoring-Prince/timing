@@ -219,7 +219,7 @@ def filings_of(sub, forms):
     return out
 
 
-def one_filing(cik_int, filing, contact, names, show, notes, want, deep):
+def one_filing(cik_int, filing, contact, names, show, notes, want, deep, light):
     """한 건의 제출 폴더를 훑습니다.
 
     **파일 이름을 짐작하지 않습니다** — 목차(index.json)가 주는 이름만 씁니다.
@@ -254,7 +254,12 @@ def one_filing(cik_int, filing, contact, names, show, notes, want, deep):
     # ── A. 본문 ────────────────────────────────────────────────
     primary = filing.get("primaryDocument") or ""
     size = next((f["bytes"] for f in item["files"] if f["name"] == primary), 0)
-    if primary and size <= MAX_BYTES:
+    if light:
+        # 여러 해를 훑을 때 10MB 본문을 해마다 받을 이유가 없습니다.
+        # 답은 XBRL 낱장에 있고, 낱장은 수십 KB 입니다.
+        print(f"    A 본문 {primary} {size:,}b — 가벼운 훑기라 건너뜁니다")
+        item["primary"] = {"name": primary, "bytes": size, "skipped": "light"}
+    elif primary and size <= MAX_BYTES:
         r = get(f"{base}/{primary}", contact)
         notes.append(save(r, f"{tag}/{safe(primary)}"))
         if r["ok"]:
@@ -314,7 +319,7 @@ def one_filing(cik_int, filing, contact, names, show, notes, want, deep):
                 n["bytes"] = rr["bytes"]
                 n["lines"] = len(lines)
                 print(f"        ── {n['file']} ({n['name']}) {rr['bytes']:,}b · {len(lines)}줄")
-                for l in lines[:12]:
+                for l in lines[:40]:
                     print(f"           {l[:400]}")
                 # **여기가 핵심입니다.** 앞머리만 찍으면 표 앞의 설명 문단에서
                 # 끝납니다(첫 실행이 그랬습니다). 보유 종목 이름이 걸린 줄을
@@ -324,6 +329,16 @@ def one_filing(cik_int, filing, contact, names, show, notes, want, deep):
                 print(f"           ── 보유 종목 이름이 걸린 줄 {len(marked)}개")
                 for l in marked[:deep]:
                     print(f"           · {l[:400]}")
+                # **표의 행 이름이 곧 답입니다.** 2차 실행에서 취득원가 표의
+                # 행이 종목이 아니라 업종(`Banks, insurance and finance`)이라는
+                # 것이 여기서 드러났습니다. 우리 보유 이름과 안 맞아도 보이게
+                # `[Member]` 줄을 따로 찍습니다 — 그것이 XBRL 의 행 차원입니다.
+                mem = [l for l in lines if "[Member]" in l or "Axis=" in l]
+                n["member_lines"] = len(mem)
+                if mem:
+                    print(f"           ── 표의 행 이름([Member]) {len(mem)}개")
+                    for l in mem[:deep]:
+                        print(f"           # {l[:300]}")
         else:
             print(f"    B FilingSummary.xml 을 못 받았습니다 — {r['error']}")
     else:
@@ -346,6 +361,8 @@ def main():
                     help="이 이름이 든 낱장을 먼저 엽니다 (빈 칸이면 순서대로)")
     ap.add_argument("--lines", type=int, default=80,
                     help="낱장에서 이름이 걸린 줄을 몇 개까지 찍을지")
+    ap.add_argument("--light", action="store_true",
+                    help="10MB 본문을 건너뛰고 XBRL 낱장만 봅니다 (여러 해를 훑을 때)")
     ap.add_argument("--cik", default="", help="registry 에 없을 때만")
     a = ap.parse_args()
 
@@ -407,6 +424,15 @@ def main():
         return 1
     sub = json.loads(rec["_body"])
 
+    # 제출 목록에 어떤 서식이 있는지 공짜로 셉니다. **주주 서한(ARS)이
+    # 따로 제출돼 있는지**가 여기서 드러납니다 — 취득원가 표가 10-K 에 없다면
+    # 다음으로 볼 곳이 거기입니다.
+    kinds = {}
+    for name in ((sub.get("filings") or {}).get("recent") or {}).get("form") or []:
+        kinds[name] = kinds.get(name, 0) + 1
+    print("    서식별 건수: " + " · ".join(
+        f"{k} {v}" for k, v in sorted(kinds.items(), key=lambda kv: -kv[1])[:18]))
+
     forms = [f.strip() for f in a.forms.split(",") if f.strip()]
     found = filings_of(sub, set(forms))
     older = len((sub.get("filings") or {}).get("files") or [])
@@ -417,7 +443,7 @@ def main():
     for form in forms:
         for filing in [f for f in found if f["form"] == form][:a.count]:
             result.append(one_filing(cik_int, filing, contact, names, a.show, notes,
-                                     a.want, a.lines))
+                                     a.want, a.lines, a.light))
 
     summary = {
         "probed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

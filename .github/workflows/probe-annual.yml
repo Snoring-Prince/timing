@@ -21,13 +21,18 @@ on:
         required: false
         default: "berkshire"
       forms:
-        description: "받을 서식 (10-Q 는 '얼마나 자주 잴 수 있나'의 답)"
+        description: "받을 서식"
         required: false
-        default: "10-K,10-Q"
+        default: "10-K"
       count:
-        description: "서식마다 최근 몇 건"
+        description: "서식마다 최근 몇 건 (여러 해를 훑을 때 올립니다)"
         required: false
-        default: "1"
+        default: "8"
+      light:
+        description: "10MB 본문을 건너뛰고 XBRL 낱장만 (여러 해를 훑을 때 켭니다)"
+        required: false
+        type: boolean
+        default: true
       show:
         description: "로그에 찍을 줄 수 (아티팩트는 받기 어렵습니다)"
         required: false
@@ -59,10 +64,12 @@ jobs:
           FORMS: ${{ inputs.forms }}
           COUNT: ${{ inputs.count }}
           SHOW: ${{ inputs.show }}
+          LIGHT: ${{ inputs.light }}
         run: |
           set -o pipefail
           python -u scripts/probe_annual.py \
-            --slug "$SLUG" --forms "$FORMS" --count "$COUNT" --show "$SHOW" 2>&1 \
+            --slug "$SLUG" --forms "$FORMS" --count "$COUNT" --show "$SHOW" \
+            ${LIGHT:+$([ "$LIGHT" = true ] && echo --light)} 2>&1 \
             | tee annual-probe-console.log
 
       # 실패해도 받아 온 데까지는 올립니다. 무엇을 받다 막혔는지가 곧 답입니다.
