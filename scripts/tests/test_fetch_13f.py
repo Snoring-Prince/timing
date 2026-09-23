@@ -20,6 +20,22 @@ fetch = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(fetch)
 
 
+# 흉내 공시 한 건. 항목 이름은 `test_amendments.py` 와 같은 실물 모양입니다.
+_NS = 'http://www.sec.gov/edgar/thirteenffiler'
+_TNS = 'http://www.sec.gov/edgar/document/thirteenf/informationtable'
+TABLE = (f'<?xml version="1.0"?><informationTable xmlns="{_TNS}">'
+         '<infoTable><nameOfIssuer>ALPHA CORP</nameOfIssuer>'
+         '<titleOfClass>COM</titleOfClass><cusip>111111111</cusip>'
+         '<value>20000</value><shrsOrPrnAmt><sshPrnamt>100</sshPrnamt>'
+         '<sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt></infoTable>'
+         '</informationTable>').encode()
+COVER = (f'<?xml version="1.0"?><edgarSubmission xmlns="{_NS}"><formData>'
+         '<coverPage><reportCalendarOrQuarter>09-30-2026</reportCalendarOrQuarter>'
+         '</coverPage><summaryPage><tableValueTotal>20000</tableValueTotal>'
+         '<tableEntryTotal>1</tableEntryTotal></summaryPage>'
+         '</formData></edgarSubmission>').encode()
+
+
 class PreservationTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -81,8 +97,12 @@ class PreservationTests(unittest.TestCase):
         self.assertFalse(self.alert.exists())
 
     def test_new_amendment_saves_once_and_alerts_once(self):
+        # **종료코드 1 이 맞습니다.** 이 검사는 원문 받기를 막아 두므로(run_fetch
+        # 기본값) 정정을 합칠 수 없고, 합치지 못한 분기는 원본 숫자로 남습니다.
+        # 예전에는 그래도 0 이라 워크플로가 초록불이었습니다 — 자료는 저장하되
+        # 빨간불로 끝내는 것이 이번에 고친 자리입니다.
         amend = {**self.latest(), 'accession': 'fixture-amendment'}
-        self.assertEqual(self.run_fetch([self.latest()], [amend]), 0)
+        self.assertEqual(self.run_fetch([self.latest()], [amend]), 1)
         after = json.loads(self.out.read_text())
         self.assertEqual(len(after['quarters']), len(self.book['quarters']))
         self.assertIn('fixture-amendment', after['quarters'][-1]['amended_by'])
@@ -90,9 +110,39 @@ class PreservationTests(unittest.TestCase):
         self.assertTrue(self.alert.exists())
         self.alert.unlink()
         saved = self.out.read_bytes()
-        self.assertEqual(self.run_fetch([self.latest()], [amend]), 0)
+        # 두 번째 실행도 여전히 못 합치므로 빨간불입니다. 다만 **쪽지는 한 번만**
+        # 갑니다 — 이미 아는 정정이라 새로 뜬 것이 아닙니다.
+        self.assertEqual(self.run_fetch([self.latest()], [amend]), 1)
         self.assertEqual(self.out.read_bytes(), saved)
         self.assertFalse(self.alert.exists())
+
+    def test_one_good_quarter_does_not_make_a_failed_one_green(self):
+        """**한 분기라도 성공하면 초록불**이던 것을 고쳤습니다.
+
+        예전 조건은 `failed and not got` 이라, 새 분기 하나가 성공하고 다른
+        하나가 실패하면 종료코드 0 이었습니다. 빠진 분기가 있는 JSON 이 조용히
+        커밋되고, 화면은 두 분기치 증감을 `이번 분기` 라고 적습니다."""
+        good = {'period': '2026-09-30', 'filed': '2026-11-14',
+                'accession': 'fixture-good'}
+        bad = {'period': '2026-12-31', 'filed': '2027-02-13',
+               'accession': 'fixture-bad'}
+        docs = {'fixture-good': (TABLE, COVER), 'fixture-bad': (None, None)}
+        with patch.dict(os.environ, {'SEC_CONTACT': 'fixture-only'}), \
+                patch.object(fetch, 'OUT', str(self.out)), \
+                patch.object(fetch, 'ALERT', str(self.alert)), \
+                patch.object(fetch, 'filing_docs',
+                             side_effect=lambda acc, _c: docs.get(acc, (None, None))), \
+                patch.object(fetch, 'list_filings',
+                             return_value=([self.latest(), good, bad], [])), \
+                contextlib.redirect_stdout(io.StringIO()):
+            code = fetch.main()
+        after = json.loads(self.out.read_text())
+        got = [q['period'] for q in after['quarters']]
+        # 성공한 분기는 **저장됩니다** — 실패했다고 받은 것까지 버리지 않습니다.
+        self.assertIn('2026-09-30', got, '성공한 분기가 저장되지 않았습니다')
+        self.assertNotIn('2026-12-31', got)
+        # 그런데 자료에 구멍이 났으므로 **빨간불로 끝나야** 합니다.
+        self.assertEqual(code, 1, '반쪽짜리 실행이 초록불로 끝났습니다')
 
     def test_bad_existing_json_is_not_rebuilt_over(self):
         self.out.write_text('{broken', encoding='utf8')

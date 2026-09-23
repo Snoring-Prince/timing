@@ -46,6 +46,10 @@ en:{
           const v=n%1?n.toFixed(1):String(n); return `${v} year${v==="1"?"":"s"}`; },
   /* 목록 머리글. **안 변하는 말은 머리에 한 번만** 적는다(4번 성적표와 같은 판단). */
   colShares:"Shares held", colQtr:"This quarter", colRet:"Est. return", colVal:"Value · weight",
+  /* 빠진 분기가 있으면 `This quarter` 라고 쓸 수 없습니다 — 그 증감은 두
+     분기치입니다. 머리글과 카드의 안내 줄이 같이 바뀝니다. */
+  colQtrGap:"Since last filing",
+  gapNote:(d,n)=>`The previous filing is ${qLabel("en",d)}, not the quarter before this one \u2014 the changes below cover ${n} quarters.`,
   lifeThin:"Only one filing — nothing to draw yet.",
   lifeSpans:["1Y","5Y","10Y","15Y"],
   lifeSpanLab:"how far back to show",
@@ -109,6 +113,8 @@ ko:{
   yr:n=>n<1?`${Math.round(n*12)}개월`:(n%1?`${n.toFixed(1)}년`:`${n}년`),
   /* 목록 머리글. **안 변하는 말은 머리에 한 번만** 적는다(4번 성적표와 같은 판단). */
   colShares:"보유 주식 수", colQtr:"이번 분기", colRet:"추정 수익률", colVal:"금액 · 비중",
+  colQtrGap:"직전 공시 대비",
+  gapNote:(d,n)=>`직전 공시가 바로 앞 분기가 아니라 ${qLabel("ko",d)}입니다 \u2014 아래 증감은 ${n}개 분기치입니다.`,
   lifeThin:"공시가 한 번뿐이라 아직 그릴 것이 없습니다.",
   lifeSpans:["1년","5년","10년","15년"],
   lifeSpanLab:"얼마나 거슬러 볼까",
@@ -179,6 +185,8 @@ function mountInvestorShell(){
   </header>
   <section class="panel fade" id="quarter" hidden>
     <h2 id="qhead">This quarter</h2>
+    <!-- 자료에 구멍이 났을 때만 나옵니다. 평소에는 hidden 이라 자리도 안 씁니다. -->
+    <p class="gapnote" id="gapnote" hidden></p>
     <div class="tally" id="tally"></div>
     <div class="says" id="says"></div>
     <p class="trade-basis" id="tradebasis"></p>
@@ -334,9 +342,22 @@ function title(s){
 }
 
 /* ══ 그리기 ══════════════════════════════════════════════════════════ */
+/* 두 공시 사이에 분기가 몇 개인가. 바로 앞 분기면 1 이다.
+   **수집이 한 분기를 놓치면 `qs[len-2]` 가 두 분기 전이 됩니다** — 그대로
+   두면 두 분기치 증감을 `이번 분기` 라고 적습니다(실측: 2026Q1 을 빼면
+   BoA 감소량이 3,023만주 대신 3,390만주로 찍힙니다). 자료에 구멍이 났다는
+   것을 화면이 스스로 말하게 하려고 셉니다. */
+const qIndex=iso=>{
+  const y=+String(iso).slice(0,4), m=+String(iso).slice(5,7);
+  return y*4+Math.floor((m-1)/3);
+};
+const qGap=(a,b)=>qIndex(b)-qIndex(a);
+
 function build(){
   const qs=RAW.quarters;
   const cur=qs[qs.length-1], prv=qs[qs.length-2];
+  /* 1 = 정상 · 2 이상 = 사이에 빠진 분기가 있음 · 0 = 직전 공시가 아예 없음 */
+  const gap=prv?qGap(prv.period,cur.period):0;
   const C=merge(cur), P=prv?merge(prv):new Map();
   const tc=[...C.values()].reduce((s,a)=>s+a.value,0);
   const tp=[...P.values()].reduce((s,a)=>s+a.value,0);
@@ -371,8 +392,12 @@ function build(){
       w:a.value/tc*100,
       dsh,
       flat:dsh!==null&&Math.abs(dsh)<5e-4,
-      isNew:!p,
-      back:!p&&everBefore(a.key),
+      /* **직전 공시가 없으면 `신규` 라고 부를 수 없습니다.** 비교할 대상이
+         없는 것이지 이번에 처음 산 것이 아닙니다 — 그대로 두면 첫 공시
+         하나만 있는 투자자의 전 종목이 `신규` 로 찍힙니다. */
+      noPrev:!prv,
+      isNew:!!prv&&!p,
+      back:!!prv&&!p&&everBefore(a.key),
       start:st.period, years:st.qtrs/4,
       avgCost:cb.avg, nowPrice:cb.last,
       /* 첫 공시(1998-12-31)에 이미 들어 있던 종목은 사들이는 장면이 안 보인다.
@@ -398,7 +423,7 @@ function build(){
     return {...a, years:(qs.length-1-i)/4, netUSD:-a.value};
   }).sort((x,y)=>y.value-x.value):[];
 
-  return {cur,prv,list,out,tc,tp};
+  return {cur,prv,gap,list,out,tc,tp};
 }
 
 function tallyOf(B){
@@ -668,21 +693,40 @@ function markHTML(r){
    나옵니다.** 실측으로 확인한 숫자입니다 — 분할을 안 잡으면 이 화면은 거짓말을 합니다.
 
    분할은 공시 자체에서 찾습니다: 주식수가 f 배로 뛰면서 가격이 꼭 1/f 로 내려간 분기.
-   **정수 배수만 인정합니다.** 1.5 배를 후보에 넣었더니 '55% 더 산 분기'(애플 2016-06)와
-   '주식을 크게 늘린 분기'(레너드 2026-03)가 분할로 잡혔습니다. 정수만 두면
-   현재 26묶음에서 다섯 건이 정확히 잡히고 오탐이 없습니다 —
-   애플 ×4(2020-09) · 아멕스 ×3(2000-06) · 코카콜라 ×2(2012-09) ·
-   무디스 ×2(2005-06) · 다비타 ×2(2013-09).
+
+   ── 3:2 를 2:1 로 읽고 있었습니다 (2026-09-23 고침) ──────────────
+   허용차가 ±30% 인데 **1.5 ÷ 2 = 0.75, 정확히 25% 차이**라 **진짜 3:2 분할이
+   2:1 의 밴드 안으로 들어왔습니다.** 잡아 놓고 틀린 배수로 '고치는' 것이라
+   안 잡는 것보다 나쁩니다 — 33% 오차가 조용히 박힙니다. 버크셔 28년에도 이미
+   네 건 있었습니다(컴캐스트·아이언마운틴 2007, 토치마크 2011·2014).
+   실측: 비율 1.45~1.80 이 전부 f=2 로 잡혔습니다.
+
+   **고친 방법은 "2배 미만은 정확히 맞을 때만"입니다.** 1.30~1.70 구간을 전부
+   뽑아 보니 갈라졌습니다 — 진짜 분할은 주식수 비가 **정확히 1.500000** 이고,
+   오탐(그냥 많이 산 분기)은 1.36~1.55 로 흩어져 있습니다. **사람의 매매는
+   1.500000 에 안 떨어집니다.** 그래서 f<2 는 ±1%, f>=2 는 ±20% 입니다.
+
+   **동그란 숫자로 사면 똑같이 떨어집니다** — GM 2012-09 가 10,000,000 →
+   15,000,000 입니다. 그래서 가격 거부권이 같이 필요합니다(그 분기에 주가가
+   올라서 걸러집니다). 가격 쪽 여유가 넉넉한 것은 분기 중에 시세가 움직이기
+   때문입니다 — 애플은 분할과 같은 분기에 주가가 27% 올랐습니다.
+
+   **`5:4`·`4:3` 은 넣지 마세요.** 넣어 봤더니 12건이 오탐이었습니다
+   (셰브런 2021-09 `주×1.2413 가÷1.032` 은 그냥 24% 더 산 것입니다).
+   1.25 근처에서는 가격 거부권이 힘을 못 씁니다 — 5:4 분할이면 주가가 20%
+   내리는데 분기 중 시세가 그만큼 움직이는 건 흔합니다. **13F 만으로는 풀 수
+   없는 자리**라 잡지 않고 넘어갑니다. 안 잡으면 큰 매수 막대로 **눈에 보이고**,
+   틀린 배수로 고치면 안 보입니다. **역분할도 안 잡습니다**(후보가 전부 1보다 큼).
 ══════════════════════════════════════════════════════════════════ */
-const SPLITF=[2,3,4,5,6,7,8,10,15,20];
-/* 가격 쪽 여유가 넉넉한 것은 분기 중에 시세가 움직이기 때문입니다 —
-   애플은 분할과 같은 분기에 주가가 27% 올랐습니다. */
+const SPLITF=[1.5,2,3,4,5,6,7,8,10,15,20];
 function splitFactor(rShares,rPrice){
-  let best=null;
+  let best=null,bd=Infinity;
   for(const f of SPLITF){
-    if(Math.abs(rShares/f-1)<.30 && Math.abs(rPrice/f-1)<.30){
-      if(best===null||Math.abs(rShares/f-1)<Math.abs(rShares/best-1)) best=f;
-    }
+    /* 2배 미만은 '많이 샀다'와 구별이 안 되므로 정확히 맞을 때만 인정합니다. */
+    const tolS=f<2?.01:.20;
+    const dS=Math.abs(rShares/f-1), dP=Math.abs(rPrice/f-1);
+    /* 먼저 맞는 것이 아니라 **제일 잘 맞는 것**을 고릅니다. */
+    if(dS<tolS && dP<.30 && dS<bd){ bd=dS; best=f; }
   }
   return best;
 }
@@ -969,7 +1013,10 @@ function rowHTML(r,rank,maxW){
      `%` 가 붙습니다. 그리고 열 머리글이 `이번 분기`·`추정 수익률` 이라고
      이미 갈라 적고 있습니다. */
   let dir="", num;
-  if(r.isNew){ num=r.back?tx("evBack"):tx("evNew"); }
+  /* 표의 전량매도 줄과 같은 어휘입니다 — `\u2014` 는 "쓸 값이 없다"는 뜻이지
+     "0" 이 아닙니다. 여기서는 비교할 직전 공시가 없다는 뜻입니다. */
+  if(r.noPrev){ num="\u2014"; }
+  else if(r.isNew){ num=r.back?tx("evBack"):tx("evNew"); }
   else if(r.flat||!r.dn){ num=tx("same"); }
   else{
     const up=r.isNew||r.dn>0;
@@ -1136,6 +1183,11 @@ function render(){
 
   const B=build(), T=tallyOf(B);
   el("qhead").textContent=tx("quarterHead",B.cur.period);
+  /* **빠진 분기가 있으면 화면이 스스로 밝힙니다.** 조용히 넘어가면 두 분기치
+     증감이 `이번 분기` 로 찍혀 아무도 모른 채 틀립니다. */
+  const gapped=B.gap>1;
+  el("gapnote").hidden=!gapped;
+  if(gapped) el("gapnote").textContent=tx("gapNote",B.prv.period,B.gap);
   el("stamp").innerHTML=`${tx("asOf",fdate(B.cur.period))}<br>${tx("filedOn",fdate(B.cur.filed))}`;
 
   /* 직전 분기가 없으면 비교할 대상이 없다. 그대로 그리면 전 종목이 '신규'로
@@ -1179,7 +1231,9 @@ function render(){
      같은 말이 78번 나오고, 라벨이 숫자보다 자리를 더 차지합니다(4번 성적표에서
      이미 같은 판단을 했습니다). 줄마다 바뀌는 `BUY`/`SELL` 만 줄 안에 둡니다. */
   el("c1").textContent=tx("colShares");
-  el("c2").textContent=tx("colQtr");
+  /* 빠진 분기가 있으면 머리글도 같이 바뀝니다 — 카드 안내 줄만 고치고
+     여기를 그대로 두면 표가 자기 말을 어깁니다. */
+  el("c2").textContent=tx(gapped?"colQtrGap":"colQtr");
   el("c3").textContent=tx("colRet");
   el("c4").textContent=tx("colVal");
   /* 상위 10종목을 펴고 **나머지는 접습니다 — 지우는 것이 아닙니다.**

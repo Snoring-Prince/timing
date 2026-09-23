@@ -449,3 +449,62 @@ test('no dictionary entry is left behind after a feature is removed', () => {
   const run = page(real);
   assert.deepEqual(run('Object.keys(D.en).sort()'), run('Object.keys(D.ko).sort()'));
 });
+
+test('a real 3:2 split is not read as 2:1', () => {
+  const run = page(real);
+  // 허용차가 ±30% 인데 1.5 ÷ 2 = 0.75, 정확히 25% 차이라 진짜 3:2 가 2:1 의
+  // 밴드 안으로 들어왔다. 틀린 배수로 '고치면' 33% 오차가 조용히 박힌다.
+  assert.equal(run('splitFactor(1.5, 1.5)'), 1.5);
+  // 퍼싱 스퀘어 브룩필드 2025Q4 — 41,020,231 → 61,403,089 주, 가격 ÷1.5
+  assert.equal(run('splitFactor(61403089/41020231, 1.5)'), 1.5);
+  // 2배 미만은 정확히 맞을 때만. 사람의 매매는 1.500000 에 안 떨어진다.
+  assert.equal(run('splitFactor(1.552, 1.140)'), null);   // 애플 2016-06 — 55% 더 산 것
+  assert.equal(run('splitFactor(1.429, 1.182)'), null);   // 레너드 2026-03
+  // 동그란 숫자로 사면 비율이 정확히 1.5 다 — 가격이 거부권을 쥔다.
+  assert.equal(run('splitFactor(1.5, 0.867)'), null);     // GM 2012-09, 주가가 오른 분기
+  // 5:4·4:3 은 후보에 없다. 1.25 근처에서는 가격 거부권이 힘을 못 쓴다.
+  assert.equal(run('splitFactor(1.2413, 1.032)'), null);  // 셰브런 2021-09
+  assert.equal(run('splitFactor(1.25, 1.25)'), null);
+  // 진짜 큰 분할은 그대로 잡힌다 — 애플 2020-09 는 분기 중 주가가 27% 올랐다.
+  assert.equal(run('splitFactor(3.852, 3.150)'), 4);
+  assert.equal(run('splitFactor(2, 2)'), 2);
+});
+
+test('the known holdings keep the estimates the split fix must not move', () => {
+  const run = page(real);
+  // 지금 보유 26종목은 이번 변경으로 하나도 안 움직여야 한다.
+  assert.ok(Math.abs(run('build().list.find(r=>r.key==="037833").avgCost')-39.59171393884013)<1e-9);
+  assert.equal(run('build().list.length'), 26);
+  assert.equal(run('build().tc'), 299253556246);
+  assert.equal(run('build().gap'), 1);   // 빠진 분기 없음
+});
+
+test('a missing quarter is never passed off as "this quarter"', () => {
+  const full = page(real);
+  const q = real.quarters.map(x=>x.period);
+  const bofa = '060505';
+  const trueQ2 = full(`build().list.find(r=>r.key==="${bofa}").dn`);
+  // 2026Q1 을 빼면 qs[len-2] 가 두 분기 전이 된다.
+  const holed = {...real, quarters: real.quarters.filter(x=>x.period!=='2026-03-31')};
+  const run = page(holed);
+  assert.equal(run('build().gap'), 2, '빠진 분기를 세지 못했다');
+  const twoQ = run(`build().list.find(r=>r.key==="${bofa}").dn`);
+  assert.notEqual(twoQ, trueQ2, '두 분기치가 한 분기치와 같을 수 없다');
+  // 머리글과 안내 문구가 '이번 분기'라고 우기지 않는다.
+  run('LANG="ko";L10N=D.ko;');
+  assert.notEqual(run('tx("colQtrGap")'), run('tx("colQtr")'));
+  assert.match(run('tx("gapNote","2025-12-31",2)'), /2025년 4분기/);
+  run('LANG="en";L10N=D.en;');
+  assert.match(run('tx("gapNote","2025-12-31",2)'), /Q4 2025[\s\S]*2 quarters/);
+  void q;
+});
+
+test('one filing on its own does not turn every holding into a new buy', () => {
+  const only = {...real, quarters: real.quarters.slice(-1)};
+  const run = page(only);
+  assert.equal(run('build().gap'), 0);
+  assert.equal(run('build().list.filter(r=>r.isNew).length'), 0, '비교할 공시가 없는데 신규로 찍혔다');
+  assert.equal(run('build().list.filter(r=>r.noPrev).length'), 26);
+  // 가운데 칸은 '쓸 값이 없다'는 뜻의 줄표만 적는다.
+  assert.match(run('rowHTML(build().list[0],26,100)'), /class="act">—</);
+});
