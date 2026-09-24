@@ -34,8 +34,8 @@
 찾은 것은 코드를, 못 찾은 것은 빈 값을 적어 둡니다. 안 적어 두면 매주 다시 묻고
 매주 실패합니다(CLAUDE.md 6-2). `RETRY_DAYS` 뒤에 한 번 더 물어봅니다.
 
-**실패로 끝내는 경우는 하나뿐입니다**: 물어볼 것이 있는데 **응답이 하나도 오지
-않았을 때**. SEC 가 답하면서 그런 회사를 모른다고 하는 것은 고장이 아닙니다.
+**일부라도 통신 실패면 실패로 끝냅니다.** 받은 값은 저장하고 `_retry`는 다음
+실행에서 재시도합니다. 정상 응답의 미등록 회사만 빈 값으로 90일 보관합니다.
 """
 import datetime as dt
 import gzip, json, os, re, sys, time, urllib.request, urllib.error
@@ -43,7 +43,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fetch_tickers import sec_index, sec_lookup, load_json   # 이름 대조를 함께 씁니다
-from titans.registry import books
+from titans.registry import books, is_share
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT  = ROOT / "data" / "titans" / "sectors.json"
@@ -55,7 +55,7 @@ RETRY_DAYS = 90
 # **이름 대조를 고치면 이 값을 올리세요.** 못 찾은 것은 빈 값으로 굳어 있어서
 # 그냥 두면 90일 뒤에나 다시 묻습니다. 첫 실행에서 221개 중 61개가 이름으로
 # 안 좁혀졌고(애플·D R 호턴 포함), 열쇠를 층으로 나눠 고친 지금이 그 경우입니다.
-SOURCES = "sec-sic2"  # 바뀌면 못 찾은 것을 전부 다시 물어봅니다
+SOURCES = "sec-sic3"  # 바뀌면 못 찾은 것을 전부 다시 물어봅니다
 
 SIC = re.compile(r'"sic"\s*:\s*"?(\d{2,4})"?.{0,40}?"sicDescription"\s*:\s*"([^"]*)"', re.S)
 
@@ -91,7 +91,7 @@ def issuer_names(investor_books):
             for h in q.get("holdings", []):
                 c = str(h.get("cusip", ""))
                 key = c[:6]
-                if len(c) == 9 and period >= named_at.get(key, ""):
+                if is_share(h) and len(c) == 9 and period >= named_at.get(key, ""):
                     name[key] = h.get("name", "")
                     named_at[key] = period
     return name
@@ -99,17 +99,18 @@ def issuer_names(investor_books):
 
 def main():
     contact = os.environ.get("SEC_CONTACT", "").strip()
-    investor_books = books()
+    investor_books = books(strict=True)
     if not investor_books:
         print("투자자 공시 파일을 못 읽었습니다 — 섹터는 건너뜁니다.")
         return 0
     if not contact:
         # SEC 는 이름 없는 요청을 거절합니다. 비밀값이 없으면 이 길은 잠깁니다.
-        print("SEC_CONTACT 가 없어 섹터를 건너뜁니다.")
-        return 0
+        print("SEC_CONTACT 가 없어 섹터를 받지 못했습니다.")
+        return 1
     name = issuer_names(investor_books)
 
     have = load_json(OUT, {})
+    retry = set(have.pop("_retry", []))
     asked = have.pop("_asked", "")
     src = have.pop("_sources", "")
     today = dt.date.today()
@@ -121,7 +122,7 @@ def main():
     fresh = sorted(k for k in name if k not in have)
     stale = sorted(k for k in name
                    if k in have and not (have[k] or {}).get("sic")) if (old or src != SOURCES) else []
-    todo = fresh + stale
+    todo = sorted(set(fresh + stale) | (retry & set(name)))
     print(f"발행사 {len(name)}개 · 아는 것 {sum(1 for v in have.values() if (v or {}).get('sic'))}개")
     print(f"물어볼 것 {len(todo)}개 (처음 {len(fresh)} · 다시 {len(stale)})", flush=True)
     if not todo:
@@ -134,7 +135,7 @@ def main():
         print(f"SEC 이름 표를 못 받았습니다 — {type(e).__name__}: {e}", file=sys.stderr)
         return 1
 
-    got, answered, shown = {}, False, False
+    got, failed, shown = {}, set(), False
     for k in todo:
         t, title, cik = sec_lookup(idx, name.get(k, ""))
         if not cik:
@@ -142,7 +143,6 @@ def main():
             continue
         try:
             (code, desc), head = sic_of(cik, contact)
-            answered = True
             if not shown:
                 # **저쪽이 실제로 보낸 것을 한 번 남깁니다.** 개발 환경에서
                 # SEC 가 막혀 있어 응답 모양을 짐작해서 짤 수는 없습니다(9-3).
@@ -150,6 +150,7 @@ def main():
                 shown = True
         except Exception as e:
             print(f"  {k}  {name.get(k,'')[:30]:<30} → 실패 {type(e).__name__}: {e}")
+            failed.add(k)
             time.sleep(PAUSE)
             continue
         got[k] = {"sic": code, "desc": desc, "cik": str(int(cik))}
@@ -157,21 +158,23 @@ def main():
               flush=True)
         time.sleep(PAUSE)
 
-    if not answered:
-        print("\nSEC 에 닿지 못했습니다 — 응답이 하나도 오지 않았습니다.", file=sys.stderr)
-        return 1
-
     # 못 찾은 것도 적어 둔다. 안 적으면 매주 다시 묻는다.
     for k in todo:
-        have[k] = got.get(k, {"sic": "", "desc": "", "cik": ""})
+        if k not in failed:
+            have[k] = got.get(k, {"sic": "", "desc": "", "cik": ""})
+    if failed:
+        have["_retry"] = sorted(failed)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     have["_asked"] = today.isoformat()
     have["_sources"] = SOURCES
     OUT.write_text(json.dumps(have, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
                    encoding="utf-8")
     n = sum(1 for k, v in have.items() if k[0] != "_" and (v or {}).get("sic"))
-    print(f"\ndata/titans/sectors.json 에 {len(have)-2}개 저장 (업종을 아는 것 {n}개)")
-    return 0
+    count = sum(not k.startswith("_") for k in have)
+    print(f"\ndata/titans/sectors.json 에 {count}개 저장 (업종을 아는 것 {n}개)")
+    if failed:
+        print(f"못 받은 것 {len(failed)}개 — 다음 실행에서 다시 묻습니다.")
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

@@ -28,6 +28,43 @@ const stored = JSON.parse(fs.readFileSync(path.join(root, 'data/titans/berkshire
 // 검산한 분기를 기준으로 고정해, 매주 자동으로 추가되는 새 분기가 검사를 깨지 않게 합니다.
 const real = {...stored, quarters:stored.quarters.filter(q=>q.period<='2026-06-30')};
 
+test('options and principal amounts never inflate stock positions or their weights', () => {
+  // Pershing Square 2013 Q2: P&G ordinary 8,940,133 + CALL underlying 25,000,000.
+  const stock={cusip:'742718109',name:'PROCTER & GAMBLE',class:'COM',shares:8940133,value:688301000};
+  const call={...stock,putCall:'CALL',shares:25000000,value:1925000000};
+  const note={cusip:'123456789',name:'NOTE',class:'NOTE',type:'PRN',shares:1000000,value:900000};
+  const data={quarters:[{period:'2013-06-30',holdings:[stock,call,note]},
+    {period:'2013-09-30',holdings:[call,note]},
+    {period:'2013-12-31',holdings:[stock,call,note]}]};
+  const run=page(data);
+  assert.equal(run('merge(RAW.quarters[0]).get("742718").shares'),8940133);
+  assert.equal(run('merge(RAW.quarters[1]).size'),0);
+  assert.equal(run('build().tc'),688301000);
+  assert.equal(run('build().list.length'),1);
+  assert.equal(run('build().list[0].w'),100);
+  assert.equal(run('build().list[0].isNew'),true);
+  assert.equal(run('build().list[0].life.filter(o=>o.exit).length'),1);
+});
+
+test('mobile guidance does not invent a quarter comparison in either language', () => {
+  const run=page(book([['2026-06-30',10,50]]));
+  assert.doesNotMatch(run('D.ko.mobileGuide'),/이번 분기/);
+  assert.doesNotMatch(run('D.en.mobileGuide'),/this quarter/);
+  assert.match(run('D.ko.stockOnly'),/옵션/);
+  assert.match(run('D.en.stockOnly'),/options/);
+});
+
+test('conflicting share-class split records are unknown only inside the affected interval', () => {
+  const run=page(book([['2026-03-31',10,50],['2026-06-30',10,50]]));
+  const series=ratio=>({ticker:'FIX',currency:'USD',splitsFrom:'2025-01-01',
+    values:[['2026-06-30',50]],splits:{'2026-05-01':ratio}});
+  const prices={method:'split-adjusted-close',series:{'123456100':series('2:1'),'123456200':series('3:1')}};
+  run('acceptPrices('+JSON.stringify(prices)+');');
+  assert.equal(run('realSplit("123456","2026-03-31","2026-06-30")'),undefined);
+  assert.equal(run('realSplit("123456","2026-06-30","2026-09-30").sh'),1);
+  assert.equal(run('realSplit("123456","2026-01-01","2026-03-31").sh'),1);
+});
+
 test('real snapshot: totals and known Apple estimate stay intact', () => {
   const run = page(real);
   assert.equal(run('build().tc'), 299253556246);
@@ -342,7 +379,7 @@ test('the toggle says what the next click does, and the caret is a real triangle
   const css=fs.readFileSync(path.join(root,'titans/shared/investor.css'),'utf8');
   assert.match(css,/\.recbtn::before\{content:"\\25B8"/);
   assert.match(css,/details\.rec\[open\] \.recbtn::before\{content:"\\25BE"\}/);
-  assert.doesNotMatch(css,/[\x00-\x08\x0b-\x1f]/);
+  assert.doesNotMatch(css,/[\x00-\x08\x0b\x0c\x0e-\x1f]/);
 });
 
 test('event rows can show the same mark and sector as the list', () => {
@@ -512,9 +549,9 @@ test('one filing on its own does not turn every holding into a new buy', () => {
 // 진짜 분할 기록은 `data/titans/prices.json` 에 이미 들어 있다. 화면이 그것을
 // 읽게 하면 추측할 필요가 없어진다 — 단, 야후의 `splits` 는 분할 목록이 아니다.
 const priceBook = JSON.parse(fs.readFileSync(path.join(root,'data/titans/prices.json'),'utf8'));
-function withPrices(data){
+function withPrices(data, prices=priceBook){
   const run = page(data);
-  run('__P=' + JSON.stringify(priceBook) + ';acceptPrices(__P);');
+  run('__P=' + JSON.stringify(prices) + ';acceptPrices(__P);');
   return run;
 }
 
@@ -540,8 +577,15 @@ test('a spin-off is not a split, however Yahoo files it', () => {
     assert.equal(run(`splitRatio(${JSON.stringify(notSplit)})`), null, notSplit+' 를 분할로 받았다');
 });
 
+// Freeze the old coverage scenario independently of future cache refreshes.
+const legacyPriceBook = structuredClone(priceBook);
+for(const s of Object.values(legacyPriceBook.series)){
+  delete s.splitsFrom;
+  s.splits=Object.fromEntries(Object.entries(s.splits||{}).filter(([day])=>day>='2011-09-23'));
+  s.values=s.values.filter(([day])=>day>='2011-09-23');
+}
 test('the real split record replaces the guess where the data reaches', () => {
-  const run = withPrices(real);
+  const run = withPrices(real, legacyPriceBook);
   // 애플: 2014 년 7:1 과 2020 년 4:1 이 둘 다 실제로 적혀 있다.
   // vm 밖으로 나온 배열은 프로토타입이 달라 deepEqual 이 걸린다 — 값으로 본다.
   const days = run('JSON.stringify([...SPLIT_BOOK["037833"].days.entries()])');
@@ -572,7 +616,7 @@ test('a deeper split scan opens the quarters the guess used to own', () => {
   // 분할이 없던 옛 분기는 1 이다 — 덮은 구간 안이므로 추측기로 넘기지 않는다.
   assert.equal(run('realSplit("025816","2001-03-31","2001-06-30").sh'), 1);
   // **표식이 없는 옛 파일은 예전 그대로** 가격 시작일까지만 덮는다.
-  assert.equal(withPrices(real)('realSplit("025816","2000-03-31","2000-06-30")'), undefined);
+  assert.equal(withPrices(real, legacyPriceBook)('realSplit("025816","2000-03-31","2000-06-30")'), undefined);
 });
 
 test('a spin-off moves the price basis but never the share count', () => {
@@ -586,8 +630,8 @@ test('a spin-off moves the price basis but never the share count', () => {
   assert.equal(run('realSplit("037833","2020-06-30","2020-09-30").px'), 4);
 });
 
-test('only the spun-off holding moves, and by exactly the event factor', () => {
-  const guessed = page(real), measured = withPrices(real);
+test('only the spun-off holding moves in the legacy coverage fixture', () => {
+  const guessed = page(real), measured = withPrices(real, legacyPriceBook);
   const pick = k => `JSON.stringify(build().list.map(r=>[r.key,r.${k}]))`;
   // 주식수·증감은 **한 줄도** 안 움직인다 — 인적분할은 주식수를 안 건드린다.
   assert.equal(measured(pick('dn')), guessed(pick('dn')));

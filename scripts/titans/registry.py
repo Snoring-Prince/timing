@@ -54,11 +54,19 @@ def one(slug, path=REGISTRY):
     raise ValueError(f"unknown investor: {slug}")
 
 
-def books(investors=None):
-    """Read every available active investor book from the registry."""
+def is_share(holding):
+    """Options name underlying shares; PRN names principal, not share counts."""
+    return (str(holding.get("type") or "SH").strip().upper() == "SH"
+            and not str(holding.get("putCall") or "").strip())
+
+
+def books(investors=None, *, strict=False):
+    """Read active books; destructive cache pruning requires a complete set."""
     result = []
     for investor in investors if investors is not None else load():
         if not investor.output.exists():
+            if strict:
+                raise ValueError(f"missing investor book: {investor.output}")
             continue
         book = json.loads(investor.output.read_text(encoding="utf-8"))
         saved_raw = str((book.get("manager") or {}).get("cik") or "")
@@ -67,4 +75,6 @@ def books(investors=None):
             raise ValueError(f"{investor.slug}: saved book belongs to CIK {saved_cik}")
         if book.get("quarters"):
             result.append(book)
+        elif strict:
+            raise ValueError(f"empty investor book: {investor.output}")
     return result

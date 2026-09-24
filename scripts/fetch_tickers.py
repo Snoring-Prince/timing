@@ -3,7 +3,7 @@
 
 왜 필요한가
 -----------
-화면(`titans/index.html`)은 로고를 **ISIN** 으로 찾습니다. 미국 종목의 ISIN 은
+공통 화면(`titans/shared/investor.js`)은 로고를 **ISIN** 으로 찾습니다. 미국 종목의 ISIN 은
 "US" + CUSIP 아홉 자리 + 체크숫자라서 공시만 있으면 계산됩니다 — 표가 필요 없습니다.
 
 **그런데 미국 발행사가 아니면 그 계산이 안 됩니다.** CUSIP 첫 글자가 숫자가 아닌
@@ -31,9 +31,9 @@ OpenFIGI 로 직접 나가지 않으므로 IP 도 안 새고 화면이 그쪽에
 
 못 찾은 것도 `RETRY_DAYS` 뒤에는 한 번 더 물어봅니다. 나중에 등록될 수 있으니까요.
 
-**실패로 끝내는 경우는 하나뿐입니다**: 한 번도 안 물어본 종목이 있는데 그중
-하나도 못 받았을 때. 그때는 OpenFIGI 가 막혔다는 뜻이라 빨간 X 로 보여야 합니다.
-옛 종목이 계속 안 잡히는 것은 실패가 아닙니다.
+**일부라도 통신 실패로 확인하지 못하면 실패로 끝냅니다.** 받은 값은 저장하고
+실패한 식별자는 `_retry`에 남겨 다음 실행에서 재시도합니다. 정상 응답의
+미등록 종목만 빈 값으로 90일 보관합니다.
 
 **`_` 로 시작하는 키는 화면이 무시합니다.** 파일에 언제 물어봤는지를 같이 둡니다.
 """
@@ -43,7 +43,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
-from titans.registry import books  # noqa: E402
+from titans.registry import books, is_share  # noqa: E402
 
 OUT  = ROOT / "data" / "titans" / "tickers.json"
 API  = "https://api.openfigi.com/v3/mapping"
@@ -57,7 +57,7 @@ RETRY_DAYS = 90     # 못 찾은 것을 다시 물어보기까지
 # **sec → sec2 로 올린 이유**: 첫 실행에서 SEC 표를 gzip 인 채로 json.loads 에
 # 넣어 열다섯 건이 전부 '못 찾음' 으로 굳었습니다. 이름이 안 맞아서가 아니라
 # 표를 읽지도 못한 것이라, 고친 뒤 한 번 다시 물어봐야 합니다.
-SOURCES = "openfigi+sec3"  # 바뀌면 못 찾은 것을 전부 다시 물어봅니다
+SOURCES = "openfigi+sec4"  # 바뀌면 못 찾은 것을 전부 다시 물어봅니다
 
 
 # ── SEC 회사 이름 → 티커 ───────────────────────────────────────────
@@ -168,6 +168,8 @@ def sec_index(contact: str):
         for lv, key in enumerate(keys(title)):
             if key:
                 idx[lv].setdefault(key, {}).setdefault(str(cik), []).append((t, title))
+    if not any(idx):
+        raise ValueError("SEC company list is empty or malformed")
     return idx
 
 
@@ -258,6 +260,10 @@ def ask(cusips, id_type="ID_CUSIP"):
 
     raw = f"{id_type} · HTTP {status} · {text[:360]}"
     rows = json.loads(text)
+    if not isinstance(rows, list) or len(rows) != len(cusips):
+        raise ValueError("OpenFIGI response size mismatch")
+    if any(not isinstance(row, dict) or row.get("error") for row in rows):
+        raise ValueError("OpenFIGI returned an item error")
 
     out = {}
     # 응답은 보낸 순서대로 온다. 항목마다 data(성공) 또는 warning(못 찾음).
@@ -283,7 +289,7 @@ def wanted_tickers(investor_books):
             period = q.get("period", "")
             for h in q.get("holdings", []):
                 c = h.get("cusip", "")
-                if needs_ticker(c):
+                if is_share(h) and needs_ticker(c):
                     wanted.add(c)
                     if period >= named_at.get(c, ""):
                         name[c] = h.get("name", "")
@@ -292,13 +298,14 @@ def wanted_tickers(investor_books):
 
 
 def main():
-    investor_books = books()
+    investor_books = books(strict=True)
     if not investor_books:
         print("투자자 공시 파일을 못 읽었습니다 — 티커는 건너뜁니다.")
         return 0
     wanted, name = wanted_tickers(investor_books)
 
     have = load_json(OUT, {})
+    retry = set(have.pop("_retry", []))
     asked = have.pop("_asked", "")          # 화면이 무시하는 키. 쓸 때 다시 넣는다.
     today = dt.date.today()
 
@@ -308,10 +315,11 @@ def main():
         old = (today - dt.date.fromisoformat(asked)).days >= RETRY_DAYS
     except Exception:
         old = True
-    if old or have.pop("_sources", "") != SOURCES:
+    src = have.pop("_sources", "")
+    if old or src != SOURCES:
         stale = sorted(c for c in wanted if c in have and not have[c])
 
-    todo = fresh + stale
+    todo = sorted(set(fresh + stale) | (retry & set(wanted)))
     print(f"ISIN 을 못 만드는 종목 {len(wanted)}개 · 아는 것 "
           f"{sum(1 for c in have.values() if c)}개 · 못 찾은 것 "
           f"{sum(1 for c in have.values() if not c)}개")
@@ -330,7 +338,7 @@ def main():
     # 전부 'No identifier found' 였습니다. OpenFIGI 가 CINS 를 ID_CUSIP 으로는
     # 색인하지 않는 것으로 보이는데, 짐작만 하지 않고 문서에 있는 여덟 자리 방식
     # (ID_CUSIP_8_CHR)도 실제로 한 번 물어보고 원본을 남깁니다.
-    got, failed, raws, answered = {}, [], {}, False
+    got, failed, raws = {}, [], {}
     for id_type in ("ID_CUSIP", "ID_CUSIP_8_CHR"):
         rest = [c for c in todo if c not in got]
         if not rest:
@@ -341,7 +349,6 @@ def main():
             try:
                 hits, raw = ask(chunk, id_type)
                 got.update(hits)
-                answered = True
                 raws.setdefault(id_type, raw)   # 방식마다 원본 하나씩
             except Exception as e:
                 print(f"  실패 {type(e).__name__}: {e}", flush=True)
@@ -357,7 +364,6 @@ def main():
         print(f"\n[SEC 이름 대조] {len(rest)}건", flush=True)
         try:
             idx = sec_index(contact)
-            answered = True
             for c in rest:
                 t, title, _cik = sec_lookup(idx, name.get(c, ""))
                 if t:
@@ -366,9 +372,11 @@ def main():
             print(f"  누적 {len(got)}건 찾음", flush=True)
         except Exception as e:
             print(f"  실패 {type(e).__name__}: {e}", flush=True)
+            failed += rest
     elif rest:
         # SEC 는 이름 없는 요청을 거절합니다. 비밀값이 없으면 이 길은 잠깁니다.
         print("\n[SEC 이름 대조] SEC_CONTACT 가 없어 건너뜁니다.", flush=True)
+        failed += rest
 
     for c in todo:
         print(f"  {c}  {name.get(c,'')[:30]:<30} → {got.get(c) or '못 찾음'}")
@@ -379,20 +387,24 @@ def main():
         for r in raws.values():
             print(f"\n응답 원본: {r}", flush=True)
 
-    # **실패로 끝내는 기준은 "답이 왔느냐" 하나뿐입니다.**
+    # 못 찾음(정상 응답)과 통신 실패를 구분합니다. 실패는 다음 실행에서 재시도합니다.
+    pending = set(failed) - set(got)
+    # **과거 방식**은 답이 하나라도 오면 전체를 성공으로 처리했습니다.
     # 처음에는 "하나도 못 찾으면 실패"로 뒀는데, 재 보니 OpenFIGI 는 멀쩡히
     # 답하면서 CINS 를 그냥 모른다고 합니다(HTTP 200 + No identifier found).
     # 그 상태로 실패를 내면 **새 해외 종목이 들어올 때마다 빨간 X** 가 뜨고,
     # 6-2 의 "매주 실패하면 아무도 안 봅니다"가 그대로 생깁니다.
     # 못 찾은 것은 빈 값으로 적어 두면 그만입니다 — 화면은 글자 타일로 갑니다.
-    if todo and not answered:
-        print("\nOpenFIGI 에 닿지 못했습니다 — 응답이 하나도 오지 않았습니다.",
+    if todo and set(todo) == pending:
+        print("\n모든 대상의 확인을 마치지 못했습니다 — 실패 대상을 재시도합니다.",
               file=sys.stderr)
-        return 1
 
     # 못 찾은 것도 빈 값으로 적어 둔다. 안 적으면 매주 다시 묻고 매주 실패한다.
     for c in todo + broken:
-        have[c] = got.get(c, "")
+        if c not in pending:
+            have[c] = got.get(c, "")
+    if pending:
+        have["_retry"] = sorted(pending)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     have["_asked"] = today.isoformat()
     have["_sources"] = SOURCES
@@ -403,10 +415,11 @@ def main():
         where = OUT.relative_to(ROOT)
     except ValueError:          # 시험할 때 다른 자리에 쓰는 경우
         where = OUT
-    print(f"\n{where} 에 {len(have)}개 저장 (이번에 새로 찾은 것 {len(got)}개)")
-    if failed:
-        print(f"못 받은 것 {len(failed)}개 — 다음 주에 다시 묻습니다.")
-    return 0
+    count = sum(not k.startswith("_") for k in have)
+    print(f"\n{where} 에 {count}개 저장 (이번에 새로 찾은 것 {len(got)}개)")
+    if pending:
+        print(f"못 받은 것 {len(pending)}개 — 다음 실행에서 다시 묻습니다.")
+    return 1 if pending else 0
 
 
 if __name__ == "__main__":

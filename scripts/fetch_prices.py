@@ -22,7 +22,7 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 from fetch_tickers import norm  # noqa: E402
-from titans.registry import books  # noqa: E402
+from titans.registry import books, is_share  # noqa: E402
 
 OUT = ROOT / "data/titans/prices.json"
 UTC = dt.timezone.utc
@@ -68,7 +68,7 @@ def first_seen(books):
     for book in books:
         for quarter in book.get("quarters", []):
             for h in quarter["holdings"]:
-                if seen.get(h["cusip"], "9999") > quarter["period"]:
+                if is_share(h) and seen.get(h["cusip"], "9999") > quarter["period"]:
                     seen[h["cusip"]] = quarter["period"]
     return seen
 
@@ -82,7 +82,7 @@ def required_cusips(books):
             continue
         latest = max(quarters, key=lambda q: q["period"])
         for h in latest["holdings"]:
-            if h.get("shares", 0) > 0 and h.get("value", 0) > 0:
+            if is_share(h) and h.get("shares", 0) > 0 and h.get("value", 0) > 0:
                 required[h["cusip"]] = {"name": h["name"], "class": h.get("class", "")}
     return required
 
@@ -251,12 +251,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--full", action="store_true")
     args = parser.parse_args()
-    catalog = books()
+    catalog = books(strict=True)
     required = required_cusips(catalog)
-    # 공시책을 한 권도 못 읽었는데 그대로 나아가면, 위에서 팔린 종목을 버리는
-    # 규칙이 **파일을 통째로 비운다.** `books()` 가 파일 없는 투자자를 조용히
-    # 건너뛰므로 실제로 일어날 수 있다. 반쪽짜리 파일을 올리지 않는다는
-    # `fetch_long.py` 와 같은 장치다.
+    # 모든 활성 투자자의 책이 있어야 매도 여부를 알 수 있습니다(strict=True).
+    # 전체 보유 목록이 비어도 기존 가격 캐시를 보존합니다.
     if not required:
         raise SystemExit("no investor book holds anything: refusing to rewrite the price cache")
     previous = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}

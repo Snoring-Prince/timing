@@ -72,11 +72,11 @@ jobs:
             --body-file amend-alert.txt
           rm -f amend-alert.txt
 
-      # 아래 둘은 화면의 이름표와 로고를 보강하는 작업입니다. 실제 공시가 바뀐
-      # 날에만 돌며, 실패해도 이미 받은 13F 저장을 되돌리지 않습니다.
+      # 아래 둘은 매 감시 때 누락·재시도 대상을 확인합니다. 공시가 그대로여도
+      # 실패한 보강은 재시도하며, 이미 받은 13F 저장은 되돌리지 않습니다.
       - name: 티커 받기 (로고용)
         id: tickers
-        if: steps.save.outputs.changed == 'true'
+        if: always() && steps.fetch.outcome != 'skipped'
         continue-on-error: true
         env:
           SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
@@ -86,7 +86,7 @@ jobs:
 
       - name: 티커 저장
         id: save_tickers
-        if: steps.save.outputs.changed == 'true'
+        if: always() && steps.tickers.outcome != 'skipped'
         continue-on-error: true
         run: |
           git add data/titans/tickers.json
@@ -98,7 +98,7 @@ jobs:
 
       - name: 섹터 받기 (업종 이름표)
         id: sectors
-        if: steps.save.outputs.changed == 'true'
+        if: always() && steps.fetch.outcome != 'skipped'
         continue-on-error: true
         env:
           SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
@@ -108,7 +108,7 @@ jobs:
 
       - name: 섹터 저장
         id: save_sectors
-        if: steps.save.outputs.changed == 'true'
+        if: always() && steps.sectors.outcome != 'skipped'
         continue-on-error: true
         run: |
           git add data/titans/sectors.json

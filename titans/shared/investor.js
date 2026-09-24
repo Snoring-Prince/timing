@@ -19,7 +19,7 @@ en:{
   metaDesc:n=>`${n} holdings in its latest SEC 13F filing — position sizes, share changes and estimated returns based on quarter-end snapshots.`,
   brand:"Titans' picks",
   tagline:n=>`${n} holdings · latest filing`,
-  mobileGuide:"Numbers, left to right: shares held · share change this quarter · estimated return. Right: value · portfolio weight.",
+  mobileGuide:"Numbers, left to right: shares held · share change between filings · estimated return. Right: value · portfolio weight.",
   tradeBasis:"Trade amounts are estimated from share changes and quarter-end prices. Full exits use the previous quarter-end value.",
   asOf:d=>`As of ${d}`,
   filedOn:d=>`filed ${d}`,
@@ -29,6 +29,7 @@ en:{
      세 가지를 가리켰습니다. 한국어는 `보유`/`유지` 로 갈라져 있습니다. */
   kNew:"new", kAdd:"added", kTrim:"trimmed", kHold:"unchanged", kOut:"exited",
   /* 영어는 단수를 따로 적는다. 한국어는 `26종목` 하나로 끝난다. */
+  stockOnly:"Stock positions only; options and bonds excluded from totals and weights.",
   positions:n=>`${n} position${n===1?"":"s"}`,
   bought:(n,v)=>`<i>Largest buy</i><span>${n}</span><em>${v} est.</em>`,
   sold:(n,v)=>`<i>Largest sale</i><span>${n}</span><em>${v} est.</em>`,
@@ -80,7 +81,7 @@ en:{
      차트 축이 적습니다. 다시 늘리고 싶어지면 그것부터 확인하세요. */
   foot:()=>[
     `Source: Form 13F-HR filed with the SEC by ${TT.name.en} (CIK ${TT.cik})`,
-    "A 13F records a single day \u2014 the last day of the quarter \u2014 and is filed within 45 days of it, so the holdings may already have changed. Only US-listed stock appears in a 13F; cash, bonds, foreign listings, wholly owned businesses and short positions are not included.",
+    "A 13F records a single day \u2014 the last day of the quarter \u2014 and is filed within 45 days of it, so the holdings may already have changed. This page shows US-listed share holdings from 13F filings; cash, bonds, foreign listings, wholly owned businesses and short positions are not included.",
     "Average cost and return are estimates. A 13F carries no trade prices, so both are worked out from value \u00F7 shares and can be off by a wide margin.",
     "Nothing on this site is an offer, a solicitation or a recommendation to buy or sell any security. Every investment decision, and its outcome, rests entirely with the investor."
   ]
@@ -91,12 +92,13 @@ ko:{
   metaDesc:n=>`${n}의 최근 SEC 13F 공시 기준 보유 종목 — 분기말 기록으로 비중, 주식 수 증감과 추정 수익률을 살펴봅니다.`,
   brand:"대가들의 선택",
   tagline:n=>`${n} · 최근 공시 기준 보유 종목`,
-  mobileGuide:"숫자는 왼쪽부터 보유 주식 수 · 이번 분기 주식 수 증감 · 추정 수익률입니다. 오른쪽은 금액 · 전체 보유 금액에서의 비중입니다.",
+  mobileGuide:"숫자는 왼쪽부터 보유 주식 수 · 공시 간 주식 수 증감 · 추정 수익률입니다. 오른쪽은 금액 · 전체 보유 금액에서의 비중입니다.",
   tradeBasis:"매매 금액은 주식 수 증감과 분기말 가격으로 추정합니다. 전량 매도는 직전 분기말 보유 금액을 사용합니다.",
   asOf:d=>`${d} 기준`,
   filedOn:d=>`${d} 공시`,
   quarterHead:d=>`${qLabel("ko",d)} (${qSpan("ko",d)})`,
   kNew:"신규", kAdd:"확대", kTrim:"축소", kHold:"유지", kOut:"전량매도",
+  stockOnly:"주식 보유분만 집계합니다. 옵션·채권은 총액·비중에서 제외합니다.",
   positions:n=>`${n}종목`,
   /* **줄글이 아니라 이름표 + 값입니다** (사용자 요청). 한 화면에 나란히 놓이는
      두 줄이라 같은 꼴이어야 견줘집니다 — "가장 많이 산 것은 … 입니다" 는
@@ -133,7 +135,7 @@ ko:{
   footTitle:"유의사항",
   foot:()=>[
     `출처: ${TT.name.ko}(CIK ${TT.cik})가 SEC 에 낸 Form 13F-HR`,
-    "13F 공시는 분기의 마지막 날 하루를 적은 것이고, 공시는 그로부터 45일 안에 냅니다. 그 사이에 이미 바뀌었을 수 있습니다. 13F 공시에는 미국 상장 주식만 실립니다 \u2014 현금\u00B7채권\u00B7해외 주식\u00B7통째로 소유한 회사\u00B7공매도는 포함되어 있지 않습니다.",
+    "13F 공시는 분기의 마지막 날 하루를 적은 것이고, 공시는 그로부터 45일 안에 냅니다. 그 사이에 이미 바뀌었을 수 있습니다. 이 화면에는 13F 공시의 미국 상장 주식 보유분을 표시합니다 \u2014 현금\u00B7채권\u00B7해외 주식\u00B7통째로 소유한 회사\u00B7공매도는 포함되어 있지 않습니다.",
     "매수 평균가와 수익률은 추정입니다. 13F 공시에는 체결가가 없어서 금액\u00F7주식 수로 어림한 값이라 크게 빗나갈 수 있습니다.",
     "본 사이트는 특정 금융상품이나 자산에 대한 투자 권유나 추천이 아니며, 투자의 최종 판단과 책임은 전적으로 투자자 본인에게 있습니다."
   ]
@@ -195,6 +197,7 @@ function mountInvestorShell(){
 
   <section class="panel fade" id="book" hidden>
     <h2 id="bookhead"></h2>
+    <p class="cap" id="stockonly" hidden></p>
     <p class="cap" id="bookcut"></p>
     <p class="cap" id="bookcap"></p>
     <p class="mobile-guide" id="mobileguide"></p>
@@ -234,7 +237,7 @@ if(document.body){
 }
 
 /* ══ 데이터 ═══════════════════════════════════════════════════════════
-   화면은 자기 집 파일만 읽습니다. Actions 가 주 1회 SEC 에서 받아
+   화면은 자기 집 파일만 읽습니다. Actions 가 새 공시를 감지하면 SEC 에서 받아
    window.TITAN.data가 가리키는 파일에 저장합니다(scripts/fetch_13f.py).
 ══════════════════════════════════════════════════════════════════════ */
 let RAW=null, LOADED=false;
@@ -247,9 +250,11 @@ let RAW=null, LOADED=false;
 const ISPFD=/\bPFD\b|PREFERRED/;
 const gkey=h=>h.cusip.slice(0,6)+(ISPFD.test((h.class||"").toUpperCase())?"|P":"");
 
+const isShare=h=>(h.type||"SH").trim().toUpperCase()==="SH"&&!String(h.putCall||"").trim();
 function merge(q){
   const g=new Map();
   for(const h of q.holdings){
+    if(!isShare(h))continue;
     const k=gkey(h);
     let a=g.get(k);
     if(!a){ a={key:k,name:h.name,value:0,shares:0,classes:[],n:0,cusip:h.cusip,top:0}; g.set(k,a); }
@@ -364,7 +369,7 @@ function build(){
 
   /* 연속 보유 시작 분기. 끊겼다가 다시 들어온 것은 다시 들어온 시점부터 센다 —
      "10년 보유"가 중간에 판 3년을 포함하면 거짓말이 된다. */
-  const seen=qs.map(q=>new Set(q.holdings.map(gkey)));
+  const seen=qs.map(q=>new Set(q.holdings.filter(isShare).map(gkey)));
   const startOf=k=>{
     let i=qs.length-1;
     while(i>0 && seen[i-1].has(k)) i--;
@@ -411,7 +416,7 @@ function build(){
       /* 가운데 칸에 '몇 주 늘었나'를 적으려면 비율이 아니라 **주식수 차이**가
          필요하다. 비율(dsh)은 판정에, 이 값(dn)은 화면 표기에 쓴다. */
       dn,
-      /* 펼쳤을 때 그릴 분기 시계열. 저장소 파일 하나로 만들어지므로 주 1회
+      /* 펼쳤을 때 그릴 분기 시계열. 저장소 파일 하나로 만들어지므로
          워크플로가 13F 를 갱신하면 차트도 저절로 따라옵니다. */
       life:lifeOf(snaps,a.key),
       netUSD:dn*(a.shares>0?a.value/a.shares:0)
@@ -500,7 +505,7 @@ function usISIN(cusip){
   return "US"+c+isinCheck("US"+c);
 }
 /* ISIN 을 못 만드는 종목의 티커. **손으로 적지 않습니다.**
-   `scripts/fetch_tickers.py` 가 주 1회 OpenFIGI 에서 받아
+   `scripts/fetch_tickers.py` 가 필요할 때 OpenFIGI·SEC에서 받아
    `data/titans/tickers.json` 에 저장한 것을 그대로 읽습니다.
    못 받았거나 파일이 없으면 비어 있고, 마크는 글자 타일로 떨어집니다. */
 let QS=[];
@@ -570,6 +575,7 @@ function splitRatio(text){
 function realSplit(key,from,to){
   const book=SPLIT_BOOK[key];
   if(!book||!from||from<book.from)return undefined;
+  if([...book.bad].some(day=>day>from&&day<=to))return undefined;
   let sh=1,px=1;
   for(const [day,v] of book.adj) if(day>from&&day<=to){ px*=v; sh*=(book.days.get(day)||1); }
   return {sh,px};
@@ -619,7 +625,7 @@ function acceptPrices(book){
 
 /* ── 섹터 ────────────────────────────────────────────────────
    **SEC 가 회사마다 업종 코드(SIC)를 매겨 둡니다.** `scripts/fetch_sectors.py`
-   가 주 1회 받아 `data/titans/sectors.json` 에 저장한 것을 읽습니다.
+   가 필요할 때 받아 `data/titans/sectors.json` 에 저장한 것을 읽습니다.
    못 받았거나 모르는 회사면 그 자리를 **비웁니다** — 틀린 섹터를 적는 것보다
    안 적는 것이 낫습니다. */
 let SECTORS={};
@@ -1270,6 +1276,8 @@ function render(){
   if(!RAW){ el("stamp").textContent=LOADED?tx("noData"):""; return; }
 
   const B=build(), T=tallyOf(B);
+  el("stockonly").hidden=!RAW.quarters.some(q=>q.holdings.some(h=>!isShare(h)));
+  el("stockonly").textContent=tx("stockOnly");
   el("qhead").textContent=tx("quarterHead",B.cur.period);
   /* **빠진 분기가 있으면 화면이 스스로 밝힙니다.** 조용히 넘어가면 두 분기치
      증감이 `이번 분기` 로 찍혀 아무도 모른 채 틀립니다. */
