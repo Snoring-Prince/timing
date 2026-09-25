@@ -116,6 +116,7 @@ ko:{
   noLine:"볼 선을 하나 이상 골라 주세요.",
   capMed:"수익률 중앙값", capWin:"수익날 확률",
   fewSample:"표본 부족", winRateShort:"승률", avgShort:"평균", holdWord:"보유",
+  byIndex:"지수별 상이", noObservation:"관측값 없음",
   sampleDays:(n,all)=>`표본 ${n}일 / 전체 ${all}일`,
   samplePeriod:"표본 기간",
   nowIs:(s,v)=>`지금 ${s} ${v}`,
@@ -129,10 +130,10 @@ ko:{
   loadFail:"데이터를 불러오지 못했습니다",
   loadFailPanel:"데이터를 불러오지 못했습니다.<br>잠시 후 새로고침해 주세요.",
   stampAs:t=>`데이터 기준 ${t}`,
-  stampLive:t=>`실시간 ${t}`,
+  stampLive:t=>`시세 조회 ${t}`,
   foot:["전고점은 화면에 보이는 기간 안의 최고 종가입니다. 옆으로 끌면 그 구간의 전고점으로 바뀝니다.",
         "SPY·QQQ 배당 재투자 기준 · 출처: Yahoo Finance · 공포탐욕지수: CNN Business · VIX: CBOE",
-        "미국장이 열려 있는 동안은 실시간, 닫혀 있으면 마지막 종가입니다. 위 차트는 최근 5년이 하루 단위, 그 이전은 주 단위입니다. 아래 수익률 계산은 전 기간 하루 단위입니다."],
+        "장중 시세를 주기적으로 조회하며 지연될 수 있습니다. 조회 시각과 각 자료의 기준일은 다를 수 있습니다. 위 차트는 최근 5년이 하루 단위, 그 이전은 주 단위입니다. 아래 수익률 계산은 전 기간 하루 단위입니다."],
   btFoot:()=>`과거 성과일 뿐 미래를 보장하지 않습니다.`,
   ax:{
     fng:{label:"공포탐욕지수",short:"공포탐욕",title:"공포와 탐욕 지수별 수익률",
@@ -186,6 +187,7 @@ en:{
   noLine:"Pick at least one line to show.",
   capMed:"Median return", capWin:"Chance of profit",
   fewSample:"too few samples", winRateShort:"win rate", avgShort:"avg", holdWord:"hold",
+  byIndex:"varies by index", noObservation:"No observation",
   sampleDays:(n,all)=>`${n} of ${all} sample days`,
   samplePeriod:"Sample",
   nowIs:(s,v)=>`Now ${s} ${v}`,
@@ -199,10 +201,10 @@ en:{
   loadFail:"Could not load the data",
   loadFailPanel:"Could not load the data.<br>Please refresh in a moment.",
   stampAs:t=>`Data as of ${t}`,
-  stampLive:t=>`Live ${t}`,
+  stampLive:t=>`Quotes checked ${t}`,
   foot:["The peak is the highest close inside the window on screen. Drag sideways and it becomes that window's peak.",
         "Total return on SPY and QQQ · Source: Yahoo Finance · Fear &amp; Greed: CNN Business · VIX: CBOE",
-        "Live while the US market is open, last close when it is shut. The chart above is daily for the last five years and weekly before that; the returns below are daily throughout."],
+        "Quotes are checked periodically and may be delayed. Quote dates can differ from the check time. The chart above is daily for the last five years and weekly before that; the returns below are daily throughout."],
   btFoot:()=>`Past performance does not guarantee future results.`,
   ax:{
     fng:{label:"Fear & Greed Index",short:"F&G",title:"Returns by Fear &amp; Greed level",
@@ -272,7 +274,7 @@ const num=n=>Number(n||0).toLocaleString(LOCALE);
 /* 날짜 — 한국은 2026.09.04, 그 밖에는 그 지역 표기 */
 function fdate(iso){
   if(LANG==="ko")return String(iso).replace(/-/g,".");
-  try{ return new Intl.DateTimeFormat(LOCALE,{year:"numeric",month:"short",day:"numeric"})
+  try{ return new Intl.DateTimeFormat(LOCALE,{year:"numeric",month:"short",day:"numeric",timeZone:"UTC"})
         .format(new Date(iso+"T00:00:00Z")); }
   catch(e){ return String(iso); }
 }
@@ -486,7 +488,8 @@ body.settled .fade{animation:none;opacity:1}
 .chart svg{display:block;width:100%;height:auto;touch-action:pan-y}
 .tip{position:absolute;top:10px;pointer-events:none;opacity:0;transition:opacity .12s;
   background:var(--card);border:1px solid var(--rule);border-left:2px solid var(--ink-2);
-  padding:7px 10px;font-family:var(--mono);font-size:11px;line-height:1.65;white-space:nowrap;
+  padding:7px 10px;font-family:var(--mono);font-size:11px;line-height:1.65;white-space:normal;
+  width:max-content;max-width:calc(100% - 8px);overflow-wrap:break-word;
   box-shadow:0 2px 10px rgba(15,26,36,.10);transform:translateX(-50%);z-index:2}
 .tip.on{opacity:1}
 .tip .t-d{color:var(--ink-3);font-size:10px;letter-spacing:.04em}
@@ -800,9 +803,9 @@ svg.sm .svg-axis{font-size:11px}
 
       <h3>평균이 아니라 중앙값으로 긋습니다</h3>
       <p>공포탐욕이 0 근처일 때 사서 1년 들고 있던 44일을 보면, 평균 수익률은
-      <b>+26.78%</b> 인데 중앙값은 <b>+11.44%</b> 입니다. 2020년 3월 바닥에서 산 며칠이
-      +100% 씩 나오며 평균을 끌어올린 결과입니다. 평균만 보면 "극단적 공포에 사면
-      27% 번다"로 읽히지만 실제로는 절반이 11% 아래였습니다. 그래서 선은 중앙값으로
+      <b>+23.35%</b> 인데 중앙값은 <b>+11.44%</b> 입니다. 2020년 3월 바닥에서 산 며칠이
+      크게 반등하며 평균을 끌어올린 결과입니다. 평균만 보면 "극단적 공포에 사면
+      23% 번다"로 읽히지만 실제로는 절반이 11% 아래였습니다. 그래서 선은 중앙값으로
       긋고, 평균은 점에 마우스를 올리면 함께 보여 줍니다.</p>
 
       <h3>구간을 덩어리로 묶지 않습니다</h3>
@@ -824,17 +827,19 @@ svg.sm .svg-axis{font-size:11px}
       차트를 옆으로 끌어 구간을 옮기면 그 구간의 전고점으로 바뀝니다.</p>
 
       <h3>표본이 닿는 곳까지만</h3>
-      <p>공포탐욕 잣대는 <b>2011년 1월 3일부터 3,854일</b>입니다. 지수 자체가 2012년에
+      <p>공포탐욕 잣대는 <b>2011년 1월 3일부터 3,862일</b>입니다. 지수 자체가 2012년에
       나왔고 소급할 수 있는 값이 2011년까지뿐이라 <b>2008년 금융위기가 통째로
       빠져 있습니다.</b> 남은 기간이 대체로 상승장이라 승률이 실제보다 좋아 보일 수
       있습니다. VIX 를 두 번째 잣대로 넣은 이유가 이것입니다 — S&amp;P 500 기준
-      1993년 1월 29일부터 <b>8,462일</b>이라 2008년이 들어갑니다.</p>
+      1993년 1월 29일부터 <b>8,469일</b>이라 2008년이 들어갑니다.</p>
 
       <h3>데이터</h3>
       <p>가격은 SPY·QQQ 배당 재투자 기준(Yahoo Finance), 공포와 탐욕 지수는 CNN Business,
-      VIX 는 CBOE 입니다. 미국장이 열려 있는 동안은 실시간, 닫혀 있으면 마지막 종가를
-      보여 줍니다. 차트는 최근 5년이 하루 단위, 그 이전은 주 단위입니다.
-      아래 수익률은 전 기간 하루 단위로 계산합니다.</p>
+      VIX 는 CBOE 입니다. 장중 시세를 주기적으로 조회하며 지연될 수 있습니다.
+      조회 시각과 각 자료의 기준일은 다를 수 있습니다. 차트는 최근 5년이 하루 단위, 그 이전은 주 단위입니다.
+      아래 수익률은 전 기간 하루 단위로 계산합니다. 보유기간은 30일·90일·180일·1년·3년·5년을
+      각각 21·63·126·252·756·1,260거래일로 환산합니다.
+      지표가 없는 날에는 진입하지 않지만, 보유기간은 전체 주가 거래일로 셉니다.</p>
 
       <p class="fine">여기 있는 숫자는 전부 과거 기록이고 미래를 보장하지 않습니다.
       투자 판단과 그 결과는 보는 사람의 몫입니다.</p>
@@ -849,9 +854,9 @@ svg.sm .svg-axis{font-size:11px}
 
       <h3>The line is the median, not the mean</h3>
       <p>Across the 44 days when Fear &amp; Greed sat near 0 and the position was held
-      for a year, the mean return was <b>+26.78%</b> and the median <b>+11.44%</b>. A handful
-      of days at the March 2020 bottom returned over +100% and dragged the mean up.
-      The mean alone reads as "buy in extreme fear and make 27%", when in fact half of
+      for a year, the mean return was <b>+23.35%</b> and the median <b>+11.44%</b>. A handful
+      of days at the March 2020 bottom saw large rebounds and dragged the mean up.
+      The mean alone reads as "buy in extreme fear and make 23%", when in fact half of
       those days came in under 11%. So the line is drawn from the median, and the mean
       appears alongside it when you hover over a point.</p>
 
@@ -877,18 +882,20 @@ svg.sm .svg-axis{font-size:11px}
       Drag the chart sideways and it becomes that window's peak.</p>
 
       <h3>As far back as the sample reaches</h3>
-      <p>The Fear &amp; Greed measure covers <b>3,854 days from 3 January 2011</b>. The
+      <p>The Fear &amp; Greed measure covers <b>3,862 days from 3 January 2011</b>. The
       index itself launched in 2012 and cannot be reconstructed further back than 2011,
       so <b>2008 is missing entirely</b>. What remains is mostly a rising market, which
       can make the win rates look better than they would otherwise. That is why VIX is
-      offered as a second measure — against the S&amp;P 500 it covers <b>8,462 days</b>
+      offered as a second measure — against the S&amp;P 500 it covers <b>8,469 days</b>
       from 29 January 1993, which includes 2008.</p>
 
       <h3>Data</h3>
       <p>Prices are SPY and QQQ with dividends reinvested (Yahoo Finance), Fear &amp;
-      Greed from CNN Business, VIX from CBOE. Live while the US market is open, last
-      close when it is shut. The chart is daily for the last five years and weekly
-      before that; the return figures below are computed from daily data throughout.</p>
+      Greed from CNN Business, VIX from CBOE. Quotes are checked periodically and may
+      be delayed. Quote dates can differ from the check time. The chart is daily for the last five years and weekly
+      before that; the return figures below are computed from daily data throughout.
+      The 30D, 90D, 180D, 1Y, 3Y and 5Y horizons mean 21, 63, 126, 252, 756 and 1,260 trading sessions.
+      Missing indicator readings exclude entry dates, but do not shorten the price calendar.</p>
 
       <p class="fine">Every figure here is a past record and guarantees nothing about
       the future. Investment decisions and their results are the responsibility of the reader.</p>
@@ -901,7 +908,7 @@ svg.sm .svg-axis{font-size:11px}
   <p class="foot" id="foot">
     Peak is the highest close inside the window on screen.<br>
     SPY and QQQ, dividends reinvested · Yahoo Finance · Fear &amp; Greed: CNN Business · VIX: CBOE<br>
-    Live while the US market is open, last close when it is shut.
+    Quotes are checked periodically and may be delayed. Quote dates can differ from the check time.
   </p>
 </div>
 
@@ -965,6 +972,23 @@ function xTicks(dates,i0,i1,c){
   return out;
 }
 
+/* 날짜 좌표와 가장 가까운 점. 일별·주별 자료를 배열 번호로 등분하지 않는다. */
+function nearestIndex(xs,x){
+  let lo=0,hi=xs.length-1;
+  while(lo<hi){const mid=(lo+hi)>>1;if(xs[mid]<x)lo=mid+1;else hi=mid}
+  return lo>0&&x-xs[lo-1]<=xs[lo]-x?lo-1:lo;
+}
+/* 주별 축약의 주말/휴일 차이(최대 10일)까지만 잇고 긴 결측은 끊는다. */
+function pointRuns(pts){
+  const runs=[];
+  for(const p of pts){
+    const run=runs[runs.length-1];
+    if(!run||dayDiff(run[run.length-1][0],p[0])>10)runs.push([p]);
+    else run.push(p);
+  }
+  return runs;
+}
+
 /* ================= 호버 ================= */
 function attachHover(box,meta){
   const svg=box.querySelector("svg");
@@ -975,7 +999,7 @@ function attachHover(box,meta){
   const move=e=>{
     const rc=svg.getBoundingClientRect();
     const vx=(e.clientX-rc.left)*(meta.W/rc.width);
-    let k=Math.round((vx-meta.L)/meta.pw*(meta.n-1));
+    let k=meta.nearest?meta.nearest(vx):Math.round((vx-meta.L)/meta.pw*(meta.n-1));
     k=Math.max(0,Math.min(meta.n-1,k));
     const x=meta.X(k);
     const ys=meta.pts?meta.pts(k):[meta.Y(meta.val(k))];
@@ -1274,7 +1298,7 @@ function renderMain(){
   }
 
   const P=a=>a.map((p,j)=>(j?"L":"M")+X(dnum(p[0])).toFixed(1)+" "+Yof(a.__l)(p[1]).toFixed(1)).join(" ");
-  const path=l=>{const a=l.pts.slice();a.__l=l;return P(a)};
+  const path=(l,pts=l.pts)=>{const a=pts.slice();a.__l=l;return P(a)};
 
   /* 선 그리기 애니메이션은 첫 화면에서만. 끌면서 다시 그릴 때도 대시를 걸면
      실제 길이를 다시 재기 전까지 선이 중간에서 끊겨 보인다(CLAUDE.md 7번). */
@@ -1337,8 +1361,10 @@ function renderMain(){
         `<dd class="sub">${atTop?tx("atPeak")
           :(past?tx("toPeak",back.toFixed(2)):tx("toRecover",back.toFixed(2)))}</dd></div>`;
   }
-  const gaugeArt=gl&&gl.pts.length>1
-    ?`<path d="${path(gl)}" fill="none" stroke="${gl.col}" stroke-width="${gl.wd}" stroke-linejoin="round"${anim}/>`:"";
+  const gaugeRuns=gl?pointRuns(gl.pts):[];
+  const gaugeArt=gaugeRuns.map(a=>a.length>1
+    ?`<path d="${path(gl,a)}" fill="none" stroke="${gl.col}" stroke-width="${gl.wd}" stroke-linejoin="round"${anim}/>`
+    :`<circle cx="${X(dnum(a[0][0]))}" cy="${YR(a[0][1])}" r="2" fill="${gl.col}"/>`).join("");
   if(gl&&gl.pts.length){
     const G=GAUGE[gl.key],lv=gl.pts[gl.pts.length-1][1];
     const gx=X(dnum(gl.pts[gl.pts.length-1][0])),gy=YR(lv);
@@ -1363,8 +1389,8 @@ function renderMain(){
   const rax=gs?gs.ticks.map(t=>`<text x="${xNum.toFixed(1)}" y="${(YR(t)+3.5).toFixed(1)}" class="svg-axis">${t}</text>`).join(""):"";
 
   /* 지수선은 오른쪽 축이라 배경처럼 깔아 두고, 가격선을 그 위에 얹는다 */
-  const area=gl?(()=>{const a=gl.pts.slice();a.__l=gl;
-    return `<path d="${P(a)} L ${X(dnum(gl.pts[gl.pts.length-1][0])).toFixed(1)} ${yBot} L ${X(dnum(gl.pts[0][0])).toFixed(1)} ${yBot} Z" fill="rgba(120,135,150,.10)"/>`})():"";
+  const area=gaugeRuns.filter(a=>a.length>1).map(a=>
+    `<path d="${path(gl,a)} L ${X(dnum(a[a.length-1][0])).toFixed(1)} ${yBot} L ${X(dnum(a[0][0])).toFixed(1)} ${yBot} Z" fill="rgba(120,135,150,.10)"/>`).join("");
 
   const xt=tTicks(t0,t1,g.ticks).map(t=>{
     const x=Lm+pw*t.x,anc=t.x<0.04?"start":t.x>0.96?"end":"middle";
@@ -1374,7 +1400,9 @@ function renderMain(){
 
   /* 십자선용 — 켜진 선들의 날짜를 합쳐 하나의 눈금으로 쓴다 */
   const allDays=[...new Set([].concat(...drawn.map(l=>l.pts.map(p=>p[0]))))].sort();
-  const at=(l,day)=>{let v=null;for(const p of l.pts){if(p[0]>day)break;v=p[1]}return v};
+  const hoverX=allDays.map(day=>X(dnum(day)));
+  drawn.forEach(l=>{l.byDay=new Map(l.pts)});
+  const at=(l,day)=>l.byDay.has(day)?l.byDay.get(day):null;
 
   chart.innerHTML=`
   <svg viewBox="0 0 ${W} ${H}" class="${sm?"sm":""}" role="img" aria-label="${tx("aria").main}">
@@ -1401,7 +1429,7 @@ function renderMain(){
   mainNotes(drawn.map(l=>l.key));
 
   attachHover(chart,{
-    W,L:Lm,pw,n:allDays.length,
+    W,L:Lm,pw,n:allDays.length,nearest:x=>nearestIndex(hoverX,x),
     X:k=>X(dnum(allDays[k])),
     pts:k=>drawn.map(l=>{const v=at(l,allDays[k]);return v==null?null:Yof(l)(v)}),
     html:k=>{const day=allDays[k];
@@ -1410,7 +1438,8 @@ function renderMain(){
         /* 가격선에는 티커를 병기한다 — 여기 찍히는 764.29 는 S&P 500 지수(7,656)가
            아니라 SPY 값이다. 심리선은 숫자가 곧 그 지수라 짧은 이름으로 둔다. */
         const nm=(l.side==="L")?mainFull(l.key):mainName(l.key);
-        return v==null?"":`<div class="t-r"><span>${nm}</span><b>${l.side==="L"?fmt(v):gFmt(v,GAUGE[l.key])}</b></div>`;
+        return v==null?`<div class="t-r"><span>${nm}</span><span>${tx("noObservation")}</span></div>`
+          :`<div class="t-r"><span>${nm}</span><b>${l.side==="L"?fmt(v):gFmt(v,GAUGE[l.key])}</b></div>`;
       }).join("")}
   });
 }
@@ -1547,7 +1576,7 @@ function paintStatic(){
   put("tagline",tx("tagline"));
   put("fng-name",axName(btAx));
   const st=document.getElementById("stamp");
-  if(st)st.textContent=STAMP_ISO?stamp(STAMP_ISO):tx("loading");
+  if(st)paintStamp();
   if(!BT){ put("bt-body",'<div class="empty">'+tx("loading")+'</div>');
            put("bt-title",tx("btTitleDefault")); }
   langSeg();
@@ -1648,11 +1677,13 @@ function axMeta(){
 }
 /* 그 잣대의 오늘 값. 공포탐욕은 fng, VIX는 vix 에서 온다. */
 function axNow(){
-  if(!DATA)return null;
-  const lq=(LIVE&&LIVE.quotes)?LIVE.quotes[btAx]:null;
-  if(lq&&typeof lq.v==="number")return lq.v;   /* 중계가 켜져 있으면 지금 값 */
-  const src=btAx==="vix"?DATA.vix:DATA.fng;
-  return src&&typeof src.value==="number"?src.value:null;
+  const src=DATA&&(btAx==="vix"?DATA.vix:DATA.fng);
+  const lq=LIVE&&LIVE.quotes&&LIVE.quotes[btAx];
+  const ser=LONG&&LONG.series&&LONG.series[btAx];
+  const last=ser&&ser.series&&ser.series[ser.series.length-1];
+  const values=[src&&{d:src.date,v:src.value},last&&{d:last[0],v:last[1]},lq]
+    .filter(q=>q&&q.d&&Number.isFinite(q.v)).sort((a,b)=>a.d.localeCompare(b.d));
+  return values.length?values[values.length-1].v:null;
 }
 /* 축 문구 — 사전이 우선, 없으면 데이터 파일에 든 한국어를 그대로 쓴다(옛 형식 대비) */
 const axLabel=a=>a?axText(a.key,"label",a.label):"";
@@ -1692,11 +1723,15 @@ function btSeries(){
   return Object.keys(BT.indices).map((k,i)=>{
     const cv=(BT.indices[k].curve||{})[btAx]||{};
     const c=(cv.h||{})[btH]||{};
-    return {k,name:idxName(k,BT.indices[k]),win:c.win||[],med:c.med||[],avg:c.avg||[],n:c.n||[],
+    return {k,from:cv.from,to:cv.to,days:cv.days||0,name:idxName(k,BT.indices[k]),win:c.win||[],med:c.med||[],avg:c.avg||[],n:c.n||[],
             col:i?"var(--ink-3)":"var(--ink)",wd:i?1.5:2.1,dash:i?"4 3":""};
   });
 }
 
+function btSample(s,v){
+  const period=s.from&&s.to?s.from.slice(0,4)+"–"+s.to.slice(0,4):"—";
+  return tx("sampleDays",num(s.n[v]||0),num(s.days))+" · "+period;
+}
 /* 축 범위를 "보기 좋은 눈금"으로 넓힌다 */
 function btScale(vals,step,floor0){
   let lo=Math.min(...vals),hi=Math.max(...vals);
@@ -1862,7 +1897,7 @@ function btHover(){
         :`<div class="t-x">${s.name} <b>${sign(s.med[v])}</b> · ${tx("winRateShort")} ${s.win[v].toFixed(0)}% <span style="color:var(--ink-3)">(${tx("avgShort")} ${sign(s.avg[v])})</span></div>`).join("");
       const zn2=zoneText(z);
       return `<div class="t-d">${axShort(a)} ${v}${zn2?" · "+zn2:""} · ${tx("hold")[btH]} ${tx("holdWord")}</div>${rows}`+
-        `<div class="t-d">${tx("sampleDays",num(S[0].n[v]||0))}</div>`;
+        S.map(s=>`<div class="t-d">${s.name} · ${btSample(s,v)}</div>`).join("");
     }
   });
 }
@@ -1891,14 +1926,12 @@ function btSummary(){
   }
   /* 이 눈금의 표본이 전체에서 얼마나 되는지 함께 보인다.
      1,616 이라는 숫자만으로는 많은지 적은지 알 수 없다. */
-  const holder=Object.values(BT.indices).find(x=>x&&x.curve&&x.curve[a.key]);
-  const all=(holder&&holder.curve[a.key]&&holder.curve[a.key].days)||0;
   /* 조건 문장과 표본 줄은 한 덩이다 — 표본 줄은 그 문장이 며칠을 근거로
      하는지 말한다. 표 아래에 떼어 두면 세 칸 중 어느 칸 이야기인지 흐려진다.
      둘을 묶어 구분선 아래 왼쪽에 놓고, 오른쪽을 표가 쓴다. */
   const lead='<div class="lead">'+
     '<div class="cond">'+tx("buyHere",tx("hold")[btH])+'</div>'+
-    '<div class="n">'+tx("sampleDays",num(S[0].n[v]||0),num(all))+'</div></div>';
+    S.map(s=>'<div class="n">'+s.name+'<br>'+btSample(s,v)+'</div>').join("")+'</div>';
   /* 지수 2개 × 잣대 2개는 원래 표다. 줄글로 쓰면 "수익날 확률"·"중위 수익"이
      줄마다 되풀이되면서 정작 숫자를 덮는다. 이름은 열 머리에 한 번만 쓴다. */
   const cell=(x,cls)=>`<span class="q ${cls||""}">${x}</span>`;
@@ -1952,8 +1985,9 @@ function renderBT(){
     b.setAttribute("aria-pressed",String(b.dataset.btax===btAx)));
   const holder=Object.values(BT.indices).find(x=>x&&x.curve&&x.curve[btAx]);
   const cv=holder?holder.curve[btAx]:null;
-  document.getElementById("bt-range").textContent=
-    cv?tx("samplePeriod")+" "+cv.from.slice(0,4)+"–"+cv.to.slice(0,4):"—";
+  const periods=btSeries().map(s=>s.from&&s.to?s.from.slice(0,4)+"–"+s.to.slice(0,4):"—");
+  document.getElementById("bt-range").textContent=tx("samplePeriod")+" "+
+    (new Set(periods).size===1?periods[0]:tx("byIndex"));
   /* 버튼은 한 번만 만들고 이후에는 눌린 표시만 옮긴다.
      매번 다시 그리면 방금 누른 버튼이 사라져 키보드 포커스를 잃는다. */
   if(!tools.firstChild)tools.innerHTML=btTools();
@@ -2021,6 +2055,12 @@ async function loadBT(){
   renderBT();
 }
 
+function paintStamp(){
+  const el=document.getElementById("stamp");
+  if(!el)return;
+  const fetched=LIVE&&LIVE.quotes&&Object.keys(LIVE.quotes).length&&LIVE.fetched;
+  el.textContent=fetched?stamp(fetched,true):STAMP_ISO?stamp(STAMP_ISO):tx("loading");
+}
 function stamp(iso,live){
   try{
     /* dateStyle/timeStyle 은 timeZoneName 과 같이 못 쓴다(TypeError). 항목을 하나씩 준다. */
@@ -2115,27 +2155,35 @@ function applyLive(){
 async function loadLive(){
   const u=(window.LIVE||{}).url;
   if(!u)return;
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),10000);
   try{
-    const r=await fetch(u,{cache:"no-store"});
+    const r=await fetch(u,{cache:"no-store",signal:controller.signal});
     if(!r.ok)throw new Error("HTTP "+r.status);
     const j=await r.json();
     if(!j||!j.quotes)throw new Error("quotes 없음");
     LIVE=j;
   }catch(e){console.error(e);return}
-  const el=document.getElementById("stamp");
-  if(el&&LIVE.fetched&&LIVE.open)el.textContent=stamp(LIVE.fetched,true);
+  finally{clearTimeout(timeout)}
+  paintStamp();
   if(applyLive()){renderMain();calibrateDraw()}
   renderBT();                                /* 성적표의 '지금 값'도 함께 */
 }
-/* 장이 열려 있고 탭을 보고 있을 때만 다시 부른다. 무료 한도를 아낀다. */
+/* 닫힌 장도 10분마다 다시 확인해야 다음 장 시작을 알 수 있다. */
 function liveLoop(){
   if(!(window.LIVE||{}).url)return;
-  setInterval(()=>{
-    if(document.hidden)return;
-    if(LIVE&&LIVE.open===false)return;
-    loadLive();
-  },60000);
-  document.addEventListener("visibilitychange",()=>{ if(!document.hidden)loadLive() });
+  let timer,checking=false;
+  const schedule=()=>{clearTimeout(timer);timer=setTimeout(tick,LIVE&&LIVE.open===false?600000:60000)};
+  const tick=async()=>{
+    if(checking)return;
+    checking=true;
+    try{if(!document.hidden)await loadLive()}
+    finally{checking=false;schedule()}
+  };
+  schedule();
+  document.addEventListener("visibilitychange",()=>{
+    if(!document.hidden){clearTimeout(timer);tick()}
+  });
 }
 
 /* 장기 이력은 따로 받는다. 실패해도 나머지 화면은 그대로 돈다. */
@@ -2152,8 +2200,10 @@ async function loadLong(){
     document.getElementById("main-tools").innerHTML="";
     return;
   }
-  mergeDaily();                   /* 먼저 도착했으면 최근 며칠을 붙이고 그린다 */
+  mergeDaily();
+  applyLive();                    /* 중계가 먼저 도착했어도 버리지 않는다 */
   renderMain();calibrateDraw();
+  if(BT)renderBT();
 }
 
 async function load(){
@@ -2166,14 +2216,16 @@ async function load(){
   }catch(err){
     /* 그림은 market-long.json 이 그린다. 여기서 잃는 것은 갱신 시각과
        성적표의 '지금' 표시뿐이라 화면을 비우지 않는다. */
-    document.getElementById("stamp").textContent=tx("loadFail");
+    paintStamp();
+    if(!LIVE&&!STAMP_ISO)document.getElementById("stamp").textContent=tx("loadFail");
     console.error(err);
     return;
   }
   STAMP_ISO=DATA.updated;
-  document.getElementById("stamp").textContent=stamp(STAMP_ISO);
+  paintStamp();
   if(BT)renderBT();               /* 지금 값이 들어왔으니 성적표를 다시 */
-  if(mergeDaily()){renderMain();calibrateDraw()}   /* 긴 이력이 먼저 왔으면 여기서 붙는다 */
+  const grew=mergeDaily(),liveChanged=applyLive();
+  if(grew||liveChanged){renderMain();calibrateDraw()}
   lastW=(document.getElementById("panel-main")||{}).clientWidth||0;
   setTimeout(()=>document.body.classList.add("settled"),1600);  /* 애니메이션은 첫 회만 */
 }

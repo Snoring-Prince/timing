@@ -31,6 +31,7 @@ import csv
 import io
 import json
 import os
+import sys
 import time
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -52,7 +53,7 @@ SINCE = 631152000
 DAILY_YEARS = 5
 
 # 공포탐욕지수 이력. 두 소스를 이어 붙여야 2011년까지 올라간다.
-# 2020-09 ~ 2021-02 사이 약 4개월 공백이 있으나 화면에서는 선이 이어진다.
+# 2020-09 ~ 2021-02 사이 약 4개월 공백은 화면에서 선을 끊어 표시한다.
 FNG_SOURCES = [
     ("2011-2020",
      "https://raw.githubusercontent.com/hackingthemarkets/"
@@ -116,8 +117,7 @@ def load_fng():
         try:
             raw = fetch(url).decode("utf-8", "replace")
         except Exception as e:                        # noqa: BLE001
-            print(f"  {label} 실패: {e}")
-            continue
+            raise RuntimeError(f"공포탐욕 {label} 수집 실패: {e}") from e
         n = 0
         for r in csv.DictReader(io.StringIO(raw)):
             day = (r.get("Date") or "").strip()
@@ -215,11 +215,12 @@ def main():
             series["fng"] = old_series["fng"]
             print("  → 기존 데이터 유지")
 
-    if not series:
-        raise SystemExit("모든 소스 실패 — 파일을 쓰지 않는다")
+    if len(failed) == len(QUOTES) + 1:
+        raise SystemExit("모든 소스 실패 — 기존 파일과 갱신 시각을 보존합니다.")
 
     out = {
-        "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "updated": (old.get("updated") if failed else
+                    datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
         "dailyFrom": daily_from,
         "series": series,
     }
@@ -232,7 +233,8 @@ def main():
     print(f"\n{OUT}  {size:,} bytes ({size / 1024:.0f} KB) · {rows:,}행")
     if failed:
         print(f"실패한 소스: {', '.join(failed)}")
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
