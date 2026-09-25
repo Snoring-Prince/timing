@@ -9,6 +9,14 @@ on:
       - "data/backtest.json"
       - "scripts/check_about.py"
       - "scripts/notify.py"
+      - "scripts/backtest.py"
+      - "scripts/fetch_data.py"
+      - "scripts/fetch_long.py"
+      - "scripts/tests/test_dashboard.py"
+      - "scripts/tests/dashboard.test.cjs"
+      - ".github/workflows/check.yml"
+      - ".github/workflows/update-data.yml"
+      - ".github/workflows/update-long.yml"
   workflow_dispatch:
 
 permissions:
@@ -22,6 +30,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: 대시보드 기간 계산과 수집 실패 검사
+        run: python -m unittest discover -s scripts/tests -p 'test_dashboard.py'
+
+      - name: 대시보드 날짜·결측·실시간 갱신 검사
+        run: node --test scripts/tests/dashboard.test.cjs
 
       - name: 설명 글 숫자 대조
         run: python scripts/check_about.py

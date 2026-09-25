@@ -25,6 +25,8 @@ jobs:
           python-version: "3.12"
 
       - name: 장기 이력 받기
+        id: collect
+        continue-on-error: true
         run: python scripts/fetch_long.py
 
       - name: 결과 저장
@@ -38,6 +40,11 @@ jobs:
             git commit -m "장기 이력 갱신 $(date -u +%Y-%m-%d)"
             git push
           fi
+
+      # 성공한 계열을 먼저 저장한 뒤 실패를 복원해 알림과 Actions 상태에 남긴다.
+      - name: 수집 실패 상태 반영
+        if: always() && steps.collect.outcome == 'failure'
+        run: exit 1
 
       # 실패하면 텔레그램으로. 이 프로젝트에서 진짜 위험한 것은 터지는 것이 아니라
       # **데이터가 조용히 끊기는 것**입니다(Stooq 차단, CNN 418 — 둘 다 겪었습니다).

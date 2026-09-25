@@ -2,7 +2,14 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
-## 2026-09-24 · Codex · (이 PR)
+## 2026-09-25 · Codex · (이 PR)
+메인 대시보드 검수 8건 — 보유기간·수집 실패 알림·결측·십자선·실시간·날짜·표본 수정
+- 파일: index.html · backtest.json · 메인 수집/백테스트/검사 · check/update-data/update-long workflow · CLAUDE.md · 이 일지
+- 규칙: 계산·저장/실패·관측·검증의 정본은 CLAUDE.md 8-1. 주별 차트 및 정적 한영 본문 유지.
+- 굳힘: 기존 색·기간·화면 틀 유지. Titans는 변경하지 않음. 실패한 수집을 최신 성공으로 표시하지 않음.
+- 넘김: 실제 Telegram 수신은 미시험. 사용자 merge 후 운영 적용. Titans의 09-26 splitsFrom 확인은 기존대로 남음.
+
+## 2026-09-24 · Codex · PR #85
 검수 잔여 수정 — 주식/옵션 분리·공시 단위·보강 재시도·누락 책 보존·실제 두 투자자 검증
 - 파일: shared/investor.js · 수집/감시/registry · tests · update/check workflow · CLAUDE.md · 안내 문서 · 이 일지
 - 규칙: 현재 동작·측정·제한은 CLAUDE.md의 2026-09-24 검수 후속이 정본. 소통·검수 요청은 하지 않음.

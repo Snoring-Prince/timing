@@ -16,6 +16,7 @@ import csv
 import io
 import json
 import os
+import sys
 import time
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -178,7 +179,10 @@ def build_fng(previous):
     got = False
     for label, fn in [("GitHub 미러", src_fng_mirror), ("CNN 직접", src_fng_cnn)]:
         try:
-            merged.update(fn())
+            fresh = fn()
+            if not fresh:
+                raise RuntimeError("빈 공포탐욕 응답")
+            merged.update(fresh)
             print(f"  {label} 성공")
             got = True
             break
@@ -187,7 +191,7 @@ def build_fng(previous):
     if not merged:
         raise RuntimeError("모든 출처 실패")
     if not got:
-        print("  새로 받지 못해 기존 데이터만 사용")
+        raise RuntimeError("공포탐욕 신규 수집 실패")
 
     cutoff = (datetime.now(timezone.utc)
               - timedelta(days=365 * YEARS)).strftime("%Y-%m-%d")
@@ -280,8 +284,10 @@ def main():
         print(f"  갱신 실패: {e}")
         failed.append("VIX")
 
-    if not result["indices"] and not result["fng"]:
-        raise SystemExit("\n받아온 데이터가 하나도 없습니다. 중단합니다.")
+    if len(failed) == 4:
+        raise SystemExit("모든 수집 실패 — 기존 파일과 갱신 시각을 보존합니다.")
+    if failed:
+        result["updated"] = old.get("updated")
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:
@@ -290,7 +296,8 @@ def main():
     print(f"\n저장 완료: {OUT} ({os.path.getsize(OUT) / 1024:.0f}KB)")
     if failed:
         print(f"주의: {', '.join(failed)} 갱신 실패 (기존 값 유지)")
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

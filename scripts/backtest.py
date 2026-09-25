@@ -41,7 +41,7 @@ HEADERS = {
 SINCE = 631152000
 
 # 공포탐욕지수 이력. 두 소스를 이어 붙여야 2011년까지 올라간다.
-# 2020-09 ~ 2021-02 사이 약 4개월 공백이 있으나 통계에는 무해하다.
+# 결측일에는 진입하지 않는다. 보유기간은 전체 가격 거래일로 센다.
 FNG_SOURCES = [
     ("2011-2020",
      "https://raw.githubusercontent.com/hackingthemarkets/"
@@ -153,8 +153,7 @@ def load_fng():
         try:
             raw = fetch(url).decode("utf-8", "replace")
         except Exception as e:                        # noqa: BLE001
-            print(f"  {label} 실패: {e}")
-            continue
+            raise RuntimeError(f"공포탐욕 {label} 수집 실패: {e}") from e
         n = 0
         for r in csv.DictReader(io.StringIO(raw)):
             day = (r.get("Date") or "").strip()
@@ -180,15 +179,17 @@ def backtest(gauge, prices, window):
     if len(days) < 500:
         raise RuntimeError(f"겹치는 날짜 부족 ({len(days)}일)")
 
-    px = [prices[d] for d in days]
-    vals = [gauge[d] for d in days]
+    # 지표의 공백을 가격 달력에서 빼면 252거래일이 수개월 더 길어진다.
+    price_days = sorted(prices)
+    position = {d: i for i, d in enumerate(price_days)}
+    px = [prices[d] for d in price_days]
 
     out = {}
     for hkey, span in HORIZONS:
         # 그 날 사서 span 거래일 뒤 팔았을 때의 수익률.
         # 아직 span 일이 안 지난 최근 날들은 결과가 없으므로 뺀다.
-        pairs = [(vals[i], (px[i + span] / px[i] - 1) * 100)
-                 for i in range(len(px) - span)]
+        pairs = [(gauge[d], (px[position[d] + span] / prices[d] - 1) * 100)
+                 for d in days if position[d] + span < len(px)]
 
         win, med, avg, ns = [], [], [], []
         for v in range(101):
@@ -283,8 +284,10 @@ def main():
             result["indices"][key] = {"name": name, "symbol": symbol,
                                       "curve": curve}
 
-    if not result["indices"]:
-        raise SystemExit("가격 데이터를 받지 못했습니다.")
+    expected_axes = {a["key"] for a in AXES}
+    if (set(result["indices"]) != {k for k, _, _ in INDICES}
+            or any(set(x["curve"]) != expected_axes for x in result["indices"].values())):
+        raise SystemExit("백테스트 자료 일부 수집 실패 — 기존 파일을 보존합니다.")
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:
