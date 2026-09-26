@@ -6,6 +6,7 @@ on:
   pull_request:
     paths:
       - "index.html"
+      - "timing/index.html"
       - "data/backtest.json"
       - "scripts/check_about.py"
       - "scripts/notify.py"

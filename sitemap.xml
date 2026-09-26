@@ -7,7 +7,8 @@
      — 표식이 없으면 매일 도는 update-data.yml 의 sed 가 분기마다 바뀌는
      titans 줄까지 같이 찍어서 "매일 바뀐다"는 거짓 신호가 됩니다.
 
-       root 표식이 달린 줄    update-data.yml  (평일 매일)
+       root 표식이 달린 줄    update-data.yml  (평일 매일 — 첫 화면도 그날 숫자를 보여 줌)
+       timing 표식이 달린 줄  update-data.yml  (평일 매일)
        titans 표식이 달린 줄  update-13f.yml   (분기마다)
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -18,6 +19,14 @@
     <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/?lang=ko"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/"/>
     <lastmod>2026-09-26</lastmod><!-- root -->
+    <changefreq>daily</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/timing/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/timing/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/timing/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/timing/"/>
+    <lastmod>2026-09-26</lastmod><!-- timing -->
     <changefreq>daily</changefreq>
   </url>
   <url>
