@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>It paid off — 과거 기록으로 보는 투자</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+:root{
+  --paper:#E9ECF0; --card:#FFFFFF;
+  --ink:#0F1A24; --ink-2:#475765; --ink-3:#5F6B74;
+  --rule:#BCC6D0; --rule-2:#DDE3E9;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --cond:"IBM Plex Sans Condensed","Pretendard Variable",Pretendard,sans-serif;
+  --body:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+}
+html[lang="ko"] [data-lang="en"]{display:none}
+html:not([lang="ko"]) [data-lang="ko"]{display:none}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:13.5px;line-height:1.7;
+  background-image:linear-gradient(rgba(15,26,36,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(15,26,36,.028) 1px,transparent 1px);
+  background-size:56px 56px}
+main{max-width:900px;margin:0 auto;padding:36px 20px 72px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase}
+.langs{display:flex;border:1px solid var(--rule)}
+.langs button{font:600 11.5px var(--cond);border:0;background:var(--card);color:var(--ink-2);padding:3px 10px;cursor:pointer}
+.langs button[aria-pressed="true"]{background:var(--ink);color:#fff}
+h1{font:700 30px/1.25 var(--cond);margin:14px 0 10px;letter-spacing:-.01em}
+.lead{color:var(--ink-2);max-width:640px;margin:0 0 28px}
+.cards{display:grid;gap:14px}
+.card{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;background:var(--card);border:1px solid var(--rule);
+  padding:20px;color:inherit;text-decoration:none;position:relative}
+a.card:hover{border-color:var(--ink)}
+a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.no{font:600 11px var(--mono);color:var(--ink-3);letter-spacing:.06em}
+.card h2{font:700 20px/1.3 var(--cond);margin:4px 0 6px}
+.q{font-size:15px;font-weight:600;margin:0 0 8px}
+.what{color:var(--ink-2);margin:0}
+.go{display:inline-block;margin-top:12px;font:600 12.5px var(--cond);color:var(--ink);border-bottom:1px solid var(--ink)}
+.read{border-left:1px solid var(--rule-2);padding-left:20px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.cap{font:500 11px/1.35 var(--cond);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.big{font:500 38px/1 var(--mono);letter-spacing:-.02em}
+.big small{font:600 19px var(--body);margin-left:8px;letter-spacing:0}
+.tbl{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px;margin-top:4px}
+.tbl th{font:500 11px/1.25 var(--cond);color:var(--ink-3);text-align:right;padding:0 0 3px;letter-spacing:.04em}
+.tbl th:first-child,.tbl td:first-child{text-align:left;font-family:var(--body);white-space:nowrap}
+.tbl td{text-align:right;padding:2px 0;border-top:1px solid var(--rule-2)}
+.sub{font:11px/1.5 var(--mono);color:var(--ink-3)}
+.soon{opacity:.75}
+.tag{position:absolute;top:20px;right:20px;font:600 11px var(--cond);border:1px dashed var(--rule);color:var(--ink-3);padding:1px 8px;letter-spacing:.06em}
+.foot{margin-top:28px;font-size:12.5px;color:var(--ink-3)}
+@media (max-width:640px){
+  main{padding:24px 14px 56px}
+  h1{font-size:25px}
+  .card{grid-template-columns:1fr;padding:14px;gap:14px}
+  .read{border-left:0;border-top:1px solid var(--rule-2);padding:14px 0 0}
+  .tag{top:14px;right:14px}
+}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div class="eyebrow">itpaidoff.com</div>
+    <div class="langs" role="group" aria-label="Language">
+      <button type="button" data-set="ko">한국어</button><button type="button" data-set="en">English</button>
+    </div>
+  </div>
+
+  <h1><span data-lang="ko">그 선택은 결실을 맺었나</span><span data-lang="en">Did it pay off?</span></h1>
+  <p class="lead">
+    <span data-lang="ko">투자에서 자주 나오는 질문 셋을 과거 기록으로 되짚어 봅니다. 여기 있는 숫자는 모두 지나간 일이고, 무엇을 사라고 말하지 않습니다.</span>
+    <span data-lang="en">Three common investing questions, checked against the historical record. Every number here describes the past; none of it is advice on what to buy.</span>
+  </p>
+
+  <div class="cards">
+    <!-- 1 -->
+    <a class="card" href="../">
+      <div>
+        <div class="no">01 · <span data-lang="ko">다니엘의 타이밍</span><span data-lang="en">Daniel's timing</span></div>
+        <h2><span data-lang="ko">시장이 겁먹었을 때, 그 뒤엔 어땠나</span><span data-lang="en">When the market was scared, what came next</span></h2>
+        <p class="what">
+          <span data-lang="ko">CNN 공포탐욕지수가 지금과 비슷했던 날들을 2011년부터 모아, S&amp;P 500 과 나스닥 100 이 그 뒤 얼마나 움직였는지 셉니다. 현금을 언제 넣을지 고민하는 사람을 위한 화면입니다.</span>
+          <span data-lang="en">It gathers every day since 2011 when CNN's Fear &amp; Greed Index sat near today's level and counts what the S&amp;P 500 and Nasdaq 100 did afterwards. It is built for anyone weighing when to put cash to work.</span>
+        </p>
+        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
+      </div>
+      <div class="read" id="r-timing">
+        <div class="cap"><span data-lang="ko">지금 공포탐욕</span><span data-lang="en">Fear &amp; Greed now</span></div>
+        <div class="big" id="fng">—</div>
+        <table class="tbl" id="fng-tbl" hidden>
+          <thead><tr><th><span data-lang="ko">이 수준 1년 뒤</span><span data-lang="en">1 year later</span></th>
+            <th><span data-lang="ko">오른 비율</span><span data-lang="en">Up</span></th>
+            <th><span data-lang="ko">중위 수익률</span><span data-lang="en">Median</span></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="sub" id="fng-sub"></div>
+      </div>
+    </a>
+
+    <!-- 2 -->
+    <a class="card" href="../titans/berkshire/">
+      <div>
+        <div class="no">02 · <span data-lang="ko">대가들의 선택</span><span data-lang="en">Titans' picks</span></div>
+        <h2><span data-lang="ko">대가들은 무엇을 샀고, 그래서 어떻게 됐나</span><span data-lang="en">What the great investors bought, and how it turned out</span></h2>
+        <p class="what">
+          <span data-lang="ko">미국 SEC 에 분기마다 내는 13F 공시를 1998년부터 모아, 무엇을 늘리고 줄였는지와 추정 매수가 대비 지금 어디에 와 있는지를 봅니다. 지금은 버크셔 해서웨이 한 곳입니다.</span>
+          <span data-lang="en">It collects the 13F filings sent to the SEC every quarter since 1998 and shows what was added and trimmed, and where each position stands against its estimated purchase price. Berkshire Hathaway is the first.</span>
+        </p>
+        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
+      </div>
+      <div class="read" id="r-titans">
+        <div class="cap"><span data-lang="ko">버크셔 해서웨이 · 최근 공시</span><span data-lang="en">Berkshire Hathaway · latest filing</span></div>
+        <div class="big" id="bk-total">—</div>
+        <div class="sub" id="bk-sub"></div>
+        <table class="tbl" id="bk-tbl" hidden>
+          <thead><tr><th><span data-lang="ko">비중 상위</span><span data-lang="en">Largest</span></th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </a>
+
+    <!-- 3 -->
+    <div class="card soon">
+      <span class="tag"><span data-lang="ko">준비 중</span><span data-lang="en">Coming</span></span>
+      <div>
+        <div class="no">03 · <span data-lang="ko">사무엘의 결정 (가제)</span><span data-lang="en">Samuel's decision (working title)</span></div>
+        <h2><span data-lang="ko">매달 꾸준히 넣었다면 어떻게 됐나</span><span data-lang="en">What if you had put money in every month</span></h2>
+        <p class="what">
+          <span data-lang="ko">S&amp;P 500 이나 나스닥 100 에 매달 같은 금액을 넣었을 때 쌓여 가는 곡선을 보여 줄 예정입니다.</span>
+          <span data-lang="en">It will show how a fixed monthly amount in the S&amp;P 500 or Nasdaq 100 would have built up over time.</span>
+        </p>
+      </div>
+      <div class="read">
+        <div class="cap"><span data-lang="ko">아직 계산을 검증하는 중입니다</span><span data-lang="en">Figures still being checked</span></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">
+    <span data-lang="ko">과거 성과일 뿐 미래를 보장하지 않습니다. 투자 판단과 그 결과는 본인의 몫입니다.</span>
+    <span data-lang="en">Past performance does not guarantee future results. Investment decisions and their outcomes are your own.</span>
+  </p>
+</main>
+
+<script>
+(function(){
+  let LANG = (new URLSearchParams(location.search).get("lang")) ||
+             ((navigator.languages||[navigator.language||"en"])[0].toLowerCase().startsWith("ko") ? "ko" : "en");
+  const ZONE = {ko:{"fng.exfear":"극단적 공포","fng.fear":"공포","fng.neutral":"중립","fng.greed":"탐욕","fng.exgreed":"극단적 탐욕"},
+                en:{"fng.exfear":"Extreme fear","fng.fear":"Fear","fng.neutral":"Neutral","fng.greed":"Greed","fng.exgreed":"Extreme greed"}};
+  const IDX = {ko:{spx:"S&P 500",ndx:"나스닥 100"}, en:{spx:"S&P 500",ndx:"Nasdaq 100"}};
+  let M=null, BT=null, BK=null;
+  const $=id=>document.getElementById(id);
+  const pct=(v,s)=>(s&&v>0?"+":"")+v.toFixed(s?2:0)+"%";
+  const usd=v=>v>=1e9?"$"+(v/1e9).toFixed(0)+"B":"$"+(v/1e6).toFixed(0)+"M";
+  const dot=d=>d.replace(/-/g,".");
+
+  function paint(){
+    document.documentElement.lang=LANG;
+    document.querySelectorAll(".langs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.set===LANG));
+    if(M&&BT){
+      const v=Math.round(M.fng.value), ax=BT.axes.find(a=>a.key==="fng");
+      const z=ax.zones.find(z=>v>=z.lo&&v<z.hi);
+      $("fng").innerHTML=v+"<small>"+(ZONE[LANG][z.key]||z.label)+"</small>";
+      const tb=$("fng-tbl").tBodies[0]; tb.innerHTML="";
+      let days=0,from="",to="";
+      for(const k of ["spx","ndx"]){
+        const c=BT.indices[k]&&BT.indices[k].curve.fng; if(!c) continue;
+        const h=c.h["1Y"]; if(h.win[v]==null) continue;
+        tb.insertAdjacentHTML("beforeend","<tr><td>"+IDX[LANG][k]+"</td><td>"+pct(h.win[v])+"</td><td>"+pct(h.med[v],1)+"</td></tr>");
+        if(k==="spx"){days=h.n[v];from=c.from.slice(0,4);to=c.to.slice(0,4);}
+      }
+      $("fng-tbl").hidden=!tb.rows.length;
+      $("fng-sub").textContent = LANG==="ko"
+        ? dot(M.fng.date)+" 기준 · 비슷했던 날 "+days.toLocaleString()+"일 · "+from+"–"+to
+        : "as of "+dot(M.fng.date)+" · "+days.toLocaleString()+" similar days · "+from+"–"+to;
+    }
+    if(BK){
+      const q=BK.quarters[BK.quarters.length-1], g={};
+      for(const r of q.holdings){const k=r.cusip.slice(0,6);(g[k]=g[k]||{v:0,n:r.name}).v+=r.value;}
+      const rows=Object.values(g).sort((a,b)=>b.v-a.v), tot=rows.reduce((s,r)=>s+r.v,0);
+      $("bk-total").innerHTML=usd(tot)+"<small>"+(LANG==="ko"?rows.length+"종목":rows.length+" stocks")+"</small>";
+      $("bk-sub").textContent = LANG==="ko"
+        ? dot(q.period)+" 분기말 · "+dot(q.filed)+" 공시"
+        : "quarter ended "+dot(q.period)+" · filed "+dot(q.filed);
+      const tb=$("bk-tbl").tBodies[0]; tb.innerHTML="";
+      rows.slice(0,3).forEach(r=>tb.insertAdjacentHTML("beforeend","<tr><td>"+r.n+"</td><td>"+(r.v/tot*100).toFixed(1)+"%</td></tr>"));
+      $("bk-tbl").hidden=false;
+    }
+  }
+  document.querySelectorAll(".langs button").forEach(b=>b.onclick=()=>{LANG=b.dataset.set;paint();});
+  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  paint();
+  Promise.all([j("../data/dashboard/market.json"),j("../data/dashboard/backtest.json"),j("../data/titans/berkshire.json")])
+    .then(([m,bt,bk])=>{M=m&&m.fng?m:null;BT=bt;BK=bk&&bk.quarters?bk:null;paint();});
+})();
+</script>
+</body>
+</html>
