@@ -52,6 +52,20 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .sub{font:11px/1.5 var(--mono);color:var(--ink-3)}
 .soon{opacity:.75}
 .tag{position:absolute;top:20px;right:20px;font:600 11px var(--cond);border:1px dashed var(--rule);color:var(--ink-3);padding:1px 8px;letter-spacing:.06em}
+.fig{grid-column:1/-1;margin:0;border-top:1px solid var(--rule-2);padding-top:14px}
+.fig svg,.hero svg{display:block;width:100%;height:auto;overflow:visible}
+.figcap{font:500 11px/1.35 var(--cond);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hero{margin:0 0 26px}
+.ax{font:11px var(--mono);fill:var(--ink-3)}
+.lab{font:500 11px var(--mono);fill:var(--ink-2)}
+.labk{font:600 11px var(--body);fill:var(--ink)}
+.stack{display:flex;height:22px;border:1px solid var(--ink);margin:6px 0 4px}
+.stack i{display:block;height:100%;border-right:1px solid #fff}
+.stack i:last-child{border-right:0}
+.legend{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 8px;font-size:12.5px;align-items:center}
+.legend b{width:10px;height:10px;display:block}
+.legend span:nth-child(3n){font-family:var(--mono);text-align:right}
+.legend span:nth-child(3n-1){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .foot{margin-top:28px;font-size:12.5px;color:var(--ink-3)}
 @media (max-width:640px){
   main{padding:24px 14px 56px}
@@ -77,6 +91,12 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     <span data-lang="en">Three common investing questions, checked against the historical record. Every number here describes the past; none of it is advice on what to buy.</span>
   </p>
 
+  <figure class="hero" id="hero">
+    <div class="figcap"><span><span data-lang="ko">S&amp;P 500 (SPY) 1993년부터 · 로그 눈금</span><span data-lang="en">S&amp;P 500 (SPY) since 1993 · log scale</span></span>
+      <span><span data-lang="ko">점선 = 그때까지의 최고점 · 빗금 = 최고점 대비 하락</span><span data-lang="en">dashed = high so far · hatch = drop from that high</span></span></div>
+    <div id="hero-svg"></div>
+  </figure>
+
   <div class="cards">
     <!-- 1 -->
     <a class="card" href="../">
@@ -100,6 +120,7 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
         </table>
         <div class="sub" id="fng-sub"></div>
       </div>
+      <figure class="fig"><div class="figcap"><span><span data-lang="ko">최근 1년 공포탐욕</span><span data-lang="en">Fear &amp; Greed, past year</span></span></div><div id="fig-fng"></div></figure>
     </a>
 
     <!-- 2 -->
@@ -117,11 +138,10 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
         <div class="cap"><span data-lang="ko">버크셔 해서웨이 · 최근 공시</span><span data-lang="en">Berkshire Hathaway · latest filing</span></div>
         <div class="big" id="bk-total">—</div>
         <div class="sub" id="bk-sub"></div>
-        <table class="tbl" id="bk-tbl" hidden>
-          <thead><tr><th><span data-lang="ko">비중 상위</span><span data-lang="en">Largest</span></th><th></th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="stack" id="bk-stack"></div>
+        <div class="legend" id="bk-legend"></div>
       </div>
+      <figure class="fig"><div class="figcap"><span><span data-lang="ko">13F 보유 총액 · 분기말</span><span data-lang="en">13F holdings value · quarter-end</span></span></div><div id="fig-bk"></div></figure>
     </a>
 
     <!-- 3 -->
@@ -138,6 +158,8 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
       <div class="read">
         <div class="cap"><span data-lang="ko">아직 계산을 검증하는 중입니다</span><span data-lang="en">Figures still being checked</span></div>
       </div>
+      <figure class="fig"><div class="figcap"><span><span data-lang="ko">S&amp;P 500 에 매달 같은 금액 · 모양 미리보기</span><span data-lang="en">Same amount into the S&amp;P 500 each month · shape preview</span></span>
+        <span><span data-lang="ko">숫자는 검증 뒤에 공개</span><span data-lang="en">numbers after checking</span></span></div><div id="fig-dca"></div></figure>
     </div>
   </div>
 
@@ -151,22 +173,136 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 (function(){
   let LANG = (new URLSearchParams(location.search).get("lang")) ||
              ((navigator.languages||[navigator.language||"en"])[0].toLowerCase().startsWith("ko") ? "ko" : "en");
+  const PAL={ko:{up:"#C4362C",down:"#1F5FA9",upRGB:"196,54,44",downRGB:"31,95,169"},
+             en:{up:"#1B7F4B",down:"#C4362C",upRGB:"27,127,75",downRGB:"196,54,44"}};
   const ZONE = {ko:{"fng.exfear":"극단적 공포","fng.fear":"공포","fng.neutral":"중립","fng.greed":"탐욕","fng.exgreed":"극단적 탐욕"},
                 en:{"fng.exfear":"Extreme fear","fng.fear":"Fear","fng.neutral":"Neutral","fng.greed":"Greed","fng.exgreed":"Extreme greed"}};
   const IDX = {ko:{spx:"S&P 500",ndx:"나스닥 100"}, en:{spx:"S&P 500",ndx:"Nasdaq 100"}};
-  let M=null, BT=null, BK=null;
+  let M=null, BT=null, BK=null, LG=null;
   const $=id=>document.getElementById(id);
   const pct=(v,s)=>(s&&v>0?"+":"")+v.toFixed(s?2:0)+"%";
   const usd=v=>v>=1e9?"$"+(v/1e9).toFixed(0)+"B":"$"+(v/1e6).toFixed(0)+"M";
   const dot=d=>d.replace(/-/g,".");
+  const T=d=>Date.parse(d+"T00:00:00Z");
+  const esc=t=>String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  const W=el=>Math.max(260,Math.round(el.clientWidth||600));
+  const pal=()=>PAL[LANG==="ko"?"ko":"en"];
+  const toneRGB=t=>t<0?pal().downRGB:t>0?pal().upRGB:"120,135,150";
+  const toneA=t=>({"-2":.10,"-1":.055,"0":.035,"1":.055,"2":.10})[t];
+  const toneCol=t=>t<0?pal().down:t>0?pal().up:"var(--ink-2)";
+  const line=pts=>pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join("");
+
+  /* ── 머리 그림: SPY 전 기간, 로그 눈금, 최고점 수위선 + 낙폭 빗금 ── */
+  function drawHero(){
+    const box=$("hero-svg"); const s=LG&&LG.series&&LG.series.spx; if(!s){box.innerHTML="";return;}
+    const d=s.series.filter(p=>typeof p[1]==="number"&&p[1]>0);
+    const w=W(box), h=w<500?150:190, L=0, R=w-2, Tp=16, B=h-20;
+    const t0=T(d[0][0]), t1=T(d[d.length-1][0]);
+    const lo=Math.log(Math.min(...d.map(p=>p[1]))), hi=Math.log(Math.max(...d.map(p=>p[1])));
+    const x=t=>L+(t-t0)/(t1-t0)*(R-L), y=v=>B-(Math.log(v)-lo)/(hi-lo)*(B-Tp);
+    let pk=0; const P=[], K=[];
+    for(const [dt,v] of d){pk=Math.max(pk,v);P.push([x(T(dt)),y(v)]);K.push([x(T(dt)),y(pk)]);}
+    const hatch="M"+K.map(p=>p[0].toFixed(1)+" "+p[1].toFixed(1)).join("L")+"L"+P.slice().reverse().map(p=>p[0].toFixed(1)+" "+p[1].toFixed(1)).join("L")+"Z";
+    // 20% 넘게 빠졌던 구간의 바닥 이름표
+    const eps=[]; pk=0; let cur=null;
+    d.forEach(([dt,v],i)=>{ if(v>=pk){ if(cur&&cur.dd<=-.2)eps.push(cur); cur=null; pk=v; }
+      else{ const dd=v/pk-1; if(!cur||dd<cur.dd)cur={dd,i,dt}; } });
+    if(cur&&cur.dd<=-.2)eps.push(cur);
+    let labs=""; const placed=[], lw=w<500?36:84;
+    for(const e of eps.slice().sort((a,b)=>a.dd-b.dd)){ const [px,py]=P[e.i];
+      if(placed.some(q=>Math.abs(q-px)<lw))continue; placed.push(px); const anc=px>w-40?"end":px<40?"start":"middle";
+      const ly=Math.min(py+24,B-6);
+      labs+=`<line x1="${px}" x2="${px}" y1="${py+3}" y2="${ly-11}" stroke="var(--ink-3)"/>`+
+            `<text class="lab" x="${px}" y="${ly}" text-anchor="${anc}" style="paint-order:stroke;stroke:var(--paper);stroke-width:3px">−${Math.abs(Math.round(e.dd*100))}%${w<500?"":" · "+e.dt.slice(0,4)}</text>`; }
+    let ticks="";
+    for(let yr=1995;yr<=2025;yr+=w<500?10:5){const tx=x(Date.UTC(yr,0,1));
+      ticks+=`<line x1="${tx}" x2="${tx}" y1="${B}" y2="${B+4}" stroke="var(--ink-3)"/><text class="ax" x="${tx}" y="${B+16}" text-anchor="middle">${yr}</text>`;}
+    const last=d[d.length-1];
+    box.innerHTML=`<svg viewBox="0 0 ${w} ${h+26}" role="img" aria-label="S&P 500 (SPY) ${d[0][0].slice(0,4)}–${last[0].slice(0,4)}">
+      <defs><pattern id="hh" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="rgba(15,26,36,.28)" stroke-width="1"/></pattern></defs>
+      <line x1="${L}" x2="${R}" y1="${B}" y2="${B}" stroke="var(--rule)"/>
+      <path d="${hatch}" fill="url(#hh)"/>
+      <path d="${line(K)}" fill="none" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 3"/>
+      <path d="${line(P)}" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+      <circle cx="${P[P.length-1][0]}" cy="${P[P.length-1][1]}" r="3" fill="var(--ink)"/>
+      <text class="lab" x="${R}" y="${P[P.length-1][1]-9}" text-anchor="end">$${last[1].toFixed(0)} · ${dot(last[0])}</text>
+      ${labs}${ticks}</svg>`;
+  }
+
+  /* ── 타이밍 카드: 최근 1년 공포탐욕 + 구간 띠 ── */
+  function drawFng(){
+    const box=$("fig-fng"); if(!LG||!BT){box.innerHTML="";return;}
+    let d=(LG.series.fng&&LG.series.fng.series||[]).slice();
+    if(M&&M.fng&&M.fng.series){ const last=d.length?d[d.length-1][0]:""; for(const p of M.fng.series) if(p[0]>last&&typeof p[1]==="number") d.push(p); }
+    if(!d.length){box.innerHTML="";return;}
+    const tEnd=T(d[d.length-1][0]), tBeg=tEnd-365*864e5; d=d.filter(p=>T(p[0])>=tBeg);
+    const ax=BT.axes.find(a=>a.key==="fng");
+    const w=W(box), h=124, L=0, R=w-(w<500?4:96), Tp=4, B=h-18;
+    const x=t=>L+(t-tBeg)/(tEnd-tBeg)*(R-L), y=v=>B-v/100*(B-Tp);
+    let bands="";
+    for(const z of ax.zones){ const y0=y(Math.min(z.hi,100)), y1=y(z.lo);
+      bands+=`<rect x="${L}" y="${y0}" width="${R-L}" height="${y1-y0}" fill="rgba(${toneRGB(z.tone)},${toneA(z.tone)})"/>`;
+      if(w>=500&&y1-y0>=14) bands+=`<text class="ax" x="${R+8}" y="${(y0+y1)/2+4}">${esc(ZONE[LANG][z.key]||z.label)}</text>`; }
+    const P=d.map(p=>[x(T(p[0])),y(p[1])]), v=d[d.length-1][1], z=ax.zones.find(z=>v>=z.lo&&v<z.hi);
+    let ticks=""; const s=new Date(tBeg); let m=new Date(Date.UTC(s.getUTCFullYear(),s.getUTCMonth()+1,1));
+    let lastX=-1e9;
+    for(;m.getTime()<=tEnd;m=new Date(Date.UTC(m.getUTCFullYear(),m.getUTCMonth()+3,1))){const tx=x(m.getTime());
+      const an=tx<28?"start":tx>R-28?"end":"middle", l0=an==="start"?tx:an==="end"?tx-48:tx-24;
+      if(l0<lastX+10)continue; lastX=l0+48;
+      ticks+=`<text class="ax" x="${tx}" y="${B+14}" text-anchor="${an}">${m.getUTCFullYear()}.${String(m.getUTCMonth()+1).padStart(2,"0")}</text>`;}
+    box.innerHTML=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Fear & Greed">${bands}
+      <path d="${line(P)}" fill="none" stroke="var(--ink-2)" stroke-width="1.4"/>
+      <circle cx="${P[P.length-1][0]}" cy="${P[P.length-1][1]}" r="3.5" fill="${toneCol(z.tone)}"/>${ticks}</svg>`;
+  }
+
+  /* ── 대가 카드: 보유 총액 111분기 ── */
+  function drawBk(){
+    const box=$("fig-bk"); if(!BK){box.innerHTML="";return;}
+    const q=BK.quarters.map(q=>[q.period,q.holdings.filter(r=>!r.putCall&&(r.type||"SH")==="SH").reduce((s,r)=>s+r.value,0)]).filter(p=>p[1]>0);
+    const w=W(box), h=96, L=0, R=w-4, Tp=16, B=h-18;
+    const t0=T(q[0][0]), t1=T(q[q.length-1][0]), mx=Math.max(...q.map(p=>p[1]));
+    const x=t=>L+(t-t0)/(t1-t0)*(R-L), y=v=>B-v/mx*(B-Tp);
+    const P=q.map(p=>[x(T(p[0])),y(p[1])]);
+    const area=line(P)+`L${P[P.length-1][0]} ${B}L${P[0][0]} ${B}Z`;
+    let ticks=""; for(let yr=2000;yr<=2025;yr+=w<500?10:5){const tx=x(Date.UTC(yr,0,1));
+      ticks+=`<text class="ax" x="${tx}" y="${B+14}" text-anchor="middle">${yr}</text>`;}
+    const f=q[0], l=q[q.length-1];
+    box.innerHTML=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="13F value">
+      <line x1="${L}" x2="${R}" y1="${B}" y2="${B}" stroke="var(--rule)"/>
+      <path d="${area}" fill="rgba(15,26,36,.06)"/><path d="${line(P)}" fill="none" stroke="var(--ink)" stroke-width="1.4"/>
+      <text class="lab" x="${P[0][0]}" y="${P[0][1]-6}">${usd(f[1])}</text>
+      <circle cx="${P[P.length-1][0]}" cy="${P[P.length-1][1]}" r="3" fill="var(--ink)"/>
+      <text class="lab" x="${R}" y="${P[P.length-1][1]-8}" text-anchor="end">${usd(l[1])}</text>${ticks}</svg>`;
+  }
+
+  /* ── 사무엘 카드: 매달 같은 금액 — 넣은 돈(계단) vs 평가액(선), 숫자 없음 ── */
+  function drawDca(){
+    const box=$("fig-dca"); const s=LG&&LG.series&&LG.series.spx; if(!s){box.innerHTML="";return;}
+    const d=s.series.filter(p=>p[0]>="2011-01-01"&&typeof p[1]==="number");
+    let units=0, put=0, lastM="", inv=[], val=[];
+    for(const [dt,v] of d){ const mo=dt.slice(0,7); if(mo!==lastM){units+=1/v;put+=1;lastM=mo;} inv.push([dt,put]); val.push([dt,units*v]); }
+    const w=W(box), h=96, L=0, R=w-(w<500?4:96), Tp=6, B=h-18;
+    const t0=T(d[0][0]), t1=T(d[d.length-1][0]), mx=Math.max(...val.map(p=>p[1]));
+    const x=t=>L+(t-t0)/(t1-t0)*(R-L), y=v=>B-v/mx*(B-Tp);
+    let st="", py=null; for(const [dt,v] of inv){const px=x(T(dt)),yy=y(v); st+=(st?(py!==yy?`L${px.toFixed(1)} ${py.toFixed(1)}L${px.toFixed(1)} ${yy.toFixed(1)}`:`L${px.toFixed(1)} ${yy.toFixed(1)}`):`M${px.toFixed(1)} ${yy.toFixed(1)}`); py=yy;}
+    const V=val.map(p=>[x(T(p[0])),y(p[1])]);
+    let ticks=""; for(let yr=2012;yr<=2026;yr+=w<500?6:3){const tx=x(Date.UTC(yr,0,1));
+      ticks+=`<text class="ax" x="${tx}" y="${B+14}" text-anchor="middle">${yr}</text>`;}
+    const lab=w>=500?`<text class="ax" x="${R+8}" y="${V[V.length-1][1]+4}">${LANG==="ko"?"평가액":"Value"}</text><text class="ax" x="${R+8}" y="${y(put)+4}">${LANG==="ko"?"넣은 돈":"Paid in"}</text>`:"";
+    box.innerHTML=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="DCA preview">
+      <line x1="${L}" x2="${R}" y1="${B}" y2="${B}" stroke="var(--rule)"/>
+      <path d="${st}" fill="none" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 2"/>
+      <path d="${line(V)}" fill="none" stroke="var(--ink-2)" stroke-width="1.4"/>${lab}${ticks}</svg>`;
+  }
 
   function paint(){
     document.documentElement.lang=LANG;
+    const p=pal(), r=document.documentElement.style; r.setProperty("--up",p.up); r.setProperty("--down",p.down);
     document.querySelectorAll(".langs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.set===LANG));
     if(M&&BT){
       const v=Math.round(M.fng.value), ax=BT.axes.find(a=>a.key==="fng");
       const z=ax.zones.find(z=>v>=z.lo&&v<z.hi);
-      $("fng").innerHTML=v+"<small>"+(ZONE[LANG][z.key]||z.label)+"</small>";
+      $("fng").innerHTML=v+`<small style="color:${toneCol(z.tone)}">`+(ZONE[LANG][z.key]||z.label)+"</small>";
       const tb=$("fng-tbl").tBodies[0]; tb.innerHTML="";
       let days=0,from="",to="";
       for(const k of ["spx","ndx"]){
@@ -182,22 +318,26 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     }
     if(BK){
       const q=BK.quarters[BK.quarters.length-1], g={};
-      for(const r of q.holdings){const k=r.cusip.slice(0,6);(g[k]=g[k]||{v:0,n:r.name}).v+=r.value;}
+      for(const r of q.holdings){ if(r.putCall||(r.type||"SH")!=="SH")continue; const k=r.cusip.slice(0,6);(g[k]=g[k]||{v:0,n:r.name}).v+=r.value;}
       const rows=Object.values(g).sort((a,b)=>b.v-a.v), tot=rows.reduce((s,r)=>s+r.v,0);
       $("bk-total").innerHTML=usd(tot)+"<small>"+(LANG==="ko"?rows.length+"종목":rows.length+" stocks")+"</small>";
       $("bk-sub").textContent = LANG==="ko"
         ? dot(q.period)+" 분기말 · "+dot(q.filed)+" 공시"
         : "quarter ended "+dot(q.period)+" · filed "+dot(q.filed);
-      const tb=$("bk-tbl").tBodies[0]; tb.innerHTML="";
-      rows.slice(0,3).forEach(r=>tb.insertAdjacentHTML("beforeend","<tr><td>"+r.n+"</td><td>"+(r.v/tot*100).toFixed(1)+"%</td></tr>"));
-      $("bk-tbl").hidden=false;
+      const shade=i=>i<5?`rgba(15,26,36,${[.9,.7,.52,.38,.26][i]})`:"rgba(15,26,36,.1)";
+      const rest=rows.slice(5).reduce((s,r)=>s+r.v,0);
+      $("bk-stack").innerHTML=rows.map((r,i)=>`<i style="width:${(r.v/tot*100).toFixed(3)}%;background:${shade(i)}" title="${esc(r.n)}"></i>`).join("");
+      $("bk-legend").innerHTML=rows.slice(0,5).map((r,i)=>`<b style="background:${shade(i)}"></b><span>${esc(r.n)}</span><span>${(r.v/tot*100).toFixed(1)}%</span>`).join("")+
+        `<b style="background:${shade(9)}"></b><span>${LANG==="ko"?"나머지 "+(rows.length-5)+"종목":(rows.length-5)+" others"}</span><span>${(rest/tot*100).toFixed(1)}%</span>`;
     }
+    drawHero(); drawFng(); drawBk(); drawDca();
   }
-  document.querySelectorAll(".langs button").forEach(b=>b.onclick=()=>{LANG=b.dataset.set;paint();});
+  document.querySelectorAll(".langs button").forEach(b=>b.onclick=e=>{e.preventDefault();LANG=b.dataset.set;paint();});
+  let rt; addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(paint,120)});
   const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
   paint();
-  Promise.all([j("../data/dashboard/market.json"),j("../data/dashboard/backtest.json"),j("../data/titans/berkshire.json")])
-    .then(([m,bt,bk])=>{M=m&&m.fng?m:null;BT=bt;BK=bk&&bk.quarters?bk:null;paint();});
+  Promise.all([j("../data/dashboard/market.json"),j("../data/dashboard/backtest.json"),j("../data/titans/berkshire.json"),j("../data/dashboard/market-long.json")])
+    .then(([m,bt,bk,lg])=>{M=m&&m.fng?m:null;BT=bt;BK=bk&&bk.quarters?bk:null;LG=lg&&lg.series?lg:null;paint();});
 })();
 </script>
 </body>
