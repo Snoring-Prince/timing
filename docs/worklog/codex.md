@@ -2,7 +2,14 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
-## 2026-09-25 · Codex · (이 PR)
+## 2026-09-26 · Codex · (이 PR)
+메인 VIX 숨김 — 기능·수집·계산 보존, 방문자 파일 분리와 중계소 선택 응답
+- 파일: index.html · data/dashboard/* · publish_dashboard.py · workers/live.js · 검사/워크플로 · CLAUDE.md · 이 일지
+- 규칙: 구현·되살리기·검증·중계소 미배포 범위는 CLAUDE.md 8-2가 정본.
+- 굳힘: 사용자 판단으로 VIX는 숨기되 제거하지 않음. 원본 수집·계산·실패 알림 및 정적 한영 본문 유지.
+- 넘김: 사용자 merge 및 Cloudflare 기존 Worker 코드 반영 필요(로그인 안 됨). 운영 응답에서 VIX 제외 확인 전 전송 제외 완료라고 하지 말 것.
+
+## 2026-09-25 · Codex · PR #86
 메인 대시보드 검수 8건 — 보유기간·수집 실패 알림·결측·십자선·실시간·날짜·표본 수정
 - 파일: index.html · backtest.json · 메인 수집/백테스트/검사 · check/update-data/update-long workflow · CLAUDE.md · 이 일지
 - 규칙: 계산·저장/실패·관측·검증의 정본은 CLAUDE.md 8-1. 주별 차트 및 정적 한영 본문 유지.

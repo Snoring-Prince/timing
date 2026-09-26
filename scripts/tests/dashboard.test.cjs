@@ -6,9 +6,9 @@ const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 const lang=scripts.find(s=>s.includes('const D=')||s.includes('const D =')).replace('applyLang(pickLang(),false);','');
 const full=scripts.find(s=>s.includes('let DATA='));
 const core=full.slice(0,full.lastIndexOf('\nloadPrefs();'));
-function page(){
+function page(vix=false){
  const nodes=new Map(),listeners={};
- const el=()=>({innerHTML:'',textContent:'',clientWidth:818,style:{setProperty(){}},setAttribute(){},
+ const el=()=>({innerHTML:'',textContent:'',clientWidth:818,style:{setProperty(){}},setAttribute(){},getAttribute:()=>vix?'visible':'hidden',
   querySelectorAll:()=>[],querySelector:()=>null,addEventListener(){},classList:{contains:()=>true,add(){}}});
  const node=id=>{if(!nodes.has(id))nodes.set(id,el());return nodes.get(id)};
  const timers=new Map();let seq=0;
@@ -25,6 +25,43 @@ function page(){
  run('LANG="ko";L10N=D.ko;LOCALE="ko-KR";');
  return {run,ctx,nodes,node,timers,listeners};
 }
+
+test('hidden VIX cannot return through saved preferences or fallback controls',()=>{
+ const {run,ctx,node}=page();
+ ctx.localStorage.getItem=()=>JSON.stringify({ax:'vix',hold:'5Y',show:{price:'ndx',gauge:true}});
+ run('loadPrefs()');assert.equal(run('btAx'),'fng');assert.equal(run('btH'),'5Y');
+ run('LONG='+fs.readFileSync(path.join(root,'data/market-long.json'),'utf8')+';');
+ run('BT='+fs.readFileSync(path.join(root,'data/backtest.json'),'utf8')+';');
+ assert.doesNotMatch(run('mainLineSeg()'),/vix/i);assert.equal(run('btAxTools()'),'');
+ run('btHover=()=>{};calibrateDraw=()=>{};btAx="vix";renderBT()');assert.equal(run('btAx'),'fng');
+ assert.doesNotMatch(node('bt-title').innerHTML,/vix/i);
+ for(const d of ['ko','en'])assert.doesNotMatch(run('D.'+d+'.docTitle+D.'+d+'.metaDesc+D.'+d+'.foot.join("")'),/vix/i);
+});
+
+test('feature switch restores VIX controls, stored choice and original file paths',()=>{
+ const {run,ctx}=page(true);
+ ctx.localStorage.getItem=()=>JSON.stringify({ax:'vix'});run('loadPrefs()');assert.equal(run('btAx'),'vix');
+ run('LONG='+fs.readFileSync(path.join(root,'data/market-long.json'),'utf8')+';');
+ run('BT='+fs.readFileSync(path.join(root,'data/backtest.json'),'utf8')+';');
+ assert.match(run('mainLineSeg()'),/data-mline="vix"/);assert.match(run('btAxTools()'),/data-btax="vix"/);
+ assert.equal(run('dashboardData("market.json")'),'data/market.json');
+});
+
+test('hidden mode fetches only visitor JSON and requests just visible live series',async()=>{
+ const {run,ctx}=page(),urls=[];
+ run('renderMain=()=>{};renderBT=()=>{};calibrateDraw=()=>{};');
+ ctx.fetch=async url=>{
+  urls.push(url);
+  return {ok:true,json:async()=>url.startsWith('https:')?
+   {open:true,quotes:{vix:{v:30,open:true},spx:{v:100,open:false}}}:
+   JSON.parse(fs.readFileSync(path.join(root,url.split('?')[0]),'utf8'))};
+ };
+ await run('load()');await run('loadLong()');await run('loadBT()');await run('loadLive()');
+ assert.deepEqual(urls.slice(0,3).map(u=>u.split('?')[0]),['data/dashboard/market.json','data/dashboard/market-long.json','data/dashboard/backtest.json']);
+ assert.equal(new URL(urls[3]).searchParams.get('quotes'),'spx,ndx,fng');
+ assert.equal(run('LIVE.quotes.vix'),undefined);assert.equal(run('LIVE.open'),false);
+ assert.equal(run('BT.indices.spx.curve.vix'),undefined);
+});
 test('date-only labels stay on the exchange date in New York',()=>{
  const before=process.env.TZ;process.env.TZ='America/New_York';
  try{const {run}=page();run('LANG="en";LOCALE="en-US"');assert.equal(run('fdate("2026-09-23")'),'Sep 23, 2026')}
@@ -52,7 +89,7 @@ test('real chart hover never invents a gauge observation on a missing date',()=>
  run('for(let k=0;k<window.hover.n;k++){if(window.hover.nearest(window.hover.X(k))!==k)throw Error("wrong date "+k)}');
 });
 test('statistics show each index count and period without undefined',()=>{
- const {run,node}=page();
+ const {run,node}=page(true);
  run('BT='+fs.readFileSync(path.join(root,'data/backtest.json'),'utf8')+';btAx="vix";btH="1Y";DATA={vix:{value:15,date:"2026-09-23"}};btSummary();');
  const text=node('bt-sum').innerHTML;
  assert.match(text,/1993–/);assert.match(text,/1999–/);assert.doesNotMatch(text,/undefined/);
