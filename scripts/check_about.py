@@ -4,7 +4,7 @@
 
 왜 필요한가
 -----------
-`index.html` 의 `.about` 문단은 **HTML 에 직접 박혀 있어야 합니다.** 사전(D)으로
+`timing/index.html` 의 `.about` 문단은 **HTML 에 직접 박혀 있어야 합니다.** 사전(D)으로
 옮기면 JS 가 그리게 되고, JS 를 안 돌리는 크롤러가 받는 페이지는 다시 빈 페이지가
 됩니다(CLAUDE.md 6-2). 그래서 글 속 숫자도 손으로 적혀 있는데, `backtest.json` 은
 주 1회 다시 계산됩니다. **아무도 확인하지 않으면 글의 숫자만 조용히 낡습니다.**
@@ -30,7 +30,7 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-HTML = ROOT / "index.html"
+HTML = ROOT / "timing" / "index.html"
 BT = ROOT / "data" / "backtest.json"
 
 OK, WARN, ERR = "✓", "경고", "오류"
@@ -165,7 +165,7 @@ def main() -> int:
     print()
     if err:
         print(f"오류 {err}건 — 설명 글을 고쳐야 합니다.")
-        print("  `.about` 문단은 사전이 아니라 index.html 에 직접 박혀 있습니다.")
+        print("  `.about` 문단은 사전이 아니라 timing/index.html 에 직접 박혀 있습니다.")
         print("  두 언어를 같이 고치세요. 논지가 깨졌다면 문단을 다시 쓰세요.")
         return 1
     if warn:

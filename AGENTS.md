@@ -208,7 +208,8 @@
 ```text
 timing/
 ├── CNAME              도메인 연결 — 지우지 말 것
-├── index.html         다니엘의 타이밍 (단일 파일)
+├── index.html         첫 화면(허브) — 세 화면으로 갈라 줌
+├── timing/index.html  다니엘의 타이밍 (단일 파일)
 ├── titans/
 │   ├── index.html         튕기는 자리 — /titans/berkshire/ 로 보냄
 │   └── berkshire/
@@ -225,7 +226,8 @@ timing/
 
 ### 현재 메인 화면
 
-`index.html` 하나에 HTML + CSS + JavaScript가 들어 있다.
+`timing/index.html` 하나에 HTML + CSS + JavaScript가 들어 있다
+(2026-09-26 에 뿌리에서 옮김 — 뿌리의 `index.html` 은 이제 허브).
 
 현재 구조를 유지한다.
 
@@ -238,7 +240,7 @@ timing/
 
 ### 매우 중요
 
-`index.html`의 `.about` 섹션에 있는 설명 글은
+`timing/index.html`의 `.about` 섹션에 있는 설명 글은
 **HTML에 직접 존재해야 한다.**
 
 이 내용을 JavaScript 사전 `D` 등으로 옮기지 않는다.

@@ -4,7 +4,20 @@
 
 ---
 
-## 2026-09-23 · Claude · (이 PR)
+## 2026-09-26 · Claude · (이 PR)
+첫 화면을 허브로 바꾸고 대시보드를 `/timing/` 으로 옮겼다
+- 파일: index.html(새 허브) · timing/index.html(옮긴 대시보드) · sitemap.xml ·
+  .github/workflows/update-data.yml · .github/workflows/check.yml ·
+  scripts/check_about.py · scripts/tests/dashboard.test.cjs · CLAUDE.md · AGENTS.md ·
+  다음에 할 일.md · 이 일지
+- 규칙: 되돌릴 자리 `backup/v1.1`(889e1ce)을 먼저 찍었다. 허브 숫자는 방문자 자료에서
+  읽고 VIX 는 안 쓴다. 네이버 소유확인 meta 는 뿌리에 있어야 한다.
+- 굳힘: 그림 네 장은 사용자가 뺐다 — 코드는 `c7a00aa` 에 있다. 알람봇은 나중에
+  한 번에(사용자). 토요일 `splitsFrom` 확인 끝(29/29, AXP·MCO 옛 분할 실림).
+- 넘김: 머지 뒤 사용자가 Search Console 에 사이트맵 재제출·`/`·`/timing/` 색인 요청.
+  허브용 공유 카드(og)는 아직 대시보드 것을 쓴다.
+
+## 2026-09-23 · Claude · PR #84
 연차보고서 대조는 **불가** 확정 — 여덟 해가 전부 업종별. 추정은 추정으로 둔다
 - 파일: scripts/probe_annual.py · CLAUDE.md · 이 일지
 - 규칙(실측, run 35883986339 · 10-K 8해 · 파일 81개 · 실패 0):

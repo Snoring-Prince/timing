@@ -1,7 +1,7 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'../..');
-const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const html=fs.readFileSync(path.join(root,'timing/index.html'),'utf8');
 const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 const lang=scripts.find(s=>s.includes('const D=')||s.includes('const D =')).replace('applyLang(pickLang(),false);','');
 const full=scripts.find(s=>s.includes('let DATA='));
@@ -44,7 +44,7 @@ test('feature switch restores VIX controls, stored choice and original file path
  run('LONG='+fs.readFileSync(path.join(root,'data/market-long.json'),'utf8')+';');
  run('BT='+fs.readFileSync(path.join(root,'data/backtest.json'),'utf8')+';');
  assert.match(run('mainLineSeg()'),/data-mline="vix"/);assert.match(run('btAxTools()'),/data-btax="vix"/);
- assert.equal(run('dashboardData("market.json")'),'data/market.json');
+ assert.equal(run('dashboardData("market.json")'),'../data/market.json');
 });
 
 test('hidden mode fetches only visitor JSON and requests just visible live series',async()=>{
@@ -54,10 +54,10 @@ test('hidden mode fetches only visitor JSON and requests just visible live serie
   urls.push(url);
   return {ok:true,json:async()=>url.startsWith('https:')?
    {open:true,quotes:{vix:{v:30,open:true},spx:{v:100,open:false}}}:
-   JSON.parse(fs.readFileSync(path.join(root,url.split('?')[0]),'utf8'))};
+   JSON.parse(fs.readFileSync(path.join(root,'timing',url.split('?')[0]),'utf8'))};
  };
  await run('load()');await run('loadLong()');await run('loadBT()');await run('loadLive()');
- assert.deepEqual(urls.slice(0,3).map(u=>u.split('?')[0]),['data/dashboard/market.json','data/dashboard/market-long.json','data/dashboard/backtest.json']);
+ assert.deepEqual(urls.slice(0,3).map(u=>u.split('?')[0]),['../data/dashboard/market.json','../data/dashboard/market-long.json','../data/dashboard/backtest.json']);
  assert.equal(new URL(urls[3]).searchParams.get('quotes'),'spx,ndx,fng');
  assert.equal(run('LIVE.quotes.vix'),undefined);assert.equal(run('LIVE.open'),false);
  assert.equal(run('BT.indices.spx.curve.vix'),undefined);
