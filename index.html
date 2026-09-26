@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-vix="hidden">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Market timing by Fear &amp; Greed and VIX — S&amp;P 500 history</title>
+<title>Market timing by Fear &amp; Greed — S&amp;P 500 history</title>
 
 <!-- ══ 검색엔진·공유 ═══════════════════════════════════════════════════
      JS 가 안 도는 크롤러가 읽는 것은 여기 적힌 글자가 전부입니다.
@@ -14,7 +14,7 @@
      og:image 는 언어별로 두 장입니다. 크롤러 대부분은 정적 HTML 만 읽으므로
      기본은 영어판이고, ?lang=ko 로 열면 한국어판으로 바뀝니다.
 ═════════════════════════════════════════════════════════════════════ -->
-<meta name="description" content="What the S&amp;P 500 and Nasdaq 100 did after each Fear &amp; Greed and VIX level, from real closing prices since 1993 — so a beginner can judge their own timing.">
+<meta name="description" content="What the S&amp;P 500 and Nasdaq 100 did after each Fear &amp; Greed level, from records since 2011 — so a beginner can judge their own timing.">
 <link rel="canonical" href="https://itpaidoff.com/">
 <link rel="alternate" hreflang="en" href="https://itpaidoff.com/?lang=en">
 <link rel="alternate" hreflang="ko" href="https://itpaidoff.com/?lang=ko">
@@ -23,8 +23,8 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Daniel's timing">
 <meta property="og:url" content="https://itpaidoff.com/">
-<meta property="og:title" content="Market timing by Fear &amp; Greed and VIX — S&amp;P 500 history">
-<meta property="og:description" content="What the S&amp;P 500 and Nasdaq 100 actually did after each Fear &amp; Greed and VIX level, measured from 1993 onward.">
+<meta property="og:title" content="Market timing by Fear &amp; Greed — S&amp;P 500 history">
+<meta property="og:description" content="What the S&amp;P 500 and Nasdaq 100 actually did after each Fear &amp; Greed level, measured from 2011 onward.">
 <meta property="og:image" content="https://itpaidoff.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -55,7 +55,7 @@
   "inLanguage": ["en", "ko"],
   "isAccessibleForFree": true,
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-  "description": "What the S&P 500 and Nasdaq 100 did after each Fear & Greed and VIX level, from real closing prices since 1993 — so a beginner can judge their own timing.",
+  "description": "What the S&P 500 and Nasdaq 100 did after each Fear & Greed level, from records since 2011 — so a beginner can judge their own timing.",
   "image": "https://itpaidoff.com/og.png"
 }
 </script>
@@ -77,6 +77,7 @@
      그 밖에는 상승 초록/하락 빨강 — 반대로 두면 정반대로 읽힙니다.
 ═════════════════════════════════════════════════════════════════════ -->
 <script>
+const VIX_ENABLED=document.documentElement.getAttribute("data-vix")==="visible";
 const D={
 ko:{
   locale:"ko-KR", dir:"ltr", name:"한국어",
@@ -107,7 +108,7 @@ ko:{
       note:"NASDAQ100(QQQ)는 S&P 500(SPY)보다 범위는 좁지만, 애플, 마이크로소프트, 엔비디아 같은 기술주 비중이 훨씬 높습니다. 즉, 금융이나 에너지 같은 전통 산업은 제외하고, 미국의 미래를 이끄는 '기술 성장주'에 집중적으로 투자할 수 있는 가장 확실한 방법입니다."},
     fng:{name:"CNN공포탐욕",btn:"공포탐욕",
       tip:"극단적 공포(0)부터 극단적 탐욕(100)까지, 지금 당장 시장에 참여하는 사람들의 심리 상태를 점수로 보여주는 직관적인 계기판입니다.",
-      note:"주식 시장은 결국 사람들의 심리에 따라 움직이잖아요. CNN 공포와 탐욕 지수는 변동성(VIX), 주가 흐름, 거래량 등 7가지 핵심 지표를 하나로 합쳐서, 지금 사람들이 두려움에 주식을 팔고 있는지(공포), 아니면 너도나도 사들이고 있는지(탐욕)를 0점부터 100점 사이로 보여줍니다. 그래서 주식 초보자분들이 '아, 지금이 저렴할 때구나' 또는 '지금은 조금 조심해야겠네' 하고 판단하기에 아주 좋은 지표랍니다."},
+      note:"주식 시장은 결국 사람들의 심리에 따라 움직이잖아요. CNN 공포와 탐욕 지수는 변동성, 주가 흐름, 거래량 등 7가지 핵심 지표를 하나로 합쳐서, 지금 사람들이 두려움에 주식을 팔고 있는지(공포), 아니면 너도나도 사들이고 있는지(탐욕)를 0점부터 100점 사이로 보여줍니다. 그래서 주식 초보자분들이 '아, 지금이 저렴할 때구나' 또는 '지금은 조금 조심해야겠네' 하고 판단하기에 아주 좋은 지표랍니다."},
     vix:{name:"VIX(변동성 지수)",btn:"VIX",
       tip:"앞으로 한 달 동안 미국 주식 시장이 얼마나 심하게 널뛰기할지 예측하는 수치로, 월가의 '공포 지수'라고 불리는 지표입니다.",
       note:"보통 VIX가 20 아래면 시장이 평화롭고 안정적이라는 뜻이고, 30을 넘어가면 투자자들이 패닉에 빠져 주가가 크게 출렁인다는 의미입니다. 즉, 'VIX가 급격히 치솟을 때 = 남들이 공포에 질려 주식을 던질 때(바겐세일 기회)'로 이해하시면, 주식 초보자분들도 시장의 흐름을 읽고 쉽게 활용하실 수 있습니다."}
@@ -178,7 +179,7 @@ en:{
       note:"The Nasdaq 100 (QQQ) covers less ground than the S&P 500 (SPY), but has a much higher weighting in technology stocks such as Apple, Microsoft and Nvidia. It leaves out traditional industries such as finance and energy, focusing instead on the technology growth companies shaping America's future."},
     fng:{name:"CNN Fear &amp; Greed",btn:"F&amp;G",
       tip:"A plain dial from extreme fear (0) to extreme greed (100), scoring how the people in the market feel right now.",
-      note:"Markets ultimately move with people's emotions. CNN's Fear &amp; Greed Index combines seven key indicators — including volatility (VIX), price momentum and trading volume — into one number from 0 to 100, showing whether people are selling stocks out of fear or buying them out of greed. For beginners, it can provide a simple way to see whether the market looks cheap or whether it may be a time to be more cautious."},
+      note:"Markets ultimately move with people's emotions. CNN's Fear &amp; Greed Index combines seven key indicators — including volatility, price momentum and trading volume — into one number from 0 to 100, showing whether people are selling stocks out of fear or buying them out of greed. For beginners, it can provide a simple way to see whether the market looks cheap or whether it may be a time to be more cautious."},
     vix:{name:"VIX (volatility index)",btn:"VIX",
       tip:"How hard the market expects US stocks to swing over the coming month. Wall Street calls it the fear index.",
       note:"A VIX below 20 generally means the market is calm and stable. Above 30 means investors are in a state of panic and prices are swinging sharply. You can think of a sharp rise in the VIX as a sign that investors are selling stocks out of fear — a situation that has sometimes been described as a bargain opportunity."}
@@ -221,6 +222,16 @@ en:{
     bt:(l,h)=>`Return and win rate by ${l}, held ${h}`}
 }
 };
+
+/* VIX의 문구·계산은 보존하고 현재 공개한 잣대만 안내한다. */
+if(!VIX_ENABLED){
+  D.ko.docTitle="투자 타이밍 — 공포탐욕지수로 본 S&P 500 과거 기록";
+  D.ko.metaDesc="공포탐욕지수가 지금 수준이던 날에 샀다면 그 뒤 어땠는지, 2011년부터의 실제 기록으로. 투자 타이밍을 스스로 재 보려는 주식 초보자를 위한 화면입니다.";
+  D.en.docTitle="Market timing by Fear & Greed — S&P 500 history";
+  D.en.metaDesc="What the S&P 500 and Nasdaq 100 did after each Fear & Greed level, from records since 2011 — so a beginner can judge their own timing.";
+  D.en.tagline="Market timing by Fear & Greed";
+  for(const d of Object.values(D))d.foot[1]=d.foot[1].replace(" · VIX: CBOE","");
+}
 
 /* 상승을 빨강으로 읽는 문화권 — 뒤집으면 정반대 의미가 된다 */
 const REDUP=new Set(["ko","ja","zh"]);
@@ -366,6 +377,7 @@ window.track=function(name,data){
 </script>
 
 <style>
+html:not([data-vix="visible"]) .vix-only{display:none!important}
 :root{
   --paper:#E9ECF0; --card:#FFFFFF;
   /* 대비는 두 바탕에서 다 재야 한다. 카드(#FFF)뿐 아니라 종이(--paper #E9ECF0)
@@ -740,7 +752,7 @@ svg.sm .svg-axis{font-size:11px}
            h1 은 구글이 제일 무겁게 보는 줄이라 찾는 말을 넣는다 — 예전에는
            여기에 브랜드만 있어서 제목 태그에 검색어가 한 번도 안 들어갔다. -->
       <p class="eyebrow">Daniel's timing</p>
-      <h1 id="tagline">Market timing by Fear &amp; Greed and VIX</h1>
+      <h1 id="tagline">Market timing by Fear &amp; Greed<span class="vix-only"> and VIX</span></h1>
     </div>
     <div class="mast-right">
       <div id="lang-seg"></div>
@@ -798,7 +810,7 @@ svg.sm .svg-axis{font-size:11px}
     <div class="prose" data-lang="ko">
       <h3>무엇을 보여주는 화면인가</h3>
       <p>S&amp;P 500(SPY)과 나스닥 100(QQQ)이 전고점에서 얼마나 내려와 있는지, 그리고
-      CNN 공포와 탐욕 지수·VIX 가 지금 수준이던 날에 샀다면 그 뒤 어떻게 됐는지를
+      CNN 공포와 탐욕 지수<span class="vix-only">·VIX</span>가 지금 수준이던 날에 샀다면 그 뒤 어떻게 됐는지를
       실제 종가로 계산해 보여 줍니다. <b>예측이 아니라 기록입니다.</b></p>
 
       <h3>평균이 아니라 중앙값으로 긋습니다</h3>
@@ -815,12 +827,14 @@ svg.sm .svg-axis{font-size:11px}
       따로 모아 계산하고, 표본이 30일도 안 되는 눈금은 비워서 선을 끊습니다.
       화면의 색 띠와 이름표는 보기 편하라고 붙인 것일 뿐 계산에는 쓰이지 않습니다.</p>
 
+      <div class="vix-only">
       <h3>VIX 구간은 남들이 쓰는 숫자에 맞췄습니다</h3>
       <p>12 미만 아주 잠잠, 12~15 잠잠, 15~20 보통, 20~30 불안, 30~40 공포, 40 이상 패닉.
       <b>CBOE 는 공식 구간 분류를 내놓지 않습니다</b> — 정의와 계산식만 공개합니다.
       검색하면 "공식"이라며 표가 나오는데 출처가 개인이 만든 차트 스크립트입니다.
       다만 1990년 이후 하루 종가의 절반이 <b>17.6</b> 아래였으니, 20 은 평균보다 조금
       높은 정도지 그 자체로 위험 신호는 아닙니다.</p>
+      </div>
 
       <h3>전고점은 사상 최고점이 아닙니다</h3>
       <p>점선으로 그은 전고점은 <b>화면에 보이는 구간 안에서의</b> 최고 종가입니다.
@@ -830,12 +844,12 @@ svg.sm .svg-axis{font-size:11px}
       <p>공포탐욕 잣대는 <b>2011년 1월 3일부터 3,862일</b>입니다. 지수 자체가 2012년에
       나왔고 소급할 수 있는 값이 2011년까지뿐이라 <b>2008년 금융위기가 통째로
       빠져 있습니다.</b> 남은 기간이 대체로 상승장이라 승률이 실제보다 좋아 보일 수
-      있습니다. VIX 를 두 번째 잣대로 넣은 이유가 이것입니다 — S&amp;P 500 기준
-      1993년 1월 29일부터 <b>8,469일</b>이라 2008년이 들어갑니다.</p>
+      있습니다.<span class="vix-only"> VIX 를 두 번째 잣대로 넣은 이유가 이것입니다 — S&amp;P 500 기준
+      1993년 1월 29일부터 <b>8,469일</b>이라 2008년이 들어갑니다.</span></p>
 
       <h3>데이터</h3>
-      <p>가격은 SPY·QQQ 배당 재투자 기준(Yahoo Finance), 공포와 탐욕 지수는 CNN Business,
-      VIX 는 CBOE 입니다. 장중 시세를 주기적으로 조회하며 지연될 수 있습니다.
+      <p>가격은 SPY·QQQ 배당 재투자 기준(Yahoo Finance), 공포와 탐욕 지수는 CNN Business<span class="vix-only">,
+      VIX 는 CBOE</span>입니다. 장중 시세를 주기적으로 조회하며 지연될 수 있습니다.
       조회 시각과 각 자료의 기준일은 다를 수 있습니다. 차트는 최근 5년이 하루 단위, 그 이전은 주 단위입니다.
       아래 수익률은 전 기간 하루 단위로 계산합니다. 보유기간은 30일·90일·180일·1년·3년·5년을
       각각 21·63·126·252·756·1,260거래일로 환산합니다.
@@ -848,7 +862,7 @@ svg.sm .svg-axis{font-size:11px}
     <div class="prose" data-lang="en">
       <h3>What this page shows</h3>
       <p>How far the S&amp;P 500 (SPY) and Nasdaq 100 (QQQ) have fallen from their peak,
-      and what happened next on days when CNN's Fear &amp; Greed index or the VIX was
+      and what happened next on days when CNN's Fear &amp; Greed index<span class="vix-only"> or the VIX</span> was
       at its current level — computed from actual closing prices.
       <b>A record, not a forecast.</b></p>
 
@@ -870,12 +884,14 @@ svg.sm .svg-axis{font-size:11px}
       labels are there to make the chart easier to read — they play no part in the
       arithmetic.</p>
 
+      <div class="vix-only">
       <h3>The VIX bands follow common usage</h3>
       <p>Under 12 very calm, 12–15 calm, 15–20 normal, 20–30 anxious, 30–40 fearful,
       above 40 panic. <b>CBOE publishes no official banding</b> — only the definition
       and the formula. Tables presented online as "official" trace back to a personal
       charting script. Worth knowing: half of all daily closes since 1990 were below
       <b>17.6</b>, so 20 is a little above ordinary rather than a warning in itself.</p>
+      </div>
 
       <h3>The peak is not the all-time high</h3>
       <p>The dashed peak line is the highest close <b>inside the window on screen</b>.
@@ -885,13 +901,13 @@ svg.sm .svg-axis{font-size:11px}
       <p>The Fear &amp; Greed measure covers <b>3,862 days from 3 January 2011</b>. The
       index itself launched in 2012 and cannot be reconstructed further back than 2011,
       so <b>2008 is missing entirely</b>. What remains is mostly a rising market, which
-      can make the win rates look better than they would otherwise. That is why VIX is
+      can make the win rates look better than they would otherwise.<span class="vix-only"> That is why VIX is
       offered as a second measure — against the S&amp;P 500 it covers <b>8,469 days</b>
-      from 29 January 1993, which includes 2008.</p>
+      from 29 January 1993, which includes 2008.</span></p>
 
       <h3>Data</h3>
       <p>Prices are SPY and QQQ with dividends reinvested (Yahoo Finance), Fear &amp;
-      Greed from CNN Business, VIX from CBOE. Quotes are checked periodically and may
+      Greed from CNN Business<span class="vix-only">, VIX from CBOE</span>. Quotes are checked periodically and may
       be delayed. Quote dates can differ from the check time. The chart is daily for the last five years and weekly
       before that; the return figures below are computed from daily data throughout.
       The 30D, 90D, 180D, 1Y, 3Y and 5Y horizons mean 21, 63, 126, 252, 756 and 1,260 trading sessions.
@@ -907,13 +923,16 @@ svg.sm .svg-axis{font-size:11px}
 
   <p class="foot" id="foot">
     Peak is the highest close inside the window on screen.<br>
-    SPY and QQQ, dividends reinvested · Yahoo Finance · Fear &amp; Greed: CNN Business · VIX: CBOE<br>
+    SPY and QQQ, dividends reinvested · Yahoo Finance · Fear &amp; Greed: CNN Business<span class="vix-only"> · VIX: CBOE</span><br>
     Quotes are checked periodically and may be delayed. Quote dates can differ from the check time.
   </p>
 </div>
 
 <script>
 /* ================= 데이터 ================= */
+/* VIX를 다시 열려면 맨 위 data-vix를 visible로. 원본 자료·렌더러는 유지한다. */
+const visibleSeries=k=>k!=="vix"||VIX_ENABLED;
+const dashboardData=name=>"data/"+(VIX_ENABLED?"":"dashboard/")+name;
 let DATA=null;
 const RANGES=[["30D",30],["90D",90],["180D",180],["1Y",365],["3Y",1095],["5Y",1825]];
 let state={scene:"now",range:{main:365,spx:365,ndx:365,fng:365}};
@@ -1141,7 +1160,7 @@ const mainFull=k=>inf(k).name||mainName(k);
 function mainLineSeg(){
   const S=(LONG||{}).series||{};
   const on=mainOn;
-  const ks=["spx","ndx","fng","vix"].filter(k=>S[k]);
+  const ks=["spx","ndx","fng","vix"].filter(k=>visibleSeries(k)&&S[k]);
   if(ks.length<2)return "";
   return '<div class="seg mini lines" role="group" aria-label="'+tx("aria").lines+'">'+
     ks.map(k=>'<button type="button" data-mline="'+k+'" aria-pressed="'+on(k)+'">'+
@@ -1707,7 +1726,7 @@ function btTools(){
       (h===btH)+'">'+h+'</button>').join("")+'</div>';
 }
 function btAxTools(){
-  const A=(BT.axes||[]).filter(a=>btHas(a.key));
+  const A=(BT.axes||[]).filter(a=>visibleSeries(a.key)&&btHas(a.key));
   if(A.length<2)return "";
   return '<div class="seg mini ax" role="group" aria-label="'+tx("aria").axis+'">'+
     A.map(a=>'<button type="button" data-btax="'+a.key+'" aria-pressed="'+
@@ -1969,8 +1988,8 @@ function renderBT(){
   }
   /* 잣대별 곡선이 없는 옛 데이터면 그릴 수 없다.
      화면만 먼저 갈아끼우고 계산을 안 돌렸을 때 여기로 온다. */
-  if(!btHas(btAx)){
-    const alt=(BT.axes||[]).map(a=>a.key).find(btHas);
+  if(!visibleSeries(btAx)||!btHas(btAx)){
+    const alt=(BT.axes||[]).map(a=>a.key).find(k=>visibleSeries(k)&&btHas(k));
     if(!alt){
       blank(tx("oldFmt"));
       return;
@@ -2015,7 +2034,7 @@ document.addEventListener("click",e=>{
 /* 잣대는 위 게이지와 아래 성적표가 함께 쓴다. 어느 쪽 토글을 눌러도 둘 다 바뀐다. */
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-btax]");
-  if(!b||b.dataset.btax===btAx)return;
+  if(!b||!visibleSeries(b.dataset.btax)||b.dataset.btax===btAx)return;
   btAx=b.dataset.btax;
   renderMain();
   if(BT)renderBT();
@@ -2029,6 +2048,7 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("[data-mline]");
   if(!b)return;
   const k=b.dataset.mline;
+  if(!visibleSeries(k))return;
   let axChanged=false;
   if(k==="spx"||k==="ndx"){
     MSHOW.price=(MSHOW.price===k)?null:k;      /* 둘은 서로 배타, 켜진 것을 다시 누르면 끈다 */
@@ -2048,7 +2068,7 @@ document.addEventListener("click",e=>{
 async function loadBT(){
   const v=new Date().toISOString().slice(0,10).replace(/-/g,"");
   try{
-    const r=await fetch("data/backtest.json?v="+v,{cache:"no-store"});
+    const r=await fetch(dashboardData("backtest.json")+"?v="+v,{cache:"no-store"});
     if(!r.ok)throw new Error("HTTP "+r.status);
     BT=await r.json();
   }catch(e){BT=null;console.error(e)}
@@ -2086,7 +2106,7 @@ function loadPrefs(){
         if(typeof sh.gauge==="boolean")MSHOW.gauge=sh.gauge;
       }
       if(MAIN_RANGES.some(r=>r[1]===o.range))state.range.main=o.range;
-      if(GAUGE[o.ax])btAx=o.ax;
+      if(GAUGE[o.ax]&&visibleSeries(o.ax))btAx=o.ax;
       if(H_ORDER.indexOf(o.hold)>=0)btH=o.hold;
       /* 둘이 연동되기 전에 저장된 값은 서로 어긋날 수 있다. 보유기간을 따라간다 —
          두 버튼 줄이 서로 다른 칸을 눌러 놓은 채로 첫 화면이 그려지면 안 된다. */
@@ -2158,10 +2178,17 @@ async function loadLive(){
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),10000);
   try{
-    const r=await fetch(u,{cache:"no-store",signal:controller.signal});
+    const url=new URL(u);
+    if(!VIX_ENABLED)url.searchParams.set("quotes","spx,ndx,fng");
+    const r=await fetch(url.href,{cache:"no-store",signal:controller.signal});
     if(!r.ok)throw new Error("HTTP "+r.status);
     const j=await r.json();
     if(!j||!j.quotes)throw new Error("quotes 없음");
+    /* 구형 Worker가 아직 배포돼 있어도 숨긴 계열을 표시·폴링 판단에 쓰지 않는다. */
+    if(!VIX_ENABLED){
+      delete j.quotes.vix;
+      j.open=Object.values(j.quotes).some(q=>q&&q.open);
+    }
     LIVE=j;
   }catch(e){console.error(e);return}
   finally{clearTimeout(timeout)}
@@ -2190,7 +2217,7 @@ function liveLoop(){
 async function loadLong(){
   const v=new Date().toISOString().slice(0,10).replace(/-/g,"");
   try{
-    const r=await fetch("data/market-long.json?v="+v,{cache:"no-store"});
+    const r=await fetch(dashboardData("market-long.json")+"?v="+v,{cache:"no-store"});
     if(!r.ok)throw new Error("HTTP "+r.status);
     LONG=await r.json();
   }catch(e){LONG=null;console.error(e)}
@@ -2210,7 +2237,7 @@ async function load(){
   /* 시간 단위 캐시 무력화 — 갱신 직후에도 옛 파일이 잡히지 않도록 */
   const v=new Date().toISOString().slice(0,13).replace(/[-T]/g,"");
   try{
-    const r=await fetch("data/market.json?v="+v,{cache:"no-store"});
+    const r=await fetch(dashboardData("market.json")+"?v="+v,{cache:"no-store"});
     if(!r.ok)throw new Error("HTTP "+r.status);
     DATA=await r.json();
   }catch(err){

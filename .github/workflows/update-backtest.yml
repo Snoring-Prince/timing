@@ -24,11 +24,14 @@ jobs:
       - name: 백테스트 계산
         run: python scripts/backtest.py
 
+      - name: 방문자용 데이터 생성
+        run: python scripts/publish_dashboard.py backtest.json
+
       - name: 결과 저장
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/backtest.json
+          git add data/backtest.json data/dashboard/backtest.json
           if git diff --staged --quiet; then
             echo "바뀐 내용 없음"
           else

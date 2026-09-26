@@ -14,9 +14,17 @@ on:
       - "scripts/fetch_long.py"
       - "scripts/tests/test_dashboard.py"
       - "scripts/tests/dashboard.test.cjs"
+      - "scripts/tests/live.test.cjs"
+      - "scripts/tests/test_dashboard_publish.py"
+      - "scripts/publish_dashboard.py"
+      - "workers/live.js"
+      - "data/dashboard/**"
+      - "data/market.json"
+      - "data/market-long.json"
       - ".github/workflows/check.yml"
       - ".github/workflows/update-data.yml"
       - ".github/workflows/update-long.yml"
+      - ".github/workflows/update-backtest.yml"
   workflow_dispatch:
 
 permissions:
@@ -35,10 +43,10 @@ jobs:
           node-version: "22"
 
       - name: 대시보드 기간 계산과 수집 실패 검사
-        run: python -m unittest discover -s scripts/tests -p 'test_dashboard.py'
+        run: python -m unittest discover -s scripts/tests -p 'test_dashboard*.py'
 
       - name: 대시보드 날짜·결측·실시간 갱신 검사
-        run: node --test scripts/tests/dashboard.test.cjs
+        run: node --test scripts/tests/dashboard.test.cjs scripts/tests/live.test.cjs
 
       - name: 설명 글 숫자 대조
         run: python scripts/check_about.py

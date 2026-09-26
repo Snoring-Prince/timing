@@ -11,6 +11,8 @@
  *   { fetched, open, quotes: { spx, ndx, vix, fng } }
  *   각 항목은 { v: 값, d: "YYYY-MM-DD", t: "…Z" } 또는 아예 없음.
  *   하나가 막혀도 나머지는 그대로 준다 — 받은 것만 담는다.
+ *   ?quotes=spx,ndx,fng 로 요청하면 VIX는 수집·응답에서 빠진다.
+ *   인자가 없으면 예전처럼 네 계열 전부 제공한다(되살리기 호환).
  *
  * 올리는 법 (계정 만들기 포함 5분, 명령어 없음)
  *   1. dash.cloudflare.com 가입 → 왼쪽 Compute(Workers) → Create
@@ -88,13 +90,18 @@ export default {
     };
     if (request.method === "OPTIONS") return new Response(null, { headers: head });
 
+    const selection = new URL(request.url).searchParams.get("quotes");
+    const requested = new Set(selection === null ? [...Object.keys(YAHOO), "fng"] : selection.split(","));
+    if ([...requested].some(key => !Object.hasOwn(YAHOO, key) && key !== "fng")) {
+      return new Response(JSON.stringify({ error: "Unknown quote" }), { status: 400, headers: head });
+    }
     const quotes = {};
     const failed = [];
-    const jobs = Object.entries(YAHOO).map(async ([key, sym]) => {
+    const jobs = Object.entries(YAHOO).filter(([key]) => requested.has(key)).map(async ([key, sym]) => {
       try { quotes[key] = await quote(sym); }
       catch (e) { failed.push(key + ": " + e.message); }
     });
-    jobs.push((async () => {
+    if (requested.has("fng")) jobs.push((async () => {
       try { quotes.fng = await fearGreed(); }
       catch (e) { failed.push("fng: " + e.message); }
     })());
