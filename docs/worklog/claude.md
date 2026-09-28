@@ -5,6 +5,15 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+막스(오크트리) 화면 — 네 번째 투자자
+- 파일: titans/oaktree/index.html(새) · titans/index.html(카드) · data/titans/investors.json ·
+  sitemap.xml · CLAUDE.md · docs/masters-13f.md · 이 일지
+- 규칙: 13F 의 옵션·원금은 빼고 주식만 — 소개 글·카드에 적음(숫자 없이).
+- 넘김: 머지 뒤 Update 13F → Update Titans Prices. 정정 66건이라 첫 수집에서
+  모르는 amendmentType 이 나오면 빨간불 — 그 접수번호를 열어 볼 것.
+  다음은 애크먼 대신 신고자(PERSHING SQUARE INC., CIK 0002026053) 정찰.
+
+## 2026-09-28 · Claude · PR #97
 ASML 종가 2차 — 실제 OpenFIGI 응답에 맞춤
 - 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
 - 규칙: 이름 비교에서 주식 종류 낱말(NY·REG·REGISTRY·SHS)과 HLDG 를 버림.
