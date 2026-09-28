@@ -66,12 +66,12 @@ future `/titans/` list page.
 ```
 value        Warren Buffett / Berkshire Hathaway      built
 value        Li Lu / Himalaya Capital                 Munger's manager; CN/HK names not in 13F
-formula      Joel Greenblatt / Gotham                 hundreds of names + shorts → top-50 view
+value        Seth Klarman / Baupost                   replaces Greenblatt (see below)
 growth       Cathie Wood / ARK                        DEFERRED: ARK self-publishes daily; do last
 macro        Ray Dalio / Bridgewater                  owner override (see below)
 macro        Stanley Druckenmiller / Duquesne FO      macro; 13F = stock sleeve only
 activist     Bill Ackman / Pershing Square            ~8-10 names
-contrarian   David Tepper / Appaloosa                 options already excluded on screen
+contrarian   David Tepper / Appaloosa                 options excluded; TWO CIKs stitched (below)
 ```
 
 - **Dalio: owner override of the old rejection.** Owner: retirement is not the
@@ -91,10 +91,51 @@ contrarian   David Tepper / Appaloosa                 options already excluded o
 - **Legends with no usable 13F** (owner asked): Graham (fund closed 1956), Fisher
   (small adviser, d.2004), Lynch and Neff (inside Fidelity / Wellington filings,
   not separable), O'Neil (own account + IBD; being checked by the probe).
-  Greenblatt is the only one of that list still filing.
-- **Before adding investor #2:** split `data/titans/prices.json` per investor. It
-  is one shared file today; with eight pages every visitor would download all
-  eight investors' prices (~20MB+).
+  Greenblatt is the only one of that list still filing (dropped anyway, above).
+- **Price file split: DONE (2026-09-28).** `data/titans/prices.json` stays the
+  bot's shared store (one download per CUSIP however many investors hold it);
+  `fetch_prices.py` then writes `data/titans/prices/<slug>.json` holding only
+  that investor's latest holdings, and each page reads its own file
+  (`window.TITAN.prices`). `--publish` rebuilds those files without downloading.
+  Git growth measured: 7 daily versions of the 2.2MB file pack to 525KB, about
+  one gzip copy, so daily rewrites are nearly free in history.
+
+### Probe run 1 (2026-09-28, run 36369828081) — what it settled
+
+```
+             latest     issuers  top50   new/qtr(median)  ETF(name)
+Li Lu        2026-06-30      7   100%        0.0%           0%
+Greenblatt   2026-06-30  1,571    41%       10.6%          27%   → DROPPED
+Dalio        2026-06-30    992    62%       18.7%          31%
+Druckenmiller 2026-06-30    85    92%       46.2%           3%   total printed $0.0B
+Ackman       2026-03-31     10   100%       10.0%           0%   Q2 filing missing
+Tepper (new) 2026-06-30     25   100%       11.8%           7%
+Tepper (old) 2015-12-31     47   100%       12.8%           2%
+```
+
+- All six CIKs matched the SEC entity names.
+- **Greenblatt dropped → Seth Klarman (owner, 2026-09-28).** Gotham is a quant
+  long/short book: 1,571 names, #1 is SPY at 19.8%, top 50 only 41%, shorts
+  invisible — the Citadel problem again. Klarman CIK `0001061768` is from memory;
+  the probe now lists Baupost and prints the SEC name — run it before registering.
+- **Tepper: stitch both CIKs (owner).** Old `0001006438` (1999-2015, stopped) is a
+  one-time fetch; weekly watching needs only new `0001656456`. Registry takes one
+  CIK today, so this is either a registry field for frozen predecessor CIKs or a
+  one-time merge into `appaloosa.json` — decide when building him.
+  Owner asked first *why* the number changed (a different firm must not be
+  stitched). Press reports: Jan 1 2016 reorganization when Tepper moved the firm
+  from Short Hills NJ to Miami Beach FL (tax residency); manager entity became
+  Appaloosa LP. The probe now prints a continuity block (old last quarter vs new
+  first quarter: shared issuers, value kept each way, cover manager/city/signer,
+  day gap). Stitch only if the book clearly carries over.
+- **Druckenmiller: total printed $0.0B** (cover total too). Likely the filer still
+  reports thousands after 2023-01-03, which the date-only `unit_scale` rule would
+  misread by 1000×. Unconfirmed; probe now prints median value÷shares per filing.
+  Needs a per-filing unit check before registering him.
+- **Ackman: latest is 2026-03-31**; the Q2 filing (due Aug 14) was not in the list.
+  Check EDGAR before registering.
+- O'Neil: one hit, name not shown (search printed the atom author "Webmaster").
+  Fixed: the probe now names every hit from its submissions file.
 - **Verify first:** `scripts/probe_titans.py` + `probe-titans.yml` (manual). CIKs
   in it are from memory; it prints the SEC entity name next to each.
 

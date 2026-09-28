@@ -1,5 +1,6 @@
 import datetime as dt
 import importlib.util
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -256,6 +257,43 @@ class PricesTests(unittest.TestCase):
                 with self.assertRaises(SystemExit):
                     p.main()
             self.assertIn("123456100", out.read_text(encoding="utf-8"))
+
+    def test_each_investor_file_holds_only_that_investors_latest_holdings(self):
+        # 여덟 명이 한 파일을 같이 쓰면 버크셔 화면을 여는 사람도 여덟 명분을
+        # 받는다. 투자자 파일에는 **자기 최신 보유**만 들어가야 한다 —
+        # 둘이 같이 든 종목은 양쪽에, 옛 분기에만 있던 종목은 어디에도 없다.
+        def book(*periods):
+            return {"quarters": [{"period": per, "holdings": [
+                {"cusip": c, "name": c, "shares": 1, "value": 1} for c in cs]} for per, cs in periods]}
+        a = book(("2026-03-31", ["OLD000100"]), ("2026-06-30", ["SHARED100", "ONLYA0100"]))
+        b = book(("2026-06-30", ["SHARED100", "ONLYB0100"]))
+        cache = {"method": "split-adjusted-close", "series": {
+            c: {"ticker": c, "values": [["2026-09-18", 1]]}
+            for c in ["SHARED100", "ONLYA0100", "ONLYB0100", "OLD000100"]}}
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            self.assertEqual(p.publish(cache, [("a", a), ("b", b)], folder), ["a", "b"])
+            got = {s: set(json.loads((folder/f"{s}.json").read_text())["series"]) for s in "ab"}
+            self.assertEqual(got, {"a": {"SHARED100", "ONLYA0100"}, "b": {"SHARED100", "ONLYB0100"}})
+            # 내용이 같으면 다시 쓰지 않는다 — 안 그러면 매일 빈 커밋이 생긴다.
+            self.assertEqual(p.publish(cache, [("a", a), ("b", b)], folder), [])
+
+    def test_publish_only_writes_investor_files_without_downloading(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out, folder = Path(tmp)/"prices.json", Path(tmp)/"prices"
+            out.write_text(json.dumps({"method": "split-adjusted-close", "series": {
+                "123456100": {"ticker": "AAPL", "values": [["2026-09-18", 1]]}}}), encoding="utf-8")
+            book = {"quarters": [{"period": "2026-06-30", "holdings": [
+                {"cusip": "123456100", "name": "A", "shares": 1, "value": 1}]}]}
+            inv = type("Inv", (), {"slug": "x"})()
+            with patch.object(p.registry, "load", return_value=[inv]), \
+                    patch.object(p, "books", return_value=[book]), patch.object(p, "OUT", out), \
+                    patch.object(p, "PER", folder), patch.object(p, "request") as req, \
+                    patch.object(p.sys, "argv", ["fetch_prices.py", "--publish"]), \
+                    patch("builtins.print"):
+                p.main()
+            req.assert_not_called()
+            self.assertIn("123456100", (folder/"x.json").read_text())
 
     def test_february_anniversary_and_winter_close_cutoff(self):
         self.assertEqual(p.years_before(dt.date(2024, 2, 29)), dt.date(2009, 2, 28))

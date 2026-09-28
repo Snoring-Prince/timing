@@ -12,6 +12,7 @@ on:
       - "scripts/fetch_sectors.py"
       - "data/titans/investors.json"
       - "data/titans/prices.json"
+      - "data/titans/prices/**"
       - "scripts/tests/**"
       - ".github/workflows/check-titans.yml"
       - ".github/workflows/update-13f.yml"
