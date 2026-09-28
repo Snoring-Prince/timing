@@ -62,8 +62,8 @@ def request(url, payload=None):
         try:
             with urllib.request.urlopen(urllib.request.Request(url, data=data, headers=headers), timeout=40) as res:
                 return json.load(res)
-        except (urllib.error.URLError, TimeoutError):
-            if attempt == 2:
+        except (urllib.error.URLError, TimeoutError) as exc:
+            if attempt == 2 or getattr(exc, "code", None) == 404:
                 raise
             time.sleep(5*(attempt+1))
 
@@ -93,7 +93,47 @@ def required_cusips(books):
     return required
 
 
-def resolve(cusips, required, known):
+def marks(books):
+    """종목마다 **가장 최근 공시의 분기말 가격**(금액 ÷ 주식수)과 그 날짜.
+
+    번호로 짝을 못 찾아 이름으로 붙인 티커를 확인하는 자다. 이미 붙어 있는
+    102종목을 재 보니 99개는 공시 금액 ÷ 주식수와 그날 종가가 소수 여섯째
+    자리까지 같았고, 가장 먼 것도 0.73% 였다(2026-09-28)."""
+    got = {}
+    for book in books:
+        quarters = book.get("quarters", [])
+        if not quarters:
+            continue
+        latest = max(quarters, key=lambda q: q["period"])
+        for h in latest["holdings"]:
+            if is_share(h) and h.get("shares", 0) > 0 and h.get("value", 0) > 0:
+                if got.get(h["cusip"], ("",))[0] < latest["period"]:
+                    got[h["cusip"]] = (latest["period"], h["value"]/h["shares"])
+    return got
+
+
+def mark_matches(values, splits, mark, tolerance=.005):
+    """분기말 종가(그 뒤 분할만큼 되돌림)가 공시의 금액 ÷ 주식수와 맞는가."""
+    day, price = mark
+    near = [(d, v) for d, v in values if d <= day]
+    if not near or (dt.date.fromisoformat(day)-dt.date.fromisoformat(near[-1][0])).days > 5:
+        return False
+    close = near[-1][1]
+    for when, ratio in splits.items():
+        if near[-1][0] < when:
+            num, den = (float(x) for x in ratio.split(":"))
+            close *= num/den
+    return abs(close/price-1) <= tolerance
+
+
+class Unpriced(ValueError):
+    """고장이 아니라 **답이 '없다'로 온 것** — 번호로도 이름으로도 짝이 없거나,
+    시세 쪽이 그 티커를 모른다. 매일 빨간불로 울리면 진짜 고장이 묻히므로
+    처음 볼 때 한 번만 울리고 목록(`unpriced`)에 적는다. 그 줄은 화면에서
+    분기말 가격으로만 그린다."""
+
+
+def resolve(cusips, required, known, unverified=None):
     result = {}
     for offset in range(0, len(cusips), 10):
         batch = cusips[offset:offset+10]
@@ -111,9 +151,12 @@ def resolve(cusips, required, known):
     # CINS mapping is absent for some foreign issuers. An old logo ticker is
     # usable only for the sole plain ordinary class and a verified US share
     # issuer match. Never apply this fallback to A/B/C, preferred or ADR classes.
+    # 같은 회사의 워런트(`WARRANT`)는 주식 종류가 아니다. 주식과 워런트를 같이
+    # 들고 있어도 보통주가 하나뿐이면 가릴 것이 없다(오크트리 Rice·Alvotech).
     for cusip in cusips:
         identity = required[cusip]
-        issuer_classes = [c for c in required if c[:6] == cusip[:6]]
+        issuer_classes = [c for c in required if c[:6] == cusip[:6]
+                          and PLAIN.fullmatch(required[c]["class"].upper().strip())]
         if cusip in result or cusip[0].isdigit() or len(issuer_classes) != 1 or not PLAIN.fullmatch(identity["class"].upper().strip()):
             continue
         ticker = known.get(cusip)
@@ -127,6 +170,9 @@ def resolve(cusips, required, known):
                       and same_issuer(r.get("name", ""), identity["name"])]
         if candidates and len({r.get("shareClassFIGI") for r in candidates}) == 1:
             result[cusip] = ticker
+            # 이름으로 붙인 것은 종가를 받은 뒤 분기말 가격으로 한 번 더 잰다.
+            if unverified is not None:
+                unverified.add(cusip)
         else:
             # 왜 못 붙였는지 **원본을 찍는다.** 개발 환경에서 OpenFIGI 가 막혀 있어
             # 응답 모양을 짐작으로 맞춘 자리다(9-3 — gzip·OpenFIGI 때 두 번 틀림).
@@ -147,10 +193,18 @@ SHARE_TYPES = {"Common Stock", "NY Reg Shrs"}
 NOT_NAME = {"HLDG", "NY", "N", "Y", "REG", "REGISTRY", "SHS"}
 
 
-def same_issuer(a, b):
-    """공시는 `ASML HLDG NV`, OpenFIGI 는 `ASML HOLDING NV-NY REG SHS` 로 적는다."""
-    drop = lambda n: sorted(w for w in norm(n) if w not in NOT_NAME)
-    return drop(a) == drop(b)
+def same_issuer(figi, filed):
+    """공시는 `ASML HLDG NV`, OpenFIGI 는 `ASML HOLDING NV-NY REG SHS` 로 적는다.
+
+    OpenFIGI 는 A주에 꼬리를 단다: `TORM PLC-A`, `XP INC - CLASS A`,
+    `LIBERTY GLOBAL LTD-A`(2026-09-28 러너 실측). 공시는 `TORM PLC` 뿐이다.
+    **A 만** 떼고 B·C 는 남긴다 — B·C 꼬리면 공시와 다른 종류일 수 있다.
+    A 를 떼어 붙인 것도 종가를 받은 뒤 분기말 가격으로 다시 잰다(`mark_matches`)."""
+    words = lambda n: [w for w in norm(n) if w not in NOT_NAME]
+    a, b = words(figi), words(filed)
+    if a[-1:] == ["A"] and b[-1:] != ["A"]:
+        a = a[:-1]
+    return sorted(a) == sorted(b)
 
 
 def parse_chart(payload, ticker, now):
@@ -197,7 +251,7 @@ def merge_series(old, values, splits, start, full):
     return {"values": [[day, merged[day]] for day in sorted(merged) if day >= start], "splits": splits}
 
 
-def collect(required, previous, now, full=False, known=None, since=None):
+def collect(required, previous, now, full=False, known=None, since=None, quarter_marks=None):
     saved = previous.get("series", {})
     # Weekly/full verification also catches ticker changes of the same security.
     missing = [c for c in required if full or now.weekday() == 5 or not saved.get(c, {}).get("ticker")]
@@ -211,18 +265,23 @@ def collect(required, previous, now, full=False, known=None, since=None):
     # 받기에 실패한 종목은 보유 목록에 그대로 있으므로 옛 값이 남는다.
     series = {c: saved[c] for c in required if c in saved}
     errors = []
+    unpriced = {}
+    unverified = set()
     try:
-        mapped = resolve(missing, required, known or {}) if missing else {}
+        mapped = resolve(missing, required, known or {}, unverified) if missing else {}
+        answered = True
     except Exception as exc:
         mapped = {}
         errors.append(f"ticker mapping unavailable: {exc}")
+        # OpenFIGI 가 **답을 못 한** 날의 '짝 없음'은 알려진 상태가 아니라 고장이다.
+        answered = False
     start = years_before(now.astimezone(NY).date())-dt.timedelta(days=7)
     for cusip, identity in sorted(required.items()):
         old = saved.get(cusip, {})
         ticker = mapped.get(cusip) or old.get("ticker")
         try:
             if not ticker:
-                raise ValueError("exact CUSIP mapping unavailable")
+                raise (Unpriced if answered else ValueError)("exact CUSIP mapping unavailable")
             refresh = full or not old.get("values") or now.weekday() == 5
             # 상장 때부터는 **종목마다 한 번만** 훑는다. 1983년 분할은 앞으로도
             # 1983년 분할이라, 매주 40년치 바를 다시 받아 같은 답을 얻는 것은
@@ -238,7 +297,14 @@ def collect(required, previous, now, full=False, known=None, since=None):
                 p1 = int(dt.datetime.combine(day, dt.time(), NY).timestamp())
                 url = ("https://query1.finance.yahoo.com/v8/finance/chart/"+urllib.parse.quote(ticker, safe="")+
                        f"?period1={p1}&period2={int(now.timestamp())}&interval=1d&events=splits")
-                payload = request(url)
+                try:
+                    payload = request(url)
+                except urllib.error.HTTPError as exc:
+                    # 한 번도 받은 적 없는 티커를 시세 쪽이 모른다(상장 폐지 등).
+                    # 받아 둔 종가가 있던 티커가 사라진 것은 고장으로 남긴다.
+                    if exc.code == 404 and not old.get("values"):
+                        raise Unpriced(f"price source does not know {ticker}") from exc
+                    raise
                 parsed = parse_chart(payload, ticker, now)
                 first_trade = payload["chart"]["result"][0]["meta"].get("firstTradeDate")
                 if verify and first_trade:
@@ -264,16 +330,23 @@ def collect(required, previous, now, full=False, known=None, since=None):
                           if d < start.isoformat()} | splits
             if (now.astimezone(NY).date()-dt.date.fromisoformat(values[-1][0])).days > 7:
                 raise ValueError("last closing price is more than seven days old")
+            if cusip in unverified and not mark_matches(values, splits, (quarter_marks or {}).get(cusip, ("", 0))):
+                # 이름으로 붙인 티커가 다른 종류(A↔C)거나 다른 회사면 여기서 걸린다.
+                raise Unpriced(f"{ticker} close does not match the filing's quarter-end price")
             if refresh and deep:
                 scanned = need
             series[cusip] = {**identity, "ticker": ticker, "currency": "USD",
                             **merge_series(old, values, splits, start.isoformat(), refresh),
                             **({"splitsFrom": scanned} if scanned else {})}
             print(f"{cusip} {ticker}: {len(series[cusip]['values'])} days, last {series[cusip]['values'][-1][0]}", flush=True)
+        except Unpriced as exc:
+            unpriced[cusip] = {"ticker": ticker or "", "reason": str(exc)}
         except Exception as exc:
             errors.append(f"{cusip} {ticker or '?'}: {exc}")
         time.sleep(.3)
     result = {"method": "split-adjusted-close", "series": series}
+    if unpriced:
+        result["unpriced"] = unpriced
     return result, errors
 
 
@@ -334,7 +407,7 @@ def main():
         return
     known = json.loads((ROOT / "data/titans/tickers.json").read_text(encoding="utf-8"))
     result, errors = collect(required, previous, dt.datetime.now(UTC), args.full, known,
-                             first_seen(catalog))
+                             first_seen(catalog), marks(catalog))
     if fresh:
         # 건너뛴 투자자가 있으면 창고에서 아무것도 지우지 않습니다. 정말 새 투자자면
         # 지울 것이 없고, 혹시 책과 투자자 파일을 둘 다 잃은 것이라면 그 가격을
@@ -342,12 +415,23 @@ def main():
         kept = previous.get("series", {})
         result["series"] = {**{c: kept[c] for c in kept if c not in result["series"]},
                             **result["series"]}
-    if result["series"] != previous.get("series", {}):
+    if (result["series"] != previous.get("series", {})
+            or result.get("unpriced", {}) != previous.get("unpriced", {})):
         write_if_changed(OUT, result)
     # 받기에 실패한 종목이 있어도 받은 것은 투자자 파일까지 내보낸다.
     publish(result, pairs)
-    if errors:
-        raise SystemExit("\n".join(errors))
+    # 짝이 없는 종목은 **처음 볼 때만** 빨간불로 알린다. 오크트리처럼 워런트·
+    # 해외 두 종류 주식을 든 투자자는 이런 줄이 늘 몇 개 있어서, 매일 울리면
+    # 진짜 고장(통신·형식)이 묻힌다(6-2). 고장은 지금처럼 매번 빨간불이다.
+    seen = previous.get("unpriced", {})
+    unpriced = result.get("unpriced", {})
+    for cusip, why in sorted(unpriced.items()):
+        if cusip in seen:
+            print(f"{cusip} {why['ticker'] or '?'}: 알려진 상태 — 분기말 가격으로만 그립니다 ({why['reason']})")
+    news = [f"{c} {w['ticker'] or '?'}: {w['reason']} — 처음 봄, 이 줄은 분기말 가격으로만 그립니다"
+            for c, w in sorted(unpriced.items()) if c not in seen]
+    if errors or news:
+        raise SystemExit("\n".join(errors + news))
 
 
 if __name__ == "__main__":

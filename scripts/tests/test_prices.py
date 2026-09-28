@@ -367,3 +367,118 @@ class PricesTests(unittest.TestCase):
         row["timestamp"] = [int(dt.datetime(2026, 1, day, 14, 30, tzinfo=p.UTC).timestamp()) for day in [6, 7, 8]]
         values, _ = p.parse_chart(payload, "AAPL", now)
         self.assertEqual(values[-1][0], "2026-01-07")
+
+
+# 러너가 받은 OpenFIGI 응답 그대로(2026-09-28, Update Titans Prices #12 로그).
+# 오크트리의 해외 법인 A주는 이름 끝에 종류 꼬리가 붙어 와서 떨어졌다.
+TORM = {"figi": "BBG00JG0MYJ1", "name": "TORM PLC-A", "ticker": "TRMD", "exchCode": "US",
+        "compositeFIGI": "BBG00JG0MYJ1", "securityType": "Common Stock", "marketSector": "Equity",
+        "shareClassFIGI": "BBG00CJZ1L61", "securityType2": "Common Stock", "securityDescription": "TRMD"}
+LBTY = {"figi": "BBG01K9HZH92", "name": "LIBERTY GLOBAL LTD-A", "ticker": "LBTYA", "exchCode": "US",
+        "compositeFIGI": "BBG01K9HZH92", "securityType": "Common Stock", "marketSector": "Equity",
+        "shareClassFIGI": "BBG01K9HZHB9", "securityType2": "Common Stock", "securityDescription": "LBTYA"}
+XP = {"figi": "BBG00QVJYGM9", "name": "XP INC - CLASS A", "ticker": "XP", "exchCode": "US",
+      "compositeFIGI": "BBG00QVJYGM9", "securityType": "Common Stock", "marketSector": "Equity",
+      "shareClassFIGI": "BBG00QVJYHP4", "securityType2": "Common Stock", "securityDescription": "XP"}
+
+
+class UnpricedTests(unittest.TestCase):
+    def test_class_a_suffix_maps_but_is_left_for_the_price_check(self):
+        for cusip, name, ticker, row in (("G89479102", "TORM PLC", "TRMD", TORM),
+                                         ("G61188101", "LIBERTY GLOBAL LTD", "LBTYA", LBTY),
+                                         ("G98239109", "XP INC", "XP", XP)):
+            with self.subTest(ticker=ticker):
+                required = {cusip: {"name": name, "class": "COMMON STOCK"}}
+                later = set()
+                with patch.object(p, "request", side_effect=[[{}], [{"data": [row]}]]):
+                    self.assertEqual(p.resolve([cusip], required, {cusip: ticker}, later), {cusip: ticker})
+                self.assertEqual(later, {cusip})
+
+    def test_only_the_a_tail_is_dropped(self):
+        required = {"G61188127": {"name": "LIBERTY GLOBAL LTD", "class": "COMMON STOCK"}}
+        for tail in ("B", "C"):
+            row = {**LBTY, "name": f"LIBERTY GLOBAL LTD-{tail}"}
+            with patch.object(p, "request", side_effect=[[{}], [{"data": [row]}]]), patch("builtins.print"):
+                self.assertEqual(p.resolve(list(required), required, {"G61188127": "LBTYA"}), {})
+
+    def test_a_warrant_does_not_count_as_a_second_share_class_but_two_commons_do(self):
+        row = {**TORM, "name": "RICE ACQUISITION CORP 3-A", "ticker": "KRSP"}
+        required = {"G7553X106": {"name": "RICE ACQUISITION CORP 3", "class": "COMMON STOCK"},
+                    "G7553X114": {"name": "RICE ACQUISITION CORP 3", "class": "WARRANT"}}
+        known = {c: "KRSP" for c in required}
+        with patch.object(p, "request", side_effect=[[{}, {}], [{"data": [row]}]]):
+            self.assertEqual(p.resolve(list(required), required, known), {"G7553X106": "KRSP"})
+        # 리버티 라틴아메리카: 같은 회사의 보통주 두 종류(A·C) — 어느 쪽인지 못 가린다.
+        both = {"G9001E102": {"name": "LIBERTY LATIN AMERICA LTD", "class": "COMMON STOCK"},
+                "G9001E128": {"name": "LIBERTY LATIN AMERICA LTD", "class": "COMMON STOCK"}}
+        with patch.object(p, "request", return_value=[{}, {}]) as req:
+            self.assertEqual(p.resolve(list(both), both, {c: "LILA" for c in both}), {})
+            self.assertEqual(req.call_count, 1)
+
+    def test_quarter_end_mark_undoes_later_splits(self):
+        self.assertTrue(p.mark_matches([("2026-06-29", 49), ("2026-06-30", 50)], {"2026-08-01": "2:1"}, ("2026-06-30", 100)))
+        self.assertFalse(p.mark_matches([("2026-06-30", 50)], {}, ("2026-06-30", 100)))
+        self.assertFalse(p.mark_matches([("2026-06-30", 100.6)], {}, ("2026-06-30", 100)))
+        self.assertTrue(p.mark_matches([("2026-06-30", 100.4)], {}, ("2026-06-30", 100)))
+        # 분기말 앞뒤로 종가가 없으면 잴 수 없다 — 못 잰 것은 맞지 않은 것이다.
+        self.assertFalse(p.mark_matches([("2026-09-17", 100)], {}, ("2026-06-30", 100)))
+        self.assertFalse(p.mark_matches([("2026-06-30", 100)], {}, ("", 0)))
+
+    def run_torm(self, mark):
+        required = {"G89479102": {"name": "TORM PLC", "class": "COMMON STOCK"}}
+        with patch.object(p, "request", side_effect=[[{}], [{"data": [TORM]}], chart(symbol="TRMD")]), \
+                patch.object(p.time, "sleep"):
+            return p.collect(required, {}, dt.datetime(2026, 9, 19, 1, tzinfo=p.UTC),
+                             known={"G89479102": "TRMD"}, quarter_marks={"G89479102": mark})
+
+    def test_a_name_matched_ticker_is_kept_only_when_its_close_matches_the_filing(self):
+        result, errors = self.run_torm(("2026-09-17", 101))
+        self.assertEqual((errors, result["series"]["G89479102"]["ticker"]), ([], "TRMD"))
+        self.assertNotIn("unpriced", result)
+        result, errors = self.run_torm(("2026-09-17", 95))
+        self.assertEqual((errors, result["series"]), ([], {}))
+        self.assertIn("quarter-end", result["unpriced"]["G89479102"]["reason"])
+
+    def test_no_match_is_a_known_state_but_an_outage_is_not(self):
+        required = {"81761L102": {"name": "SERVICE PROPERTIES TRUST", "class": "COMMON STOCK"}}
+        now = dt.datetime(2026, 9, 19, 1, tzinfo=p.UTC)
+        with patch.object(p, "request", return_value=[{"warning": "No identifier found."}]), patch.object(p.time, "sleep"):
+            result, errors = p.collect(required, {}, now)
+        self.assertEqual((errors, list(result["unpriced"])), ([], ["81761L102"]))
+        with patch.object(p, "request", side_effect=ValueError("offline")), patch.object(p.time, "sleep"):
+            result, errors = p.collect(required, {}, now)
+        self.assertEqual((len(errors), result.get("unpriced")), (2, None))
+
+    def test_price_source_404_is_known_only_for_a_ticker_never_priced(self):
+        gone = p.urllib.error.HTTPError("u", 404, "Not Found", {}, None)
+        required = {"8676EP108": {"name": "SUNOPTA INC", "class": "COMMON STOCK"}}
+        now = dt.datetime(2026, 9, 19, 1, tzinfo=p.UTC)
+        mapping = [{"data": [{"ticker": "STKL", "marketSector": "Equity", "exchCode": "US"}]}]
+        with patch.object(p, "request", side_effect=[mapping, gone]) as req, patch.object(p.time, "sleep"):
+            result, errors = p.collect(required, {}, now)
+        self.assertEqual((errors, list(result["unpriced"])), ([], ["8676EP108"]))
+        old = {"series": {"8676EP108": {"ticker": "STKL", "values": [["2026-09-17", 1]], "splits": {}}}}
+        # 평일(금) — 이미 티커가 있으니 짝을 다시 묻지 않고 종가만 받는다.
+        with patch.object(p, "request", side_effect=gone), patch.object(p.time, "sleep"):
+            result, errors = p.collect(required, old, dt.datetime(2026, 9, 18, 1, tzinfo=p.UTC))
+        self.assertEqual((len(errors), result.get("unpriced")), (1, None))
+        self.assertEqual(result["series"], old["series"])
+
+    def test_a_new_unpriced_holding_turns_the_run_red_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out, folder = Path(tmp)/"prices.json", Path(tmp)/"prices"
+            book = {"quarters": [{"period": "2026-06-30", "holdings": [
+                {"cusip": "123456100", "name": "A", "shares": 1, "value": 1}]}]}
+            inv = type("Inv", (), {"slug": "x", "output": out})()
+            got = ({"method": "split-adjusted-close", "series": {},
+                    "unpriced": {"123456100": {"ticker": "", "reason": "exact CUSIP mapping unavailable"}}}, [])
+            def run():
+                with patch.object(p.registry, "load", return_value=[inv]), \
+                        patch.object(p, "books", return_value=[book]), patch.object(p, "OUT", out), \
+                        patch.object(p, "PER", folder), patch.object(p, "collect", return_value=got), \
+                        patch.object(p.sys, "argv", ["fetch_prices.py"]), patch("builtins.print"):
+                    p.main()
+            with self.assertRaises(SystemExit):
+                run()
+            self.assertIn("123456100", json.loads(out.read_text())["unpriced"])
+            run()   # 다음 날: 같은 종목이면 초록불
