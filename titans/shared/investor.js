@@ -80,7 +80,7 @@ en:{
      `배당 제외` 는 목록 캡션(`costArrow`)이 이미 적고, 날짜와 기간은
      차트 축이 적습니다. 다시 늘리고 싶어지면 그것부터 확인하세요. */
   foot:()=>[
-    `Source: Form 13F-HR filed with the SEC by ${TT.name.en} (CIK ${TT.cik})`,
+    `Source: Form 13F-HR filed with the SEC by ${TT.name.en} (CIK ${TT.cik}${(TT.formerCiks||[]).map(c=>`; earlier filings under CIK ${c}`).join("")})`,
     "A 13F records a single day \u2014 the last day of the quarter \u2014 and is filed within 45 days of it, so the holdings may already have changed. This page shows US-listed share holdings from 13F filings; cash, bonds, foreign listings, wholly owned businesses and short positions are not included.",
     "Average cost and return are estimates. A 13F carries no trade prices, so both are worked out from value \u00F7 shares and can be off by a wide margin.",
     "Nothing on this site is an offer, a solicitation or a recommendation to buy or sell any security. Every investment decision, and its outcome, rests entirely with the investor."
@@ -134,7 +134,7 @@ ko:{
   noData:"공시를 불러오지 못했습니다.",
   footTitle:"유의사항",
   foot:()=>[
-    `출처: ${TT.name.ko}(CIK ${TT.cik})가 SEC 에 낸 Form 13F-HR`,
+    `출처: ${TT.name.ko}(CIK ${TT.cik}${(TT.formerCiks||[]).map(c=>` · 이전 공시는 CIK ${c}`).join("")})가 SEC 에 낸 Form 13F-HR`,
     "13F 공시는 분기의 마지막 날 하루를 적은 것이고, 공시는 그로부터 45일 안에 냅니다. 그 사이에 이미 바뀌었을 수 있습니다. 이 화면에는 13F 공시의 미국 상장 주식 보유분을 표시합니다 \u2014 현금\u00B7채권\u00B7해외 주식\u00B7통째로 소유한 회사\u00B7공매도는 포함되어 있지 않습니다.",
     "매수 평균가와 수익률은 추정입니다. 13F 공시에는 체결가가 없어서 금액\u00F7주식 수로 어림한 값이라 크게 빗나갈 수 있습니다.",
     "본 사이트는 특정 금융상품이나 자산에 대한 투자 권유나 추천이 아니며, 투자의 최종 판단과 책임은 전적으로 투자자 본인에게 있습니다."

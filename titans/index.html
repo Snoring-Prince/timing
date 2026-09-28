@@ -19,7 +19,7 @@
 
      **간판에는 법인 이름을 씁니다**(CLAUDE.md 9번). 사람 이름은 설명 줄에만.
 ═════════════════════════════════════════════════════════════════════ -->
-<meta name="description" content="Portfolios of great investors from their SEC 13F filings — Berkshire Hathaway, Himalaya Capital and more: what they hold, what they changed, and how it has done since.">
+<meta name="description" content="Portfolios of great investors from their SEC 13F filings — Berkshire Hathaway, Himalaya Capital, Appaloosa and more: what they hold, what they changed, and how it has done since.">
 <link rel="canonical" href="https://itpaidoff.com/titans/">
 <link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/?lang=en">
 <link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/?lang=ko">
@@ -164,6 +164,19 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
       </div>
       <div class="read"></div>
     </a>
+    <a class="card" href="/titans/appaloosa/" data-slug="appaloosa">
+      <div>
+        <div class="no"><span data-lang="ko">역발상</span><span data-lang="en">Contrarian</span></div>
+        <h2><span class="tmark" aria-hidden="true">AP</span><span><span data-lang="ko">애팔루사</span><span data-lang="en">Appaloosa</span></span></h2>
+        <p class="who"><span data-lang="ko">데이비드 테퍼</span><span data-lang="en">David Tepper</span></p>
+        <p class="what">
+          <span data-lang="ko">데이비드 테퍼가 1993년 세운 운용사입니다. 남들이 피하는 자산을 사는 쪽으로 알려졌습니다. 채권과 대부분의 옵션은 13F 에 나오지 않아 주식 부분만 봅니다. 2016년에 법인이 바뀐 두 공시 이력을 이어 2013년부터 봅니다.</span>
+          <span data-lang="en">The firm David Tepper founded in 1993, known for buying what others are fleeing. Bonds and most options do not appear in a 13F, so this shows the stock side only. Two filing histories, split by a change of legal entity in 2016, are joined from 2013 on.</span>
+        </p>
+        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
+      </div>
+      <div class="read"></div>
+    </a>
   </div>
 
   <div class="foot">
@@ -189,9 +202,9 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   let LANG=pick(), S=null;
   const HEAD={
     en:{title:"Great investors' 13F portfolios — Titans' picks",
-        desc:"Portfolios of great investors from their SEC 13F filings — Berkshire Hathaway, Himalaya Capital and more: what they hold, what they changed, and how it has done since."},
+        desc:"Portfolios of great investors from their SEC 13F filings — Berkshire Hathaway, Himalaya Capital, Appaloosa and more: what they hold, what they changed, and how it has done since."},
     ko:{title:"대가들의 13F 보유 종목 — 대가들의 선택",
-        desc:"버크셔 해서웨이·히말라야 캐피털 등 대가들이 SEC 13F 공시에 밝힌 보유 종목을 봅니다. 무엇을 들고 있고, 무엇을 늘리고 줄였고, 그 뒤 어떻게 됐는지."}
+        desc:"버크셔 해서웨이·히말라야 캐피털·애팔루사 등 대가들이 SEC 13F 공시에 밝힌 보유 종목을 봅니다. 무엇을 들고 있고, 무엇을 늘리고 줄였고, 그 뒤 어떻게 됐는지."}
   };
   const $=id=>document.getElementById(id);
   const esc=t=>String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;");
@@ -232,7 +245,8 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     const by={}; for(const o of S.investors) by[o.slug]=o;
     document.querySelectorAll(".card[data-slug]").forEach(c=>{
       const o=by[c.dataset.slug], r=c.querySelector(".read");
-      r.innerHTML=o?readHTML(o):"";
+      /* 새로 등록해 봇이 아직 공시를 안 받은 투자자는 빈 칸 대신 한 줄을 둔다. */
+      r.innerHTML=o?readHTML(o):'<div class="cap">'+(LANG==="ko"?"공시를 받는 중입니다":"Filings on the way")+'</div>';
     });
   }
   document.querySelectorAll(".langs button").forEach(b=>b.onclick=()=>{

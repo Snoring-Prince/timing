@@ -12,6 +12,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -182,3 +183,81 @@ class PreservationTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class PredecessorTests(unittest.TestCase):
+    """테퍼처럼 법인 번호가 바뀐 투자자 — 예전 번호의 공시를 한 번에 이어 붙입니다."""
+
+    NEW, OLD = '0001656456', '0001006438'
+
+    def sub(self, rows):
+        return json.dumps({'filings': {'recent': {
+            'form': [r[0] for r in rows], 'reportDate': [r[1] for r in rows],
+            'filingDate': [r[2] for r in rows], 'accessionNumber': [r[3] for r in rows]}}}).encode()
+
+    def table(self, value):
+        return TABLE.replace(b'<value>20000</value>', f'<value>{value}</value>'.encode())
+
+    def test_old_number_fills_the_years_before_the_new_one_and_is_fetched_from_its_own_folder(self):
+        subs = {
+            self.NEW: self.sub([('13F-HR', '2016-03-31', '2016-05-13', '2222222222-16-000001'),
+                                ('13F-HR', '2016-06-30', '2016-08-12', '2222222222-16-000002')]),
+            # 겹치는 2016-03-31 은 새 법인의 것이 이긴다 — 예전 번호에서는 버린다.
+            self.OLD: self.sub([('13F-HR', '2015-09-30', '2015-11-13', '1111111111-15-000001'),
+                                ('13F-HR', '2015-12-31', '2016-02-12', '1111111111-16-000002'),
+                                ('13F-HR', '2016-03-31', '2016-05-13', '1111111111-16-000009'),
+                                ('13F-HR/A', '2015-12-31', '2016-03-01', '1111111111-16-000003')]),
+        }
+        asked = []
+
+        def fake_get(url, contact):
+            asked.append(url)
+            for cik, body in subs.items():
+                if url.endswith(f'CIK{cik}.json'):
+                    return body
+            if url.endswith('/index.json'):
+                return json.dumps({'directory': {'item': [
+                    {'name': 'primary_doc.xml', 'size': '100'},
+                    {'name': 'table.xml', 'size': '100'}]}}).encode()
+            if url.endswith('/table.xml'):
+                return self.table(20)          # 2023년 전 → 천 달러 단위
+            if url.endswith('/primary_doc.xml'):
+                cover = COVER.replace(b'20000', b'20')
+                if '/111111111116000003/' in url:
+                    cover = cover.replace(b'<coverPage>', b'<coverPage><amendmentInfo>'
+                                          b'<amendmentType>NEW HOLDINGS</amendmentType>'
+                                          b'</amendmentInfo>')
+                return cover
+            return None
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / 'appaloosa.json'
+            inv = SimpleNamespace(slug='appaloosa', cik=self.NEW, filing_name='Appaloosa LP',
+                                  output=out, since=2013, name={'ko': '애팔루사', 'en': 'Appaloosa'},
+                                  predecessors=((self.OLD, 'Appaloosa Management LP'),))
+            with patch.dict(os.environ, {'SEC_CONTACT': 'fixture-only'}), \
+                    patch.object(fetch, 'one', return_value=inv), \
+                    patch.object(fetch, 'ALERT', str(Path(tmp) / 'alert.txt')), \
+                    patch.object(fetch, 'get', side_effect=fake_get), \
+                    patch.object(fetch, 'ACC_CIK', {}), \
+                    patch.multiple(fetch, CIK=fetch.CIK, OUT=fetch.OUT, MANAGER_NAME=fetch.MANAGER_NAME,
+                                   PREDECESSORS=fetch.PREDECESSORS), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                # main 이 전역 설정을 이 투자자로 바꾸므로 끝나면 되돌린다(다른 검사가 버크셔로 돈다).
+                self.assertEqual(fetch.main('appaloosa'), 0)
+            book = json.loads(out.read_text(encoding='utf8'))
+        qs = book['quarters']
+        self.assertEqual([q['period'] for q in qs], ['2015-09-30', '2015-12-31', '2016-03-31', '2016-06-30'])
+        self.assertEqual([q.get('filer_cik') for q in qs], [self.OLD, self.OLD, None, None])
+        self.assertEqual(qs[2]['accession'], '2222222222-16-000001')
+        self.assertEqual(qs[1]['amended_by'], ['1111111111-16-000003'])
+        # 책은 지금 번호의 것이고, 예전 번호를 밝혀 둔다.
+        self.assertEqual(book['manager'], {'cik': self.NEW, 'name': 'Appaloosa LP',
+                                           'predecessors': [self.OLD]})
+        # 원문은 낸 법인의 폴더에서 받는다(다른 번호로 물으면 SEC 가 못 찾는다).
+        self.assertTrue(any(f'/data/{int(self.OLD)}/111111111115000001/' in u for u in asked))
+        self.assertTrue(any(f'/data/{int(self.NEW)}/222222222216000001/' in u for u in asked))
+        self.assertFalse(any('111111111116000009' in u for u in asked))
+        # 예전 번호의 정정도 그 법인 폴더에서 받아 합친다.
+        self.assertTrue(any(f'/data/{int(self.OLD)}/111111111116000003/' in u for u in asked))
+        self.assertEqual([a['accession'] for a in qs[1]['amended_applied']], ['1111111111-16-000003'])

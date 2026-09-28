@@ -176,6 +176,18 @@ Tepper (old) 2015-12-31     47   100%       12.8%           2%
 - **Verify first:** `scripts/probe_titans.py` + `probe-titans.yml` (manual). CIKs
   in it are from memory; it prints the SEC entity name next to each.
 
+### Tepper registered (2026-09-28)
+
+- `appaloosa`, CIK 0001656456, `since 2013`, `predecessors: [0001006438]`.
+  `fetch_13f.list_filings()` walks the current CIK then each predecessor; a
+  predecessor filing is kept only if its period precedes the current CIK's first
+  13F-HR. `ACC_CIK` maps accession -> filer CIK so `filing_docs()` builds the
+  archive path under the filer's own CIK. Quarters from the old CIK carry
+  `filer_cik`; the book's `manager.predecessors` lists the old CIKs.
+- 1999–2013Q1 under the old CIK are text filings: not converted (one-time rule).
+- Test: `PredecessorTests` in `test_fetch_13f.py` (reverting the folder or the
+  overlap rule each fails it).
+
 ### Probe run 4 (2026-09-28, run 36377898009)
 
 - **Ackman 13F-NT reporting manager:** PERSHING SQUARE INC., CIK 0002026053,

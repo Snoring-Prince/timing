@@ -39,6 +39,12 @@ class RegistryTests(unittest.TestCase):
                 self.assertIn(f'prices: "../../data/titans/prices/{investor.slug}.json"', html)
                 self.assertIn(investor.name["en"], html)
                 self.assertIn(investor.name["ko"], html)
+                # 예전 법인 번호는 각주 출처 줄에도 나와야 한다 — 두 곳이 같은 목록이어야 한다.
+                former = [c for c, _ in investor.predecessors]
+                if former:
+                    self.assertIn("formerCiks: " + json.dumps(former), html)
+                else:
+                    self.assertNotIn("formerCiks", html)
 
     def test_registry_rejects_duplicate_slug_and_bad_cik(self):
         rows = [
@@ -52,6 +58,31 @@ class RegistryTests(unittest.TestCase):
             path.write_text(json.dumps({"investors": rows}), encoding="utf-8")
             with self.assertRaises(ValueError):
                 load(path)
+
+    def test_registry_keeps_predecessor_numbers_and_rejects_bad_ones(self):
+        base = {"slug": "stitched", "cik": "0000000003", "filing_name": "New LP",
+                "name": {"en": "Stitched", "ko": "이어붙임"}, "since": 2013}
+        ok = {**base, "predecessors": [{"cik": "0000000004", "filing_name": "Old LP"}]}
+        bad = [
+            {**base, "predecessors": [{"cik": "0000000003", "filing_name": "Same"}]},  # 자기 번호
+            {**base, "predecessors": [{"cik": "42", "filing_name": "Short"}]},          # 열 자리 아님
+            {**base, "predecessors": [{"cik": "0000000004"}]},                         # 법인명 없음
+        ]
+        other = {"slug": "other", "cik": "0000000004", "filing_name": "Other",
+                 "name": {"en": "Other", "ko": "다른"}, "since": 2000}
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "investors.json"
+            path.write_text(json.dumps({"investors": [ok]}), encoding="utf-8")
+            self.assertEqual(load(path)[0].predecessors, (("0000000004", "Old LP"),))
+            for row in bad + [None]:
+                rows = [row] if row else [other, ok]   # 다른 투자자의 번호를 예전 번호로 쓰면 안 된다
+                path.write_text(json.dumps({"investors": rows}), encoding="utf-8")
+                with self.assertRaises(ValueError):
+                    load(path)
+        # 실제 등록부의 예전 번호는 지금 감시하는 번호와 겹치지 않는다.
+        mains = {i.cik for i in load()}
+        for inv in load():
+            self.assertFalse({c for c, _ in inv.predecessors} & mains)
 
     def test_books_reads_every_registered_investor_file(self):
         with tempfile.TemporaryDirectory() as directory:
