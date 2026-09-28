@@ -429,8 +429,16 @@ def continuity(cand, report, contact):
     if not old or not new or not old.get("_filings") or not new.get("_filings"):
         print("  이어짐 확인: 두 번호의 목록을 다 받지 못했습니다")
         return
+    # 새 번호의 '처음'은 옛 번호가 멈춘 **뒤의** 첫 분기다. 새 번호가 그 전부터 다른
+    # 것을 내고 있었을 수 있다(애크먼: 지주회사가 2025년부터 하워드 휴즈 한 종목만 냄).
+    # 그냥 첫 공시를 잡았더니 −274일 짜리 엉뚱한 비교가 나왔다(정찰 5차).
+    last_old = old["_filings"][-1]
+    after = [f for f in new["_filings"] if f["period"] > last_old["period"]]
+    if not after:
+        print("  이어짐 확인: 옛 번호가 멈춘 뒤의 새 공시가 없습니다")
+        return
     sides = []
-    for side, f in (("옛 마지막", old["_filings"][-1]), ("새 처음", new["_filings"][0])):
+    for side, f in (("옛 마지막", last_old), ("새 처음", after[0])):
         f13.CIK = old["cik"] if side == "옛 마지막" else new["cik"]
         xml, cover = f13.filing_docs(f["accession"], contact)
         if xml is f13.NO_XML or not xml:
@@ -455,10 +463,73 @@ def continuity(cand, report, contact):
     print(f"    옛 마지막 금액 중 새 처음에도 있는 몫 {pct(kept_old)}"
           f" · 새 처음 금액 중 옛 마지막에도 있던 몫 {pct(kept_new)}")
     gap = (date.fromisoformat(fn["period"]) - date.fromisoformat(fo["period"])).days
-    print(f"    두 분기 사이 {gap}일" + ("  (바로 다음 분기)" if gap <= 92 else "  ← 빈 분기가 있습니다"))
+    print(f"    두 분기 사이 {gap}일" + ("  (바로 다음 분기)" if 0 < gap <= 92 else "  ← 빈 분기가 있습니다"))
     report["continuity"] = {"old": fo["period"], "new": fn["period"], "gap_days": gap,
                             "shared_issuers": len(both), "kept_old": kept_old,
                             "kept_new": kept_new, "old_cover": wo, "new_cover": wn}
+    overlap(cand, old, new, after[0], contact, report)
+
+
+def holdings_of(cik, filing, contact):
+    """한 공시의 주식(옵션 아님)을 CUSIP 9자리별 {이름, 주식수, 금액} 으로."""
+    f13.CIK = cik
+    xml, _ = f13.filing_docs(filing["accession"], contact)
+    if xml is f13.NO_XML or not xml:
+        return None
+    rows = f13.rows_of(xml)
+    scale, _ = f13.unit_scale(rows, filing["filed"])
+    out = {}
+    for h in f13.fold(rows, scale):
+        if h.get("putCall") or h.get("type", "SH") != "SH":
+            continue
+        a = out.setdefault(h["cusip"], {"name": h["name"], "shares": 0, "value": 0})
+        a["shares"] += h["shares"]
+        a["value"] += h["value"]
+    return out
+
+
+def overlap(cand, old, new, first_after, contact, report):
+    """두 번호가 **같은 분기**를 둘 다 낸 경우 — 합칠지, 겹치는 것을 한 번만 셀지 가린다.
+
+    애크먼: 옛 번호(펀드들)와 새 번호(지주회사)가 2025-06-30 ~ 2026-03-31 에 각자 냈고,
+    2026-06-30 부터는 새 번호가 둘을 합쳐 낸다. 두 공시에 같이 나오는 종목의 주식 수를
+    나란히 찍고, 합쳐 낸 첫 분기의 주식 수와 견준다 —
+      합계 ≈ 다음 분기  → 서로 다른 주머니(더한다)
+      한쪽 ≈ 다음 분기  → 같은 주식을 두 번 신고(한 번만 센다)"""
+    olds = {f["period"]: f for f in old["_filings"]}
+    shared_periods = [f for f in new["_filings"] if f["period"] in olds]
+    if not shared_periods:
+        return
+    print(f"\n  ── 같은 분기를 두 번호가 다 냄: {len(shared_periods)}분기 ──")
+    rows_out, keys = [], set()
+    for fn in shared_periods:
+        a = holdings_of(old["cik"], olds[fn["period"]], contact)
+        b = holdings_of(new["cik"], fn, contact)
+        if a is None or b is None:
+            print(f"    {fn['period']}: 원문을 받지 못했습니다")
+            continue
+        both = sorted(set(a) & set(b))
+        keys |= set(both)
+        print(f"    {fn['period']}  옛 {len(a)}종목 ${sum(x['value'] for x in a.values())/1e9:,.2f}B"
+              f" · 새 {len(b)}종목 ${sum(x['value'] for x in b.values())/1e9:,.2f}B · 둘 다 {len(both)}")
+        for c in both:
+            print(f"      {c} {a[c]['name'][:28]:<28} 옛 {a[c]['shares']:>14,}주"
+                  f" · 새 {b[c]['shares']:>14,}주 · 합 {a[c]['shares']+b[c]['shares']:>14,}주")
+        only_b = sorted(set(b) - set(a))
+        if only_b:
+            print("      새 번호에만: " + ", ".join(f"{b[c]['name'][:24]} {b[c]['shares']:,}주" for c in only_b))
+        rows_out.append({"period": fn["period"], "both": {c: [a[c]["shares"], b[c]["shares"]] for c in both},
+                         "only_new": {c: b[c]["shares"] for c in only_b}})
+    nxt = holdings_of(new["cik"], first_after, contact)
+    if nxt is not None:
+        for c in sorted(keys):
+            if c in nxt:
+                print(f"    합쳐 낸 첫 분기 {first_after['period']}: {c} {nxt[c]['name'][:28]} {nxt[c]['shares']:,}주")
+            else:
+                print(f"    합쳐 낸 첫 분기 {first_after['period']}: {c} 없음")
+    report["overlap"] = {"periods": rows_out,
+                         "next": {c: (nxt or {}).get(c, {}).get("shares") for c in keys},
+                         "next_period": first_after["period"]}
 
 
 def main():
