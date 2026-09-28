@@ -1,0 +1,65 @@
+# 대가들의 선택 — 새 투자자 후보 정찰
+#
+# 2026-09-28 에 정한 여덟 명 중 아직 안 넣은 여섯 곳(리루·그린블라트·달리오·
+# 드러켄밀러·애크먼·테퍼)의 최근 13F 를 받아, 종목 수·상위 비중·분기마다
+# 바뀌는 정도·ETF 비중을 로그에 찍습니다. 비교 기준으로 버크셔도 같이 잽니다.
+#
+# 개발 환경에서는 SEC 에 닿지 않습니다(프록시가 끊습니다). 러너에서는 됩니다.
+# 그래서 **짐작해서 넣지 않고** 여기서 한 번 받아 봅니다.
+# probe-sec.yml · probe-annual.yml 과 같은 요령입니다.
+#
+# 예약 실행은 없습니다. Actions 탭에서 손으로 누를 때만 돕니다.
+# 저장소에 아무것도 커밋하지 않습니다(`contents: read`).
+name: Probe Titans
+
+on:
+  workflow_dispatch:
+    inputs:
+      depth:
+        description: "후보마다 최근 몇 분기"
+        required: false
+        default: "8"
+      only:
+        description: "몇 곳만 (쉼표로 · 비우면 전부)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 내려받기
+        uses: actions/checkout@v4
+
+      - name: 파이썬 준비
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # 비밀값이 없으면 여기서 종료코드 1 로 끝납니다. 손으로 돌린 것은
+      # "되는지 확인해 달라"는 뜻이라, 조용히 넘어가면 초록불인데 빈손이 됩니다.
+      - name: 정찰
+        env:
+          SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
+          # 입력값을 명령줄에 바로 끼워 넣지 않습니다.
+          DEPTH: ${{ inputs.depth }}
+          ONLY: ${{ inputs.only }}
+        run: |
+          set -o pipefail
+          python -u scripts/probe_titans.py --depth "$DEPTH" --only "$ONLY" 2>&1 \
+            | tee titans-probe-console.log
+
+      # 실패해도 받아 온 데까지는 올립니다.
+      - name: 원본 올리기
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: titans-probe
+          path: |
+            titans-probe/
+            titans-probe-console.log
+          if-no-files-found: warn
+          retention-days: 14
