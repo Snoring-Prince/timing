@@ -68,7 +68,7 @@ value        Warren Buffett / Berkshire Hathaway      built
 value        Li Lu / Himalaya Capital                 Munger's manager; CN/HK names not in 13F
 value        Seth Klarman / Baupost                   replaces Greenblatt (see below)
 growth       Cathie Wood / ARK                        DEFERRED: ARK self-publishes daily; do last
-distressed   Howard Marks / Oaktree                   CANDIDATE (probe run 3) — replaces Dalio
+distressed   Howard Marks / Oaktree                   DECIDED (probe run 3) — replaces Dalio
 macro        Stanley Druckenmiller / Duquesne FO      macro; 13F = stock sleeve only
 activist     Bill Ackman / Pershing Square            ~8-10 names
 contrarian   David Tepper / Appaloosa                 options excluded; TWO CIKs stitched (below)
@@ -156,6 +156,23 @@ Tepper (old) 2015-12-31     47   100%       12.8%           2%
 - **Ackman Q2 still absent**, no other Pershing 13F filer in search. Run 3 prints
   the latest 13F-family forms (incl. 13F-NT) per CIK.
 - O'Neil: `O'Neil Global Advisors, Inc.` (CIK 0001861159) — a firm, not his book; not added.
+
+### Probe run 3 (2026-09-28, run 36376757948) — what it settled
+
+- **Marks IN (owner).** OAKTREE CAPITAL MANAGEMENT LP, CIK 0000949509 confirmed.
+  Latest 13F $7.2B: SH $3.8B (48 issuers, top 50 = 100%, median new/qtr 18%),
+  options $1.9B, PRN $1.5B — the SH-only screen shows about half. Units normal
+  (median value/shares $16.56). 66 amendments over 27 years.
+- **Ackman Q2 2026 = 13F-NT** (filed 2026-08-14): his holdings were reported by
+  another manager. The probe now reads the 13F-NT cover's otherManager block
+  (name / 028- file number / CIK). Do not register him until that filer is known.
+- Klarman/Druckenmiller thousands confirmed again. **Fixed in the collector:**
+  `fetch_13f.unit_by()` compares each filing's value/shares with the same CUSIPs'
+  prices in the previous stored quarter; flips the date rule only when the date
+  reading is >100x off and the other unit is within 10x (≥3 shared names), else
+  follows the previous same-era quarter's unit, else the date rule. Records
+  `unit_by` on the quarter when it overrides. Berkshire's 110 consecutive pairs
+  read identically (test). Price level alone still never decides the unit.
 - **Verify first:** `scripts/probe_titans.py` + `probe-titans.yml` (manual). CIKs
   in it are from memory; it prints the SEC entity name next to each.
 

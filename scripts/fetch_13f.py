@@ -33,6 +33,7 @@
 
 import argparse
 import json
+import math
 import os
 import re
 import sys
@@ -94,17 +95,57 @@ def rows_of(xml: bytes) -> list[dict]:
     return out
 
 
-def unit_scale(rows: list[dict], filed: str) -> tuple[int, float]:
+def date_scale(filed: str) -> int:
     """SEC EDGAR 22.4.1 (2023-01-03): thousands → dollars by filing date.
 
     SEC: https://content.govdelivery.com/accounts/USSEC/bulletins/3401c41
-    An amendment to an older quarter follows its own submission date.
-    The median is diagnostic only; unknown dates must not guess a unit.
-    """
-    submitted = date.fromisoformat(filed)
+    An amendment to an older quarter follows its own submission date."""
+    return 1000 if date.fromisoformat(filed) < date(2023, 1, 3) else 1
+
+
+UNIT_OF = {"thousands": 1000, "usd": 1}     # 저장된 표식 → 배수 (없으면 모름)
+
+
+def anchor_prices(holdings) -> dict:
+    """저장된 분기의 **분기말 가격**(달러 금액 ÷ 주식수) — 다음 공시의 단위를 가릴 자."""
+    return {h["cusip"]: h["value"] / h["shares"] for h in holdings or []
+            if not h.get("putCall") and (h.get("type") or "SH") == "SH"
+            and h.get("shares", 0) > 0 and h.get("value", 0) > 0}
+
+
+def unit_by(rows: list[dict], filed: str, anchor=None, habit=None) -> tuple[int, str]:
+    """금액 단위(1 = 달러, 1000 = 천 달러)와 그렇게 정한 근거.
+
+    기본은 제출일 규칙입니다. 그런데 **2023년 이후에도 천 달러로 내는 곳이
+    있습니다**(정찰 2·3차: 드러켄밀러·클라만, 금액÷주식수 $0.09·$0.13).
+    **주가 수준만으로 정하면 안 됩니다** — 값싼 주식만 든 투자자를 틀리게
+    잡습니다(아래 검사). 그래서 **같은 종목의 직전 분기 가격**과 견줍니다.
+    한 분기 사이에 주가가 1000배 움직이는 일은 없으므로, 날짜 규칙으로 읽은
+    값이 100배 넘게 어긋나고 다른 단위로 읽은 값이 10배 안에 들어올 때만
+    뒤집습니다. 겹치는 종목이 셋이 안 되면 같은 시대(2023년 전/후)의 직전
+    분기 단위(`habit`)를 따르고, 그것도 없으면 날짜 규칙입니다."""
+    by_date = date_scale(filed)
+    if anchor:
+        pairs = [(r["value"] / r["shares"], anchor[r["cusip"]]) for r in rows
+                 if not r.get("putCall") and (r.get("type") or "SH") == "SH"
+                 and r.get("shares", 0) > 0 and r.get("value", 0) > 0
+                 and anchor.get(r["cusip"], 0) > 0]
+        if len(pairs) >= 3:
+            off = {s: abs(median(math.log10(raw * s / a) for raw, a in pairs)) for s in (1, 1000)}
+            other = 1 if by_date == 1000 else 1000
+            if off[by_date] > 2 and off[other] < 1:
+                return other, "prev-quarter"
+            return by_date, "date"
+    if habit in (1, 1000):
+        return habit, ("date" if habit == by_date else "habit")
+    return by_date, "date"
+
+
+def unit_scale(rows: list[dict], filed: str, anchor=None, habit=None) -> tuple[int, float]:
+    """단위와 금액÷주식수 중앙값(로그용). unknown dates must not guess a unit."""
     r = [x["value"] / x["shares"] for x in rows
          if x["type"] == "SH" and x["shares"] > 0 and x["value"] > 0]
-    return (1000 if submitted < date(2023, 1, 3) else 1), (median(r) if r else 0.0)
+    return unit_by(rows, filed, anchor, habit)[0], (median(r) if r else 0.0)
 
 
 def fold(rows: list[dict], scale: int) -> list[dict]:
@@ -275,7 +316,7 @@ def amend_info(cover: bytes | None) -> dict:
     return out
 
 
-def one_doc(acc: str, contact: str, filed=None):
+def one_doc(acc: str, contact: str, filed=None, anchor=None, habit=None):
     """한 건을 받아 줄을 **달러로 환산해서** 돌려줍니다.
 
     분기마다 금액 단위가 다를 수 있으므로(천 달러/달러) 합치기 전에 먼저
@@ -292,18 +333,18 @@ def one_doc(acc: str, contact: str, filed=None):
     if not rows:
         return None, "줄이 없음"
     try:
-        scale, _ = unit_scale(rows, filed)
+        scale, _ = unit_scale(rows, filed, anchor, habit)
     except (TypeError, ValueError):
         return None, "제출일을 몰라 금액 단위를 정하지 못함"
     for r in rows:
         r["value"] *= scale
     ctot, cent = cover_totals(cover)
-    return {"acc": acc, "rows": rows, "scale": scale,
+    return {"acc": acc, "rows": rows, "scale": scale, "filed": filed,
             "total": ctot * scale if ctot else None, "lines": cent,
             "amend": amend_info(cover)}, None
 
 
-def merge_amendments(base: dict, accs: list[str], contact: str, filing_dates=None):
+def merge_amendments(base: dict, accs: list[str], contact: str, filing_dates=None, anchor=None):
     """원본에 정정을 차례대로 적용합니다. `(결과, 잘못된 이유)` 를 돌려줍니다.
 
     **차례는 `amended_by` 배열 순서가 아니라 `amendmentNo` 입니다.**
@@ -312,7 +353,14 @@ def merge_amendments(base: dict, accs: list[str], contact: str, filing_dates=Non
     전체 재작성이 그것을 통째로 덮어써서 **조용히 사라집니다.**"""
     plans = []
     for acc in accs:
-        doc, why = one_doc(acc, contact, (filing_dates or {}).get(acc))
+        filed = (filing_dates or {}).get(acc)
+        # 정정도 원본과 같은 투자자가 낸 것이라 같은 시대면 원본의 단위를 따릅니다
+        # (추가분은 새 종목뿐이라 직전 가격과 겹치지 않을 수 있습니다).
+        try:
+            habit = base["scale"] if filed and date_scale(filed) == date_scale(base["filed"]) else None
+        except (TypeError, ValueError):
+            habit = None
+        doc, why = one_doc(acc, contact, filed, anchor, habit)
         if not doc:
             return None, f"{acc} {why}"
         kind = doc["amend"]["type"]
@@ -365,7 +413,10 @@ def apply_amendments(quarters: list[dict], contact: str, filing_dates=None) -> t
         if {a.get("accession") for a in (q.get("amended_applied") or [])} == set(accs):
             continue
 
-        base, why = one_doc(q["accession"], contact, q.get("filed"))
+        # 원본은 저장해 둔 자기 자신의 가격과 단위가 자입니다.
+        anchor = anchor_prices(q.get("holdings"))
+        base, why = one_doc(q["accession"], contact, q.get("filed"), anchor,
+                            UNIT_OF.get(q.get("unit")))
         if not base:
             if why == "pre-xml":
                 # 2013년 중반 이전은 텍스트 공시입니다. 사용자가 **투자자별
@@ -378,7 +429,7 @@ def apply_amendments(quarters: list[dict], contact: str, filing_dates=None) -> t
             unmerged.append(f"{q['period']} (원본을 {why})")
             continue
 
-        merged, bad = merge_amendments(base, accs, contact, filing_dates)
+        merged, bad = merge_amendments(base, accs, contact, filing_dates, anchor)
         if bad:
             # 합치지 않고 **원본 숫자를 그대로 둡니다.** 반쯤 합친 분기를
             # 남기는 것보다 안 합친 것이 낫습니다.
@@ -512,8 +563,16 @@ def main(slug=None) -> int:
             print(f"    {f['period']} 줄이 하나도 없습니다 — 건너뜁니다")
             failed += 1
             continue
+        # 단위를 가릴 자: 이미 알고 있는 **바로 앞 분기**(저장된 것이든 이번에 받은 것이든).
+        before = [x for x in saved.values() if x["period"] < f["period"]]
+        last = max(before, key=lambda x: x["period"]) if before else None
+        anchor = anchor_prices(last["holdings"]) if last else None
         try:
-            scale, ratio = unit_scale(rows, f.get("filed"))
+            habit = None
+            if last and last.get("filed") and date_scale(last["filed"]) == date_scale(f.get("filed")):
+                habit = UNIT_OF.get(last.get("unit"))
+            scale, ratio = unit_scale(rows, f.get("filed"), anchor, habit)
+            how = unit_by(rows, f.get("filed"), anchor, habit)[1]
         except (TypeError, ValueError):
             print(f"    {f['period']} 제출일이 없어 금액 단위를 정하지 못했습니다")
             failed += 1
@@ -525,6 +584,9 @@ def main(slug=None) -> int:
              "accession": f["accession"], "lines": len(rows),
              "unit": "thousands" if scale == 1000 else "usd",
              "total": total, "holdings": held}
+        if how != "date":
+            # 제출일 규칙과 다르게 읽었다는 사실을 자료에 남깁니다(검산할 수 있게).
+            q["unit_by"] = how
 
         # 우리 합계를 **공시가 스스로 밝힌 총액**과 맞춰 봅니다. 이게 맞으면
         # 줄을 빠뜨리지도, 단위를 잘못 잡지도 않았다는 뜻입니다. 화면을 만들기

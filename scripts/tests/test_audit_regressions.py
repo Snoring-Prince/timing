@@ -218,3 +218,61 @@ class AuxiliaryRetryTests(unittest.TestCase):
 
 if __name__=='__main__':
     unittest.main()
+
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+class FilerUnitTests(unittest.TestCase):
+    """2023년 이후에도 천 달러로 내는 곳이 있습니다(드러켄밀러·클라만, 정찰 2·3차).
+    날짜 규칙만 보면 금액이 1000배 작아집니다. 직전 분기 가격으로 가립니다."""
+
+    @staticmethod
+    def raw(q, scale):
+        # 저장된 분기(달러)를 공시가 적었을 모양으로 되돌립니다.
+        return [{'cusip': h['cusip'], 'value': h['value'] / scale, 'shares': h['shares'],
+                 'type': h.get('type') or 'SH', 'putCall': h.get('putCall', '')}
+                for h in q['holdings']]
+
+    def book(self):
+        b = json.loads((ROOT / 'data/titans/berkshire.json').read_text(encoding='utf8'))
+        return [q for q in b['quarters'] if q.get('unit')]
+
+    def test_28_years_of_berkshire_read_exactly_as_before(self):
+        # 이 장치가 멀쩡한 분기를 한 번이라도 뒤집으면 안 됩니다.
+        qs = self.book()
+        for prev, q in zip(qs, qs[1:]):
+            scale = f.UNIT_OF[q['unit']]
+            habit = f.UNIT_OF[prev['unit']] if f.date_scale(prev['filed']) == f.date_scale(q['filed']) else None
+            got = f.unit_by(self.raw(q, scale), q['filed'], f.anchor_prices(prev['holdings']), habit)
+            self.assertEqual(got, (scale, 'date'), q['period'])
+
+    def test_a_filer_still_writing_thousands_after_2023_is_caught(self):
+        qs = [q for q in self.book() if q['unit'] == 'usd']
+        for prev, q in zip(qs, qs[1:]):
+            got = f.unit_by(self.raw(q, 1000), q['filed'], f.anchor_prices(prev['holdings']), None)
+            self.assertEqual(got, (1000, 'prev-quarter'), q['period'])
+
+    def test_few_shared_names_follow_the_previous_quarter_of_the_same_era(self):
+        rows = [{'cusip': 'NEW000100', 'value': 50, 'shares': 1000, 'type': 'SH', 'putCall': ''}]
+        self.assertEqual(f.unit_by(rows, '2025-05-15', {'OLD000100': 10.0}, 1000), (1000, 'habit'))
+        self.assertEqual(f.unit_by(rows, '2025-05-15', None, None), (1, 'date'))
+
+    def test_the_collector_stores_dollars_for_a_thousands_filer(self):
+        def tab(v):
+            return table([('A', '111111111', v, 100), ('B', '222222222', v, 100), ('C', '333333333', v, 100)])
+        docs = {'q1': (tab(5), cover(total=15, lines=3)),        # 2022 · 천 달러 · $50/주
+                'q2': (tab(6), cover(total=18, lines=3))}        # 2024 · 그래도 천 달러 · $60/주
+        filings = [{'period': '2022-09-30', 'filed': '2022-11-14', 'accession': 'q1'},
+                   {'period': '2024-09-30', 'filed': '2024-11-14', 'accession': 'q2'}]
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / 'book.json'
+            with patch.dict(os.environ, {'SEC_CONTACT': 'fixture'}), patch.object(f, 'OUT', str(out)), \
+                    patch.object(f, 'ALERT', str(Path(tmp) / 'alert.txt')), \
+                    patch.object(f, 'list_filings', return_value=(filings, [])), \
+                    patch.object(f, 'filing_docs', side_effect=lambda acc, _: docs[acc]), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                f.main()
+            q2 = json.loads(out.read_text())['quarters'][-1]
+        self.assertEqual(q2['total'], 18000)
+        self.assertEqual((q2['unit'], q2['unit_by']), ('thousands', 'prev-quarter'))
