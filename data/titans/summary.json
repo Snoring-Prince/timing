@@ -53,6 +53,33 @@
      "w": 15.0
     }
    ]
+  },
+  {
+   "slug": "appaloosa",
+   "name": {
+    "en": "Appaloosa",
+    "ko": "애팔루사"
+   },
+   "since": 2013,
+   "period": "2026-06-30",
+   "filed": "2026-08-14",
+   "quarters": 53,
+   "total": 7471257999,
+   "stocks": 25,
+   "top": [
+    {
+     "name": "Amazon Com Inc",
+     "w": 16.0
+    },
+    {
+     "name": "Micron Technology Inc",
+     "w": 15.1
+    },
+    {
+     "name": "Taiwan Semiconductor Manufac",
+     "w": 10.5
+    }
+   ]
   }
  ]
 }
