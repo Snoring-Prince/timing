@@ -74,6 +74,32 @@ class SkippedFilingsTests(unittest.TestCase):
             new={**amendment,'accession':'later'}
             self.assertEqual(watch.changed(inv,[new]),[new])
 
+    def test_xml_amendment_of_a_text_original_is_a_known_state_not_a_weekly_failure(self):
+        # 오크트리 2013-03-31: 원본은 텍스트, 정정(0000949509-13-000021)만 XML.
+        # 합칠 원본이 없으니 기록만 하고 초록불. 통신 실패만 실패로 셉니다.
+        for amend_doc,code in [('<xml/>',0),(None,1)]:
+            with self.subTest(amend_doc=amend_doc),tempfile.TemporaryDirectory() as tmp:
+                out=Path(tmp)/'book.json'
+                inv=SimpleNamespace(output=out,since=2013,name={'ko':'샘플'})
+                recent={'period':'2026-03-31','filed':'2026-05-14','accession':'recent'}
+                old={'period':'2013-03-31','filed':'2013-05-14','accession':'text'}
+                amendment={**old,'filed':'2013-11-14','accession':'xml-amend'}
+                out.write_text(json.dumps({'quarters':[{**recent,'holdings':[],'total':0}]}),encoding='utf-8')
+                docs={'text':(f.NO_XML,None),'xml-amend':(amend_doc,None)}
+                with patch.dict(os.environ,{'SEC_CONTACT':'fixture'}), patch.object(f,'configure',return_value=inv), \
+                     patch.object(f,'OUT',str(out)), patch.object(f,'ALERT',str(Path(tmp)/'alert.txt')), \
+                     patch.object(f,'list_filings',return_value=([old,recent],[amendment])), \
+                     patch.object(f,'filing_docs',side_effect=lambda acc,_:docs[acc]) as fetch, \
+                     contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(f.main('sample'),code)
+                    if code:
+                        continue
+                    fetch.reset_mock()
+                    self.assertEqual(f.main('sample'),0)
+                    fetch.assert_not_called()
+                reasons={s['accession']:s['reason'] for s in json.loads(out.read_text())['skipped_filings']}
+                self.assertEqual(reasons,{'text':'pre-xml','xml-amend':'original-pre-xml'})
+
     def test_failed_text_request_is_not_recorded_as_intentionally_skipped(self):
         with tempfile.TemporaryDirectory() as tmp:
             out=Path(tmp)/'book.json'

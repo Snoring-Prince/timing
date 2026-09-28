@@ -686,9 +686,16 @@ def main(slug=None) -> int:
             xml, _ = filing_docs(f["accession"], contact)
             if xml is NO_XML:
                 skipped[f["accession"]] = {**f, "reason": "pre-xml"}
+            elif xml:
+                # 원본은 텍스트라 건너뛰었는데 정정만 XML 로 나온 경우입니다
+                # (오크트리 2013-03-31 — 원본 2013-05, 정정은 XML 이 의무가 된 뒤).
+                # 덧붙일 원본이 없으니 합칠 수 없고, 매주 다시 받아도 답이 같습니다.
+                # 실패로 세면 매주 빨간불이 켜져 진짜 실패가 묻힙니다(6-2).
+                skipped[f["accession"]] = {**f, "reason": "original-pre-xml"}
+                print(f"    {f['period']} 정정은 XML 인데 원본이 텍스트라 합치지 않습니다: {f['accession']}")
             else:
                 failed += 1
-                print(f"    {f['period']} 정정의 원본 분기가 없습니다: {f['accession']}")
+                print(f"    {f['period']} 정정 원문을 받지 못했습니다: {f['accession']}")
     if skipped:
         doc["skipped_filings"] = sorted(skipped.values(), key=lambda f: (f["period"], f["accession"]))
     if doc != prev:
