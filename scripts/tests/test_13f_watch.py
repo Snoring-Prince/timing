@@ -34,6 +34,9 @@ class RegistryTests(unittest.TestCase):
                 self.assertIn(f'cik  : "{investor.cik}"', html)
                 self.assertIn(f'data : "../../data/titans/{investor.slug}.json"', html)
                 self.assertIn(f'since: {investor.since}', html)
+                # 공유 창고(prices.json)가 아니라 자기 몫만 받는다 — 여덟 명분을
+                # 한꺼번에 받게 하지 않으려는 것이다.
+                self.assertIn(f'prices: "../../data/titans/prices/{investor.slug}.json"', html)
                 self.assertIn(investor.name["en"], html)
                 self.assertIn(investor.name["ko"], html)
 

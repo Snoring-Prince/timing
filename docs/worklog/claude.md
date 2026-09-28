@@ -5,6 +5,23 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+정찰 1차 결과 반영 · 그린블라트→클라만 · 주가 파일을 투자자별로 나눔
+- 파일: scripts/fetch_prices.py · titans/berkshire/index.html ·
+  data/titans/prices/berkshire.json(새, 봇이 만듦) · .github/workflows/update-prices.yml ·
+  .github/workflows/check-titans.yml · scripts/probe_titans.py ·
+  .github/workflows/probe-titans.yml · scripts/tests/test_prices.py ·
+  scripts/tests/test_13f_watch.py · scripts/tests/titans.test.cjs · CLAUDE.md ·
+  docs/masters-13f.md · docs/design-system.md · 이 일지
+- 규칙: prices.json 은 봇의 공유 창고, 화면은 `prices/<slug>.json`(그 투자자 최신
+  보유만)을 받는다. `fetch_prices.py --publish` 가 받지 않고 다시 만든다.
+  정찰 run 36369828081: 여섯 CIK 다 맞음. 그린블라트는 사용자 판단으로 뺌(클라만).
+  테퍼는 두 CIK 를 잇는다(옛 번호는 한 번만).
+- 굳힘: 드러켄밀러 총액 $0.0B(단위 의심, 확인 전) · 애크먼 2분기 공시 없음 —
+  둘 다 등록 전에 확인. 매일 가격 덮어쓰기의 저장소 증가는 거의 0(7판 525KB).
+- 넘김: 머지 뒤 사용자가 Probe Titans 를 다시 누르면 클라만 CIK·오닐 이름·
+  드러켄밀러 금액÷주식수가 나온다. 그다음 리루부터 한 명씩.
+
+## 2026-09-28 · Claude · PR #89
 대가들의 선택 여덟 명 확정 · 새 후보 여섯 곳 정찰 만듦
 - 파일: scripts/probe_titans.py · .github/workflows/probe-titans.yml · CLAUDE.md ·
   docs/masters-13f.md · 이 일지

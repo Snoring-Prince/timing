@@ -57,6 +57,7 @@ from titans.sec import get
 OUT_DIR = "titans-probe"
 
 # 후보 — 사용자와 정한 여섯 곳 + 비교 기준 버크셔.
+# 테퍼는 두 CIK 를 이어 붙이기로 했습니다(2026-09-28) — 옛 번호는 2015년에 멈췄으니 한 번만 받으면 됩니다.
 # `cik` 는 기억에서 온 값이라 틀릴 수 있습니다. `search` 로 이름 검색을 같이 합니다.
 # 아팔루사는 운용 법인이 2016년에 바뀌어 옛 CIK 도 같이 봅니다.
 CANDIDATES = [
@@ -64,8 +65,10 @@ CANDIDATES = [
      "ciks": ["0001067983"], "search": "Berkshire Hathaway"},
     {"slug": "himalaya",    "who": "Li Lu",                "style": "value",
      "ciks": ["0001709323"], "search": "Himalaya Capital"},
-    {"slug": "gotham",      "who": "Joel Greenblatt",      "style": "formula",
-     "ciks": ["0001510387"], "search": "Gotham Asset Management"},
+    # 그린블라트(고담)는 1차 정찰(2026-09-28)에서 1,571종목 · 상위 50이 41% ·
+    # 1위가 S&P 500 ETF 라 뺐습니다(사용자 판단). 대신 클라만입니다.
+    {"slug": "baupost",     "who": "Seth Klarman",         "style": "value",
+     "ciks": ["0001061768"], "search": "Baupost"},
     {"slug": "bridgewater", "who": "Ray Dalio",            "style": "macro",
      "ciks": ["0001350694"], "search": "Bridgewater Associates"},
     {"slug": "duquesne",    "who": "Stanley Druckenmiller", "style": "macro",
@@ -95,7 +98,7 @@ def save(path, data):
 
 
 def search_names(term, contact):
-    """EDGAR 회사 검색(13F-HR 을 낸 곳). 받은 것을 저장하고 CIK·이름만 어림으로 뽑습니다."""
+    """EDGAR 회사 검색(13F-HR 을 낸 곳). 받은 것을 저장하고 CIK 를 모아 제출 목록의 이름을 붙입니다."""
     url = ("https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany"
            f"&company={quote(term)}&type=13F-HR&dateb=&owner=include&count=40&output=atom")
     body = get(url, contact)
@@ -103,20 +106,21 @@ def search_names(term, contact):
         return None
     text = body.decode("utf-8", "replace")
     save(f"search/{re.sub(r'[^A-Za-z0-9]+', '_', term)}.xml", body)
-    hits = []
-    # 회사가 여럿이면 목록, 하나면 그 회사의 공시 목록이 옵니다. 둘 다 훑습니다.
-    for m in re.finditer(r"<cik>(\d+)</cik>.*?<name>([^<]+)</name>", text, re.S):
-        hits.append((m.group(1).zfill(10), m.group(2).strip()))
-    for m in re.finditer(r"<name>([^<]+)</name>.*?<cik>(\d+)</cik>", text, re.S):
-        hits.append((m.group(2).zfill(10), m.group(1).strip()))
-    for m in re.finditer(r"CIK=(\d{10})[^>]*>\s*([^<]{2,80})<", text):
-        hits.append((m.group(1), m.group(2).strip()))
-    seen, out = set(), []
-    for cik, name in hits:
-        if cik not in seen:
-            seen.add(cik)
-            out.append((cik, name))
-    return {"bytes": len(body), "hits": out[:15], "head": "" if out else text[:600]}
+    # 회사가 여럿이면 목록, 하나면 그 회사의 공시 목록이 옵니다. **번호만** 모읍니다 —
+    # 이름은 아래에서 제출 목록으로 받습니다.
+    ciks = [c.zfill(10) for c in re.findall(r"<cik>(\d+)</cik>", text)]
+    ciks += re.findall(r"CIK=(\d{10})", text)
+    out = list(dict.fromkeys(ciks))
+    # 1차 실행에서 이름 칸에 'Webmaster'(피드 작성자)가 찍혔습니다. atom 의 모양을
+    # 짐작해 고치지 않고, 이미 읽을 줄 아는 제출 목록에서 **진짜 이름**을 받습니다.
+    named = []
+    for cik in out[:8]:
+        raw = get(f"https://data.sec.gov/submissions/CIK{cik}.json", contact)
+        try:
+            named.append((cik, json.loads(raw)["name"] if raw else "(이름 못 받음)"))
+        except (ValueError, KeyError):
+            named.append((cik, "(이름 못 읽음)"))
+    return {"bytes": len(body), "hits": named, "head": "" if out else text[:600]}
 
 
 def issuer_rows(held):
@@ -144,7 +148,12 @@ def measure(held, total):
         n80 += 1
         if cum >= 0.8 * stock_total:
             break
+    # 금액 ÷ 주식수 중앙값 = 대략 주가. 1달러 아래로 나오면 금액이 '천 달러'
+    # 단위일 가능성이 큽니다(드러켄밀러 총액이 $0.0B 로 나온 까닭을 가리는 한 줄).
+    per = sorted(h["value"] / h["shares"] for h in held
+                 if h.get("shares") and not h.get("putCall") and h.get("type", "SH") == "SH")
     return {
+        "implied_price_median": per[len(per) // 2] if per else None,
         "positions_all": len(held),
         "issuers_sh": len(sh),
         "total_all": total,
@@ -250,6 +259,9 @@ def probe_one(cand, contact, depth):
               f" · 주식 발행사 {cur['issuers_sh']:,} · 원문 {cur['bytes']/1e6:.1f}MB")
         print(f"      총액 ${cur['total_all']/1e9:,.1f}B (주식 ${cur['total_sh']/1e9:,.1f}B)"
               + (f" · 표지 총액 ${cur['cover_total']/1e9:,.1f}B" if cur["cover_total"] else ""))
+        if cur.get("implied_price_median") is not None:
+            print(f"      금액÷주식수 중앙값 ${cur['implied_price_median']:,.2f}"
+                  + ("  ← 1달러 아래: 금액이 천 달러 단위일 수 있습니다" if cur["implied_price_median"] < 1 else ""))
         print(f"      옵션 {cur['options']['count']}줄 ${cur['options']['value']/1e9:,.1f}B"
               f" · 원금(PRN) {cur['prn']['count']}줄 ${cur['prn']['value']/1e9:,.1f}B"
               f" · 이름으로 어림한 ETF {pct(cur['etf_name_share'])}")

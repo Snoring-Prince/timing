@@ -22,9 +22,15 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 from fetch_tickers import norm  # noqa: E402
+from titans import registry  # noqa: E402
 from titans.registry import books, is_share  # noqa: E402
 
 OUT = ROOT / "data/titans/prices.json"
+# 방문자는 공유 창고(OUT)가 아니라 **자기 투자자의 몫**만 받는다.
+# 창고는 봇이 쓰는 것이다 — 같은 종목을 여러 투자자가 들고 있어도 한 번만
+# 받고, 분할을 한 번만 훑는다. 투자자 몫은 그 창고에서 잘라 낸 것이라 손으로
+# 고치지 않는다(대시보드의 `data/dashboard/` 와 같은 요령).
+PER = ROOT / "data/titans/prices"
 UTC = dt.timezone.utc
 NY = ZoneInfo("America/New_York")
 # 가격은 15년치만 저장하지만 **분할은 그 종목이 공시에 처음 나온 분기까지**
@@ -247,24 +253,60 @@ def collect(required, previous, now, full=False, known=None, since=None):
     return result, errors
 
 
+def write_if_changed(path, data):
+    text = json.dumps(data, ensure_ascii=False, separators=(",", ":"))+"\n"
+    if path.exists() and path.read_text(encoding="utf-8") == text:
+        return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, path)
+    return True
+
+
+def publish(cache, pairs, folder=None):
+    """투자자마다 **그 사람의 최신 보유 종목만** 담은 파일을 쓴다.
+
+    여덟 명이 한 파일을 같이 쓰면 버크셔 화면을 여는 사람도 여덟 명분을
+    받는다. 창고에 아직 없는 종목(오늘 처음 들어온 것)은 빠지고, 화면은 그
+    줄만 분기말 가격으로 그린다 — 지금과 같다."""
+    folder = folder or PER
+    series = cache.get("series", {})
+    written = []
+    for slug, book in pairs:
+        own = {c: series[c] for c in sorted(required_cusips([book])) if c in series}
+        if write_if_changed(folder / f"{slug}.json",
+                            {"method": cache.get("method", "split-adjusted-close"), "series": own}):
+            written.append(slug)
+    return written
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--full", action="store_true")
+    parser.add_argument("--publish", action="store_true",
+                        help="받지 않고 창고에서 투자자별 파일만 다시 만든다")
     args = parser.parse_args()
-    catalog = books(strict=True)
+    investors = registry.load()
+    catalog = books(investors, strict=True)
     required = required_cusips(catalog)
     # 모든 활성 투자자의 책이 있어야 매도 여부를 알 수 있습니다(strict=True).
     # 전체 보유 목록이 비어도 기존 가격 캐시를 보존합니다.
     if not required:
         raise SystemExit("no investor book holds anything: refusing to rewrite the price cache")
     previous = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
+    # strict=True 라 책은 투자자 순서대로 빠짐없이 온다.
+    pairs = list(zip([i.slug for i in investors], catalog))
+    if args.publish:
+        print("다시 쓴 투자자 파일:", publish(previous, pairs) or "없음")
+        return
     known = json.loads((ROOT / "data/titans/tickers.json").read_text(encoding="utf-8"))
     result, errors = collect(required, previous, dt.datetime.now(UTC), args.full, known,
                              first_seen(catalog))
     if result["series"] != previous.get("series", {}):
-        tmp = OUT.with_suffix(".tmp")
-        tmp.write_text(json.dumps(result, ensure_ascii=False, separators=(",", ":"))+"\n", encoding="utf-8")
-        os.replace(tmp, OUT)
+        write_if_changed(OUT, result)
+    # 받기에 실패한 종목이 있어도 받은 것은 투자자 파일까지 내보낸다.
+    publish(result, pairs)
     if errors:
         raise SystemExit("\n".join(errors))
 

@@ -484,7 +484,7 @@ window.TITAN = {
   data : "../../data/titans/berkshire.json",   // 공시 JSON 자리
   name : { en:"Berkshire Hathaway", ko:"버크셔 해서웨이" },
   since: 1998,                                 // 자료의 첫 해
-  prices: "../../data/titans/prices.json"       // 투자자들이 공유하는 일별 가격
+  prices: "../../data/titans/prices/berkshire.json"  // 이 투자자 몫의 일별 가격(봇이 만듦)
 };
 ```
 

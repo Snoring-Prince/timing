@@ -167,7 +167,8 @@ test('price ingestion rejects invalid dates, zero prices and other currencies', 
 });
 
 test('stored daily prices cover all current share classes and extend before investor entry', () => {
-  const prices=JSON.parse(fs.readFileSync(path.join(root,'data/titans/prices.json'),'utf8'));
+  // 방문자가 실제로 받는 투자자 몫으로 잽니다 — 공유 창고가 아니라.
+  const prices=JSON.parse(fs.readFileSync(path.join(root,'data/titans/prices/berkshire.json'),'utf8'));
   const run=page(real);run('const B=build();const before=B.list.find(r=>r.key==="037833").avgCost;');
   run('acceptPrices('+JSON.stringify(prices)+');');
   assert.equal(run('B.list.filter(r=>!PRICE_SERIES[r.cusip]).length'),0);
