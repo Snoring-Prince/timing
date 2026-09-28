@@ -188,6 +188,13 @@ Tepper (old) 2015-12-31     47   100%       12.8%           2%
 - Test: `PredecessorTests` in `test_fetch_13f.py` (reverting the folder or the
   overlap rule each fails it).
 
+### Marks registered (2026-09-28)
+
+- `oaktree`, CIK 0000949509, filing name `Oaktree Capital Management LP`, `since 2013`.
+  No predecessors. SH-only screen shows about half of the 13F (options and PRN excluded);
+  the bio and list card say so without numbers. 66 amendments: an unknown
+  `amendmentType` keeps the weekly run red until a person looks (by design).
+
 ### Probe run 4 (2026-09-28, run 36377898009)
 
 - **Ackman 13F-NT reporting manager:** PERSHING SQUARE INC., CIK 0002026053,

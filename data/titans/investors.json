@@ -38,6 +38,17 @@
           "filing_name": "Appaloosa Management LP"
         }
       ]
+    },
+    {
+      "slug": "oaktree",
+      "cik": "0000949509",
+      "filing_name": "Oaktree Capital Management LP",
+      "name": {
+        "en": "Oaktree Capital",
+        "ko": "오크트리 캐피털"
+      },
+      "since": 2013,
+      "active": true
     }
   ]
 }
