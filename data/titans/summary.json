@@ -134,6 +134,33 @@
      "w": 9.0
     }
    ]
+  },
+  {
+   "slug": "pershing",
+   "name": {
+    "en": "Pershing Square",
+    "ko": "퍼싱 스퀘어"
+   },
+   "since": 2013,
+   "period": "2026-06-30",
+   "filed": "2026-08-14",
+   "quarters": 53,
+   "total": 19465692772,
+   "stocks": 14,
+   "top": [
+    {
+     "name": "Uber Technologies Inc",
+     "w": 12.7
+    },
+    {
+     "name": "Brookfield Corp",
+     "w": 12.6
+    },
+    {
+     "name": "Microsoft Corp",
+     "w": 11.9
+    }
+   ]
   }
  ]
 }
