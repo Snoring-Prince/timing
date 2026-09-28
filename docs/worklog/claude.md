@@ -5,6 +5,15 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+토름 종가 대조 실패에 숫자를 남김
+- 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
+- 결과(PR #100): 해외 5종목 중 LBTYA·KRSP·XP·ALVO 붙음. TRMD(오크트리 1위)는
+  종가 대조에서 떨어짐 — 얼마나 어긋났는지 로그에 없었음. 이제 이유에 종가·공시가·차이를 적음.
+- 넘김: 머지 뒤 Update Titans Prices 로그의 `G89479102 TRMD: 알려진 상태 …` 줄에서 차이를 볼 것.
+  1~2% 면 코펜하겐 종가 기준일 공산(티커는 맞음), 크면 다른 종목. 그 뒤 판단.
+  다음은 애크먼 대신 신고자(PERSHING SQUARE INC., CIK 0002026053) 정찰.
+
+## 2026-09-28 · Claude · PR #100
 오크트리 종가 — 짝 없는 11종목
 - 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
 - 규칙: OpenFIGI 이름의 A주 꼬리(`-A`·`CLASS A`)만 뗌. 워런트는 둘째 종류로 안 셈.

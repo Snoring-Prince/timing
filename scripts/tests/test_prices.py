@@ -437,7 +437,9 @@ class UnpricedTests(unittest.TestCase):
         self.assertNotIn("unpriced", result)
         result, errors = self.run_torm(("2026-09-17", 95))
         self.assertEqual((errors, result["series"]), ([], {}))
-        self.assertIn("quarter-end", result["unpriced"]["G89479102"]["reason"])
+        # 얼마나 어긋났는지를 숫자로 남긴다 — 이유 없이 '안 맞음'만 있으면 판단을 못 한다.
+        self.assertIn("close 101.0000 on 2026-09-17 vs filing 95.0000 for 2026-09-17 (+6.32%)",
+                      result["unpriced"]["G89479102"]["reason"])
 
     def test_no_match_is_a_known_state_but_an_outage_is_not(self):
         required = {"81761L102": {"name": "SERVICE PROPERTIES TRUST", "class": "COMMON STOCK"}}
