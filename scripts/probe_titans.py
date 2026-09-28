@@ -77,8 +77,12 @@ CANDIDATES = [
      "ciks": ["0000949509"], "search": "Oaktree Capital"},
     {"slug": "duquesne",    "who": "Stanley Druckenmiller", "style": "macro",
      "ciks": ["0001536411"], "search": "Duquesne Family Office"},
+    # 애크먼: 2026 2분기는 옛 번호가 13F 대신 13F-NT 를 냈고, 대신 낸 곳이
+    # PERSHING SQUARE INC.(CIK 0002026053 · 028-25746)였다(정찰 4차). 그 번호의
+    # 13F 가 퍼싱의 보유만 담는지, 옛 번호의 마지막 13F 와 이어지는지를 잰다(정찰 5차).
     {"slug": "pershing",    "who": "Bill Ackman",          "style": "activist",
-     "ciks": ["0001336528"], "search": "Pershing Square Capital"},
+     "ciks": ["0002026053", "0001336528"], "search": "Pershing Square",
+     "predecessor": "0001336528"},
     {"slug": "appaloosa",   "who": "David Tepper",         "style": "contrarian",
      "ciks": ["0001656456", "0001006438"], "search": "Appaloosa",
      # 옛 번호(1999~2015)를 새 번호(2016~)에 이어 붙이기 전에, 같은 포트폴리오가
@@ -181,6 +185,40 @@ def who_signed(cover):
     out["signer"] = " · ".join(x for x in (first(("signatureBlock", "name")),
                                             first(("signatureBlock", "title"))) if x)
     return out
+
+
+def report_scope(cover, xml, period):
+    """이 13F 가 **누구의 보유**를 담았는가 — 표지의 보고 종류와 함께 실린 운용사,
+    그리고 표의 줄마다 붙는 '다른 운용사' 번호를 센다(애크먼 대신 신고자 정찰).
+
+    `13F HOLDINGS REPORT` 면 이 운용사 것만, `13F COMBINATION REPORT` 면 다른
+    운용사 몫이 섞여 있다. 섞였으면 줄마다 `otherManager` 번호로 누구 몫인지 갈린다."""
+    kind, included = "?", []
+    try:
+        root = ET.fromstring(cover) if cover else None
+    except ET.ParseError:
+        root = None
+    if root is not None:
+        for el in root.iter():
+            tag = f13.local(el.tag)
+            if tag == "reportType" and (el.text or "").strip():
+                kind = el.text.strip()
+            # 함께 실린 운용사 한 칸 — 자식이 전부 잎인 안쪽 칸만(13F-NT 와 같은 요령).
+            if "othermanager" in tag.lower() and len(el) and not any(len(x) for x in el):
+                leaves = {f13.local(x.tag): x.text.strip() for x in el.iter()
+                          if x is not el and len(x) == 0 and (x.text or "").strip()}
+                if leaves:
+                    included.append(" · ".join(f"{k} {v}" for k, v in leaves.items()))
+    tags = re.findall(rb"<(?:\w+:)?otherManager>\s*([^<]*?)\s*</", xml or b"")
+    rows = len(re.findall(rb"<(?:\w+:)?infoTable>", xml or b""))
+    by = {}
+    for t in tags:
+        by[t.decode("utf-8", "replace")] = by.get(t.decode("utf-8", "replace"), 0) + 1
+    print(f"      {period} 표지: 보고 종류 {kind} · 함께 실린 운용사 {len(included)}곳")
+    for x in included:
+        print(f"        {x}")
+    print(f"      {period} 표: {rows}줄 중 다른 운용사 번호가 붙은 줄 {sum(by.values())}"
+          + (" (" + ", ".join(f"{k or '빈칸'}: {v}" for k, v in sorted(by.items())) + ")" if by else ""))
 
 
 def issuer_rows(held):
@@ -322,6 +360,8 @@ def probe_one(cand, contact, depth):
             held = f13.fold(rows, scale)
             total = sum(h["value"] for h in held)
             ctot, _ = f13.cover_totals(cover)
+            if not quarters:
+                report_scope(cover, xml, f["period"])
             m = measure(held, total)
             m.update(period=f["period"], filed=f["filed"], lines=len(rows), bytes=len(xml),
                      cover_total=(ctot * scale if ctot else None))

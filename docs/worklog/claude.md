@@ -5,6 +5,15 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+애크먼 정찰 5차 — 대신 신고자(PERSHING SQUARE INC.)
+- 파일: scripts/probe_titans.py · CLAUDE.md · 이 일지
+- 결과(PR #105): 에이온 AON · 리버티 C주 LBTYK 로 붙음. 6-30 종가가 공시 값과 소수까지 같음.
+- 규칙: pershing 후보에 0002026053 을 더하고 옛 번호를 predecessor 로 — 이어짐 확인이 돈다.
+  최신 분기 표지의 보고 종류·함께 실린 운용사·줄마다 다른 운용사 번호를 찍음.
+- 넘김: Probe Titans 를 `pershing` 만으로 돌린 로그를 볼 것. HOLDINGS REPORT 이고 이어짐이
+  테퍼처럼 높으면 등록 후보. COMBINATION 이면 줄마다 번호로 퍼싱 몫을 가를 수 있는지 판단.
+
+## 2026-09-28 · Claude · PR #105
 종류 글자 줄(CL A·CL C)을 이름 검색으로 찾기
 - 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
 - 결과(PR #104): NCLH·AXTA·HLF 붙음. 남은 에이온(`SHS CL A`)·리버티 C주(`COM CL C`).
