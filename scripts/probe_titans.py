@@ -69,8 +69,12 @@ CANDIDATES = [
     # 1위가 S&P 500 ETF 라 뺐습니다(사용자 판단). 대신 클라만입니다.
     {"slug": "baupost",     "who": "Seth Klarman",         "style": "value",
      "ciks": ["0001061768"], "search": "Baupost"},
-    {"slug": "bridgewater", "who": "Ray Dalio",            "style": "macro",
-     "ciks": ["0001350694"], "search": "Bridgewater Associates"},
+    # 달리오(브리지워터)는 2차 정찰 뒤 뺐습니다(사용자 판단, 2026-09-28) — 992종목 ·
+    # 상위 50이 62% · ETF 가 약 30%. 대신 하워드 막스(오크트리)를 잽니다.
+    # 오크트리의 본업은 채권·부실채권이라 13F 에는 주식 쪽만 나옵니다 — 얼마나
+    # 보이는지가 이번 정찰의 질문입니다.
+    {"slug": "oaktree",     "who": "Howard Marks",         "style": "distressed",
+     "ciks": ["0000949509"], "search": "Oaktree Capital"},
     {"slug": "duquesne",    "who": "Stanley Druckenmiller", "style": "macro",
      "ciks": ["0001536411"], "search": "Duquesne Family Office"},
     {"slug": "pershing",    "who": "Bill Ackman",          "style": "activist",
@@ -248,6 +252,13 @@ def probe_one(cand, contact, depth):
               f" · 설립지 {sub.get('stateOfIncorporation') or '?'}"
               + (f" · 옛 이름 {', '.join(former)}" if former else ""))
         r["_filings"] = filings
+        # 13F 계열 제출을 날짜순으로 최근 몇 건 — '공시가 안 보인다'가 늦은 것인지,
+        # 13F-NT(다른 곳이 대신 냄) 같은 다른 서식인지 가린다(애크먼 2분기).
+        rec = (sub.get("filings") or {}).get("recent") or {}
+        recent13 = [(fm, fd, rd) for fm, fd, rd in zip(rec.get("form", []), rec.get("filingDate", []),
+                                                       rec.get("reportDate", [])) if fm.startswith("13F")]
+        print("      최근 13F 계열 제출: " + (" · ".join(f"{fm} {rd or '?'}→{fd}"
+                                                 for fm, fd, rd in recent13[:5]) or "없음"))
         if not filings:
             print("      13F-HR 없음")
             report["ciks"].append(r)
