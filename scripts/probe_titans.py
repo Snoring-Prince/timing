@@ -76,7 +76,10 @@ CANDIDATES = [
     {"slug": "pershing",    "who": "Bill Ackman",          "style": "activist",
      "ciks": ["0001336528"], "search": "Pershing Square Capital"},
     {"slug": "appaloosa",   "who": "David Tepper",         "style": "contrarian",
-     "ciks": ["0001656456", "0001006438"], "search": "Appaloosa"},
+     "ciks": ["0001656456", "0001006438"], "search": "Appaloosa",
+     # 옛 번호(1999~2015)를 새 번호(2016~)에 이어 붙이기 전에, 같은 포트폴리오가
+     # 이어진 것인지(= 회사가 바뀐 게 아니라 껍데기만 바뀐 것인지) 잰다.
+     "predecessor": "0001006438"},
 ]
 # 13F 를 내는지조차 모르는 이름 — 검색만 합니다.
 SEARCH_ONLY = [
@@ -121,6 +124,31 @@ def search_names(term, contact):
         except (ValueError, KeyError):
             named.append((cik, "(이름 못 읽음)"))
     return {"bytes": len(body), "hits": named, "head": "" if out else text[:600]}
+
+
+def who_signed(cover):
+    """표지의 운용사 이름·주소·서명자. 두 번호가 같은 사람들인지 보는 재료."""
+    if not cover:
+        return {}
+    try:
+        root = ET.fromstring(cover)
+    except ET.ParseError:
+        return {}
+    out = {}
+    def first(path):
+        for el in root.iter():
+            if f13.local(el.tag) != path[0]:
+                continue
+            for sub in el.iter():
+                if f13.local(sub.tag) == path[1] and (sub.text or "").strip():
+                    return sub.text.strip()
+        return ""
+    out["manager"] = first(("filingManager", "name"))
+    out["city"] = ", ".join(x for x in (first(("filingManager", "city")),
+                                         first(("filingManager", "stateOrCountry"))) if x)
+    out["signer"] = " · ".join(x for x in (first(("signatureBlock", "name")),
+                                            first(("signatureBlock", "title"))) if x)
+    return out
 
 
 def issuer_rows(held):
@@ -214,6 +242,12 @@ def probe_one(cand, contact, depth):
         filings, amends = f13.list_filings(contact)
         r = {"cik": cik, "name": name, "filings": len(filings), "amendments": len(amends)}
         print(f"  CIK {cik}: {name}")
+        biz = (sub.get("addresses") or {}).get("business") or {}
+        former = [x.get("name", "") for x in sub.get("formerNames") or []]
+        print(f"      등록 주소 {biz.get('city') or '?'}, {biz.get('stateOrCountry') or '?'}"
+              f" · 설립지 {sub.get('stateOfIncorporation') or '?'}"
+              + (f" · 옛 이름 {', '.join(former)}" if former else ""))
+        r["_filings"] = filings
         if not filings:
             print("      13F-HR 없음")
             report["ciks"].append(r)
@@ -293,7 +327,53 @@ def probe_one(cand, contact, depth):
             q.pop("_issuers", None)
         r.update(quarters=quarters, turnover=turns, top10_streaks=streaks)
         report["ciks"].append(r)
+    if cand.get("predecessor"):
+        continuity(cand, report, contact)
+    for x in report["ciks"]:
+        x.pop("_filings", None)             # summary.json 에는 목록 전체를 싣지 않는다
     return report
+
+
+def continuity(cand, report, contact):
+    """옛 번호의 **마지막** 분기와 새 번호의 **첫** 분기를 나란히 놓는다.
+
+    회사가 바뀐 것이면 보유 종목이 딴판이고, 껍데기(법인·주소)만 바뀐 것이면
+    같은 종목이 같은 무게로 이어진다. 숫자로 가린다."""
+    old = next((x for x in report["ciks"] if x["cik"] == cand["predecessor"]), None)
+    new = next((x for x in report["ciks"] if x["cik"] != cand["predecessor"]), None)
+    if not old or not new or not old.get("_filings") or not new.get("_filings"):
+        print("  이어짐 확인: 두 번호의 목록을 다 받지 못했습니다")
+        return
+    sides = []
+    for side, f in (("옛 마지막", old["_filings"][-1]), ("새 처음", new["_filings"][0])):
+        f13.CIK = old["cik"] if side == "옛 마지막" else new["cik"]
+        xml, cover = f13.filing_docs(f["accession"], contact)
+        if xml is f13.NO_XML or not xml:
+            print(f"  이어짐 확인: {side} {f['period']} 원문을 받지 못했습니다")
+            return
+        rows = f13.rows_of(xml)
+        scale, _ = f13.unit_scale(rows, f["filed"])
+        m = measure(f13.fold(rows, scale), 0)
+        sides.append((side, f, m, who_signed(cover)))
+        save(f"{cand['slug']}/continuity-{f13.CIK}-{f['period']}-infotable.xml", xml)
+    (_, fo, mo, wo), (_, fn, mn, wn) = sides
+    a, b = mo["_issuers"], mn["_issuers"]
+    both = set(a) & set(b)
+    kept_old = sum(a[k]["value"] for k in both) / max(1, sum(x["value"] for x in a.values()))
+    kept_new = sum(b[k]["value"] for k in both) / max(1, sum(x["value"] for x in b.values()))
+    print(f"\n  ── 이어짐 확인: {cand['who']} ──")
+    for side, f, m, w in sides:
+        print(f"    {side:<6} {f['period']} (제출 {f['filed']}) · 발행사 {m['issuers_sh']}"
+              f" · 운용사 {w.get('manager') or '?'} · {w.get('city') or '?'}"
+              f" · 서명 {w.get('signer') or '?'}")
+    print(f"    두 분기에 다 있는 발행사 {len(both)}곳")
+    print(f"    옛 마지막 금액 중 새 처음에도 있는 몫 {pct(kept_old)}"
+          f" · 새 처음 금액 중 옛 마지막에도 있던 몫 {pct(kept_new)}")
+    gap = (date.fromisoformat(fn["period"]) - date.fromisoformat(fo["period"])).days
+    print(f"    두 분기 사이 {gap}일" + ("  (바로 다음 분기)" if gap <= 92 else "  ← 빈 분기가 있습니다"))
+    report["continuity"] = {"old": fo["period"], "new": fn["period"], "gap_days": gap,
+                            "shared_issuers": len(both), "kept_old": kept_old,
+                            "kept_new": kept_new, "old_cover": wo, "new_cover": wn}
 
 
 def main():

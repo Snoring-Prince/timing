@@ -122,6 +122,12 @@ Tepper (old) 2015-12-31     47   100%       12.8%           2%
   one-time fetch; weekly watching needs only new `0001656456`. Registry takes one
   CIK today, so this is either a registry field for frozen predecessor CIKs or a
   one-time merge into `appaloosa.json` — decide when building him.
+  Owner asked first *why* the number changed (a different firm must not be
+  stitched). Press reports: Jan 1 2016 reorganization when Tepper moved the firm
+  from Short Hills NJ to Miami Beach FL (tax residency); manager entity became
+  Appaloosa LP. The probe now prints a continuity block (old last quarter vs new
+  first quarter: shared issuers, value kept each way, cover manager/city/signer,
+  day gap). Stitch only if the book clearly carries over.
 - **Druckenmiller: total printed $0.0B** (cover total too). Likely the filer still
   reports thousands after 2023-01-03, which the date-only `unit_scale` rule would
   misread by 1000×. Unconfirmed; probe now prints median value÷shares per filing.
