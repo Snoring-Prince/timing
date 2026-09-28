@@ -107,6 +107,33 @@
      "w": 7.3
     }
    ]
+  },
+  {
+   "slug": "baupost",
+   "name": {
+    "en": "Baupost Group",
+    "ko": "바우포스트 그룹"
+   },
+   "since": 2013,
+   "period": "2026-06-30",
+   "filed": "2026-08-13",
+   "quarters": 53,
+   "total": 5415853000,
+   "stocks": 23,
+   "top": [
+    {
+     "name": "Amazon Com Inc",
+     "w": 16.5
+    },
+    {
+     "name": "Elevance Health Inc Formerly",
+     "w": 9.1
+    },
+    {
+     "name": "Restaurant Brands Intl Inc",
+     "w": 9.0
+    }
+   ]
   }
  ]
 }
