@@ -14,6 +14,11 @@
   "desc": "",
   "sic": ""
  },
+ "01609W": {
+  "cik": "1577552",
+  "desc": "Services-Business Services, NEC",
+  "sic": "7389"
+ },
  "02005N": {
   "cik": "40729",
   "desc": "State Commercial Banks",
@@ -74,6 +79,11 @@
   "desc": "Services-Computer Processing & Data Preparation",
   "sic": "7374"
  },
+ "056752": {
+  "cik": "1329099",
+  "desc": "Services-Computer Programming, Data Processing, Etc.",
+  "sic": "7370"
+ },
  "060505": {
   "cik": "70858",
   "desc": "National Commercial Banks",
@@ -93,6 +103,11 @@
   "cik": "10795",
   "desc": "Surgical & Medical Instruments & Apparatus",
   "sic": "3841"
+ },
+ "084670": {
+  "cik": "1067983",
+  "desc": "Fire, Marine & Casualty Insurance",
+  "sic": "6331"
  },
  "086516": {
   "cik": "764478",
@@ -209,6 +224,11 @@
   "desc": "Retail-Variety Stores",
   "sic": "5331"
  },
+ "227046": {
+  "cik": "1334036",
+  "desc": "Rubber & Plastics Footwear",
+  "sic": "3021"
+ },
  "23331A": {
   "cik": "882184",
   "desc": "Operative Builders",
@@ -289,6 +309,11 @@
   "desc": "",
   "sic": ""
  },
+ "27579R": {
+  "cik": "1069157",
+  "desc": "State Commercial Banks",
+  "sic": "6022"
+ },
  "278058": {
   "cik": "1551182",
   "desc": "Misc Industrial & Commercial Machinery & Equipment",
@@ -308,6 +333,11 @@
   "cik": "2115436",
   "desc": "Petroleum Refining",
   "sic": "2911"
+ },
+ "30303M": {
+  "cik": "1326801",
+  "desc": "Services-Computer Programming, Data Processing, Etc.",
+  "sic": "7370"
  },
  "319963": {
   "cik": "",
@@ -564,6 +594,11 @@
   "desc": "State Commercial Banks",
   "sic": "6022"
  },
+ "55354G": {
+  "cik": "1408198",
+  "desc": "Services-Business Services, NEC",
+  "sic": "7389"
+ },
  "55616P": {
   "cik": "794367",
   "desc": "Retail-Department Stores",
@@ -603,6 +638,11 @@
   "cik": "310158",
   "desc": "Pharmaceutical Preparations",
   "sic": "2834"
+ },
+ "595112": {
+  "cik": "723125",
+  "desc": "Semiconductors & Related Devices",
+  "sic": "3674"
  },
  "609207": {
   "cik": "1103982",
@@ -739,6 +779,11 @@
   "desc": "",
   "sic": ""
  },
+ "722304": {
+  "cik": "1737806",
+  "desc": "Services-Business Services, NEC",
+  "sic": "7389"
+ },
  "73278L": {
   "cik": "945841",
   "desc": "Wholesale-Misc Durable Goods",
@@ -779,10 +824,20 @@
   "desc": "",
   "sic": ""
  },
+ "78409V": {
+  "cik": "64040",
+  "desc": "Services-Consumer Credit Reporting, Collection Agencies",
+  "sic": "7320"
+ },
  "78462F": {
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "78574H": {
+  "cik": "1831481",
+  "desc": "Crude Petroleum & Natural Gas",
+  "sic": "1311"
  },
  "80105N": {
   "cik": "1121404",
@@ -873,6 +928,11 @@
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "88034P": {
+  "cik": "1744676",
+  "desc": "Radio Broadcasting Stations",
+  "sic": "4832"
  },
  "881624": {
   "cik": "818686",
@@ -1009,6 +1069,11 @@
   "desc": "State Commercial Banks",
   "sic": "6022"
  },
+ "948596": {
+  "cik": "1595761",
+  "desc": "Services-Computer Programming, Data Processing, Etc.",
+  "sic": "7370"
+ },
  "94973V": {
   "cik": "",
   "desc": "",
@@ -1089,6 +1154,11 @@
   "desc": "Pharmaceutical Preparations",
   "sic": "2834"
  },
+ "G81477": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "G85158": {
   "cik": "1745431",
   "desc": "Services-Computer Processing & Data Preparation",
@@ -1104,6 +1174,6 @@
   "desc": "Fire, Marine & Casualty Insurance",
   "sic": "6331"
  },
- "_asked": "2026-09-24",
+ "_asked": "2026-09-28",
  "_sources": "sec-sic3"
 }
