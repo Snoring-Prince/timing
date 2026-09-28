@@ -5,6 +5,15 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+토름 종가 대조 문턱 0.5% → 2%
+- 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
+- 결과(PR #102): 바우포스트 53분기 · 2022-12-31 부터 14분기에 `unit_by: prev-quarter` · 총액
+  끊김 없음($6.11B→…→$5.42B). 종가 작업은 13F 저장보다 먼저 시작돼 바우포스트를 못 봄 —
+  Update Titans Prices 를 한 번 더 누르면 됨. 토름은 +1.06%(코펜하겐 종가 환산으로 봄).
+- 넘김: 머지 뒤 Update Titans Prices 한 번. `prices/baupost.json` 이 생기고 TRMD 가
+  `unpriced` 에서 빠지는지 볼 것. 다음은 애크먼 대신 신고자 정찰.
+
+## 2026-09-28 · Claude · PR #102
 클라만(바우포스트) 화면 — 다섯 번째 투자자
 - 파일: titans/baupost/index.html(새) · titans/index.html(카드) · data/titans/investors.json ·
   sitemap.xml · CLAUDE.md · docs/masters-13f.md · 이 일지

@@ -418,8 +418,10 @@ class UnpricedTests(unittest.TestCase):
     def test_quarter_end_mark_undoes_later_splits(self):
         self.assertTrue(p.mark_matches([("2026-06-29", 49), ("2026-06-30", 50)], {"2026-08-01": "2:1"}, ("2026-06-30", 100)))
         self.assertFalse(p.mark_matches([("2026-06-30", 50)], {}, ("2026-06-30", 100)))
-        self.assertFalse(p.mark_matches([("2026-06-30", 100.6)], {}, ("2026-06-30", 100)))
-        self.assertTrue(p.mark_matches([("2026-06-30", 100.4)], {}, ("2026-06-30", 100)))
+        self.assertFalse(p.mark_matches([("2026-06-30", 102.1)], {}, ("2026-06-30", 100)))
+        self.assertTrue(p.mark_matches([("2026-06-30", 101.9)], {}, ("2026-06-30", 100)))
+        # 러너가 찍은 토름 숫자 그대로 — 코펜하겐 종가를 달러로 바꾼 공시 (+1.06%)
+        self.assertTrue(p.mark_matches([("2026-06-30", 26.06)], {}, ("2026-06-30", 25.7877)))
         # 분기말 앞뒤로 종가가 없으면 잴 수 없다 — 못 잰 것은 맞지 않은 것이다.
         self.assertFalse(p.mark_matches([("2026-09-17", 100)], {}, ("2026-06-30", 100)))
         self.assertFalse(p.mark_matches([("2026-06-30", 100)], {}, ("", 0)))
