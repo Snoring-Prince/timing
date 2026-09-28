@@ -80,6 +80,33 @@
      "w": 10.5
     }
    ]
+  },
+  {
+   "slug": "oaktree",
+   "name": {
+    "en": "Oaktree Capital",
+    "ko": "오크트리 캐피털"
+   },
+   "since": 2013,
+   "period": "2026-06-30",
+   "filed": "2026-08-14",
+   "quarters": 53,
+   "total": 3778630287,
+   "stocks": 48,
+   "top": [
+    {
+     "name": "Torm PLC",
+     "w": 13.9
+    },
+    {
+     "name": "Expand Energy Corp",
+     "w": 12.6
+    },
+    {
+     "name": "Garrett Motion Inc",
+     "w": 7.3
+    }
+   ]
   }
  ]
 }
