@@ -157,6 +157,10 @@ def resolve(cusips, required, known, unverified=None, outage=None):
                           if r.get("marketSector") == "Equity" and r.get("exchCode") == "US" and r.get("ticker")}
             if len(candidates) == 1:
                 result[c] = candidates.pop().replace("/", "-").replace(".", "-")
+            elif c[0].isdigit():
+                # 미국 번호인데 짝이 하나로 안 나왔다 — 왜인지 원본을 남긴다(테바 ADR, 2026-09-28).
+                print(f"{c}: exact mapping gave {sorted(candidates) or 'nothing'} · raw "
+                      f"{json.dumps(row, ensure_ascii=False)[:600]}", flush=True)
         if offset+10 < len(cusips):
             time.sleep(3)
     # CINS mapping is absent for some foreign issuers. An old logo ticker is
@@ -226,7 +230,10 @@ def resolve(cusips, required, known, unverified=None, outage=None):
 
 
 # 공시의 종류 칸에서 종류 글자 하나: `CL A`, `SHS CL A`, `COM CL C`, `ORD SHS CL A`.
-CLASS_LETTER = re.compile(r"(?:(?:COM(?:MON)?|ORD(?:INARY)?)\s+)?(?:SHS\s+)?CL(?:ASS)?\s+([A-Z])")
+# 글자 **뒤에** 주식 낱말이 오는 공시도 있다(듀케인 2026-06-30 러너 실측):
+# `CL A COM`(BBB Foods) · `CL A ORD SHS`(Bitdeer) · `CL A SHS`(JBS).
+CLASS_LETTER = re.compile(r"(?:(?:COM(?:MON)?|ORD(?:INARY)?)\s+)?(?:SHS\s+)?CL(?:ASS)?\s+([A-Z])"
+                          r"(?:\s+(?:(?:COM(?:MON)?|ORD(?:INARY)?)(?:\s+SHS)?|SHS))?")
 
 
 def pick_class(rows, filed, letter):
@@ -240,7 +247,7 @@ def pick_class(rows, filed, letter):
               and r.get("ticker") and " " not in r["ticker"]]
     tagged, plain = [], []
     for r in shares:
-        words = [w for w in norm(r.get("name", "")) if w not in NOT_NAME]
+        words = name_words(r.get("name", ""))
         if len(words) >= 2 and len(words[-1]) == 1:
             if same_issuer(" ".join(words[:-1]), filed):
                 tagged.append((words[-1], r))
@@ -265,7 +272,16 @@ PLAIN = re.compile(r"COM(?:MON)?(?: STOCK| SHS)?|SHS|ORD(?: SHS)?|ORDINARY SHARE
 SHARE_TYPES = {"Common Stock", "NY Reg Shrs"}
 # 회사 이름이 아니라 **주식 종류**를 적은 낱말. OpenFIGI 는 뉴욕 등록주 이름 끝에
 # 종류를 붙인다: 'ASML HOLDING NV-NY REG SHS'(실측). 공시는 'ASML HLDG NV'.
-NOT_NAME = {"HLDG", "NY", "N", "Y", "REG", "REGISTRY", "SHS"}
+NOT_NAME = {"HLDG", "HLDNGS", "NY", "N", "Y", "REG", "REGISTRY", "SHS"}
+# 13F 의 이름 칸도 28글자에서 잘린다(듀케인 `Seagate Technology Hldngs Pl` ·
+# `Taiwan Semiconductor Manufac`, 2026-06-30). OpenFIGI 쪽과 같은 길이다.
+CUT = 28
+
+
+def name_words(name):
+    """비교용 낱말. `N.V.` 처럼 한 글자씩 끊긴 낱말은 붙여서(`NV`) 회사 형태로 버린다."""
+    joined = re.sub(r"\b([A-Za-z])\.(?=[A-Za-z]\b)", r"\1", str(name))
+    return [w for w in norm(joined) if w not in NOT_NAME]
 
 
 def same_issuer(figi, filed):
@@ -282,15 +298,18 @@ def same_issuer(figi, filed):
     - 잘린 이름: OpenFIGI `NORWEGIAN CRUISE LINE HOLDIN` — 28글자에서 끊겼다.
       28글자 이상이면 끝 낱말은 잘렸을 수 있어 빼고, 남은 낱말이 공시 이름의
       앞부분과 맞는지 본다. 이렇게 붙인 것도 전부 종가 대조를 한 번 더 거친다."""
-    words = lambda n: [w for w in norm(n) if w not in NOT_NAME]
-    a, b = words(figi), words(filed)
+    a, b = name_words(figi), name_words(filed)
     if a[-1:] == ["A"] and b[-1:] != ["A"]:
         a = a[:-1]
     if sorted(a) == sorted(b):
         return True
-    if len(str(figi).strip()) >= 28 and len(a) >= 3:
+    if len(str(figi).strip()) >= CUT and len(a) >= 3:
         a = a[:-1]
         b = b[:len(a)]
+    elif len(str(filed).strip()) >= CUT and len(b) >= 3:
+        # 공시 쪽이 잘렸다 — 끝 낱말(`Pl`)은 반쪽일 수 있어 빼고 앞부분만 본다.
+        b = b[:-1]
+        a = a[:len(b)]
     same = lambda x, y: x == y or (min(len(x), len(y)) >= 3 and (x.startswith(y) or y.startswith(x)))
     return len(a) == len(b) >= 1 and all(same(x, y) for x, y in zip(a, b))
 

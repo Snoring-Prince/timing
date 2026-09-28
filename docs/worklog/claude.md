@@ -5,6 +5,16 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+드러켄밀러 종가 짝 찾기 — 잘린 공시 이름 · 종류 글자 뒤 낱말 · N.V.
+- 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
+- 결과(PR #109): 53분기 · 천 달러 14분기 전부 prev-quarter 로 바로잡힘 · 종가 첫 실행 새 짝 없음 5
+  (STX·TBBB·BTDR·JBS·TEVA — 표시 티커는 짐작, 로그 확인 전).
+- 규칙: 공시 이름 28글자면 끝 낱말 빼고 비교 · `HLDNGS` 버림 · `CL A COM/ORD SHS/SHS` 도 이름 검색 ·
+  `N.V.` 붙여서 버림 · 미국 번호 짝이 하나가 아니면 원본 출력. 전부 종가 대조(2%) 그대로.
+- 넘김: 머지 뒤 Update Titans Prices. 시게이트·BBB Foods·Bitdeer·JBS 넷이 붙는지(못 붙으면
+  `class search rejected · raw` 줄), 테바의 `exact mapping gave … raw` 줄이 무엇인지 볼 것.
+
+## 2026-09-28 · Claude · PR #109
 드러켄밀러(듀케인 패밀리 오피스) 화면 — 일곱 번째 투자자
 - 파일: titans/duquesne/index.html(새) · titans/index.html(카드) · data/titans/investors.json ·
   sitemap.xml · CLAUDE.md · docs/masters-13f.md · 이 일지. 코드 변경 없음.
