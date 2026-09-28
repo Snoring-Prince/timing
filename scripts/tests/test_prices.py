@@ -79,8 +79,13 @@ class PricesTests(unittest.TestCase):
         # ASML(네덜란드)은 미국에서 본주 그대로 '뉴욕 등록주'로 거래된다.
         # CINS 로는 OpenFIGI 가 모르고, 옛 규칙은 'COM' 만 받아서 떨어졌다.
         required = {"N07059210": {"name": "ASML HLDG NV", "class": "N Y REGISTRY SHS"}}
-        row = {"ticker": "ASML", "name": "ASML HOLDING NV", "securityType": "NY Reg Shrs",
-               "securityType2": "Common Stock", "shareClassFIGI": "BBG001SDT3F5"}
+        # 러너가 받은 OpenFIGI 응답 그대로(2026-09-28, Update Titans Prices #9 로그).
+        # 첫 판은 이 모양을 짐작으로 적어서(이름 'ASML HOLDING NV') 검사는 통과하고
+        # 실제로는 떨어졌다 — 짐작한 응답으로 짠 검사는 짐작을 검사할 뿐이다.
+        row = {"figi": "BBG000K6MRN4", "name": "ASML HOLDING NV-NY REG SHS", "ticker": "ASML",
+               "exchCode": "US", "compositeFIGI": "BBG000K6MRN4", "securityType": "NY Reg Shrs",
+               "marketSector": "Equity", "shareClassFIGI": "BBG001SCG0R3",
+               "securityType2": "Depositary Receipt", "securityDescription": "ASML"}
         with patch.object(p, "request", side_effect=[[{}], [{"data": [row]}]]):
             self.assertEqual(p.resolve(list(required), required, {"N07059210": "ASML"}), {"N07059210": "ASML"})
 
@@ -88,8 +93,8 @@ class PricesTests(unittest.TestCase):
         required = {"N07059210": {"name": "ASML HLDG NV", "class": "N Y REGISTRY SHS"}}
         adr = {"ticker": "ASML", "name": "ASML HOLDING NV", "securityType": "ADR",
                "securityType2": "Depositary Receipt", "shareClassFIGI": "X"}
-        other = {"ticker": "ASML", "name": "ASM INTERNATIONAL NV", "securityType": "NY Reg Shrs",
-                 "securityType2": "Common Stock", "shareClassFIGI": "Y"}
+        other = {"ticker": "ASML", "name": "ASM INTERNATIONAL NV-NY REG SHS", "securityType": "NY Reg Shrs",
+                 "securityType2": "Depositary Receipt", "shareClassFIGI": "Y"}
         for bad in (adr, other):
             with patch.object(p, "request", side_effect=[[{}], [{"data": [bad]}]]):
                 self.assertEqual(p.resolve(list(required), required, {"N07059210": "ASML"}), {})

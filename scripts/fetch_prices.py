@@ -123,7 +123,7 @@ def resolve(cusips, required, known):
             {"idType": "TICKER", "idValue": ticker, "exchCode": "US"}])
         data = rows[0].get("data", []) if isinstance(rows, list) and rows else []
         candidates = [r for r in data if r.get("ticker") == ticker
-                      and (r.get("securityType") in SHARE_TYPES or r.get("securityType2") == "Common Stock")
+                      and r.get("securityType") in SHARE_TYPES
                       and same_issuer(r.get("name", ""), identity["name"])]
         if candidates and len({r.get("shareClassFIGI") for r in candidates}) == 1:
             result[cusip] = ticker
@@ -139,15 +139,17 @@ def resolve(cusips, required, known):
 # 종류 글자(CL A·SHS CL C)·우선주·단위(UNIT)는 넣지 않는다.
 PLAIN = re.compile(r"COM(?:MON(?: STOCK)?)?|SHS|ORD(?: SHS)?|ORDINARY SHARES|"
                    r"N ?Y REGISTRY SHS|NY REG(?:ISTRY)? SHS|REG SHS|NAMEN AKT")
-# OpenFIGI 의 securityType. 뉴욕 등록주는 'NY Reg Shrs' 로 온다고 알려져 있지만
-# 실물을 못 봤으므로 넓은 칸(securityType2)이 'Common Stock' 이어도 받는다.
-# ADR 은 둘 다 아니다('ADR' · 'Depositary Receipt').
+# OpenFIGI 의 securityType. 뉴욕 등록주는 'NY Reg Shrs' 로 온다(2026-09-28 러너 실측 —
+# 넓은 칸 securityType2 는 'Depositary Receipt' 라 그쪽으로는 가릴 수 없다). ADR 은 'ADR'.
 SHARE_TYPES = {"Common Stock", "NY Reg Shrs"}
+# 회사 이름이 아니라 **주식 종류**를 적은 낱말. OpenFIGI 는 뉴욕 등록주 이름 끝에
+# 종류를 붙인다: 'ASML HOLDING NV-NY REG SHS'(실측). 공시는 'ASML HLDG NV'.
+NOT_NAME = {"HLDG", "NY", "N", "Y", "REG", "REGISTRY", "SHS"}
 
 
 def same_issuer(a, b):
-    """공시는 `ASML HLDG NV`, OpenFIGI 는 `ASML HOLDING NV` 로 적는다."""
-    drop = lambda n: sorted(w for w in norm(n) if w != "HLDG")
+    """공시는 `ASML HLDG NV`, OpenFIGI 는 `ASML HOLDING NV-NY REG SHS` 로 적는다."""
+    drop = lambda n: sorted(w for w in norm(n) if w not in NOT_NAME)
     return drop(a) == drop(b)
 
 

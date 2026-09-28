@@ -5,6 +5,14 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+ASML 종가 2차 — 실제 OpenFIGI 응답에 맞춤
+- 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
+- 규칙: 이름 비교에서 주식 종류 낱말(NY·REG·REGISTRY·SHS)과 HLDG 를 버림.
+  종류는 securityType 'NY Reg Shrs' 로만(securityType2 는 'Depositary Receipt' 라 못 씀).
+- 굳힘: 검사가 러너 로그의 원본 응답을 그대로 씀.
+- 넘김: 머지 뒤 Update Prices → `N07059210 ASML: N days` 확인.
+
+## 2026-09-28 · Claude · PR #96
 ASML 종가 — 해외 종목 우회 규칙이 뉴욕 등록주를 받게
 - 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
 - 규칙: CINS 우회는 한 종류뿐인 본주 표기만(COM·SHS·ORD·N Y REGISTRY SHS·REG SHS·

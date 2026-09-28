@@ -1569,10 +1569,16 @@ VIX만 열려 있어도 중계소의 open은 참이므로 그 값으로 SPY·QQQ
     ADR 이 아니라 본주 그대로)입니다. 해외 종목용 우회 규칙이 종류 `COM` 만
     받았고, 이름도 `ASML HLDG NV` vs `ASML HOLDING NV` 로 어긋났습니다.
     지금은 **한 종류뿐인 본주 표기**(`COM`·`SHS`·`ORD`·`N Y REGISTRY SHS`·`REG SHS`·
-    `NAMEN AKT`)를 받고, 이름 비교에서 `HLDG` 를 버립니다. `CL A`·우선주·ADR·UNIT 은
-    여전히 안 받습니다. OpenFIGI 의 `securityType` 은 개발 환경에서 못 봐서
-    `NY Reg Shrs` 또는 넓은 칸 `securityType2 == "Common Stock"` 을 받고,
-    **못 붙이면 원본 응답을 로그에 찍습니다**(짐작으로 맞춘 자리라서).
+    `NAMEN AKT`)를 받습니다. `CL A`·우선주·ADR·UNIT 은 여전히 안 받습니다.
+    **못 붙이면 원본 응답을 로그에 찍습니다.**
+  - **첫 고침(PR #96)은 짐작이 틀려서 또 빨간불이었습니다.** 개발 환경에서
+    OpenFIGI 가 막혀 응답 모양을 짐작으로 적었는데(이름 `ASML HOLDING NV`,
+    `securityType2 Common Stock`), 원본을 찍게 해 둔 줄이 실제 모양을 보여 줬습니다 —
+    이름이 **`ASML HOLDING NV-NY REG SHS`** 이고 `securityType2` 는
+    `Depositary Receipt` 입니다. 이름 끝의 주식 종류 낱말(`NY REG SHS`)과 `HLDG` 를
+    비교에서 버리고, 종류는 `securityType` 의 `NY Reg Shrs` 로만 받습니다.
+    **짐작한 응답으로 짠 검사는 짐작을 검사할 뿐입니다** — 검사가 이제 러너의
+    원본 응답을 글자 그대로 씁니다. 9-3 의 gzip·OpenFIGI 사고와 같은 자리입니다.
 - **오닐은 `O'Neil Global Advisors, Inc.`(CIK 0001861159) 하나가 걸렸습니다.**
   본인 계좌가 아니라 회사 이름이라 명단에는 안 넣었습니다.
   자세한 표는 `docs/masters-13f.md` 의 *Probe run 1·2*.
