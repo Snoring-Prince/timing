@@ -5,6 +5,15 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+공시마다 금액 단위를 확인 · 애크먼 13F-NT 대신 낸 곳 찾기 · 막스 확정
+- 파일: scripts/fetch_13f.py · scripts/probe_titans.py · scripts/tests/test_audit_regressions.py ·
+  CLAUDE.md · docs/masters-13f.md · 이 일지
+- 규칙: `unit_by()` = 직전 분기 같은 종목 가격과 비교(100배↑ 어긋남 + 10배 안 → 뒤집기),
+  아니면 같은 시대 직전 분기 단위, 아니면 날짜. 버크셔 110쌍 그대로(검사).
+- 굳힘: 정찰 run 36376757948 — 막스 확정(주식은 13F 의 절반), 애크먼 2분기는 13F-NT.
+- 넘김: 머지 뒤 Probe Titans 한 번 → 애크먼 대신 신고한 운용사 이름. 그다음 리루 화면.
+
+## 2026-09-28 · Claude · PR #91
 정찰 2차 결과 반영 · 달리오 뺌 · 드러켄밀러 전 종목 · 하워드 막스 정찰
 - 파일: scripts/probe_titans.py · .github/workflows/probe-titans.yml · CLAUDE.md ·
   docs/masters-13f.md · 이 일지

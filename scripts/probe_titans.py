@@ -130,6 +130,34 @@ def search_names(term, contact):
     return {"bytes": len(body), "hits": named, "head": "" if out else text[:600]}
 
 
+def notice_managers(cik, acc, contact):
+    """13F-NT 표지에서 '대신 신고한 운용사'의 이름·파일번호·CIK 를 찍습니다."""
+    url = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{acc.replace('-', '')}/primary_doc.xml"
+    body = get(url, contact)
+    if not body:
+        print(f"      13F-NT {acc}: 표지를 받지 못했습니다")
+        return
+    save(f"notice/{cik}-{acc}.xml", body)
+    try:
+        root = ET.fromstring(body)
+    except ET.ParseError as e:
+        print(f"      13F-NT {acc}: 표지를 읽지 못했습니다 — {e}")
+        return
+    found = 0
+    for el in root.iter():
+        # 바깥 묶음(otherManagersInfo)과 안쪽 한 칸(otherManager)이 둘 다 걸리므로
+        # 자식이 전부 잎인 **안쪽 칸**만 찍습니다.
+        if "othermanager" not in f13.local(el.tag).lower() or not len(el) or any(len(x) for x in el):
+            continue
+        leaves = {f13.local(x.tag): x.text.strip() for x in el.iter()
+                  if x is not el and len(x) == 0 and (x.text or "").strip()}
+        if leaves:
+            found += 1
+            print(f"      13F-NT {acc} 대신 신고: " + " · ".join(f"{k} {v}" for k, v in leaves.items()))
+    if not found:
+        print(f"      13F-NT {acc}: 대신 신고한 운용사 항목을 못 찾았습니다 (원본 저장함)")
+
+
 def who_signed(cover):
     """표지의 운용사 이름·주소·서명자. 두 번호가 같은 사람들인지 보는 재료."""
     if not cover:
@@ -259,6 +287,12 @@ def probe_one(cand, contact, depth):
                                                        rec.get("reportDate", [])) if fm.startswith("13F")]
         print("      최근 13F 계열 제출: " + (" · ".join(f"{fm} {rd or '?'}→{fd}"
                                                  for fm, fd, rd in recent13[:5]) or "없음"))
+        # 13F-NT 는 "내 보유는 다른 운용사가 대신 신고했다"는 알림입니다(애크먼
+        # 2026 2분기). 누가 대신 냈는지는 그 알림의 표지에 적혀 있으니 읽습니다.
+        for fm, acc in zip(rec.get("form", []), rec.get("accessionNumber", [])):
+            if fm == "13F-NT":
+                notice_managers(cik, acc, contact)
+                break
         if not filings:
             print("      13F-HR 없음")
             report["ciks"].append(r)
