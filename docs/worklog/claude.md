@@ -5,6 +5,16 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+클라만(바우포스트) 화면 — 다섯 번째 투자자
+- 파일: titans/baupost/index.html(새) · titans/index.html(카드) · data/titans/investors.json ·
+  sitemap.xml · CLAUDE.md · docs/masters-13f.md · 이 일지
+- 규칙: 13F 밖(부실채권·부동산·비상장)이 커서 "미국 상장 주식만" 을 글에 적음(숫자 없이).
+  천 달러 단위 공시는 수집기 `unit_by` 가 직전 분기 가격으로 가림.
+- 넘김: 머지 뒤 Update 13F → Update Titans Prices. 13F 로그에서 2023년 이후 분기에
+  `unit_by: prev-quarter` 가 붙는지, 분기 총액이 1000배 튀지 않고 이어지는지 볼 것.
+  토름 숫자(PR #101)는 다음 예약 주가 실행 로그에서 확인.
+
+## 2026-09-28 · Claude · PR #101
 토름 종가 대조 실패에 숫자를 남김
 - 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
 - 결과(PR #100): 해외 5종목 중 LBTYA·KRSP·XP·ALVO 붙음. TRMD(오크트리 1위)는

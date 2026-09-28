@@ -195,6 +195,16 @@ Tepper (old) 2015-12-31     47   100%       12.8%           2%
   the bio and list card say so without numbers. 66 amendments: an unknown
   `amendmentType` keeps the weekly run red until a person looks (by design).
 
+### Klarman registered (2026-09-28)
+
+- `baupost`, CIK 0001061768 (probe 2: BAUPOST GROUP LLC/MA), filing name
+  `Baupost Group LLC`, `since 2013`. Files in thousands after 2023 (median
+  value/shares $0.13); `unit_by()` flips it against the previous stored quarter,
+  same path that fixed Li Lu's six quarters. Bio/card say US-listed shares only
+  (distressed debt, real estate, private deals are outside the 13F).
+- Quote: Margin of Safety (1991), the margin-of-safety definition, checked
+  against several book summaries; 1982 co-founding checked (Wikipedia, CNBC).
+
 ### Probe run 4 (2026-09-28, run 36377898009)
 
 - **Ackman 13F-NT reporting manager:** PERSHING SQUARE INC., CIK 0002026053,
