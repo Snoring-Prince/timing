@@ -1,4 +1,9 @@
 {
+ "00138L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "001547": {
   "cik": "",
   "desc": "",
@@ -8,6 +13,11 @@
   "cik": "2025774",
   "desc": "Services-Health Services",
   "sic": "8000"
+ },
+ "00166R": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "00206R": {
   "cik": "732717",
@@ -24,6 +34,26 @@
   "desc": "Pharmaceutical Preparations",
   "sic": "2834"
  },
+ "00438Y": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "00444X": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "00489Q": {
+  "cik": "1332551",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
+ },
+ "005029": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "00507V": {
   "cik": "",
   "desc": "",
@@ -39,10 +69,45 @@
   "desc": "",
   "sic": ""
  },
+ "00782L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "007903": {
   "cik": "2488",
   "desc": "Semiconductors & Related Devices",
   "sic": "3674"
+ },
+ "00809J": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "00851L": {
+  "cik": "1802883",
+  "desc": "Services-Prepackaged Software",
+  "sic": "7372"
+ },
+ "00BY9D": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "00BZ3C": {
+  "cik": "1655891",
+  "desc": "Deep Sea Foreign Transportation of  Freight",
+  "sic": "4412"
+ },
+ "01449J": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "015271": {
+  "cik": "1035443",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
  },
  "01609W": {
   "cik": "1577552",
@@ -59,6 +124,11 @@
   "desc": "",
   "sic": ""
  },
+ "018606": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "020002": {
   "cik": "899051",
   "desc": "Fire, Marine & Casualty Insurance",
@@ -69,15 +139,35 @@
   "desc": "State Commercial Banks",
   "sic": "6022"
  },
+ "02073F": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "02079K": {
   "cik": "1652044",
   "desc": "Services-Computer Programming, Data Processing, Etc.",
   "sic": "7370"
  },
+ "02083L": {
+  "cik": "2125551",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "02115M": {
+  "cik": "1750106",
+  "desc": "Real Estate",
+  "sic": "6500"
+ },
  "021346": {
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "02156K": {
+  "cik": "1702780",
+  "desc": "Cable & Other Pay Television Services",
+  "sic": "4841"
  },
  "02209S": {
   "cik": "764180",
@@ -89,10 +179,30 @@
   "desc": "Retail-Catalog & Mail-Order Houses",
   "sic": "5961"
  },
+ "02319V": {
+  "cik": "1565025",
+  "desc": "Beverages",
+  "sic": "2080"
+ },
+ "02364W": {
+  "cik": "1129137",
+  "desc": "Telephone Communications (No Radiotelephone)",
+  "sic": "4813"
+ },
  "02376R": {
   "cik": "6201",
   "desc": "Air Transportation, Scheduled",
   "sic": "4512"
+ },
+ "02390A": {
+  "cik": "1129137",
+  "desc": "Telephone Communications (No Radiotelephone)",
+  "sic": "4813"
+ },
+ "025537": {
+  "cik": "4904",
+  "desc": "Electric Services",
+  "sic": "4911"
  },
  "025816": {
   "cik": "4962",
@@ -114,10 +224,40 @@
   "desc": "Water Supply",
   "sic": "4941"
  },
+ "03027X": {
+  "cik": "1053507",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
+ },
+ "03064D": {
+  "cik": "1455863",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
+ },
  "03076C": {
   "cik": "820027",
   "desc": "Investment Advice",
   "sic": "6282"
+ },
+ "03212B": {
+  "cik": "1533924",
+  "desc": "Crude Petroleum & Natural Gas",
+  "sic": "1311"
+ },
+ "03232P": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "032511": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "035128": {
+  "cik": "1973832",
+  "desc": "Gold and Silver Ores",
+  "sic": "1040"
  },
  "035229": {
   "cik": "1668717",
@@ -129,10 +269,25 @@
   "desc": "Crude Petroleum & Natural Gas",
   "sic": "1311"
  },
+ "036752": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "03743Q": {
   "cik": "1841666",
   "desc": "Crude Petroleum & Natural Gas",
   "sic": "1311"
+ },
+ "037612": {
+  "cik": "1858681",
+  "desc": "Investment Advice",
+  "sic": "6282"
+ },
+ "037636": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "037833": {
   "cik": "320193",
@@ -143,6 +298,21 @@
   "cik": "6951",
   "desc": "Semiconductors & Related Devices",
   "sic": "3674"
+ },
+ "03836W": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "03842W": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "03881F": {
+  "cik": "1253986",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
  },
  "039380": {
   "cik": "947484",
@@ -159,30 +329,95 @@
   "desc": "Fats & Oils",
   "sic": "2070"
  },
+ "04005A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "04026L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "040413": {
   "cik": "1596532",
   "desc": "Computer Communications Equipment",
   "sic": "3576"
+ },
+ "040450": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "04208V": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "042644": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "044209": {
   "cik": "1674862",
   "desc": "Wholesale-Chemicals & Allied Products",
   "sic": "5160"
  },
+ "04545L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "04684M": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "047726": {
   "cik": "1958140",
   "desc": "Services-Amusement & Recreation Services",
   "sic": "7900"
+ },
+ "04845A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "05150A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "053015": {
   "cik": "8670",
   "desc": "Services-Computer Processing & Data Preparation",
   "sic": "7374"
  },
+ "05338E": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "05463D": {
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "05467C": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "05501U": {
+  "cik": "1432364",
+  "desc": "Air Transportation, Scheduled",
+  "sic": "4512"
+ },
+ "05545E": {
+  "cik": "811809",
+  "desc": "Metal Mining",
+  "sic": "1000"
  },
  "055622": {
   "cik": "313807",
@@ -199,6 +434,26 @@
   "desc": "Metal Cans",
   "sic": "3411"
  },
+ "059460": {
+  "cik": "1160330",
+  "desc": "State Commercial Banks",
+  "sic": "6022"
+ },
+ "05961W": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "05965X": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "05990K": {
+  "cik": "1169770",
+  "desc": "National Commercial Banks",
+  "sic": "6021"
+ },
  "060505": {
   "cik": "70858",
   "desc": "National Commercial Banks",
@@ -209,15 +464,55 @@
   "desc": "State Commercial Banks",
   "sic": "6022"
  },
+ "06652V": {
+  "cik": "946673",
+  "desc": "State Commercial Banks",
+  "sic": "6022"
+ },
+ "06654K": {
+  "cik": "946673",
+  "desc": "State Commercial Banks",
+  "sic": "6022"
+ },
+ "06690B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "067901": {
   "cik": "756894",
   "desc": "Gold and Silver Ores",
   "sic": "1040"
  },
+ "06849F": {
+  "cik": "756894",
+  "desc": "Gold and Silver Ores",
+  "sic": "1040"
+ },
+ "07134L": {
+  "cik": "1282648",
+  "desc": "Crude Petroleum & Natural Gas",
+  "sic": "1311"
+ },
+ "071705": {
+  "cik": "1860742",
+  "desc": "Ophthalmic Goods",
+  "sic": "3851"
+ },
+ "071734": {
+  "cik": "885590",
+  "desc": "Pharmaceutical Preparations",
+  "sic": "2834"
+ },
  "073463": {
   "cik": "1826889",
   "desc": "Retail-Nonstore Retailers",
   "sic": "5960"
+ },
+ "07402Q": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "07556Q": {
   "cik": "915840",
@@ -229,6 +524,31 @@
   "desc": "Surgical & Medical Instruments & Apparatus",
   "sic": "3841"
  },
+ "07725L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "077347": {
+  "cik": "729580",
+  "desc": "Electronic Coils, Transformers & Other Inductors",
+  "sic": "3677"
+ },
+ "078314": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "079174": {
+  "cik": "2127839",
+  "desc": "",
+  "sic": ""
+ },
+ "08069M": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "084670": {
   "cik": "1067983",
   "desc": "Fire, Marine & Casualty Insurance",
@@ -239,25 +559,95 @@
   "desc": "",
   "sic": ""
  },
+ "08579X": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "086516": {
   "cik": "764478",
   "desc": "Retail-Radio, Tv & Consumer Electronics Stores",
   "sic": "5731"
+ },
+ "09001T": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "090040": {
+  "cik": "1723690",
+  "desc": "Services-Computer Processing & Data Preparation",
+  "sic": "7374"
  },
  "09062X": {
   "cik": "875045",
   "desc": "Biological Products, (No Diagnostic Substances)",
   "sic": "2836"
  },
+ "09075P": {
+  "cik": "1720893",
+  "desc": "Pharmaceutical Preparations",
+  "sic": "2834"
+ },
+ "091941": {
+  "cik": "1287480",
+  "desc": "",
+  "sic": ""
+ },
+ "09216A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "09253U": {
+  "cik": "1393818",
+  "desc": "Investment Advice",
+  "sic": "6282"
+ },
+ "09255X": {
+  "cik": "1259708",
+  "desc": "",
+  "sic": ""
+ },
+ "09256U": {
+  "cik": "1486298",
+  "desc": "",
+  "sic": ""
+ },
+ "09257R": {
+  "cik": "1546429",
+  "desc": "",
+  "sic": ""
+ },
  "093671": {
   "cik": "1512673",
   "desc": "Services-Prepackaged Software",
   "sic": "7372"
  },
+ "09370F": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "095229": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "09570Q": {
+  "cik": "1732379",
+  "desc": "Metal Mining",
+  "sic": "1000"
+ },
  "097023": {
   "cik": "12927",
   "desc": "Aircraft",
   "sic": "3721"
+ },
+ "097793": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "101137": {
   "cik": "885725",
@@ -269,10 +659,25 @@
   "desc": "Hotels & Motels",
   "sic": "7011"
  },
+ "10552T": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "105532": {
+  "cik": "1071438",
+  "desc": "Industrial Organic Chemicals",
+  "sic": "2860"
+ },
  "110122": {
   "cik": "14272",
   "desc": "Pharmaceutical Preparations",
   "sic": "2834"
+ },
+ "11125B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "111320": {
   "cik": "1730168",
@@ -284,10 +689,25 @@
   "desc": "Semiconductors & Related Devices",
   "sic": "3674"
  },
+ "12008J": {
+  "cik": "1113809",
+  "desc": "Retail-Hobby, Toy & Game Shops",
+  "sic": "5945"
+ },
  "12189T": {
   "cik": "1579298",
   "desc": "Retail-Department Stores",
   "sic": "5311"
+ },
+ "123013": {
+  "cik": "2098707",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "124830": {
+  "cik": "910612",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
  },
  "124857": {
   "cik": "",
@@ -299,6 +719,21 @@
   "desc": "Agricultural Chemicals",
   "sic": "2870"
  },
+ "125581": {
+  "cik": "1868995",
+  "desc": "Services-Computer Programming Services",
+  "sic": "7371"
+ },
+ "12561U": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "126132": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "126408": {
   "cik": "277948",
   "desc": "Railroads, Line-Haul Operating",
@@ -308,6 +743,16 @@
   "cik": "64803",
   "desc": "Retail-Drug Stores and Proprietary Stores",
   "sic": "5912"
+ },
+ "126677": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "12674R": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "127097": {
   "cik": "16040",
@@ -334,10 +779,20 @@
   "desc": "Hotels & Motels",
   "sic": "7011"
  },
+ "13057Q": {
+  "cik": "1609253",
+  "desc": "Crude Petroleum & Natural Gas",
+  "sic": "1311"
+ },
  "131476": {
   "cik": "2013745",
   "desc": "Petroleum Refining",
   "sic": "2911"
+ },
+ "13767K": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "14040H": {
   "cik": "927628",
@@ -354,6 +809,11 @@
   "desc": "Water Transportation",
   "sic": "4400"
  },
+ "14739D": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "150870": {
   "cik": "1306830",
   "desc": "Plastic Material, Synth Resin/Rubber, Cellulos (No Glass)",
@@ -364,10 +824,30 @@
   "desc": "Cement, Hydraulic",
   "sic": "3241"
  },
+ "15130M": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "15135B": {
   "cik": "1071739",
   "desc": "Hospital & Medical Service Plans",
   "sic": "6324"
+ },
+ "156504": {
+  "cik": "1576940",
+  "desc": "Operative Builders",
+  "sic": "1531"
+ },
+ "15719Y": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "159561": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "16117M": {
   "cik": "1091667",
@@ -404,8 +884,28 @@
   "desc": "Real Estate Investment Trusts",
   "sic": "6798"
  },
+ "16941M": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "16945R": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "171232": {
   "cik": "896159",
+  "desc": "Fire, Marine & Casualty Insurance",
+  "sic": "6331"
+ },
+ "171798": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "171871": {
+  "cik": "20286",
   "desc": "Fire, Marine & Casualty Insurance",
   "sic": "6331"
  },
@@ -419,6 +919,21 @@
   "desc": "",
   "sic": ""
  },
+ "17888H": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "184493": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "18453H": {
+  "cik": "1334978",
+  "desc": "Services-Advertising",
+  "sic": "7310"
+ },
  "184692": {
   "cik": "1517518",
   "desc": "",
@@ -429,10 +944,25 @@
   "desc": "Electric Services",
   "sic": "4911"
  },
+ "18915E": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "191216": {
   "cik": "21344",
   "desc": "Beverages",
   "sic": "2080"
+ },
+ "19533H": {
+  "cik": "2091024",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "198287": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "20030N": {
   "cik": "1166691",
@@ -449,10 +979,40 @@
   "desc": "",
   "sic": ""
  },
+ "203233": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "203668": {
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "204409": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "20440T": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "20441W": {
+  "cik": "1170858",
+  "desc": "Water Supply",
+  "sic": "4941"
+ },
+ "204448": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "20607V": {
+  "cik": "1851959",
+  "desc": "Blank Checks",
+  "sic": "6770"
  },
  "20825C": {
   "cik": "1163165",
@@ -474,10 +1034,30 @@
   "desc": "Electric Services",
   "sic": "4911"
  },
+ "210751": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "21075N": {
+  "cik": "1502377",
+  "desc": "Gold and Silver Ores",
+  "sic": "1040"
+ },
+ "21241B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "21873S": {
   "cik": "1769628",
   "desc": "Services-Prepackaged Software",
   "sic": "7372"
+ },
+ "21874A": {
+  "cik": "1839341",
+  "desc": "Finance Services",
+  "sic": "6199"
  },
  "219350": {
   "cik": "24741",
@@ -489,10 +1069,45 @@
   "desc": "Retail-Variety Stores",
   "sic": "5331"
  },
+ "22266T": {
+  "cik": "1834584",
+  "desc": "Retail-Catalog & Mail-Order Houses",
+  "sic": "5961"
+ },
+ "22542D": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "22662K": {
+  "cik": "1562151",
+  "desc": "Beverages",
+  "sic": "2080"
+ },
  "227046": {
   "cik": "1334036",
   "desc": "Rubber & Plastics Footwear",
   "sic": "3021"
+ },
+ "228227": {
+  "cik": "1051470",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
+ },
+ "22822V": {
+  "cik": "1051470",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
+ },
+ "22943F": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "231082": {
+  "cik": "1058623",
+  "desc": "Radio Broadcasting Stations",
+  "sic": "4832"
  },
  "232820": {
   "cik": "",
@@ -504,12 +1119,37 @@
   "desc": "Operative Builders",
   "sic": "1531"
  },
+ "233331": {
+  "cik": "936340",
+  "desc": "Electric Services",
+  "sic": "4911"
+ },
+ "23344T": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "235851": {
+  "cik": "313616",
+  "desc": "Industrial Instruments For Measurement, Display, and Control",
+  "sic": "3823"
+ },
+ "23703Q": {
+  "cik": "1477641",
+  "desc": "Semiconductors & Related Devices",
+  "sic": "3674"
+ },
  "23918K": {
   "cik": "927066",
   "desc": "Services-Misc Health & Allied Services, NEC",
   "sic": "8090"
  },
  "242370": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "243733": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -534,10 +1174,30 @@
   "desc": "Beverages",
   "sic": "2080"
  },
+ "252603": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "253393": {
   "cik": "1089063",
   "desc": "Retail-Miscellaneous Shopping Goods Stores",
   "sic": "5940"
+ },
+ "253651": {
+  "cik": "28823",
+  "desc": "Calculating & Accounting Machines (No Electronic Computers)",
+  "sic": "3578"
+ },
+ "253893": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "25460L": {
+  "cik": "1880613",
+  "desc": "Services-Advertising",
+  "sic": "7310"
  },
  "254687": {
   "cik": "1744489",
@@ -564,6 +1224,11 @@
   "desc": "Retail-Variety Stores",
   "sic": "5331"
  },
+ "25746U": {
+  "cik": "715957",
+  "desc": "Electric Services",
+  "sic": "4911"
+ },
  "25754A": {
   "cik": "1286681",
   "desc": "Wholesale-Groceries & Related Products",
@@ -584,6 +1249,11 @@
   "desc": "",
   "sic": ""
  },
+ "26431Q": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "264399": {
   "cik": "1326160",
   "desc": "Electric & Other Services Combined",
@@ -599,6 +1269,16 @@
   "desc": "",
   "sic": ""
  },
+ "26817R": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "26846A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "268648": {
   "cik": "",
   "desc": "",
@@ -608,6 +1288,21 @@
   "cik": "33213",
   "desc": "Crude Petroleum & Natural Gas",
   "sic": "1311"
+ },
+ "26884U": {
+  "cik": "1045450",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
+ },
+ "269246": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "269279": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "26969P": {
   "cik": "918646",
@@ -629,10 +1324,60 @@
   "desc": "Misc Industrial & Commercial Machinery & Equipment",
   "sic": "3590"
  },
+ "27826S": {
+  "cik": "1070732",
+  "desc": "",
+  "sic": ""
+ },
+ "278279": {
+  "cik": "1288992",
+  "desc": "",
+  "sic": ""
+ },
+ "27828Q": {
+  "cik": "1258623",
+  "desc": "",
+  "sic": ""
+ },
+ "278768": {
+  "cik": "1415404",
+  "desc": "Communications Services, NEC",
+  "sic": "4899"
+ },
+ "27877D": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "279158": {
+  "cik": "1444406",
+  "desc": "Crude Petroleum & Natural Gas",
+  "sic": "1311"
+ },
+ "27923Q": {
+  "cik": "1708035",
+  "desc": "Chemicals & Allied Products",
+  "sic": "2800"
+ },
  "281020": {
   "cik": "827052",
   "desc": "Electric Services",
   "sic": "4911"
+ },
+ "28201D": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "28470R": {
+  "cik": "918608",
+  "desc": "Gold and Silver Ores",
+  "sic": "1040"
+ },
+ "29082A": {
+  "cik": "1355444",
+  "desc": "Aircraft",
+  "sic": "3721"
  },
  "291011": {
   "cik": "32604",
@@ -654,7 +1399,17 @@
   "desc": "",
   "sic": ""
  },
+ "29276K": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "29278N": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "29336T": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -664,10 +1419,20 @@
   "desc": "Natural Gas Transmission",
   "sic": "4922"
  },
+ "29476L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "29788T": {
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "29978K": {
+  "cik": "2015845",
+  "desc": "Operative Builders",
+  "sic": "1531"
  },
  "30212P": {
   "cik": "1324424",
@@ -675,6 +1440,11 @@
   "sic": "4700"
  },
  "30219G": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "30227M": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -694,13 +1464,58 @@
   "desc": "Services-Computer Programming, Data Processing, Etc.",
   "sic": "7370"
  },
+ "31154R": {
+  "cik": "1591670",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
+ },
  "31428X": {
   "cik": "1048911",
   "desc": "Air Courier Services",
   "sic": "4513"
  },
+ "31561T": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "31660B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "31772T": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "31811H": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "318136": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "318672": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "319963": {
   "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "320703": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "33733U": {
+  "cik": "1282850",
   "desc": "",
   "sic": ""
  },
@@ -724,6 +1539,11 @@
   "desc": "Heavy Construction Other Than Bldg Const - Contractors",
   "sic": "1600"
  },
+ "344419": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "344849": {
   "cik": "",
   "desc": "",
@@ -734,10 +1554,45 @@
   "desc": "Motor Vehicles & Passenger Car Bodies",
   "sic": "3711"
  },
+ "34958B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "34959J": {
+  "cik": "1659166",
+  "desc": "Industrial Instruments For Measurement, Display, and Control",
+  "sic": "3823"
+ },
+ "34960P": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "34969G": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "35671D": {
   "cik": "831259",
   "desc": "Metal Mining",
   "sic": "1000"
+ },
+ "35906A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "35909D": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "35969L": {
+  "cik": "1838413",
+  "desc": "Services-Prepackaged Software",
+  "sic": "7372"
  },
  "360921": {
   "cik": "",
@@ -749,10 +1604,25 @@
   "desc": "Misc Industrial & Commercial Machinery & Equipment",
   "sic": "3590"
  },
+ "36118W": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "36119D": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "361448": {
   "cik": "40211",
   "desc": "Transportation Services",
   "sic": "4700"
+ },
+ "36164V": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "36225X": {
   "cik": "",
@@ -769,6 +1639,16 @@
   "desc": "Retail-Family Clothing Stores",
   "sic": "5651"
  },
+ "365506": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "366505": {
+  "cik": "1735707",
+  "desc": "Motor Vehicle Parts & Accessories",
+  "sic": "3714"
+ },
  "369550": {
   "cik": "40533",
   "desc": "Ship & Boat Building & Repairing",
@@ -784,7 +1664,37 @@
   "desc": "",
   "sic": ""
  },
+ "371559": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "37186H": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "37187C": {
+  "cik": "1022321",
+  "desc": "Pipe Lines (No Natural Gas)",
+  "sic": "4610"
+ },
+ "373737": {
+  "cik": "1073404",
+  "desc": "Steel Works, Blast Furnaces & Rolling & Finishing Mills",
+  "sic": "3310"
+ },
+ "374297": {
+  "cik": "1052752",
+  "desc": "Real Estate",
+  "sic": "6500"
+ },
  "375766": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "37653T": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -794,15 +1704,45 @@
   "desc": "",
   "sic": ""
  },
+ "37892B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "37892F": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "37959E": {
   "cik": "320335",
   "desc": "Life Insurance",
   "sic": "6311"
  },
+ "37962G": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "380956": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "38136Y": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "38141G": {
   "cik": "886982",
   "desc": "Security Brokers, Dealers & Flotation Companies",
   "sic": "6211"
+ },
+ "38216G": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "382550": {
   "cik": "42582",
@@ -814,6 +1754,11 @@
   "desc": "",
   "sic": ""
  },
+ "384272": {
+  "cik": "2123380",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
  "384637": {
   "cik": "",
   "desc": "",
@@ -823,6 +1768,21 @@
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "40049J": {
+  "cik": "912892",
+  "desc": "Television Broadcasting Stations",
+  "sic": "4833"
+ },
+ "40053C": {
+  "cik": "1114700",
+  "desc": "Commercial Banks, NEC",
+  "sic": "6029"
+ },
+ "40054J": {
+  "cik": "1561861",
+  "desc": "Air Transportation, Scheduled",
+  "sic": "4512"
  },
  "404119": {
   "cik": "860730",
@@ -834,6 +1794,11 @@
   "desc": "Services-General Medical & Surgical Hospitals, NEC",
   "sic": "8062"
  },
+ "40415F": {
+  "cik": "1144967",
+  "desc": "Commercial Banks, NEC",
+  "sic": "6029"
+ },
  "40416M": {
   "cik": "",
   "desc": "",
@@ -844,10 +1809,20 @@
   "desc": "Computer & office Equipment",
   "sic": "3570"
  },
+ "40472A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "405217": {
   "cik": "910406",
   "desc": "Food and Kindred Products",
   "sic": "2000"
+ },
+ "40537Q": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "406216": {
   "cik": "45012",
@@ -858,6 +1833,21 @@
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "42217K": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "42227R": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "42237V": {
+  "cik": "799233",
+  "desc": "Trucking (No Local)",
+  "sic": "4213"
  },
  "422806": {
   "cik": "46619",
@@ -879,6 +1869,11 @@
   "desc": "Services-Auto Rental & Leasing (No Drivers)",
   "sic": "7510"
  },
+ "42806J": {
+  "cik": "1657853",
+  "desc": "Services-Auto Rental & Leasing (No Drivers)",
+  "sic": "7510"
+ },
  "42809H": {
   "cik": "1789832",
   "desc": "Crude Petroleum & Natural Gas",
@@ -888,6 +1883,16 @@
   "cik": "1645590",
   "desc": "Computer & office Equipment",
   "sic": "3570"
+ },
+ "43010E": {
+  "cik": "810943",
+  "desc": "",
+  "sic": "0000"
+ },
+ "433000": {
+  "cik": "1773751",
+  "desc": "Services-Offices & Clinics of  Doctors of  Medicine",
+  "sic": "8011"
  },
  "437076": {
   "cik": "354950",
@@ -899,6 +1904,26 @@
   "desc": "Aircraft Engines & Engine Parts",
   "sic": "3724"
  },
+ "44157R": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "44332N": {
+  "cik": "1483994",
+  "desc": "Hotels & Motels",
+  "sic": "7011"
+ },
+ "44364H": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "444144": {
+  "cik": "925528",
+  "desc": "Wholesale-Machinery, Equipment & Supplies",
+  "sic": "5080"
+ },
  "444859": {
   "cik": "49071",
   "desc": "Hospital & Medical Service Plans",
@@ -909,22 +1934,122 @@
   "desc": "Chemicals & Allied Products",
   "sic": "2800"
  },
+ "44852D": {
+  "cik": "1728190",
+  "desc": "Services-Computer Programming, Data Processing, Etc.",
+  "sic": "7370"
+ },
+ "45104G": {
+  "cik": "1103838",
+  "desc": "Commercial Banks, NEC",
+  "sic": "6029"
+ },
+ "45174J": {
+  "cik": "1400891",
+  "desc": "Radio Broadcasting Stations",
+  "sic": "4832"
+ },
+ "45174L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "45333D": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "45579U": {
+  "cik": "1625297",
+  "desc": "Pharmaceutical Preparations",
+  "sic": "2834"
+ },
+ "45617P": {
+  "cik": "1717307",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
+ },
+ "45635R": {
+  "cik": "1717307",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
+ },
+ "45667G": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "456788": {
+  "cik": "1067491",
+  "desc": "Services-Computer Programming Services",
+  "sic": "7371"
+ },
+ "45686J": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "45688C": {
+  "cik": "1653477",
+  "desc": "Chemicals & Allied Products",
+  "sic": "2800"
+ },
  "457187": {
   "cik": "1046257",
   "desc": "Grain Mill Products",
   "sic": "2040"
+ },
+ "45784L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "458140": {
   "cik": "50863",
   "desc": "Semiconductors & Related Devices",
   "sic": "3674"
  },
+ "45827R": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "45828D": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "459200": {
   "cik": "51143",
   "desc": "Computer & office Equipment",
   "sic": "3570"
  },
+ "459506": {
+  "cik": "51253",
+  "desc": "Industrial Organic Chemicals",
+  "sic": "2860"
+ },
  "460690": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "46131H": {
+  "cik": "1059386",
+  "desc": "",
+  "sic": ""
+ },
+ "46132C": {
+  "cik": "884152",
+  "desc": "",
+  "sic": ""
+ },
+ "46132P": {
+  "cik": "885601",
+  "desc": "",
+  "sic": ""
+ },
+ "46132R": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -944,6 +2069,11 @@
   "desc": "Services-Video Tape Rental",
   "sic": "7841"
  },
+ "46269C": {
+  "cik": "1418819",
+  "desc": "Communications Services, NEC",
+  "sic": "4899"
+ },
  "462846": {
   "cik": "1020569",
   "desc": "Real Estate Investment Trusts",
@@ -958,6 +2088,26 @@
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "464288": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "46429B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "465562": {
+  "cik": "1132597",
+  "desc": "State Commercial Banks",
+  "sic": "6022"
+ },
+ "46591M": {
+  "cik": "1530238",
+  "desc": "Services-Computer Processing & Data Preparation",
+  "sic": "7374"
  },
  "46625H": {
   "cik": "19617",
@@ -994,6 +2144,21 @@
   "desc": "",
   "sic": ""
  },
+ "48203N": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "482082": {
+  "cik": "1679628",
+  "desc": "Pharmaceutical Preparations",
+  "sic": "2834"
+ },
+ "48208E": {
+  "cik": "1679628",
+  "desc": "Pharmaceutical Preparations",
+  "sic": "2834"
+ },
  "48242W": {
   "cik": "1357615",
   "desc": "Heavy Construction Other Than Bldg Const - Contractors",
@@ -1004,10 +2169,20 @@
   "desc": "Real Estate Agents & Managers (For Others)",
   "sic": "6531"
  },
+ "48553T": {
+  "cik": "1842827",
+  "desc": "Services-Computer Programming, Data Processing, Etc.",
+  "sic": "7370"
+ },
  "486606": {
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "48666K": {
+  "cik": "795266",
+  "desc": "Operative Builders",
+  "sic": "1531"
  },
  "489170": {
   "cik": "55242",
@@ -1024,15 +2199,35 @@
   "desc": "Blank Checks",
   "sic": "6770"
  },
+ "49427F": {
+  "cik": "1025996",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
+ },
+ "49436K": {
+  "cik": "1657788",
+  "desc": "Crude Petroleum & Natural Gas",
+  "sic": "1311"
+ },
  "49456B": {
   "cik": "1506307",
   "desc": "Natural Gas Transmission",
   "sic": "4922"
  },
+ "49639K": {
+  "cik": "1795589",
+  "desc": "Services-Prepackaged Software",
+  "sic": "7372"
+ },
  "499049": {
   "cik": "1492691",
   "desc": "Trucking (No Local)",
   "sic": "4213"
+ },
+ "499103": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "500255": {
   "cik": "885639",
@@ -1069,6 +2264,16 @@
   "desc": "",
   "sic": ""
  },
+ "50202D": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "50202M": {
+  "cik": "1791706",
+  "desc": "Motor Vehicles & Passenger Car Bodies",
+  "sic": "3711"
+ },
  "502431": {
   "cik": "202058",
   "desc": "Search, Detection, Navigation, Guidance, Aeronautical Sys",
@@ -1089,15 +2294,40 @@
   "desc": "Real Estate Investment Trusts",
   "sic": "6798"
  },
+ "51724W": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "517834": {
   "cik": "1300514",
   "desc": "Hotels & Motels",
   "sic": "7011"
  },
+ "519345": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "521865": {
+  "cik": "842162",
+  "desc": "Motor Vehicle Parts & Accessories",
+  "sic": "3714"
+ },
  "523768": {
   "cik": "58361",
   "desc": "Newspapers: Publishing or  Publishing & Printing",
   "sic": "2711"
+ },
+ "52473Y": {
+  "cik": "2087450",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "52476L": {
+  "cik": "2052568",
+  "desc": "Construction - Special Trade Contractors",
+  "sic": "1700"
  },
  "526057": {
   "cik": "920760",
@@ -1109,7 +2339,17 @@
   "desc": "",
   "sic": ""
  },
+ "529043": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "529771": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "530307": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -1118,6 +2358,16 @@
   "cik": "1560385",
   "desc": "Television Broadcasting Stations",
   "sic": "4833"
+ },
+ "53046P": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "53071M": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "53073L": {
   "cik": "1560385",
@@ -1129,6 +2379,11 @@
   "desc": "Services-Amusement & Recreation Services",
   "sic": "7900"
  },
+ "53118A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "531229": {
   "cik": "1560385",
   "desc": "Television Broadcasting Stations",
@@ -1139,10 +2394,25 @@
   "desc": "Life Insurance",
   "sic": "6311"
  },
+ "536262": {
+  "cik": "2015955",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
  "539320": {
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "54141L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "54150E": {
+  "cik": "1711375",
+  "desc": "Cement, Hydraulic",
+  "sic": "3241"
  },
  "544147": {
   "cik": "",
@@ -1159,6 +2429,11 @@
   "desc": "Retail-Lumber & Other Building Materials Dealers",
   "sic": "5211"
  },
+ "54975P": {
+  "cik": "1816007",
+  "desc": "Finance Services",
+  "sic": "6199"
+ },
  "55087P": {
   "cik": "1759509",
   "desc": "Services-Business Services, NEC",
@@ -1169,10 +2444,25 @@
   "desc": "State Commercial Banks",
   "sic": "6022"
  },
+ "55282T": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "552848": {
+  "cik": "876437",
+  "desc": "Surety Insurance",
+  "sic": "6351"
+ },
  "552953": {
   "cik": "789570",
   "desc": "Hotels & Motels",
   "sic": "7011"
+ },
+ "55305B": {
+  "cik": "799292",
+  "desc": "Operative Builders",
+  "sic": "1531"
  },
  "553274": {
   "cik": "",
@@ -1194,10 +2484,25 @@
   "desc": "Retail-Department Stores",
   "sic": "5311"
  },
+ "55826T": {
+  "cik": "1952073",
+  "desc": "Services-Miscellaneous Amusement & Recreation",
+  "sic": "7990"
+ },
  "559080": {
   "cik": "1515317",
   "desc": "Metal Mining",
   "sic": "1000"
+ },
+ "55933J": {
+  "cik": "1325702",
+  "desc": "Semiconductors & Related Devices",
+  "sic": "3674"
+ },
+ "56608A": {
+  "cik": "1965052",
+  "desc": "Finance Services",
+  "sic": "6199"
  },
  "570535": {
   "cik": "1096343",
@@ -1219,6 +2524,11 @@
   "desc": "Heating Equip, Except Elec & Warm Air; & Plumbing Fixtures",
   "sic": "3430"
  },
+ "575385": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "57636Q": {
   "cik": "1141391",
   "desc": "Services-Business Services, NEC",
@@ -1228,6 +2538,31 @@
   "cik": "891103",
   "desc": "Services-Computer Programming, Data Processing, Etc.",
   "sic": "7370"
+ },
+ "57682V": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "577128": {
+  "cik": "63296",
+  "desc": "Nonferrous Foundries (Castings)",
+  "sic": "3360"
+ },
+ "57778T": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "57808L": {
+  "cik": "1823255",
+  "desc": "Metal Mining",
+  "sic": "1000"
+ },
+ "580037": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "58155Q": {
   "cik": "927653",
@@ -1244,10 +2579,40 @@
   "desc": "",
   "sic": ""
  },
+ "585464": {
+  "cik": "1381640",
+  "desc": "Hotels & Motels",
+  "sic": "7011"
+ },
+ "58733R": {
+  "cik": "1099590",
+  "desc": "Services-Business Services, NEC",
+  "sic": "7389"
+ },
+ "58759A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "58933Y": {
   "cik": "310158",
   "desc": "Pharmaceutical Preparations",
   "sic": "2834"
+ },
+ "589381": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "590717": {
+  "cik": "1345099",
+  "desc": "Biological Products, (No Diagnostic Substances)",
+  "sic": "2836"
+ },
+ "591176": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "59156R": {
   "cik": "1099219",
@@ -1264,6 +2629,26 @@
   "desc": "Semiconductors & Related Devices",
   "sic": "3674"
  },
+ "59804T": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "60436Q": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "607409": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "60742N": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "608190": {
   "cik": "851968",
   "desc": "Carpets & Rugs",
@@ -1279,6 +2664,21 @@
   "desc": "",
   "sic": ""
  },
+ "61240F": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "61244M": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "615111": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "615369": {
   "cik": "1059556",
   "desc": "Services-Consumer Credit Reporting, Collection Agencies",
@@ -1288,6 +2688,16 @@
   "cik": "1285785",
   "desc": "Agricultural Chemicals",
   "sic": "2870"
+ },
+ "623006": {
+  "cik": "2051820",
+  "desc": "Investment Advice",
+  "sic": "6282"
+ },
+ "62404B": {
+  "cik": "1859035",
+  "desc": "Surgical & Medical Instruments & Apparatus",
+  "sic": "3841"
  },
  "624756": {
   "cik": "89439",
@@ -1304,6 +2714,21 @@
   "desc": "",
   "sic": ""
  },
+ "626642": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "629209": {
+  "cik": "1547903",
+  "desc": "Surety Insurance",
+  "sic": "6351"
+ },
+ "629337": {
+  "cik": "918541",
+  "desc": "Metalworkg Machinery & Equipment",
+  "sic": "3540"
+ },
  "629377": {
   "cik": "1013871",
   "desc": "Electric Services",
@@ -1319,12 +2744,37 @@
   "desc": "Operative Builders",
   "sic": "1531"
  },
+ "629567": {
+  "cik": "1163739",
+  "desc": "Drilling Oil & Gas Wells",
+  "sic": "1381"
+ },
+ "629579": {
+  "cik": "789933",
+  "desc": "Bituminous Coal & Lignite Surface Mining",
+  "sic": "1221"
+ },
  "62985Q": {
   "cik": "",
   "desc": "",
   "sic": ""
  },
+ "633643": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "635309": {
+  "cik": "1377630",
+  "desc": "Services-Advertising",
+  "sic": "7310"
+ },
  "637071": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "63861C": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -1344,7 +2794,22 @@
   "desc": "Services-Video Tape Rental",
   "sic": "7841"
  },
+ "64110W": {
+  "cik": "1110646",
+  "desc": "Services-Prepackaged Software",
+  "sic": "7372"
+ },
+ "64361Q": {
+  "cik": "2074176",
+  "desc": "Crude Petroleum & Natural Gas",
+  "sic": "1311"
+ },
  "647581": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "64944P": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -1354,10 +2819,20 @@
   "desc": "Newspapers: Publishing or  Publishing & Printing",
   "sic": "2711"
  },
+ "65339F": {
+  "cik": "753308",
+  "desc": "Electric Services",
+  "sic": "4911"
+ },
  "654106": {
   "cik": "320187",
   "desc": "Rubber & Plastics Footwear",
   "sic": "3021"
+ },
+ "654902": {
+  "cik": "924613",
+  "desc": "Radio & Tv Broadcasting & Communications Equipment",
+  "sic": "3663"
  },
  "655664": {
   "cik": "",
@@ -1369,7 +2844,27 @@
   "desc": "Railroads, Line-Haul Operating",
   "sic": "4011"
  },
+ "66538L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "665531": {
+  "cik": "1104485",
+  "desc": "Crude Petroleum & Natural Gas",
+  "sic": "1311"
+ },
+ "66718N": {
+  "cik": "2133719",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
  "67011P": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "67022R": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -1384,17 +2879,82 @@
   "desc": "Semiconductors & Related Devices",
   "sic": "3674"
  },
+ "67067Y": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "6706EN": {
+  "cik": "1276533",
+  "desc": "",
+  "sic": ""
+ },
+ "67072T": {
+  "cik": "1276533",
+  "desc": "",
+  "sic": ""
+ },
+ "67073D": {
+  "cik": "1227476",
+  "desc": "",
+  "sic": ""
+ },
+ "67074X": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "670851": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "670865": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "67104A": {
   "cik": "1039065",
   "desc": "Semiconductors & Related Devices",
   "sic": "3674"
+ },
+ "67190B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "67401P": {
+  "cik": "1414932",
+  "desc": "",
+  "sic": ""
+ },
+ "67402D": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "674215": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "674599": {
   "cik": "797468",
   "desc": "Crude Petroleum & Natural Gas",
   "sic": "1311"
  },
+ "675746": {
+  "cik": "873860",
+  "desc": "Mortgage Bankers & Loan Correspondents",
+  "sic": "6162"
+ },
  "676220": {
+  "cik": "1456772",
+  "desc": "Real Estate",
+  "sic": "6500"
+ },
+ "67623C": {
   "cik": "1456772",
   "desc": "Real Estate",
   "sic": "6500"
@@ -1403,6 +2963,11 @@
   "cik": "29989",
   "desc": "Services-Advertising Agencies",
   "sic": "7311"
+ },
+ "68218C": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "68389X": {
   "cik": "1341439",
@@ -1413,6 +2978,11 @@
   "cik": "1821825",
   "desc": "Pharmaceutical Preparations",
   "sic": "2834"
+ },
+ "68829A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "689899": {
   "cik": "",
@@ -1429,6 +2999,11 @@
   "desc": "Abrasive, Asbestos & Misc Nonmetallic Mineral Prods",
   "sic": "3290"
  },
+ "69121K": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "69331C": {
   "cik": "1004980",
   "desc": "Electric & Other Services Combined",
@@ -1438,6 +3013,11 @@
   "cik": "713676",
   "desc": "National Commercial Banks",
   "sic": "6021"
+ },
+ "693483": {
+  "cik": "889132",
+  "desc": "Steel Works, Blast Furnaces & Rolling Mills (Coke Ovens)",
+  "sic": "3312"
  },
  "693506": {
   "cik": "79879",
@@ -1449,6 +3029,41 @@
   "desc": "Arrangement of  Transportation of  Freight & Cargo",
   "sic": "4731"
  },
+ "69512X": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "697660": {
+  "cik": "1469395",
+  "desc": "Electric Services",
+  "sic": "4911"
+ },
+ "69882P": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "69888T": {
+  "cik": "821483",
+  "desc": "Crude Petroleum & Natural Gas",
+  "sic": "1311"
+ },
+ "69901P": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "69913R": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "70184A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "70450Y": {
   "cik": "1633917",
   "desc": "Services-Business Services, NEC",
@@ -1459,13 +3074,28 @@
   "desc": "Bituminous Coal & Lignite Surface Mining",
   "sic": "1221"
  },
+ "70788V": {
+  "cik": "921738",
+  "desc": "Hotels & Motels",
+  "sic": "7011"
+ },
  "708160": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "71531R": {
   "cik": "",
   "desc": "",
   "sic": ""
  },
  "71646E": {
   "cik": "1108329",
+  "desc": "Crude Petroleum & Natural Gas",
+  "sic": "1311"
+ },
+ "71654V": {
+  "cik": "1119639",
   "desc": "Crude Petroleum & Natural Gas",
   "sic": "1311"
  },
@@ -1478,6 +3108,11 @@
   "cik": "1534701",
   "desc": "Petroleum Refining",
   "sic": "2911"
+ },
+ "71902K": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "720279": {
   "cik": "",
@@ -1499,6 +3134,21 @@
   "desc": "",
   "sic": ""
  },
+ "72942P": {
+  "cik": "2065661",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "732450": {
+  "cik": "2108164",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "73245B": {
+  "cik": "2108164",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
  "73278L": {
   "cik": "945841",
   "desc": "Wholesale-Misc Durable Goods",
@@ -1514,6 +3164,16 @@
   "desc": "",
   "sic": ""
  },
+ "740444": {
+  "cik": "80035",
+  "desc": "Water, Sewer, Pipeline, Comm & Power Line Construction",
+  "sic": "1623"
+ },
+ "74113L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "741503": {
   "cik": "",
   "desc": "",
@@ -1523,6 +3183,11 @@
   "cik": "80424",
   "desc": "Soap, Detergents, Cleang Preparations, Perfumes, Cosmetics",
   "sic": "2840"
+ },
+ "74349W": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "744320": {
   "cik": "1137774",
@@ -1534,12 +3199,42 @@
   "desc": "",
   "sic": ""
  },
+ "74586W": {
+  "cik": "1625101",
+  "desc": "Surgical & Medical Instruments & Apparatus",
+  "sic": "3841"
+ },
+ "747301": {
+  "cik": "1481792",
+  "desc": "Commercial Printing",
+  "sic": "2750"
+ },
+ "74736A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "747525": {
   "cik": "804328",
   "desc": "Radio & Tv Broadcasting & Communications Equipment",
   "sic": "3663"
  },
+ "747906": {
+  "cik": "709283",
+  "desc": "Computer Storage Devices",
+  "sic": "3572"
+ },
+ "74841A": {
+  "cik": "1978528",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
  "74909E": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "74954L": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -1554,6 +3249,11 @@
   "desc": "Crude Petroleum & Natural Gas",
   "sic": "1311"
  },
+ "75508B": {
+  "cik": "1597672",
+  "desc": "Pulp Mills",
+  "sic": "2611"
+ },
  "75513E": {
   "cik": "101829",
   "desc": "Aircraft Engines & Engine Parts",
@@ -1564,10 +3264,25 @@
   "desc": "",
   "sic": ""
  },
+ "758083": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "758932": {
+  "cik": "716643",
+  "desc": "Services-Personal Services",
+  "sic": "7200"
+ },
  "7591EP": {
   "cik": "1281761",
   "desc": "National Commercial Banks",
   "sic": "6021"
+ },
+ "75944B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "760719": {
   "cik": "",
@@ -1579,6 +3294,11 @@
   "desc": "Refuse Systems",
   "sic": "4953"
  },
+ "76119X": {
+  "cik": "1824403",
+  "desc": "Services-Amusement & Recreation Services",
+  "sic": "7900"
+ },
  "76131D": {
   "cik": "",
   "desc": "",
@@ -1589,8 +3309,38 @@
   "desc": "",
   "sic": ""
  },
+ "769395": {
+  "cik": "1041368",
+  "desc": "Savings Institution, Federally Chartered",
+  "sic": "6035"
+ },
+ "77118V": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "772739": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "77867P": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "778920": {
+  "cik": "2068385",
+  "desc": "Services-Computer Processing & Data Preparation",
+  "sic": "7374"
+ },
  "780259": {
   "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "78163D": {
+  "cik": "1653384",
   "desc": "",
   "sic": ""
  },
@@ -1629,15 +3379,40 @@
   "desc": "Crude Petroleum & Natural Gas",
   "sic": "1311"
  },
+ "786514": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "78661R": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "79466L": {
   "cik": "1108524",
   "desc": "Services-Prepackaged Software",
   "sic": "7372"
  },
+ "79956P": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "79970Y": {
+  "cik": "1349436",
+  "desc": "Crude Petroleum & Natural Gas",
+  "sic": "1311"
+ },
  "80004C": {
   "cik": "2023554",
   "desc": "Computer Storage Devices",
   "sic": "3572"
+ },
+ "80007P": {
+  "cik": "1349436",
+  "desc": "Crude Petroleum & Natural Gas",
+  "sic": "1311"
  },
  "80105N": {
   "cik": "1121404",
@@ -1649,7 +3424,17 @@
   "desc": "",
   "sic": ""
  },
+ "81141R": {
+  "cik": "1703399",
+  "desc": "Services-Miscellaneous Business Services",
+  "sic": "7380"
+ },
  "81211K": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "81221H": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -1659,10 +3444,20 @@
   "desc": "Oil & Gas Field Services, NEC",
   "sic": "1389"
  },
+ "816851": {
+  "cik": "1032208",
+  "desc": "Gas & Other Services Combined",
+  "sic": "4932"
+ },
  "81760N": {
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "81761L": {
+  "cik": "945394",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
  },
  "820286": {
   "cik": "",
@@ -1674,25 +3469,75 @@
   "desc": "",
   "sic": ""
  },
+ "822821": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "82481R": {
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "82489W": {
+  "cik": "1831651",
+  "desc": "Semiconductors & Related Devices",
+  "sic": "3674"
  },
  "82509L": {
   "cik": "1594805",
   "desc": "Services-Prepackaged Software",
   "sic": "7372"
  },
+ "82537G": {
+  "cik": "1831651",
+  "desc": "Semiconductors & Related Devices",
+  "sic": "3674"
+ },
+ "826332": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "826917": {
+  "cik": "1010086",
+  "desc": "Pharmaceutical Preparations",
+  "sic": "2834"
+ },
+ "82900L": {
+  "cik": "1702744",
+  "desc": "Food and Kindred Products",
+  "sic": "2000"
+ },
  "82968B": {
   "cik": "908937",
   "desc": "Radio Broadcasting Stations",
   "sic": "4832"
  },
+ "82982V": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "82983N": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "829933": {
   "cik": "908937",
   "desc": "Radio Broadcasting Stations",
   "sic": "4832"
+ },
+ "83014E": {
+  "cik": "2030663",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "83193G": {
+  "cik": "1837014",
+  "desc": "Services-Computer Integrated Systems Design",
+  "sic": "7373"
  },
  "83304A": {
   "cik": "1564408",
@@ -1703,6 +3548,36 @@
   "cik": "1640147",
   "desc": "Services-Prepackaged Software",
   "sic": "7372"
+ },
+ "833551": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "833635": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "83407J": {
+  "cik": "1919847",
+  "desc": "Services-Computer Programming Services",
+  "sic": "7371"
+ },
+ "83587F": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "838518": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "842587": {
+  "cik": "92122",
+  "desc": "Electric Services",
+  "sic": "4911"
  },
  "844741": {
   "cik": "92380",
@@ -1719,6 +3594,16 @@
   "desc": "Services-Computer Programming, Data Processing, Etc.",
   "sic": "7370"
  },
+ "849343": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "85205U": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "85207U": {
   "cik": "",
   "desc": "",
@@ -1729,6 +3614,16 @@
   "desc": "Services-Prepackaged Software",
   "sic": "7372"
  },
+ "854502": {
+  "cik": "93556",
+  "desc": "Cutlery, Handtools & General Hardware",
+  "sic": "3420"
+ },
+ "85512G": {
+  "cik": "1953366",
+  "desc": "Lessors of  Real Property, NEC",
+  "sic": "6519"
+ },
  "85571Q": {
   "cik": "929351",
   "desc": "Services-Motion Picture & Video Tape Production",
@@ -1738,6 +3633,11 @@
   "cik": "93751",
   "desc": "State Commercial Banks",
   "sic": "6022"
+ },
+ "86183Q": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "862121": {
   "cik": "",
@@ -1759,15 +3659,45 @@
   "desc": "Petroleum Refining",
   "sic": "2911"
  },
+ "86764L": {
+  "cik": "1552275",
+  "desc": "Petroleum Refining",
+  "sic": "2911"
+ },
+ "8676EP": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "867914": {
   "cik": "",
   "desc": "",
   "sic": ""
  },
+ "867975": {
+  "cik": "2021938",
+  "desc": "Cable & Other Pay Television Services",
+  "sic": "4841"
+ },
+ "86800U": {
+  "cik": "1375365",
+  "desc": "Electronic Computers",
+  "sic": "3571"
+ },
  "868168": {
   "cik": "95574",
   "desc": "Apparel & Other Finishd Prods of  Fabrics & Similar Matl",
   "sic": "2300"
+ },
+ "86881A": {
+  "cik": "1638833",
+  "desc": "Services-General Medical & Surgical Hospitals, NEC",
+  "sic": "8062"
+ },
+ "86881L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "871503": {
   "cik": "",
@@ -1794,20 +3724,65 @@
   "desc": "Radiotelephone Communications",
   "sic": "4812"
  },
+ "87261Q": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "87266J": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "874039": {
   "cik": "1046179",
   "desc": "Semiconductors & Related Devices",
   "sic": "3674"
+ },
+ "87422Q": {
+  "cik": "1622536",
+  "desc": "Electric Services",
+  "sic": "4911"
  },
  "87612E": {
   "cik": "",
   "desc": "",
   "sic": ""
  },
+ "876545": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "876568": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "87724P": {
+  "cik": "96536",
+  "desc": "General Industrial Machinery & Equipment, NEC",
+  "sic": "3569"
+ },
  "878742": {
   "cik": "886986",
   "desc": "Mining & Quarrying of  Nonmetallic Minerals (No Fuels)",
   "sic": "1400"
+ },
+ "879273": {
+  "cik": "932470",
+  "desc": "Telephone Communications (No Radiotelephone)",
+  "sic": "4813"
+ },
+ "87936R": {
+  "cik": "1066119",
+  "desc": "Telephone Communications (No Radiotelephone)",
+  "sic": "4813"
+ },
+ "879433": {
+  "cik": "1051512",
+  "desc": "Telephone Communications (No Radiotelephone)",
+  "sic": "4813"
  },
  "88023U": {
   "cik": "",
@@ -1839,6 +3814,11 @@
   "desc": "Industrial Trucks, Tractors, Trailors & Stackers",
   "sic": "3537"
  },
+ "880890": {
+  "cik": "1342874",
+  "desc": "Steel Works, Blast Furnaces & Rolling Mills (Coke Ovens)",
+  "sic": "3312"
+ },
  "88104M": {
   "cik": "",
   "desc": "",
@@ -1864,6 +3844,16 @@
   "desc": "Measuring & Controlling Devices, NEC",
   "sic": "3829"
  },
+ "88605L": {
+  "cik": "2140030",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "889478": {
+  "cik": "794170",
+  "desc": "Operative Builders",
+  "sic": "1531"
+ },
  "891027": {
   "cik": "",
   "desc": "",
@@ -1874,10 +3864,25 @@
   "desc": "",
   "sic": ""
  },
+ "892231": {
+  "cik": "1499832",
+  "desc": "Radio Broadcasting Stations",
+  "sic": "4832"
+ },
  "892893": {
   "cik": "1466258",
   "desc": "Auto Controls For Regulating Residential & Comml Environments",
   "sic": "3822"
+ },
+ "89346D": {
+  "cik": "1144800",
+  "desc": "Electric Services",
+  "sic": "4911"
+ },
+ "893870": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "89417E": {
   "cik": "86312",
@@ -1889,12 +3894,37 @@
   "desc": "Finance Services",
   "sic": "6199"
  },
+ "896047": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "896082": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "89628E": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "896522": {
   "cik": "99780",
   "desc": "Railroad Equipment",
   "sic": "3743"
  },
+ "89677Q": {
+  "cik": "1269238",
+  "desc": "Services-Business Services, NEC",
+  "sic": "7389"
+ },
  "896818": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "89703P": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -1903,6 +3933,11 @@
   "cik": "92230",
   "desc": "National Commercial Banks",
   "sic": "6021"
+ },
+ "900111": {
+  "cik": "1071321",
+  "desc": "Telephone Communications (No Radiotelephone)",
+  "sic": "4813"
  },
  "90130A": {
   "cik": "2070457",
@@ -1944,6 +3979,11 @@
   "desc": "Retail-Retail Stores, NEC",
   "sic": "5990"
  },
+ "903914": {
+  "cik": "1275014",
+  "desc": "Semiconductors & Related Devices",
+  "sic": "3674"
+ },
  "907818": {
   "cik": "100885",
   "desc": "Railroads, Line-Haul Operating",
@@ -1969,25 +4009,70 @@
   "desc": "National Commercial Banks",
   "sic": "6021"
  },
+ "911684": {
+  "cik": "821130",
+  "desc": "Radiotelephone Communications",
+  "sic": "4812"
+ },
  "912008": {
   "cik": "1665918",
   "desc": "Wholesale-Groceries & Related Products",
   "sic": "5140"
+ },
+ "91274U": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "912909": {
   "cik": "",
   "desc": "",
   "sic": ""
  },
+ "913017": {
+  "cik": "1261654",
+  "desc": "Services-Educational Services",
+  "sic": "8200"
+ },
  "91324P": {
   "cik": "731766",
   "desc": "Hospital & Medical Service Plans",
   "sic": "6324"
  },
+ "91325V": {
+  "cik": "2020795",
+  "desc": "Telephone Communications (No Radiotelephone)",
+  "sic": "4813"
+ },
+ "91822M": {
+  "cik": "1468091",
+  "desc": "Radiotelephone Communications",
+  "sic": "4812"
+ },
+ "91823B": {
+  "cik": "1783398",
+  "desc": "Mortgage Bankers & Loan Correspondents",
+  "sic": "6162"
+ },
+ "91842V": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "91854V": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "91911K": {
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "91912E": {
+  "cik": "917851",
+  "desc": "Metal Mining",
+  "sic": "1000"
  },
  "91913Y": {
   "cik": "1035002",
@@ -2024,6 +4109,16 @@
   "desc": "Services-Computer Processing & Data Preparation",
   "sic": "7374"
  },
+ "92531L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "92552V": {
+  "cik": "797721",
+  "desc": "Communications Services, NEC",
+  "sic": "4899"
+ },
  "92553P": {
   "cik": "",
   "desc": "",
@@ -2034,10 +4129,35 @@
   "desc": "",
   "sic": ""
  },
+ "925652": {
+  "cik": "1705696",
+  "desc": "Real Estate Investment Trusts",
+  "sic": "6798"
+ },
+ "92719A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "92826C": {
   "cik": "1403161",
   "desc": "Services-Business Services, NEC",
   "sic": "7389"
+ },
+ "928298": {
+  "cik": "103730",
+  "desc": "Electronic Components & Accessories",
+  "sic": "3670"
+ },
+ "92837L": {
+  "cik": "1762506",
+  "desc": "Crude Petroleum & Natural Gas",
+  "sic": "1311"
+ },
+ "92838J": {
+  "cik": "1813783",
+  "desc": "Ship & Boat Building & Repairing",
+  "sic": "3730"
  },
  "92840M": {
   "cik": "1692819",
@@ -2064,6 +4184,11 @@
   "desc": "",
   "sic": ""
  },
+ "92934F": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "92936P": {
   "cik": "",
   "desc": "",
@@ -2073,6 +4198,11 @@
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "93627C": {
+  "cik": "1691303",
+  "desc": "Silver Ores",
+  "sic": "1220"
  },
  "939640": {
   "cik": "737468",
@@ -2094,10 +4224,20 @@
   "desc": "National Commercial Banks",
   "sic": "6021"
  },
+ "950415": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "950817": {
   "cik": "929008",
   "desc": "Wholesale-Electrical Apparatus & Equipment, Wiring Supplies",
   "sic": "5063"
+ },
+ "95758L": {
+  "cik": "2076192",
+  "desc": "Blank Checks",
+  "sic": "6770"
  },
  "957638": {
   "cik": "1212545",
@@ -2119,6 +4259,11 @@
   "desc": "Services-Business Services, NEC",
   "sic": "7389"
  },
+ "96145D": {
+  "cik": "1806347",
+  "desc": "Beverages",
+  "sic": "2080"
+ },
  "963320": {
   "cik": "106640",
   "desc": "Household Appliances",
@@ -2139,10 +4284,30 @@
   "desc": "",
   "sic": ""
  },
+ "96950F": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "96951B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "972487": {
   "cik": "107263",
   "desc": "Natural Gas Transmission",
   "sic": "4922"
+ },
+ "97655B": {
+  "cik": "1854463",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "98212B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "983134": {
   "cik": "1174922",
@@ -2154,10 +4319,35 @@
   "desc": "Transportation Services",
   "sic": "4700"
  },
+ "98422D": {
+  "cik": "1810997",
+  "desc": "Motor Vehicles & Passenger Car Bodies",
+  "sic": "3711"
+ },
+ "984245": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "984332": {
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "98585X": {
+  "cik": "1670592",
+  "desc": "Sporting & Athletic Goods, NEC",
+  "sic": "3949"
+ },
+ "98741Y": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "98850P": {
+  "cik": "1673358",
+  "desc": "Retail-Eating  Places",
+  "sic": "5812"
  },
  "989390": {
   "cik": "",
@@ -2169,12 +4359,37 @@
   "desc": "National Commercial Banks",
   "sic": "6021"
  },
+ "B38564": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "D18190": {
   "cik": "",
   "desc": "",
   "sic": ""
  },
  "G00349": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G0083B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G01109": {
+  "cik": "2087035",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G01125": {
+  "cik": "1771007",
+  "desc": "Services-Educational Services",
+  "sic": "8200"
+ },
+ "G01490": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -2189,15 +4404,85 @@
   "desc": "",
   "sic": ""
  },
+ "G0223V": {
+  "cik": "2125551",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G0230C": {
+  "cik": "1865111",
+  "desc": "Services-Prepackaged Software",
+  "sic": "7372"
+ },
+ "G0231L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G0283A": {
+  "cik": "2125551",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
  "G0371B": {
   "cik": "",
   "desc": "",
   "sic": ""
  },
+ "G0378L": {
+  "cik": "1973832",
+  "desc": "Gold and Silver Ores",
+  "sic": "1040"
+ },
  "G0403H": {
   "cik": "315293",
   "desc": "Insurance Agents, Brokers & Service",
   "sic": "6411"
+ },
+ "G0440J": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G05157": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G0542S": {
+  "cik": "1865107",
+  "desc": "Retail-Catalog & Mail-Order Houses",
+  "sic": "5961"
+ },
+ "G0543H": {
+  "cik": "1876716",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G0633U": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G06536": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G06984": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G0703K": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G07247": {
+  "cik": "104918",
+  "desc": "Electric & Other Services Combined",
+  "sic": "4931"
  },
  "G0750C": {
   "cik": "1616862",
@@ -2209,7 +4494,102 @@
   "desc": "Blank Checks",
   "sic": "6770"
  },
+ "G0R45S": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G11217": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G11765": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G1263E": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G1330L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G1330M": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G1792A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "G1992N": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G2058L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G2254A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G2263T": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G2311X": {
+  "cik": "1903392",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G2365L": {
+  "cik": "1834032",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G2519Y": {
+  "cik": "1001290",
+  "desc": "Commercial Banks, NEC",
+  "sic": "6029"
+ },
+ "G2540H": {
+  "cik": "1743759",
+  "desc": "Computer Peripheral Equipment, NEC",
+  "sic": "3577"
+ },
+ "G2542B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G25457": {
+  "cik": "1807794",
+  "desc": "Semiconductors & Related Devices",
+  "sic": "3674"
+ },
+ "G26735": {
+  "cik": "2025341",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G2773W": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G27740": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -2223,6 +4603,151 @@
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "G2956R": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G2R11M": {
+  "cik": "2107018",
+  "desc": "Nonferrous Foundries (Castings)",
+  "sic": "3360"
+ },
+ "G30092": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G3033X": {
+  "cik": "1300306",
+  "desc": "",
+  "sic": ""
+ },
+ "G3034H": {
+  "cik": "1869601",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G3041W": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G30449": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G3168A": {
+  "cik": "1688126",
+  "desc": "Services-Computer Processing & Data Preparation",
+  "sic": "7374"
+ },
+ "G3312L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G3312W": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G3400W": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G3730V": {
+  "cik": "1590364",
+  "desc": "Services-Miscellaneous Equipment Rental & Leasing",
+  "sic": "7350"
+ },
+ "G3934N": {
+  "cik": "932021",
+  "desc": "Radio & Tv Broadcasting & Communications Equipment",
+  "sic": "3663"
+ },
+ "G3937F": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G39637": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G3R19A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G3R23D": {
+  "cik": "1022321",
+  "desc": "Pipe Lines (No Natural Gas)",
+  "sic": "4610"
+ },
+ "G3R34K": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G3R95N": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G4023C": {
+  "cik": "1375348",
+  "desc": "Miscellaneous Metal Ores",
+  "sic": "1090"
+ },
+ "G41089": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G4124C": {
+  "cik": "1855612",
+  "desc": "Services-Business Services, NEC",
+  "sic": "7389"
+ },
+ "G4166K": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G4233U": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G4365A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G4619M": {
+  "cik": "1946021",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G470AU": {
+  "cik": "2101135",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G4712C": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G4766E": {
+  "cik": "1625297",
+  "desc": "Pharmaceutical Preparations",
+  "sic": "2834"
  },
  "G47766": {
   "cik": "1699150",
@@ -2239,20 +4764,135 @@
   "desc": "General Industrial Machinery & Equipment",
   "sic": "3560"
  },
+ "G47862": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G4809M": {
+  "cik": "1042893",
+  "desc": "Oil & Gas Field Machinery & Equipment",
+  "sic": "3533"
+ },
+ "G4828B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "G48833": {
   "cik": "1603923",
   "desc": "Oil & Gas Field Machinery & Equipment",
   "sic": "3533"
+ },
+ "G5000D": {
+  "cik": "1852019",
+  "desc": "Communications Services, NEC",
+  "sic": "4899"
+ },
+ "G50752": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G52131": {
+  "cik": "1865468",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G5260A": {
+  "cik": "2102771",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G5338L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G5352N": {
+  "cik": "2049248",
+  "desc": "Blank Checks",
+  "sic": "6770"
  },
  "G5480U": {
   "cik": "1570585",
   "desc": "Cable & Other Pay Television Services",
   "sic": "4841"
  },
+ "G5510R": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G5596W": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G5853A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G5870E": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G60405": {
+  "cik": "2107724",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G6053N": {
+  "cik": "1882464",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
  "G6095L": {
   "cik": "1521332",
   "desc": "Motor Vehicle Parts & Accessories",
   "sic": "3714"
+ },
+ "G61188": {
+  "cik": "1570585",
+  "desc": "Cable & Other Pay Television Services",
+  "sic": "4841"
+ },
+ "G6256B": {
+  "cik": "1714899",
+  "desc": "Biological Products, (No Diagnostic Substances)",
+  "sic": "2836"
+ },
+ "G6293R": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G6301J": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G63290": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G6359F": {
+  "cik": "1163739",
+  "desc": "Drilling Oil & Gas Wells",
+  "sic": "1381"
+ },
+ "G65431": {
+  "cik": "1895262",
+  "desc": "Drilling Oil & Gas Wells",
+  "sic": "1381"
+ },
+ "G6610J": {
+  "cik": "1895262",
+  "desc": "Drilling Oil & Gas Wells",
+  "sic": "1381"
  },
  "G6683N": {
   "cik": "1691493",
@@ -2264,17 +4904,122 @@
   "desc": "Finance Services",
   "sic": "6199"
  },
+ "G66964": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G67145": {
+  "cik": "2029769",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G6715X": {
+  "cik": "2029769",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G6755Q": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G6855L": {
+  "cik": "1584831",
+  "desc": "Fire, Marine & Casualty Insurance",
+  "sic": "6331"
+ },
+ "G68707": {
+  "cik": "1712807",
+  "desc": "Services-Computer Processing & Data Preparation",
+  "sic": "7374"
+ },
+ "G69454": {
+  "cik": "1825570",
+  "desc": "Investment Advice",
+  "sic": "6282"
+ },
  "G6964L": {
   "cik": "1833835",
   "desc": "Services-Business Services, NEC",
   "sic": "7389"
+ },
+ "G7007D": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G7158C": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G71704": {
+  "cik": "2108164",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G7185D": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G7207P": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G7308P": {
+  "cik": "2069238",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G7553X": {
+  "cik": "2074872",
+  "desc": "Blank Checks",
+  "sic": "6770"
+ },
+ "G7573M": {
+  "cik": "1034842",
+  "desc": "Pharmaceutical Preparations",
+  "sic": "2834"
+ },
+ "G7665A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
  },
  "G7709Q": {
   "cik": "1802768",
   "desc": "Pharmaceutical Preparations",
   "sic": "2834"
  },
+ "G8028L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G80694": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "G81477": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G8232Y": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G82472": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G83745": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -2289,7 +5034,52 @@
   "desc": "",
   "sic": ""
  },
+ "G8656T": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "G8704C": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G87076": {
+  "cik": "1770787",
+  "desc": "Laboratory Analytical Instruments",
+  "sic": "3826"
+ },
+ "G8708L": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G87119": {
+  "cik": "1900679",
+  "desc": "Services-Business Services, NEC",
+  "sic": "7389"
+ },
+ "G88935": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G89229": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G89479": {
+  "cik": "1655891",
+  "desc": "Deep Sea Foreign Transportation of  Freight",
+  "sic": "4412"
+ },
+ "G8956E": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G8990L": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -2299,7 +5089,37 @@
   "desc": "Cable & Other Pay Television Services",
   "sic": "4841"
  },
+ "G9059F": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G9320Z": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "G9329Z": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G9460G": {
+  "cik": "314808",
+  "desc": "Drilling Oil & Gas Wells",
+  "sic": "1381"
+ },
+ "G9461B": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "G98239": {
+  "cik": "1787425",
+  "desc": "Security Brokers, Dealers & Flotation Companies",
+  "sic": "6211"
+ },
+ "G9831X": {
   "cik": "",
   "desc": "",
   "sic": ""
@@ -2334,6 +5154,11 @@
   "desc": "Drilling Oil & Gas Wells",
   "sic": "1381"
  },
+ "L01800": {
+  "cik": "1898416",
+  "desc": "Biological Products, (No Diagnostic Substances)",
+  "sic": "2836"
+ },
  "L5140P": {
   "cik": "",
   "desc": "",
@@ -2344,10 +5169,25 @@
   "desc": "Services-Prepackaged Software",
   "sic": "7372"
  },
+ "M75253": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
  "N07059": {
   "cik": "937966",
   "desc": "Special Industry Machinery, NEC",
   "sic": "3559"
+ },
+ "N22035": {
+  "cik": "1563411",
+  "desc": "Secondary Smelting & Refining of  Nonferrous Metals",
+  "sic": "3341"
+ },
+ "N4732M": {
+  "cik": "1791942",
+  "desc": "Meat Packing Plants",
+  "sic": "2011"
  },
  "N59465": {
   "cik": "",
@@ -2358,6 +5198,61 @@
   "cik": "1413447",
   "desc": "Semiconductors & Related Devices",
   "sic": "3674"
+ },
+ "N97284": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "V5633W": {
+  "cik": "1495153",
+  "desc": "Transportation Services",
+  "sic": "4700"
+ },
+ "Y0207T": {
+  "cik": "1577437",
+  "desc": "Deep Sea Foreign Transportation of  Freight",
+  "sic": "4412"
+ },
+ "Y0553W": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "Y11082": {
+  "cik": "202947",
+  "desc": "Lessors of  Real Property, NEC",
+  "sic": "6519"
+ },
+ "Y2066G": {
+  "cik": "1318885",
+  "desc": "Deep Sea Foreign Transportation of  Freight",
+  "sic": "4412"
+ },
+ "Y20676": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "Y2187A": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "Y2685T": {
+  "cik": "1326200",
+  "desc": "Deep Sea Foreign Transportation of  Freight",
+  "sic": "4412"
+ },
+ "Y26889": {
+  "cik": "",
+  "desc": "",
+  "sic": ""
+ },
+ "Y8162K": {
+  "cik": "1386716",
+  "desc": "Deep Sea Foreign Transportation of  Freight",
+  "sic": "4412"
  },
  "Y8564M": {
   "cik": "",
