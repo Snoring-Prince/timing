@@ -176,6 +176,19 @@ Tepper (old) 2015-12-31     47   100%       12.8%           2%
 - **Verify first:** `scripts/probe_titans.py` + `probe-titans.yml` (manual). CIKs
   in it are from memory; it prints the SEC entity name next to each.
 
+### Probe run 4 (2026-09-28, run 36377898009)
+
+- **Ackman 13F-NT reporting manager:** PERSHING SQUARE INC., CIK 0002026053,
+  028-25746. Next: probe that CIK's 13F-HR (does it hold only Pershing's book?
+  names continuous with CIK 0001336528's last 13F-HR 2026-03-31?) — same test as
+  the Tepper stitch. Not registered until then.
+- Li Lu confirmed: 35 13F-HR since 2016-12-31, 1 amendment (2025-12-31), units
+  normal ($289 median), 7 issuers, 80% in 3. **Registered** as `himalaya`; page
+  at `titans/himalaya/`. Data arrives on the first Update 13F run after merge.
+- `fetch_prices.main()` skips a registered investor with neither a book nor a
+  `prices/<slug>.json` (never collected); a missing book with a projection still
+  stops (strict). Test: `test_a_just_registered_investor_waits_but_a_lost_book_still_stops`.
+
 ### Accepted — first eight (2026-09-14; superseded above, kept for the reasoning)
 
 ```

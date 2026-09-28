@@ -5,6 +5,16 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+리루(히말라야 캐피털) 화면 · 애크먼 대신 신고자 확인 · 새 투자자 주가 대기
+- 파일: titans/himalaya/index.html(새) · data/titans/investors.json · sitemap.xml ·
+  scripts/fetch_prices.py · scripts/tests/test_prices.py · scripts/tests/titans.test.cjs ·
+  CLAUDE.md · docs/masters-13f.md · 이 일지
+- 규칙: 공시·주가 자료는 봇이 받는다(머지 뒤 Update 13F → Update Prices). 모든
+  투자자 페이지를 한 검사가 훑는다.
+- 굳힘: 정찰 run 36377898009 — 애크먼 2분기는 PERSHING SQUARE INC.(0002026053)가 대신 신고.
+- 넘김: 리루 자료가 들어오면 실제 화면을 다시 잴 것. 그다음 `/titans/` 목록 · 테퍼.
+
+## 2026-09-28 · Claude · PR #92
 공시마다 금액 단위를 확인 · 애크먼 13F-NT 대신 낸 곳 찾기 · 막스 확정
 - 파일: scripts/fetch_13f.py · scripts/probe_titans.py · scripts/tests/test_audit_regressions.py ·
   CLAUDE.md · docs/masters-13f.md · 이 일지

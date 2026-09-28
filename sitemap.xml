@@ -37,4 +37,12 @@
     <lastmod>2026-09-20</lastmod><!-- titans -->
     <changefreq>monthly</changefreq>
   </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/himalaya/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/himalaya/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/himalaya/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/himalaya/"/>
+    <lastmod>2026-09-28</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
 </urlset>

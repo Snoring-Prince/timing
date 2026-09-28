@@ -1,3 +1,4 @@
+import contextlib
 import datetime as dt
 import importlib.util
 import json
@@ -285,7 +286,7 @@ class PricesTests(unittest.TestCase):
                 "123456100": {"ticker": "AAPL", "values": [["2026-09-18", 1]]}}}), encoding="utf-8")
             book = {"quarters": [{"period": "2026-06-30", "holdings": [
                 {"cusip": "123456100", "name": "A", "shares": 1, "value": 1}]}]}
-            inv = type("Inv", (), {"slug": "x"})()
+            inv = type("Inv", (), {"slug": "x", "output": out})()
             with patch.object(p.registry, "load", return_value=[inv]), \
                     patch.object(p, "books", return_value=[book]), patch.object(p, "OUT", out), \
                     patch.object(p, "PER", folder), patch.object(p, "request") as req, \
@@ -294,6 +295,38 @@ class PricesTests(unittest.TestCase):
                 p.main()
             req.assert_not_called()
             self.assertIn("123456100", (folder/"x.json").read_text())
+
+    def test_a_just_registered_investor_waits_but_a_lost_book_still_stops(self):
+        # 등록만 하고 공시를 아직 안 받은 투자자(책도 투자자 파일도 없음)는 건너뛴다.
+        # 책만 사라지고 투자자 파일이 남아 있으면 예전처럼 멈춘다 — 그걸 전량 매도로
+        # 읽고 가격을 지우면 안 된다.
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            out, folder = tmp/"prices.json", tmp/"prices"
+            folder.mkdir()
+            out.write_text(json.dumps({"method": "split-adjusted-close", "series": {
+                "123456100": {"ticker": "AAPL", "values": [["2026-09-18", 1]]}}}), encoding="utf-8")
+            (tmp/"old.json").write_text(json.dumps({"quarters": [{"period": "2026-06-30",
+                "holdings": [{"cusip": "123456100", "name": "A", "shares": 1, "value": 1}]}]}),
+                encoding="utf-8")
+            Inv = lambda slug: type("Inv", (), {"slug": slug, "output": tmp/f"{slug}.json", "cik": ""})()
+            old, new = Inv("old"), Inv("new")
+            run = lambda investors: (
+                patch.object(p.registry, "load", return_value=investors), patch.object(p, "OUT", out),
+                patch.object(p, "PER", folder), patch.object(p, "request"),
+                patch.object(p.sys, "argv", ["fetch_prices.py", "--publish"]), patch("builtins.print"))
+            with contextlib.ExitStack() as stack:
+                req = [stack.enter_context(c) for c in run([old, new])][3]
+                p.main()
+            req.assert_not_called()
+            self.assertTrue((folder/"old.json").exists())
+            self.assertFalse((folder/"new.json").exists())
+            (folder/"new.json").write_text("{}", encoding="utf-8")
+            with contextlib.ExitStack() as stack:
+                for c in run([old, new]):
+                    stack.enter_context(c)
+                with self.assertRaises(ValueError):
+                    p.main()
 
     def test_february_anniversary_and_winter_close_cutoff(self):
         self.assertEqual(p.years_before(dt.date(2024, 2, 29)), dt.date(2009, 2, 28))

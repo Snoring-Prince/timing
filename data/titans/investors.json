@@ -10,6 +10,17 @@
       },
       "since": 1998,
       "active": true
+    },
+    {
+      "slug": "himalaya",
+      "cik": "0001709323",
+      "filing_name": "Himalaya Capital Management LLC",
+      "name": {
+        "en": "Himalaya Capital",
+        "ko": "히말라야 캐피털"
+      },
+      "since": 2016,
+      "active": true
     }
   ]
 }

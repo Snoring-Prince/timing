@@ -697,3 +697,34 @@ test('the adjusted 13F price lands exactly on the stored close', () => {
   }
   assert.ok(checked > 400, `대조한 분기가 너무 적다: ${checked}`);
 });
+
+test('every registered investor page follows the same static rules', () => {
+  const css=fs.readFileSync(path.join(root,'titans/shared/investor.css'),'utf8');
+  const reg=JSON.parse(fs.readFileSync(path.join(root,'data/titans/investors.json'),'utf8'));
+  const sitemap=fs.readFileSync(path.join(root,'sitemap.xml'),'utf8');
+  assert.ok(reg.investors.filter(i=>i.active).length>=2);
+  for(const inv of reg.investors.filter(i=>i.active)){
+    const src=fs.readFileSync(path.join(root,`titans/${inv.slug}/index.html`),'utf8');
+    const titan=vm.runInNewContext("("+src.match(/window\.TITAN = (\{[\s\S]*?\});/)[1]+")");
+    const run=page(real,titan);run('LANG="en";L10N=D.en;');
+    const base=`https://itpaidoff.com/titans/${inv.slug}/`;
+    // 크롤러가 받는 제목·주소가 JS 가 그리는 것과 같아야 한다.
+    assert.equal(src.match(/<title>([^<]*)<\/title>/)[1],run('tx("docTitle",tName(),TT.since)'),inv.slug);
+    assert.equal(src.match(/<h1 id="tagline">([\s\S]*?)<\/h1>/)[1],run('taglineHTML()'),inv.slug);
+    assert.match(src,new RegExp(`<link rel="canonical" href="${base}">`));
+    assert.match(src,new RegExp(`<meta property="og:url" content="${base}">`));
+    assert.match(sitemap,new RegExp(`<loc>${base}</loc>`));
+    // 다른 투자자의 이름이 복사한 껍데기에 남지 않는다.
+    for(const other of reg.investors.filter(o=>o.slug!==inv.slug))
+      assert.doesNotMatch(src,new RegExp(`${other.name.en}|/titans/${other.slug}/|${other.slug}\\.json`),inv.slug);
+    const bio=src.match(/<section class="panel bio[^"]*" id="titan-bio">([\s\S]*?)<\/section>/)[1];
+    const count=lg=>bio.match(new RegExp(`data-lang="${lg}"`,'g')).length;
+    assert.equal(count('en'),count('ko'),inv.slug);
+    for(const q of bio.match(/<blockquote[\s\S]*?<\/blockquote>/g)||[])
+      assert.match(q,/<cite>[^<]+<\/cite>/,inv.slug);
+    // 그림이 있으면 못 받을 때 칸이 빠지고, 없으면 처음부터 칸이 없다.
+    if(/<img /.test(bio)) assert.match(bio,/onerror="this\.closest\('\.bio'\)\.classList\.add\('nofigure'\)/);
+    else assert.match(src,/<section class="panel bio nofigure" id="titan-bio">/,inv.slug);
+  }
+  assert.match(css,/\.bio\.nofigure\{grid-template-columns:minmax\(0,1fr\)\}/);
+});

@@ -288,6 +288,14 @@ def main():
                         help="받지 않고 창고에서 투자자별 파일만 다시 만든다")
     args = parser.parse_args()
     investors = registry.load()
+    # 방금 등록해 공시를 한 번도 안 받은 투자자는 건너뜁니다. 책도 투자자 파일도
+    # 없으면 지킬 가격이 아직 없습니다. 둘 중 하나라도 있으면 strict 가 멈춥니다 —
+    # 책만 사라진 것을 전량 매도로 읽어 가격을 지우면 안 되기 때문입니다.
+    fresh = [i for i in investors
+             if not i.output.exists() and not (PER / f"{i.slug}.json").exists()]
+    for investor in fresh:
+        print(f"{investor.slug}: 공시도 주가 파일도 아직 없습니다 — 이번에는 건너뛰고 창고에서 아무것도 안 지웁니다")
+    investors = [i for i in investors if i not in fresh]
     catalog = books(investors, strict=True)
     required = required_cusips(catalog)
     # 모든 활성 투자자의 책이 있어야 매도 여부를 알 수 있습니다(strict=True).
@@ -303,6 +311,13 @@ def main():
     known = json.loads((ROOT / "data/titans/tickers.json").read_text(encoding="utf-8"))
     result, errors = collect(required, previous, dt.datetime.now(UTC), args.full, known,
                              first_seen(catalog))
+    if fresh:
+        # 건너뛴 투자자가 있으면 창고에서 아무것도 지우지 않습니다. 정말 새 투자자면
+        # 지울 것이 없고, 혹시 책과 투자자 파일을 둘 다 잃은 것이라면 그 가격을
+        # 매도로 읽어 지우면 안 됩니다.
+        kept = previous.get("series", {})
+        result["series"] = {**{c: kept[c] for c in kept if c not in result["series"]},
+                            **result["series"]}
     if result["series"] != previous.get("series", {}):
         write_if_changed(OUT, result)
     # 받기에 실패한 종목이 있어도 받은 것은 투자자 파일까지 내보낸다.
