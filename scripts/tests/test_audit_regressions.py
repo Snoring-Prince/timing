@@ -99,13 +99,40 @@ class BookSafetyTests(unittest.TestCase):
                     b.write_text('{"quarters":[]}',encoding='utf-8')
                 out.write_text('{"series":{"123456789":{},"987654321":{}}}',encoding='utf-8')
                 before=out.read_bytes()
-                invs=[SimpleNamespace(output=a),SimpleNamespace(output=b)]
+                # 이미 공개한 투자자라 투자자 주가 파일이 있다 — 책만 사라진 경우.
+                per=Path(tmp)/'per'; per.mkdir(); (per/'b.json').write_text('{}',encoding='utf-8')
+                invs=[SimpleNamespace(slug='a',output=a),SimpleNamespace(slug='b',output=b)]
                 with patch.object(registry,'load',return_value=invs),patch.object(prices,'OUT',out), \
+                     patch.object(prices,'PER',per), \
                      patch.object(sys,'argv',['fetch_prices.py']),patch.object(prices,'request') as request:
                     with self.assertRaises(ValueError):
                         prices.main()
                     request.assert_not_called()
                 self.assertEqual(out.read_bytes(),before)
+
+    def test_a_skipped_investor_never_prunes_the_shared_price_cache(self):
+        # 책도 투자자 파일도 없는 투자자는 새 투자자로 보고 건너뛴다. 그래도 창고에서
+        # 다른 종목을 지우지 않는다 — 둘 다 잃은 것일 수도 있기 때문이다.
+        with tempfile.TemporaryDirectory() as tmp:
+            a,b,out=(Path(tmp)/name for name in ['a.json','b.json','prices.json'])
+            a.write_text(json.dumps({'quarters':[{'period':'2026-03-31','holdings':[
+                {'cusip':'123456789','shares':10,'value':100,'name':'A'}]}]}),encoding='utf-8')
+            keep={'ticker':'B','values':[['2026-09-18',1]]}
+            out.write_text(json.dumps({'series':{'123456789':{'ticker':'A','values':[['2026-09-18',1]]},
+                                                 '987654321':keep}}),encoding='utf-8')
+            per=Path(tmp)/'per'; per.mkdir()
+            invs=[SimpleNamespace(slug='a',output=a,cik=''),SimpleNamespace(slug='b',output=b,cik='')]
+            done={'method':'split-adjusted-close','series':{'123456789':{'ticker':'A','values':[['2026-09-19',2]]}}}
+            with patch.object(registry,'load',return_value=invs),patch.object(prices,'OUT',out), \
+                 patch.object(prices,'PER',per),patch.object(sys,'argv',['fetch_prices.py']), \
+                 patch.object(prices,'collect',return_value=(done,[])), \
+                 patch.object(prices,'ROOT',ROOT),contextlib.redirect_stdout(io.StringIO()):
+                prices.main()
+            saved=json.loads(out.read_text())['series']
+            self.assertEqual(saved['987654321'],keep)
+            self.assertEqual(saved['123456789']['values'],[['2026-09-19',2]])
+            self.assertTrue((per/'a.json').exists())
+            self.assertFalse((per/'b.json').exists())
 
     def test_options_and_principal_are_not_requested_as_stock_prices_or_labels(self):
         share={'cusip':'H1467J104','name':'Chubb','value':100,'shares':10}
