@@ -5,6 +5,17 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+테퍼(애팔루사) 화면 · 예전 CIK 를 이어 붙이는 수집
+- 파일: titans/appaloosa/index.html(새) · titans/index.html(카드) · data/titans/investors.json ·
+  scripts/titans/registry.py · scripts/fetch_13f.py · titans/shared/investor.js(각주 출처) ·
+  sitemap.xml · scripts/tests/test_fetch_13f.py · scripts/tests/test_13f_watch.py ·
+  CLAUDE.md · docs/masters-13f.md · 이 일지
+- 규칙: registry `predecessors` = 예전 CIK. 원문은 낸 법인 폴더에서. 겹치는 분기는 지금 번호.
+- 굳힘: since 2013(예전 번호의 텍스트 시대는 안 읽음).
+- 넘김: 머지 뒤 Update 13F → Update Prices. 실제 이음매(2015-12-31 → 2016-03-31) 확인.
+  다음은 막스(오크트리) · 애크먼 대신 신고자 정찰.
+
+## 2026-09-28 · Claude · PR #94
 투자자 목록 /titans/ · 첫 화면 카드 02 를 목록으로 · 목록용 요약 파일
 - 파일: titans/index.html · index.html · scripts/publish_titans.py(새) ·
   data/titans/summary.json(새, 봇이 만듦) · titans/shared/investor.js(맨 아래 링크) ·

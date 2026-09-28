@@ -16,6 +16,10 @@ class Investor:
     name: dict
     since: int
     active: bool = True
+    # 같은 포트폴리오를 예전에 다른 CIK 로 내던 법인 — ((CIK, 공시 법인명), ...).
+    # 공시를 멈춘 번호라 수집기가 한 번에 이어 붙이고, 감시기는 지금 번호만 봅니다
+    # (테퍼 — CLAUDE.md 9-3).
+    predecessors: tuple = ()
 
     @property
     def output(self):
@@ -36,6 +40,14 @@ def load(path=REGISTRY):
         if (inv.slug in seen_slugs or inv.cik in seen_ciks or not inv.filing_name
                 or not all(inv.name.get(k) for k in ("en", "ko"))):
             raise ValueError(f"invalid or duplicate investor: {inv.slug}")
+        # (CIK, 공시 법인명) 짝의 튜플로 둡니다.
+        pairs = tuple((str(o.get("cik") or ""), str(o.get("filing_name") or ""))
+                      for o in (row.get("predecessors") or ()))
+        for ocik, oname in pairs:
+            if not re.fullmatch(r"\d{10}", ocik) or ocik == inv.cik or ocik in seen_ciks or not oname:
+                raise ValueError(f"{inv.slug}: invalid predecessor {ocik!r}")
+            seen_ciks.add(ocik)
+        inv = Investor(**{**row, "predecessors": pairs})
         if not 1994 <= inv.since <= 2100:
             raise ValueError(f"{inv.slug}: invalid first year")
         seen_slugs.add(inv.slug)

@@ -21,6 +21,23 @@
       },
       "since": 2016,
       "active": true
+    },
+    {
+      "slug": "appaloosa",
+      "cik": "0001656456",
+      "filing_name": "Appaloosa LP",
+      "name": {
+        "en": "Appaloosa",
+        "ko": "애팔루사"
+      },
+      "since": 2013,
+      "active": true,
+      "predecessors": [
+        {
+          "cik": "0001006438",
+          "filing_name": "Appaloosa Management LP"
+        }
+      ]
     }
   ]
 }

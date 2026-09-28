@@ -54,6 +54,10 @@ ALERT = "amend-alert.txt"
 # 직접 실행과 기존 단위 검사의 기본값입니다. 자동 실행은 registry의 값을 넘깁니다.
 CIK = "0001067983"
 MANAGER_NAME = "Berkshire Hathaway Inc"
+# 예전 법인 번호(공시를 멈춘 것)와, 접수번호마다 누가 냈는지. SEC 원문 폴더는
+# 낸 법인의 CIK 아래에 있으므로 받을 때 이 표를 봅니다(테퍼 — CLAUDE.md 9-3).
+PREDECESSORS: list[str] = []
+ACC_CIK: dict[str, str] = {}
 FORM = "13F-HR"
 MAX_BYTES = 64 * 1024 * 1024
 
@@ -178,29 +182,39 @@ def list_filings(contact: str) -> tuple[list[dict], list[dict]]:
 
     최근 목록(filings.recent)만 보면 2016년까지밖에 안 올라갑니다(실측:
     39건). 더 옛것은 filings.files 에 별도 파일로 쪼개져 있습니다."""
-    body = get(f"https://data.sec.gov/submissions/CIK{CIK}.json", contact)
-    if not body:
-        return [], []
-    sub = json.loads(body)
-    fil = sub.get("filings") or {}
-    blocks = [fil.get("recent") or {}]
-
-    for f in (fil.get("files") or []):
-        nm = f.get("name")
-        if not nm:
-            continue
-        b = get(f"https://data.sec.gov/submissions/{nm}", contact)
-        if not b:
-            # 반쪽 목록으로 저장하면 옛 분기와 정정 표시가 사라집니다.
-            # 다음 실행에서 다시 받도록 전체 목록을 실패로 돌립니다.
-            return [], []
-        blocks.append(json.loads(b))
-
     out, amend = [], []
-    for block in blocks:
-        for item in form_rows(block):
-            form = item.pop("form")
-            (out if form == FORM else amend).append(item)
+    # 지금 번호가 먼저입니다 — 예전 번호의 공시는 지금 번호의 첫 분기보다
+    # 앞선 것만 받습니다(겹치는 분기는 지금 법인의 것이 이깁니다).
+    for cik in [CIK, *PREDECESSORS]:
+        body = get(f"https://data.sec.gov/submissions/CIK{cik}.json", contact)
+        if not body:
+            return [], []
+        sub = json.loads(body)
+        fil = sub.get("filings") or {}
+        blocks = [fil.get("recent") or {}]
+
+        for f in (fil.get("files") or []):
+            nm = f.get("name")
+            if not nm:
+                continue
+            b = get(f"https://data.sec.gov/submissions/{nm}", contact)
+            if not b:
+                # 반쪽 목록으로 저장하면 옛 분기와 정정 표시가 사라집니다.
+                # 다음 실행에서 다시 받도록 전체 목록을 실패로 돌립니다.
+                return [], []
+            blocks.append(json.loads(b))
+
+        first = min((x["period"] for x in out if x.get("period")), default=None)
+        for block in blocks:
+            for item in form_rows(block):
+                form = item.pop("form")
+                if cik != CIK:
+                    if first and item.get("period") and item["period"] >= first:
+                        continue
+                    item["cik"] = cik
+                if item.get("accession"):
+                    ACC_CIK[item["accession"]] = cik
+                (out if form == FORM else amend).append(item)
 
     # 정정 공시(13F-HR/A)는 여기서 **목록만** 모읍니다. 원문을 받아 수치에
     # 반영하는 일은 `apply_amendments` 가 뒤에서 합니다 — 정정이 달린 분기만
@@ -228,7 +242,7 @@ def filing_docs(acc: str, contact: str):
     실측으로 1998-12-31 ~ 2013-03-31 의 58건이 전부 여기 해당합니다.
     이것을 '실패'로 세면 매주 58건이 찍혀서 **진짜 실패가 그 속에 묻힙니다.**"""
     a = re.sub(r"\D", "", acc)
-    base = f"https://www.sec.gov/Archives/edgar/data/{int(CIK)}/{a}"
+    base = f"https://www.sec.gov/Archives/edgar/data/{int(ACC_CIK.get(acc, CIK))}/{a}"
     body = get(f"{base}/index.json", contact)
     if not body:
         return None, None
@@ -470,11 +484,12 @@ def apply_amendments(quarters: list[dict], contact: str, filing_dates=None) -> t
 
 def configure(slug):
     """Select one registered investor without changing parser internals."""
-    global CIK, OUT, MANAGER_NAME  # noqa: PLW0603
+    global CIK, OUT, MANAGER_NAME, PREDECESSORS  # noqa: PLW0603
     investor = one(slug)
     CIK = investor.cik
     OUT = str(investor.output)
     MANAGER_NAME = investor.filing_name
+    PREDECESSORS = [c for c, _ in investor.predecessors]
     return investor
 
 
@@ -587,6 +602,9 @@ def main(slug=None) -> int:
         if how != "date":
             # 제출일 규칙과 다르게 읽었다는 사실을 자료에 남깁니다(검산할 수 있게).
             q["unit_by"] = how
+        if f.get("cik"):
+            # 예전 법인 번호로 낸 분기입니다. 어디서 받았는지 자료에 남깁니다.
+            q["filer_cik"] = f["cik"]
 
         # 우리 합계를 **공시가 스스로 밝힌 총액**과 맞춰 봅니다. 이게 맞으면
         # 줄을 빠뜨리지도, 단위를 잘못 잡지도 않았다는 뜻입니다. 화면을 만들기
@@ -652,7 +670,8 @@ def main(slug=None) -> int:
     doc = {
         "updated": prev.get("updated") if prev else None,
         "source": "SEC Form 13F-HR (public domain)",
-        "manager": {"cik": CIK, "name": MANAGER_NAME},
+        "manager": {"cik": CIK, "name": MANAGER_NAME,
+                    **({"predecessors": PREDECESSORS} if PREDECESSORS else {})},
         "note": ("value in USD; rows folded by cusip. 13F shows US-listed long "
                  "positions only, filed 45 days after quarter end."),
         "quarters": quarters,
@@ -725,7 +744,7 @@ def main(slug=None) -> int:
             acc = x["accession"]
             lines.append(f"  {x['period']}  냄 {x['filed']}  {acc}")
             lines.append(f"    https://www.sec.gov/Archives/edgar/data/"
-                         f"{int(CIK)}/{acc.replace('-', '')}/")
+                         f"{int(ACC_CIK.get(acc, CIK))}/{acc.replace('-', '')}/")
         with open(ALERT, "a", encoding="utf-8") as f:
             if f.tell():
                 f.write("\n")
