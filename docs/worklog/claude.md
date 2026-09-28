@@ -5,6 +5,16 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+바우포스트 종가 — 이름 표기 차이 셋
+- 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
+- 결과(PR #103): 토름 붙음. 바우포스트 해외 5종목 짝 없음 — NCLH(OpenFIGI 이름 28자 잘림) ·
+  AXTA(SYS/SYSTEMS) · HLF(`COM SHS` 를 보통주로 안 봄) · AON(`SHS CL A`) · LBTY C(`COM CL C`).
+- 규칙: 앞부분 3글자 이상 겹치면 같은 낱말, 28자 이상 이름은 끝 낱말 빼고, `COM SHS` 보통주.
+  종류 글자 줄(CL A/C)은 그대로 안 붙임. 되돌려 다섯 가지 모두 검사가 잡는 것 확인.
+- 넘김: 머지 뒤 Update Titans Prices — NCLH·AXTA·HLF 가 붙는지(빨간불 없음이 정상).
+  HLF 원본은 아직 못 봄 — 떨어지면 로그의 `fallback rejected · raw` 줄을 볼 것.
+
+## 2026-09-28 · Claude · PR #103
 토름 종가 대조 문턱 0.5% → 2%
 - 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
 - 결과(PR #102): 바우포스트 53분기 · 2022-12-31 부터 14분기에 `unit_by: prev-quarter` · 총액

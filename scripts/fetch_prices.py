@@ -193,8 +193,9 @@ def resolve(cusips, required, known, unverified=None):
 
 # 해외 법인이 미국에 낸 **한 종류뿐인 보통주**의 공시 표기. 네덜란드 법인의
 # 뉴욕 등록주(ASML `N Y REGISTRY SHS`)도 여기 든다 — ADR 이 아니라 본주 그대로다.
-# 종류 글자(CL A·SHS CL C)·우선주·단위(UNIT)는 넣지 않는다.
-PLAIN = re.compile(r"COM(?:MON(?: STOCK)?)?|SHS|ORD(?: SHS)?|ORDINARY SHARES|"
+# 종류 글자(CL A·SHS CL C)·우선주·단위(UNIT)는 넣지 않는다. 허벌라이프는
+# `COM SHS` 로 적는다(바우포스트 2026-06-30).
+PLAIN = re.compile(r"COM(?:MON)?(?: STOCK| SHS)?|SHS|ORD(?: SHS)?|ORDINARY SHARES|"
                    r"N ?Y REGISTRY SHS|NY REG(?:ISTRY)? SHS|REG SHS|NAMEN AKT")
 # OpenFIGI 의 securityType. 뉴욕 등록주는 'NY Reg Shrs' 로 온다(2026-09-28 러너 실측 —
 # 넓은 칸 securityType2 는 'Depositary Receipt' 라 그쪽으로는 가릴 수 없다). ADR 은 'ADR'.
@@ -210,12 +211,25 @@ def same_issuer(figi, filed):
     OpenFIGI 는 A주에 꼬리를 단다: `TORM PLC-A`, `XP INC - CLASS A`,
     `LIBERTY GLOBAL LTD-A`(2026-09-28 러너 실측). 공시는 `TORM PLC` 뿐이다.
     **A 만** 떼고 B·C 는 남긴다 — B·C 꼬리면 공시와 다른 종류일 수 있다.
-    A 를 떼어 붙인 것도 종가를 받은 뒤 분기말 가격으로 다시 잰다(`mark_matches`)."""
+    A 를 떼어 붙인 것도 종가를 받은 뒤 분기말 가격으로 다시 잰다(`mark_matches`).
+
+    바우포스트에서 두 가지가 더 나왔다(2026-09-28 러너 실측).
+    - 줄임말: 공시 `AXALTA COATING SYS LTD` · OpenFIGI `AXALTA COATING SYSTEMS LTD`.
+      그래서 낱말끼리 한쪽이 다른 쪽의 앞부분(3글자 이상)이어도 같다고 본다.
+    - 잘린 이름: OpenFIGI `NORWEGIAN CRUISE LINE HOLDIN` — 28글자에서 끊겼다.
+      28글자 이상이면 끝 낱말은 잘렸을 수 있어 빼고, 남은 낱말이 공시 이름의
+      앞부분과 맞는지 본다. 이렇게 붙인 것도 전부 종가 대조를 한 번 더 거친다."""
     words = lambda n: [w for w in norm(n) if w not in NOT_NAME]
     a, b = words(figi), words(filed)
     if a[-1:] == ["A"] and b[-1:] != ["A"]:
         a = a[:-1]
-    return sorted(a) == sorted(b)
+    if sorted(a) == sorted(b):
+        return True
+    if len(str(figi).strip()) >= 28 and len(a) >= 3:
+        a = a[:-1]
+        b = b[:len(a)]
+    same = lambda x, y: x == y or (min(len(x), len(y)) >= 3 and (x.startswith(y) or y.startswith(x)))
+    return len(a) == len(b) >= 1 and all(same(x, y) for x, y in zip(a, b))
 
 
 def parse_chart(payload, ticker, now):
