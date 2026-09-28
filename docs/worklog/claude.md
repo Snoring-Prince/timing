@@ -5,6 +5,14 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+오크트리 첫 수집의 빨간불 — 텍스트 원본에 붙은 XML 정정
+- 파일: scripts/fetch_13f.py · scripts/tests/test_audit_regressions.py · CLAUDE.md · 이 일지
+- 규칙: 원본이 pre-xml 인 분기의 XML 정정은 `original-pre-xml` 로 기록하고 초록불.
+  원문을 못 받은 것(통신 실패)만 실패.
+- 넘김: 머지 뒤 Update 13F → 초록불 확인, 그다음 Update Titans Prices(오크트리 종가).
+  다음은 애크먼 대신 신고자(PERSHING SQUARE INC., CIK 0002026053) 정찰.
+
+## 2026-09-28 · Claude · PR #98
 막스(오크트리) 화면 — 네 번째 투자자
 - 파일: titans/oaktree/index.html(새) · titans/index.html(카드) · data/titans/investors.json ·
   sitemap.xml · CLAUDE.md · docs/masters-13f.md · 이 일지
