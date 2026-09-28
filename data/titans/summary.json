@@ -161,6 +161,33 @@
      "w": 11.9
     }
    ]
+  },
+  {
+   "slug": "duquesne",
+   "name": {
+    "en": "Duquesne Family Office",
+    "ko": "듀케인 패밀리 오피스"
+   },
+   "since": 2013,
+   "period": "2026-06-30",
+   "filed": "2026-08-14",
+   "quarters": 53,
+   "total": 4354220000,
+   "stocks": 85,
+   "top": [
+    {
+     "name": "Natera Inc",
+     "w": 19.9
+    },
+    {
+     "name": "Taiwan Semiconductor Manufac",
+     "w": 6.5
+    },
+    {
+     "name": "Stmicroelectronics N V",
+     "w": 5.3
+    }
+   ]
   }
  ]
 }
