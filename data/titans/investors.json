@@ -78,6 +78,17 @@
           "merge": true
         }
       ]
+    },
+    {
+      "slug": "duquesne",
+      "cik": "0001536411",
+      "filing_name": "Duquesne Family Office LLC",
+      "name": {
+        "en": "Duquesne Family Office",
+        "ko": "듀케인 패밀리 오피스"
+      },
+      "since": 2013,
+      "active": true
     }
   ]
 }
