@@ -57,7 +57,48 @@ T3  Few enough positions to be a story?        quant with 1,000+ names → fail
 T4  Do they already disclose better themselves? → fail if yes
 ```
 
-### Accepted — first eight (owner approved the direction, list is mine)
+### DECIDED 2026-09-28 — the eight (owner's list; supersedes the lists below)
+
+Owner grouped investors by **style** first, then picked so every style is covered.
+The style label is descriptive, never a verdict, and becomes the grouping on the
+future `/titans/` list page.
+
+```
+value        Warren Buffett / Berkshire Hathaway      built
+value        Li Lu / Himalaya Capital                 Munger's manager; CN/HK names not in 13F
+formula      Joel Greenblatt / Gotham                 hundreds of names + shorts → top-50 view
+growth       Cathie Wood / ARK                        DEFERRED: ARK self-publishes daily; do last
+macro        Ray Dalio / Bridgewater                  owner override (see below)
+macro        Stanley Druckenmiller / Duquesne FO      macro; 13F = stock sleeve only
+activist     Bill Ackman / Pershing Square            ~8-10 names
+contrarian   David Tepper / Appaloosa                 options already excluded on screen
+```
+
+- **Dalio: owner override of the old rejection.** Owner: retirement is not the
+  point — Buffett also stepped down (CEO → Greg Abel, end-2025); the page stands
+  on *carrying the philosophy*. The T1 problem stays real (13F is mostly ETFs;
+  macro bets in futures/FX/bonds are invisible), so his page must say plainly that
+  13F shows the stock sleeve only. Same note for Druckenmiller.
+- **Cathie Wood: owner wants her in**, reasoning her self-publishing is a plus, not
+  a minus. Built **after** the 13F-only investors ("13F 밖에 방법이 없는 사람들만 우선").
+- **Dropped from the 2026-09-14 list:** Burry (Scion deregistered Nov 2025, no new
+  13F), Pabrai (13F nearly empty after moving to non-US markets), Terry Smith,
+  Chris Hohn (reserve). Reserves: Seth Klarman, Carl Icahn, Chris Hohn.
+- **Renaissance / Citadel: owner considered "top 30-50 only", then dropped both.**
+  Not a load problem (top-50 fits), a meaning problem: Medallion holds for days so
+  a quarter-end snapshot is noise; Citadel's long book is one half of hedged pairs
+  and the short half is invisible. Do not re-propose.
+- **Legends with no usable 13F** (owner asked): Graham (fund closed 1956), Fisher
+  (small adviser, d.2004), Lynch and Neff (inside Fidelity / Wellington filings,
+  not separable), O'Neil (own account + IBD; being checked by the probe).
+  Greenblatt is the only one of that list still filing.
+- **Before adding investor #2:** split `data/titans/prices.json` per investor. It
+  is one shared file today; with eight pages every visitor would download all
+  eight investors' prices (~20MB+).
+- **Verify first:** `scripts/probe_titans.py` + `probe-titans.yml` (manual). CIKs
+  in it are from memory; it prints the SEC entity name next to each.
+
+### Accepted — first eight (2026-09-14; superseded above, kept for the reasoning)
 
 ```
 Buffett / Berkshire Hathaway      ~40 pos, 13F ≈ whole portfolio   ← START HERE

@@ -4,7 +4,18 @@
 
 ---
 
-## 2026-09-26 · Claude · (이 PR)
+## 2026-09-28 · Claude · (이 PR)
+대가들의 선택 여덟 명 확정 · 새 후보 여섯 곳 정찰 만듦
+- 파일: scripts/probe_titans.py · .github/workflows/probe-titans.yml · CLAUDE.md ·
+  docs/masters-13f.md · 이 일지
+- 규칙: 갈래별로 고름(가치 버핏·리루 / 공식 그린블라트 / 성장 캐시 우드 / 거시 달리오·
+  드러켄밀러 / 행동주의 애크먼 / 역발상 테퍼). 캐시 우드는 마지막. 르네상스·시타델·
+  버리·파브라이 뺌. 달리오는 사용자 판단으로 넣음(9-14 의 뺀 이유를 뒤집음).
+- 굳힘: 정찰 CIK 는 기억값 — 로그의 회사 이름으로 확인할 것. 두 번째 투자자 전에
+  prices.json 을 투자자별로 나눈다.
+- 넘김: 사용자가 Actions → Probe Titans 를 눌러야 다음으로 간다.
+
+## 2026-09-26 · Claude · PR #88
 첫 화면을 허브로 바꾸고 대시보드를 `/timing/` 으로 옮겼다
 - 파일: index.html(새 허브) · timing/index.html(옮긴 대시보드) · sitemap.xml ·
   .github/workflows/update-data.yml · .github/workflows/check.yml ·
