@@ -5,6 +5,16 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+정찰 2차 결과 반영 · 달리오 뺌 · 드러켄밀러 전 종목 · 하워드 막스 정찰
+- 파일: scripts/probe_titans.py · .github/workflows/probe-titans.yml · CLAUDE.md ·
+  docs/masters-13f.md · 이 일지
+- 규칙: run 36375516285. 클라만 CIK 맞음. 테퍼 두 번호 이어짐 확인(같은 CFO 서명,
+  34종목·금액 87/85% 이어짐). 드러켄밀러·클라만은 2023년 이후에도 천 달러 단위.
+- 굳힘: 두 사람을 넣기 전에 공시마다 금액 단위를 재는 장치가 먼저다.
+- 넘김: 머지 뒤 사용자가 Probe Titans 를 다시 누르면 오크트리 숫자와 애크먼의
+  최근 13F 계열 제출이 나온다.
+
+## 2026-09-28 · Claude · PR #90
 정찰 1차 결과 반영 · 그린블라트→클라만 · 주가 파일을 투자자별로 나눔
 - 파일: scripts/fetch_prices.py · titans/berkshire/index.html ·
   data/titans/prices/berkshire.json(새, 봇이 만듦) · .github/workflows/update-prices.yml ·

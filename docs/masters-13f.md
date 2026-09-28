@@ -68,7 +68,7 @@ value        Warren Buffett / Berkshire Hathaway      built
 value        Li Lu / Himalaya Capital                 Munger's manager; CN/HK names not in 13F
 value        Seth Klarman / Baupost                   replaces Greenblatt (see below)
 growth       Cathie Wood / ARK                        DEFERRED: ARK self-publishes daily; do last
-macro        Ray Dalio / Bridgewater                  owner override (see below)
+distressed   Howard Marks / Oaktree                   CANDIDATE (probe run 3) — replaces Dalio
 macro        Stanley Druckenmiller / Duquesne FO      macro; 13F = stock sleeve only
 activist     Bill Ackman / Pershing Square            ~8-10 names
 contrarian   David Tepper / Appaloosa                 options excluded; TWO CIKs stitched (below)
@@ -136,6 +136,26 @@ Tepper (old) 2015-12-31     47   100%       12.8%           2%
   Check EDGAR before registering.
 - O'Neil: one hit, name not shown (search printed the atom author "Webmaster").
   Fixed: the probe now names every hit from its submissions file.
+
+### Probe run 2 (2026-09-28, run 36375516285) — what it settled
+
+- **Dalio DROPPED (owner)**; slot goes to **Howard Marks / Oaktree** if run 3 holds
+  up (CIK `0000949509` from memory; core business is credit/distressed, so the 13F
+  is the equity sleeve only — same page note as Druckenmiller).
+- **Druckenmiller: all 85 issuers, no top-50 cut (owner).**
+- **Klarman confirmed:** BAUPOST GROUP LLC/MA, 23 issuers, top 50 = 100%.
+- **Thousands-unit filers after 2023:** median value÷shares Druckenmiller $0.09,
+  Klarman $0.13 (cover totals equally small). The date-only `unit_scale` rule is
+  wrong for them. Before registering either, add a per-filing unit check
+  (e.g. implied price vs stored close, 1000× is unmistakable).
+- **Tepper stitch confirmed:** old last 2015-12-31 (47 issuers, APPALOOSA
+  MANAGEMENT LP, Miami Beach FL) vs new first 2016-03-31 (43, APPALOOSA LP, Short
+  Hills NJ); same signer Michael L Palmer (CFO); 34 shared issuers; value carried
+  87% / 85%; 91-day gap. Note the addresses run FL→NJ, opposite to the press-based
+  guess written earlier.
+- **Ackman Q2 still absent**, no other Pershing 13F filer in search. Run 3 prints
+  the latest 13F-family forms (incl. 13F-NT) per CIK.
+- O'Neil: `O'Neil Global Advisors, Inc.` (CIK 0001861159) — a firm, not his book; not added.
 - **Verify first:** `scripts/probe_titans.py` + `probe-titans.yml` (manual). CIKs
   in it are from memory; it prints the SEC entity name next to each.
 
