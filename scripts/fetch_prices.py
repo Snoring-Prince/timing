@@ -112,18 +112,24 @@ def marks(books):
     return got
 
 
-def mark_matches(values, splits, mark, tolerance=.005):
-    """분기말 종가(그 뒤 분할만큼 되돌림)가 공시의 금액 ÷ 주식수와 맞는가."""
-    day, price = mark
+def mark_close(values, splits, mark):
+    """공시 분기말에 가장 가까운 종가(그 뒤 분할만큼 되돌림)와 그 날짜. 없으면 None."""
+    day, _ = mark
     near = [(d, v) for d, v in values if d <= day]
     if not near or (dt.date.fromisoformat(day)-dt.date.fromisoformat(near[-1][0])).days > 5:
-        return False
+        return None
     close = near[-1][1]
     for when, ratio in splits.items():
         if near[-1][0] < when:
             num, den = (float(x) for x in ratio.split(":"))
             close *= num/den
-    return abs(close/price-1) <= tolerance
+    return near[-1][0], close
+
+
+def mark_matches(values, splits, mark, tolerance=.005):
+    """분기말 종가(그 뒤 분할만큼 되돌림)가 공시의 금액 ÷ 주식수와 맞는가."""
+    got = mark_close(values, splits, mark)
+    return bool(got) and abs(got[1]/mark[1]-1) <= tolerance
 
 
 class Unpriced(ValueError):
@@ -330,9 +336,16 @@ def collect(required, previous, now, full=False, known=None, since=None, quarter
                           if d < start.isoformat()} | splits
             if (now.astimezone(NY).date()-dt.date.fromisoformat(values[-1][0])).days > 7:
                 raise ValueError("last closing price is more than seven days old")
-            if cusip in unverified and not mark_matches(values, splits, (quarter_marks or {}).get(cusip, ("", 0))):
+            mark = (quarter_marks or {}).get(cusip, ("", 0))
+            if cusip in unverified and not mark_matches(values, splits, mark):
                 # 이름으로 붙인 티커가 다른 종류(A↔C)거나 다른 회사면 여기서 걸린다.
-                raise Unpriced(f"{ticker} close does not match the filing's quarter-end price")
+                # **얼마나 어긋났는지 숫자를 남긴다** — 오크트리의 토름(1위)이 여기
+                # 걸렸는데 숫자가 없어 티커가 틀린 것인지 공시 기준가가 다른 것인지
+                # (예: 코펜하겐 종가) 가릴 수 없었다(2026-09-28).
+                got = mark_close(values, splits, mark)
+                seen = (f"close {got[1]:.4f} on {got[0]} vs filing {mark[1]:.4f} for {mark[0]} "
+                        f"({got[1]/mark[1]-1:+.2%})" if got else f"no close near {mark[0] or 'the filing date'}")
+                raise Unpriced(f"{ticker} failed the quarter-end price check: {seen}")
             if refresh and deep:
                 scanned = need
             series[cusip] = {**identity, "ticker": ticker, "currency": "USD",
