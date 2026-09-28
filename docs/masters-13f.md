@@ -226,6 +226,24 @@ Tepper (old) 2015-12-31     47   100%       12.8%           2%
   leaves the quarter unsaved (exit 1). Amendments apply per filer
   (`merge_partner_amendments`). Without the flag (Tepper) the new CIK still wins.
 - No quote on the page: could not verify one sentence against a primary source.
+- First real run (after PR #108): 53 quarters 2013-06-30..2026-06-30, 48 from the
+  old CIK (`filer_cik`), 2013-03-31 skipped `pre-xml`, 3 amendments applied. The
+  four overlap quarters carry `partners`, 12 rows each, HHH 27,852,064 sh; no
+  `merged_dups`, no total mismatch. All 14 latest holdings priced.
+
+### Druckenmiller registered (2026-09-28)
+
+- `duquesne`, CIK 0001536411 `Duquesne Family Office LLC` (probe 2, NY), since 2013.
+  13F-HR from 2011-12-31 but pre-2013Q2 filings are text (not converted).
+- All 85 issuers (owner). Stock sleeve only; bio and card say so. 9 option rows
+  in probe 2 are excluded by the SH-only rule.
+- Still thousands after 2023 (median value/shares $0.09): relies on `unit_by`
+  prev-quarter check; >30 continuing issuers per quarter, so the ≥3 shared-name
+  condition holds despite ~46% median new names per quarter.
+- Issuer names come mixed-case (`Natera Inc`); `title()` leaves them, collector
+  name matching upper-cases. Expect a first-time `unpriced` red on prices for any
+  CINS names without an exact mapping.
+- No quote: the widely quoted Soros lesson differs word-for-word across sources.
 
 ### Probe run 4 (2026-09-28, run 36377898009)
 

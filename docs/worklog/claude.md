@@ -5,6 +5,16 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+드러켄밀러(듀케인 패밀리 오피스) 화면 — 일곱 번째 투자자
+- 파일: titans/duquesne/index.html(새) · titans/index.html(카드) · data/titans/investors.json ·
+  sitemap.xml · CLAUDE.md · docs/masters-13f.md · 이 일지. 코드 변경 없음.
+- 결과(PR #108): 퍼싱 53분기 · 겹친 네 분기 합쳐짐(12줄) · 하워드 휴즈 27,852,064주 · 14종목 종가 전부.
+- 규칙: 85종목 전부 · "주식 부분만" · 천 달러 단위는 `unit_by` 에 맡김 · 인용 없음.
+- 넘김: 머지 뒤 Update 13F → 끝난 뒤 Update Titans Prices. 2022-12-31 이후 분기에 `unit_by:
+  prev-quarter` 가 붙어 총액이 끊김 없이 이어지는지(1000배 튀지 않는지) 볼 것. 종가는 해외 종목
+  몇 개가 처음 한 번 빨간불일 수 있음 — 로그의 원본 응답을 보고 판단.
+
+## 2026-09-28 · Claude · PR #108
 애크먼(퍼싱 스퀘어) 화면 — 여섯 번째 투자자, 겹친 분기 합치기
 - 파일: scripts/fetch_13f.py · scripts/titans/registry.py · scripts/tests/test_fetch_13f.py ·
   titans/pershing/index.html(새) · titans/index.html(카드) · data/titans/investors.json ·
