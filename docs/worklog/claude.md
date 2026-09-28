@@ -5,6 +5,17 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+애크먼(퍼싱 스퀘어) 화면 — 여섯 번째 투자자, 겹친 분기 합치기
+- 파일: scripts/fetch_13f.py · scripts/titans/registry.py · scripts/tests/test_fetch_13f.py ·
+  titans/pershing/index.html(새) · titans/index.html(카드) · data/titans/investors.json ·
+  sitemap.xml · CLAUDE.md · docs/masters-13f.md · 이 일지
+- 결과(PR #107): 하워드 휴즈 펀드 18,852,064 + 지주회사 9,000,000 = 합쳐 낸 2분기 27,852,064 (네 분기 모두).
+- 규칙: predecessors 의 `merge: true` → 겹친 분기는 두 원본을 `combine()` 으로 더함. 같은 주식 수·금액
+  (1% 안)이면 중복으로 한 번만(`merged_dups`). 정정은 낸 법인의 원본에만. 짝을 못 받으면 그 분기 안 씀.
+- 넘김: 머지 뒤 Update 13F → 끝난 뒤 Update Titans Prices. 13F 로그에서 2025-06-30~2026-03-31 에
+  `⊕ 예전 번호 공시 1건과 합침` 이 붙고 공시 총액 ✓ 인지, 하워드 휴즈가 27,852,064주인지 볼 것.
+
+## 2026-09-28 · Claude · PR #107
 애크먼 정찰 6차 — 겹친 분기의 하워드 휴즈
 - 파일: scripts/probe_titans.py · CLAUDE.md · 이 일지
 - 결과(PR #106): 새 번호 = 퍼싱 지주회사, 2분기는 그룹 전체(6곳 전부 퍼싱 계열) · 1분기와 이어짐.

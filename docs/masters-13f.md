@@ -205,6 +205,28 @@ Tepper (old) 2015-12-31     47   100%       12.8%           2%
 - Quote: Margin of Safety (1991), the margin-of-safety definition, checked
   against several book summaries; 1982 co-founding checked (Wikipedia, CNBC).
 
+### Ackman registered (2026-09-28) — overlap merge
+
+- Probe 5 (run 36439439702): CIK 0002026053 `PERSHING SQUARE INC.` (formerly
+  `PERSHING SQUARE HOLDCO, L.P.`), NY, signed by William A Ackman. Its 2026-06-30
+  13F is a HOLDINGS REPORT listing six other included managers, all Pershing
+  entities (0001336528 PSCM, PSCM GP, Partner Group, Management, PSUS Holdings,
+  HHH Holdings); every one of the 15 rows carries their numbers. 14 issuers,
+  $19.5B. Old CIK 0001336528 filed 13F-NT for 2026-06-30 pointing to it.
+- Probe 6 (run 36440685468): continuity 2026-03-31 → 2026-06-30, 91 days, 9 shared
+  issuers, 99.3% of old value carries over. The new CIK also filed 13F-HR for
+  2025-06-30..2026-03-31 holding only Howard Hughes (44267T102) 9,000,000 sh;
+  PSCM held 18,852,064 sh in each; sum 27,852,064 = the combined 2026-06-30 row
+  exactly. Different pockets, so overlap quarters are **added**.
+- Registry: `pershing`, cik 0002026053, predecessors
+  `[{cik 0001336528, merge: true}]`, since 2013. `merge: true` makes
+  `list_filings()` attach the old CIK's same-period 13F-HR as `partners` of the
+  new CIK's filing; `main()` fetches both, `combine()` adds them (same cusip with
+  equal shares and value within 1% counts once → `merged_dups`). A missing partner
+  leaves the quarter unsaved (exit 1). Amendments apply per filer
+  (`merge_partner_amendments`). Without the flag (Tepper) the new CIK still wins.
+- No quote on the page: could not verify one sentence against a primary source.
+
 ### Probe run 4 (2026-09-28, run 36377898009)
 
 - **Ackman 13F-NT reporting manager:** PERSHING SQUARE INC., CIK 0002026053,

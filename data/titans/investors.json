@@ -60,6 +60,24 @@
       },
       "since": 2013,
       "active": true
+    },
+    {
+      "slug": "pershing",
+      "cik": "0002026053",
+      "filing_name": "Pershing Square Inc.",
+      "name": {
+        "en": "Pershing Square",
+        "ko": "퍼싱 스퀘어"
+      },
+      "since": 2013,
+      "active": true,
+      "predecessors": [
+        {
+          "cik": "0001336528",
+          "filing_name": "Pershing Square Capital Management, L.P.",
+          "merge": true
+        }
+      ]
     }
   ]
 }

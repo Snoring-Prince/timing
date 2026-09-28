@@ -20,6 +20,11 @@ class Investor:
     # 공시를 멈춘 번호라 수집기가 한 번에 이어 붙이고, 감시기는 지금 번호만 봅니다
     # (테퍼 — CLAUDE.md 9-3).
     predecessors: tuple = ()
+    # 예전 번호 중 **같은 분기를 지금 번호와 둘 다 낸** 것을 합칠 번호들.
+    # 기본은 "겹치면 지금 번호가 이긴다"(테퍼). 애크먼은 지주회사(지금 번호)가
+    # 2025~2026년 1분기에 자기 몫 하워드 휴즈만 따로 냈고 펀드 몫은 예전 번호가
+    # 냈다 — 서로 다른 주머니라 더해야 한다(정찰 6차, CLAUDE.md 9-3).
+    merge_overlap: tuple = ()
 
     @property
     def output(self):
@@ -47,7 +52,12 @@ def load(path=REGISTRY):
             if not re.fullmatch(r"\d{10}", ocik) or ocik == inv.cik or ocik in seen_ciks or not oname:
                 raise ValueError(f"{inv.slug}: invalid predecessor {ocik!r}")
             seen_ciks.add(ocik)
-        inv = Investor(**{**row, "predecessors": pairs})
+        merge = tuple(str(o.get("cik")) for o in (row.get("predecessors") or ())
+                      if o.get("merge") is True)
+        for o in (row.get("predecessors") or ()):
+            if "merge" in o and not isinstance(o["merge"], bool):
+                raise ValueError(f"{inv.slug}: predecessor merge must be true/false")
+        inv = Investor(**{**row, "predecessors": pairs, "merge_overlap": merge})
         if not 1994 <= inv.since <= 2100:
             raise ValueError(f"{inv.slug}: invalid first year")
         seen_slugs.add(inv.slug)

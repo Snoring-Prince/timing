@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pershing Square portfolio — every 13F filing since 2013</title>
+
+<!-- ══ 검색엔진·공유 ═══════════════════════════════════════════════════
+     본 사이트와 같은 규칙입니다(CLAUDE.md 6-2). 크롤러 대부분은 JS 를 안
+     돌리므로 여기 적힌 **영어**가 검색 결과에 나오는 글자입니다. 한국어
+     방문자에게는 applyLang() → paintHead() 가 갈아끼웁니다.
+═════════════════════════════════════════════════════════════════════ -->
+<meta name="description" content="Pershing Square holdings in its latest SEC 13F filing — position sizes, share changes and estimated returns based on quarter-end snapshots.">
+<link rel="canonical" href="https://itpaidoff.com/titans/pershing/">
+<link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/pershing/?lang=en">
+<link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/pershing/?lang=ko">
+<link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/pershing/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="It paid off">
+<meta property="og:url" content="https://itpaidoff.com/titans/pershing/">
+<meta property="og:title" content="Pershing Square portfolio — every 13F filing since 2013">
+<meta property="og:description" content="Pershing Square holdings in its latest SEC 13F filing — position sizes, share changes and estimated returns based on quarter-end snapshots.">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ko_KR">
+<meta name="twitter:card" content="summary">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#F7F9FB">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+
+<!-- Investor-specific static SEO stays here. Every visible component, style and calculation is shared. -->
+<script>
+window.TITAN = {
+  slug : "pershing",
+  cik  : "0002026053",
+  data : "../../data/titans/pershing.json",
+  name : { en:"Pershing Square", ko:"퍼싱 스퀘어" },
+  since: 2013,
+  // 2026년 1분기까지 공시를 내던 운용사 번호. 각주의 출처 줄에 같이 적힌다(registry 의 predecessors 와 같아야 함).
+  formerCiks: ["0001336528"],
+  prices: "../../data/titans/prices/pershing.json",
+  // 머리글 이름표. 비워 두면 영어 이름의 머리글자 타일이 나온다.
+  // 진짜 로고를 쓰려면 그림 파일을 저장소에 넣고 그 경로를 여기 한 줄 적는다.
+  mark: ""
+};
+</script>
+<link rel="stylesheet" href="../shared/investor.css">
+</head>
+<body>
+<main class="wrap static-investor" id="static-investor">
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">Titans' picks</p>
+      <h1 id="tagline"><span class="tmark" aria-hidden="true">PS</span><span class="ttext"><b class="tname">Pershing Square</b> holdings · latest filing</span></h1>
+    </div>
+  </header>
+
+  <!-- ══ 투자자 소개 ═══════════════════════════════════════
+       버크셔 페이지와 같은 규칙입니다 — 사전(D)으로 옮기지 마세요(CLAUDE.md 6-2).
+       두 언어를 다 넣어 두고 CSS 가 한쪽만 보여 줍니다. 그림이 없어 `nofigure` 입니다.
+
+       **두 법인 번호를 이었고, 겹친 네 분기는 합쳤습니다.** 2026년 1분기까지는
+       운용사 Pershing Square Capital Management(CIK 0001336528)가 펀드의 보유를,
+       2026년 2분기부터는 지주회사 Pershing Square Inc.(CIK 0002026053)가 그룹
+       전체를 냅니다. 지주회사는 2025년 2분기~2026년 1분기에 자기 몫 하워드 휴즈만
+       따로 냈는데, 펀드 몫과 더하면 합쳐 낸 다음 분기의 주식 수와 한 주도 안
+       틀리고 같았습니다(정찰 6차 — CLAUDE.md 9-3). registry 의 predecessors 에
+       `merge: true` 가 그 표시입니다.
+
+       인용은 싣지 않았습니다 — 원문과 글자까지 맞춰 볼 수 있는 한 문장을
+       찾지 못했습니다(출처 없는 인용은 싣지 않는다는 규칙).
+  ══════════════════════════════════════════════════════════════════ -->
+  <section class="panel bio nofigure" id="titan-bio">
+    <div class="bio-text">
+
+      <p data-lang="en">Bill Ackman runs Pershing Square, an activist fund: it takes large stakes in a small number of companies — often around ten — and presses management for changes it believes will raise their value. The portfolio is concentrated, so a single decision moves it a lot. A 13F shows only its US-listed shares; options and anything held outside that scope are left out. The filings run from 2013. They came from the fund manager until early 2026 and from the group’s holding company since then; for the four quarters in 2025–26 when both filed, the two reports are added together here.</p>
+      <p data-lang="ko">빌 애크먼이 이끄는 행동주의 펀드입니다. 소수의 회사 — 흔히 열 곳 안팎 — 에 큰 지분을 사고, 가치를 높인다고 보는 변화를 경영진에게 요구합니다. 종목이 몰려 있어 한 번의 결정이 포트폴리오를 크게 움직입니다. 13F 에는 미국 상장 주식만 나오고 옵션 등은 빠집니다. 공시는 2013년부터입니다. 2026년 초까지는 운용사가, 그 뒤로는 그룹의 지주회사가 냈고, 둘이 함께 낸 2025~26년의 네 분기는 두 공시를 더해 보여 줍니다.</p>
+
+    </div>
+  </section>
+</main>
+<script src="../shared/investor.js"></script>
+</body>
+</html>

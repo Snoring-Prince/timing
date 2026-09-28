@@ -57,6 +57,8 @@ MANAGER_NAME = "Berkshire Hathaway Inc"
 # 예전 법인 번호(공시를 멈춘 것)와, 접수번호마다 누가 냈는지. SEC 원문 폴더는
 # 낸 법인의 CIK 아래에 있으므로 받을 때 이 표를 봅니다(테퍼 — CLAUDE.md 9-3).
 PREDECESSORS: list[str] = []
+# 예전 번호 중 겹치는 분기를 **합칠** 번호(애크먼). 나머지는 겹치면 지금 번호가 이깁니다.
+MERGE: set[str] = set()
 ACC_CIK: dict[str, str] = {}
 FORM = "13F-HR"
 MAX_BYTES = 64 * 1024 * 1024
@@ -177,14 +179,45 @@ def fold(rows: list[dict], scale: int) -> list[dict]:
     return out
 
 
+def combine(parts: list[list[dict]]) -> tuple[list[dict], list[dict]]:
+    """두 법인이 **같은 분기**에 낸 보유를 합칩니다(애크먼 — 지주회사와 펀드).
+
+    서로 다른 주머니이므로 같은 종목은 **더합니다**. 정찰 6차에서 하워드 휴즈가
+    펀드 18,852,064주 + 지주회사 9,000,000주 = 합쳐 낸 다음 분기 27,852,064주로
+    한 주도 안 틀리고 맞았습니다.
+
+    **같은 주식을 두 법인이 다 신고한 줄은 한 번만 셉니다** — 주식 수가 같고 금액이
+    1% 안이면 중복으로 봅니다(사용자 판단: "중복은 제외"). 뺀 줄은 돌려줘서
+    자료에 남깁니다."""
+    out: dict[tuple, dict] = {}
+    dups: list[dict] = []
+    for part in parts:
+        for h in part:
+            key = (h["cusip"], h["class"], h.get("type", "SH"), h.get("putCall", ""))
+            a = out.get(key)
+            if a is None:
+                out[key] = dict(h)
+            elif (a["shares"] == h["shares"]
+                  and abs(a["value"] - h["value"]) <= 0.01 * max(a["value"], h["value"], 1)):
+                dups.append(dict(h))
+            else:
+                a["value"] += h["value"]
+                a["shares"] += h["shares"]
+                a["lines"] += h["lines"]
+    return sorted(out.values(), key=lambda a: -a["value"]), dups
+
+
 def list_filings(contact: str) -> tuple[list[dict], list[dict]]:
     """13F-HR 을 전부 모읍니다 — 최근 목록 + 쪼개진 옛 목록까지.
 
     최근 목록(filings.recent)만 보면 2016년까지밖에 안 올라갑니다(실측:
     39건). 더 옛것은 filings.files 에 별도 파일로 쪼개져 있습니다."""
     out, amend = [], []
+    # 겹친 분기에서 합칠 예전 번호의 원본 — 분기별로 모았다가 끝에 짝을 붙입니다.
+    overlap: dict[str, list[dict]] = {}
     # 지금 번호가 먼저입니다 — 예전 번호의 공시는 지금 번호의 첫 분기보다
     # 앞선 것만 받습니다(겹치는 분기는 지금 법인의 것이 이깁니다).
+    # 예외: MERGE 에 든 번호는 겹친 분기도 받아 **지금 번호의 같은 분기와 합칩니다.**
     for cik in [CIK, *PREDECESSORS]:
         body = get(f"https://data.sec.gov/submissions/CIK{cik}.json", contact)
         if not body:
@@ -208,13 +241,27 @@ def list_filings(contact: str) -> tuple[list[dict], list[dict]]:
         for block in blocks:
             for item in form_rows(block):
                 form = item.pop("form")
+                late = bool(cik != CIK and first and item.get("period")
+                            and item["period"] >= first)
+                if late and cik not in MERGE:
+                    continue
                 if cik != CIK:
-                    if first and item.get("period") and item["period"] >= first:
-                        continue
                     item["cik"] = cik
                 if item.get("accession"):
                     ACC_CIK[item["accession"]] = cik
+                if late and form == FORM:
+                    overlap.setdefault(item["period"], []).append(item)
+                    continue
                 (out if form == FORM else amend).append(item)
+
+    # 겹친 분기: 지금 번호에 같은 분기가 있으면 그 공시의 짝(partners)으로 붙이고,
+    # 없으면 예전 번호의 것을 그대로 씁니다.
+    mine = {x["period"]: x for x in out if not x.get("cik")}
+    for period, items in overlap.items():
+        if period in mine:
+            mine[period].setdefault("partners", []).extend(items)
+        else:
+            out.extend(items)
 
     # 정정 공시(13F-HR/A)는 여기서 **목록만** 모읍니다. 원문을 받아 수치에
     # 반영하는 일은 `apply_amendments` 가 뒤에서 합니다 — 정정이 달린 분기만
@@ -429,6 +476,16 @@ def apply_amendments(quarters: list[dict], contact: str, filing_dates=None) -> t
 
         # 원본은 저장해 둔 자기 자신의 가격과 단위가 자입니다.
         anchor = anchor_prices(q.get("holdings"))
+        if q.get("partners"):
+            # 두 법인의 공시를 합친 분기(애크먼). 정정은 **낸 법인의 원본에만**
+            # 적용합니다 — 한쪽의 전체 재작성이 다른 쪽 몫까지 지우면 안 됩니다.
+            bad = merge_partner_amendments(q, accs, contact, filing_dates, anchor)
+            if bad:
+                print(f"    {q['period']} 정정 병합 보류 — {bad}")
+                unmerged.append(f"{q['period']} ({bad})")
+            else:
+                done += 1
+            continue
         base, why = one_doc(q["accession"], contact, q.get("filed"), anchor,
                             UNIT_OF.get(q.get("unit")))
         if not base:
@@ -482,6 +539,49 @@ def apply_amendments(quarters: list[dict], contact: str, filing_dates=None) -> t
     return done, unmerged
 
 
+def merge_partner_amendments(q: dict, accs: list[str], contact: str, filing_dates, anchor):
+    """합친 분기의 정정을 법인별로 적용하고 다시 합칩니다. 못 하면 이유를 돌려줍니다."""
+    docs = [(q["accession"], q.get("filed"))] + [(p["accession"], p.get("filed"))
+                                                  for p in q.get("partners") or []]
+    filers = {ACC_CIK.get(acc, CIK) for acc, _ in docs}
+    stray = [a for a in accs if ACC_CIK.get(a, CIK) not in filers]
+    if stray:
+        return f"{', '.join(stray)} 를 낸 법인의 원본이 이 분기에 없습니다"
+    parts, applied, want, lines = [], [], 0, 0
+    for acc, filed in docs:
+        base, why = one_doc(acc, contact, filed, anchor, UNIT_OF.get(q.get("unit")))
+        if not base:
+            return f"{acc} 원본을 {why}"
+        mine = [a for a in accs if ACC_CIK.get(a, CIK) == ACC_CIK.get(acc, CIK)]
+        if mine:
+            merged, bad = merge_amendments(base, mine, contact, filing_dates, anchor)
+            if bad:
+                return bad
+            rows, applied = merged["rows"], applied + merged["applied"]
+            part_want = merged["want_total"]
+        else:
+            rows, part_want = base["rows"], base["total"]
+        want = want + part_want if want is not None and part_want is not None else None
+        lines += len(rows)
+        parts.append(fold(rows, 1))
+    held, dups = combine(parts)
+    q["holdings"], q["lines"] = held, lines
+    q["total"] = sum(h["value"] for h in held)
+    q["amended_applied"] = applied
+    q.pop("merged_dups", None)
+    if dups:
+        q["merged_dups"] = dups
+        if want is not None:
+            want -= sum(d["value"] for d in dups)
+    q.pop("total_mismatch", None)
+    q.pop("lines_mismatch", None)
+    if want and abs(q["total"] - want) / want > 0.005:
+        q["total_mismatch"] = want
+    print(f"  {q['period']}  정정 {len(accs)}건 반영(두 법인 합친 분기) → 종목 {len(held)} · "
+          f"${q['total']/1e9:,.1f}B")
+    return None
+
+
 def configure(slug):
     """Select one registered investor without changing parser internals."""
     global CIK, OUT, MANAGER_NAME, PREDECESSORS  # noqa: PLW0603
@@ -490,6 +590,8 @@ def configure(slug):
     OUT = str(investor.output)
     MANAGER_NAME = investor.filing_name
     PREDECESSORS = [c for c, _ in investor.predecessors]
+    global MERGE  # noqa: PLW0603
+    MERGE = set(getattr(investor, "merge_overlap", ()) or ())
     return investor
 
 
@@ -539,7 +641,8 @@ def main(slug=None) -> int:
     if not filings:
         print("설정한 시작 연도 이후의 공시가 없습니다. 파일을 쓰지 않습니다.")
         return 1
-    filing_dates = {f["accession"]: f.get("filed") for f in filings + amends}
+    filing_dates = {f["accession"]: f.get("filed")
+                    for f in filings + amends + [p for x in filings for p in x.get("partners") or []]}
     skipped = {f["accession"]: f for f in (prev or {}).get("skipped_filings", [])}
     known_amend.update(skipped)
     print(f"{FORM} {len(filings)}건 ({filings[0]['period']} ~ {filings[-1]['period']})")
@@ -593,12 +696,62 @@ def main(slug=None) -> int:
             failed += 1
             continue
         held = fold(rows, scale)
+        ctot, cent = cover_totals(cover)
+        want = ctot * scale if ctot else None
+        lines = len(rows)
+
+        # 같은 분기를 예전 번호도 냈으면(애크먼) 그 원문을 받아 합칩니다.
+        # 하나라도 못 받으면 반쪽 분기를 저장하지 않고 다음 실행에 다시 받습니다.
+        partners, dups, broken = [], [], False
+        parts = [held]
+        for p in f.get("partners") or []:
+            pxml, pcover = filing_docs(p["accession"], contact)
+            prows = None
+            if pxml and pxml is not NO_XML:
+                try:
+                    prows = rows_of(pxml)
+                except ET.ParseError:
+                    prows = None
+            if not prows:
+                broken = True
+                break
+            try:
+                phabit = None
+                if last and last.get("filed") and date_scale(last["filed"]) == date_scale(p.get("filed")):
+                    phabit = UNIT_OF.get(last.get("unit"))
+                pscale, _ = unit_scale(prows, p.get("filed"), anchor, phabit)
+            except (TypeError, ValueError):
+                broken = True
+                break
+            pheld = fold(prows, pscale)
+            parts.append(pheld)
+            ptot, pcent = cover_totals(pcover)
+            want = want + ptot * pscale if want is not None and ptot else None
+            lines += len(prows)
+            cent = cent + pcent if cent and pcent else None
+            partners.append({"accession": p["accession"], "cik": p.get("cik"),
+                             "filed": p.get("filed"), "lines": len(prows),
+                             "total": sum(h["value"] for h in pheld)})
+        if broken:
+            print(f"    {f['period']} 같은 분기를 낸 예전 번호의 원문을 받지 못했습니다 — "
+                  "이 분기를 저장하지 않습니다")
+            failed += 1
+            continue
+        if partners:
+            held, dups = combine(parts)
+            if want is not None:
+                want -= sum(d["value"] for d in dups)
         total = sum(h["value"] for h in held)
 
         q = {"period": f["period"], "filed": f["filed"],
-             "accession": f["accession"], "lines": len(rows),
+             "accession": f["accession"], "lines": lines,
              "unit": "thousands" if scale == 1000 else "usd",
              "total": total, "holdings": held}
+        if partners:
+            # 이 분기는 두 법인의 공시를 합친 것입니다. 무엇을 합쳤는지 남깁니다.
+            q["partners"] = partners
+            if dups:
+                q["merged_dups"] = dups
         if how != "date":
             # 제출일 규칙과 다르게 읽었다는 사실을 자료에 남깁니다(검산할 수 있게).
             q["unit_by"] = how
@@ -609,25 +762,26 @@ def main(slug=None) -> int:
         # 우리 합계를 **공시가 스스로 밝힌 총액**과 맞춰 봅니다. 이게 맞으면
         # 줄을 빠뜨리지도, 단위를 잘못 잡지도 않았다는 뜻입니다. 화면을 만들기
         # 전에 이 검산이 통과해야 합니다.
-        ctot, cent = cover_totals(cover)
         mark = ""
-        if ctot:
-            want = ctot * scale
+        if want:
             off = abs(total - want) / want if want else 0
             if off > 0.005:
                 q["total_mismatch"] = want
                 mark = f"  ※ 공시 총액과 {off:.1%} 차이 (${want/1e9:,.1f}B)"
             else:
                 mark = "  ✓"
-        if cent and cent != len(rows):
+        if cent and cent != lines:
             q["lines_mismatch"] = cent
-            mark += f"  ※ 공시 줄 수 {cent} ≠ {len(rows)}"
+            mark += f"  ※ 공시 줄 수 {cent} ≠ {lines}"
+        if partners:
+            mark += (f"  ⊕ 예전 번호 공시 {len(partners)}건과 합침"
+                     + (f" (중복 {len(dups)}줄 뺌)" if dups else ""))
         if f["period"] in amend_by:
             mark += "  ※ 정정 공시 있음"
 
         saved[f["accession"]] = q
         got += 1
-        print(f"  {f['period']}  줄 {len(rows):>4} → 종목 {len(held):>3}  "
+        print(f"  {f['period']}  줄 {lines:>4} → 종목 {len(held):>3}  "
               f"금액÷주식수 {ratio:>8.2f} ({'천달러' if scale == 1000 else '달러'})  "
               f"합계 ${total/1e9:,.1f}B{mark}")
 

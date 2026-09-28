@@ -261,3 +261,148 @@ class PredecessorTests(unittest.TestCase):
         # 예전 번호의 정정도 그 법인 폴더에서 받아 합친다.
         self.assertTrue(any(f'/data/{int(self.OLD)}/111111111116000003/' in u for u in asked))
         self.assertEqual([a['accession'] for a in qs[1]['amended_applied']], ['1111111111-16-000003'])
+
+
+class MergeOverlapTests(unittest.TestCase):
+    """애크먼처럼 두 법인이 **같은 분기**를 각자 낸 경우 — 겹친 분기는 합칩니다.
+
+    지금 번호(지주회사)가 2025-06-30 부터 자기 몫 하워드 휴즈만 따로 냈고, 펀드 몫은
+    예전 번호가 냈습니다. 정찰 6차 실측 18,852,064 + 9,000,000 = 27,852,064 를
+    그대로 씁니다."""
+
+    NEW, OLD = '0002026053', '0001336528'
+    HHH, ALPHA, BETA, GAMMA = '44267T102', '111111111', '222222222', '333333333'
+
+    def sub(self, rows):
+        return json.dumps({'filings': {'recent': {
+            'form': [r[0] for r in rows], 'reportDate': [r[1] for r in rows],
+            'filingDate': [r[2] for r in rows], 'accessionNumber': [r[3] for r in rows]}}}).encode()
+
+    def table(self, rows):
+        body = ''.join(
+            f'<infoTable><nameOfIssuer>{n}</nameOfIssuer><titleOfClass>COM</titleOfClass>'
+            f'<cusip>{c}</cusip><value>{v}</value><shrsOrPrnAmt><sshPrnamt>{s}</sshPrnamt>'
+            '<sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt></infoTable>' for n, c, s, v in rows)
+        return f'<?xml version="1.0"?><informationTable xmlns="{_TNS}">{body}</informationTable>'.encode()
+
+    def cover(self, rows, amend=''):
+        info = (f'<amendmentInfo><amendmentType>{amend}</amendmentType></amendmentInfo>'
+                if amend else '')
+        return (f'<?xml version="1.0"?><edgarSubmission xmlns="{_NS}"><formData>'
+                f'<coverPage>{info}</coverPage><summaryPage>'
+                f'<tableValueTotal>{sum(r[3] for r in rows)}</tableValueTotal>'
+                f'<tableEntryTotal>{len(rows)}</tableEntryTotal></summaryPage>'
+                '</formData></edgarSubmission>').encode()
+
+    def run_merge(self, merge=True, docs_patch=None):
+        hh = ('HOWARD HUGHES HOLDINGS INC', self.HHH)
+        docs = {
+            # 예전 번호(펀드)
+            '111111111125000001': [('ALPHA CORP', self.ALPHA, 100, 5000), (*hh, 18852064, 1_300_000_000)],
+            '111111111125000002': [('ALPHA CORP', self.ALPHA, 100, 6000), (*hh, 18852064, 1_400_000_000),
+                                   ('BETA CORP', self.BETA, 500, 1000)],
+            '111111111125000003': [('GAMMA CORP', self.GAMMA, 10, 100)],            # 예전 번호의 정정
+            # 지금 번호(지주회사) — 2025-06-30 은 하워드 휴즈 + 두 법인이 똑같이 적은 BETA
+            '222222222225000001': [(*hh, 9000000, 600_000_000), ('BETA CORP', self.BETA, 500, 1000)],
+            '222222222225000002': [('ALPHA CORP', self.ALPHA, 100, 7000), (*hh, 27852064, 2_000_000_000)],
+        }
+        amend = {'111111111125000003': 'NEW HOLDINGS'}
+        subs = {
+            self.NEW: self.sub([('13F-HR', '2025-06-30', '2025-08-14', '2222222222-25-000001'),
+                                ('13F-HR', '2025-09-30', '2025-11-14', '2222222222-25-000002')]),
+            self.OLD: self.sub([('13F-HR', '2025-03-31', '2025-05-15', '1111111111-25-000001'),
+                                ('13F-HR', '2025-06-30', '2025-08-14', '1111111111-25-000002'),
+                                ('13F-HR/A', '2025-06-30', '2025-09-01', '1111111111-25-000003')]),
+        }
+        asked = []
+
+        def fake_get(url, contact):
+            asked.append(url)
+            for cik, body in subs.items():
+                if url.endswith(f'CIK{cik}.json'):
+                    return body
+            acc = url.rstrip('/').split('/')[-2]
+            if docs_patch and acc in docs_patch:
+                return None
+            if url.endswith('/index.json'):
+                return json.dumps({'directory': {'item': [
+                    {'name': 'primary_doc.xml', 'size': '100'},
+                    {'name': 'table.xml', 'size': '100'}]}}).encode()
+            if url.endswith('/table.xml'):
+                return self.table(docs[acc])
+            if url.endswith('/primary_doc.xml'):
+                return self.cover(docs[acc], amend.get(acc, ''))
+            return None
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / 'pershing.json'
+            inv = SimpleNamespace(slug='pershing', cik=self.NEW, filing_name='Pershing Square Inc.',
+                                  output=out, since=2013, name={'ko': '퍼싱 스퀘어', 'en': 'Pershing Square'},
+                                  predecessors=((self.OLD, 'Pershing Square Capital Management, L.P.'),),
+                                  merge_overlap=(self.OLD,) if merge else ())
+            with patch.dict(os.environ, {'SEC_CONTACT': 'fixture-only'}), \
+                    patch.object(fetch, 'one', return_value=inv), \
+                    patch.object(fetch, 'ALERT', str(Path(tmp) / 'alert.txt')), \
+                    patch.object(fetch, 'get', side_effect=fake_get), \
+                    patch.object(fetch, 'ACC_CIK', {}), \
+                    patch.multiple(fetch, CIK=fetch.CIK, OUT=fetch.OUT, MANAGER_NAME=fetch.MANAGER_NAME,
+                                   PREDECESSORS=fetch.PREDECESSORS, MERGE=fetch.MERGE), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                code = fetch.main('pershing')
+            book = json.loads(out.read_text(encoding='utf8'))
+        return code, book, asked
+
+    def test_overlapping_quarter_adds_both_pockets_and_counts_a_double_report_once(self):
+        code, book, asked = self.run_merge()
+        self.assertEqual(code, 0)
+        qs = {q['period']: q for q in book['quarters']}
+        self.assertEqual(list(qs), ['2025-03-31', '2025-06-30', '2025-09-30'])
+        self.assertEqual(qs['2025-03-31'].get('filer_cik'), self.OLD)
+        q = qs['2025-06-30']
+        self.assertEqual(q['accession'], '2222222222-25-000001')
+        self.assertEqual([p['accession'] for p in q['partners']], ['1111111111-25-000002'])
+        held = {h['cusip']: h for h in q['holdings']}
+        # 두 주머니를 더한 하워드 휴즈 = 합쳐 낸 다음 분기와 같은 주식 수
+        nxt = {h['cusip']: h for h in qs['2025-09-30']['holdings']}
+        self.assertEqual(held[self.HHH]['shares'], 27852064)
+        self.assertEqual(held[self.HHH]['shares'], nxt[self.HHH]['shares'])
+        # 두 법인이 똑같이 적은 줄은 한 번만
+        self.assertEqual(held[self.BETA]['shares'], 500)
+        self.assertEqual([d['cusip'] for d in q['merged_dups']], [self.BETA])
+        # 예전 번호의 정정은 예전 번호 몫에만 — 하워드 휴즈 합계는 그대로
+        self.assertEqual(held[self.GAMMA]['shares'], 10)
+        self.assertEqual([a['accession'] for a in q['amended_applied']], ['1111111111-25-000003'])
+        self.assertNotIn('total_mismatch', q)
+        self.assertNotIn('lines_mismatch', q)
+        # 원문은 낸 법인의 폴더에서
+        self.assertTrue(any(f'/data/{int(self.OLD)}/111111111125000002/' in u for u in asked))
+        self.assertTrue(any(f'/data/{int(self.NEW)}/222222222225000001/' in u for u in asked))
+
+    def test_without_the_merge_flag_the_new_number_still_wins(self):
+        # 테퍼처럼 합치지 않는 투자자는 예전 규칙 그대로 — 겹친 분기는 지금 번호 것만.
+        code, book, asked = self.run_merge(merge=False)
+        q = {q['period']: q for q in book['quarters']}['2025-06-30']
+        self.assertNotIn('partners', q)
+        self.assertEqual({h['cusip'] for h in q['holdings']}, {self.HHH, self.BETA})
+        self.assertFalse(any('111111111125000002' in u for u in asked))
+
+    def test_a_missing_partner_filing_does_not_save_half_a_quarter(self):
+        code, book, _ = self.run_merge(docs_patch={'111111111125000002'})
+        self.assertEqual(code, 1)
+        self.assertNotIn('2025-06-30', {q['period'] for q in book['quarters']})
+
+    def test_registry_reads_the_merge_flag(self):
+        spec = importlib.util.spec_from_file_location('reg_for_test', ROOT / 'scripts/titans/registry.py')
+        reg = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(reg)
+        base = {'slug': 'x', 'cik': '0000000003', 'filing_name': 'X', 'name': {'en': 'X', 'ko': 'X'},
+                'since': 2013, 'active': True}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'r.json'
+            path.write_text(json.dumps({'investors': [{**base, 'predecessors': [
+                {'cik': '0000000004', 'filing_name': 'Old', 'merge': True}]}]}), encoding='utf8')
+            self.assertEqual(reg.load(path)[0].merge_overlap, ('0000000004',))
+            path.write_text(json.dumps({'investors': [{**base, 'predecessors': [
+                {'cik': '0000000004', 'filing_name': 'Old', 'merge': 'yes'}]}]}), encoding='utf8')
+            with self.assertRaises(ValueError):
+                reg.load(path)
