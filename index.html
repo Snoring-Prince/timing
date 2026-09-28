@@ -16,7 +16,7 @@
      적었고, 그 글은 두 언어 다 HTML 에 박혀 있습니다(CSS 가 한쪽만 보임).
      숫자는 저장소의 자료 파일에서 읽으므로 봇이 갱신하면 같이 바뀝니다.
 ═════════════════════════════════════════════════════════════════════ -->
-<meta name="description" content="Common investing questions checked against the record: what the S&amp;P 500 did after each Fear &amp; Greed level, and what Berkshire Hathaway bought in its 13F filings.">
+<meta name="description" content="Common investing questions checked against the record: what the S&amp;P 500 did after each Fear &amp; Greed level, and what Berkshire Hathaway and other great investors bought in their 13F filings.">
 <link rel="canonical" href="https://itpaidoff.com/">
 <link rel="alternate" hreflang="en" href="https://itpaidoff.com/?lang=en">
 <link rel="alternate" hreflang="ko" href="https://itpaidoff.com/?lang=ko">
@@ -26,7 +26,7 @@
 <meta property="og:site_name" content="itpaidoff.com">
 <meta property="og:url" content="https://itpaidoff.com/">
 <meta property="og:title" content="Market timing and 13F investor picks — historical records">
-<meta property="og:description" content="What the S&amp;P 500 did after each Fear &amp; Greed level, and what Berkshire Hathaway bought — from the record, not advice.">
+<meta property="og:description" content="What the S&amp;P 500 did after each Fear &amp; Greed level, and what great investors bought — from the record, not advice.">
 <meta property="og:image" content="https://itpaidoff.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -121,6 +121,8 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .tbl th:first-child,.tbl td:first-child{text-align:left;font-family:var(--body);white-space:nowrap}
 .tbl td{text-align:right;padding:2px 0;border-top:1px solid var(--rule-2)}
 .sub{font:11px/1.5 var(--mono);color:var(--ink-3)}
+/* 카드 03 의 '준비 중' 꼬리표가 번호 줄과 겹치지 않게 그 폭만큼 비워 둔다 */
+.soon .no{padding-right:76px}
 .soon{opacity:.75}
 .tag{position:absolute;top:20px;right:20px;font:600 11px var(--cond);border:1px dashed var(--rule);color:var(--ink-3);padding:1px 8px;letter-spacing:.06em}
 .foot{margin-top:28px;font-size:12.5px;color:var(--ink-3)}
@@ -174,24 +176,26 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     </a>
 
     <!-- 2 -->
-    <a class="card" href="/titans/berkshire/" data-go="titans">
+    <a class="card" href="/titans/" data-go="titans">
       <div>
         <div class="no">02 · <span data-lang="ko">대가들의 선택</span><span data-lang="en">Titans' picks</span></div>
         <h2><span data-lang="ko">대가들은 무엇을 샀고, 그래서 어떻게 됐나</span><span data-lang="en">What the great investors bought, and how it turned out</span></h2>
         <p class="what">
-          <span data-lang="ko">미국 SEC 에 분기마다 내는 13F 공시를 1998년부터 모아, 무엇을 늘리고 줄였는지와 추정 매수가 대비 지금 어디에 와 있는지를 봅니다. 지금은 버크셔 해서웨이 한 곳입니다.</span>
-          <span data-lang="en">It collects the 13F filings sent to the SEC every quarter since 1998 and shows what was added and trimmed, and where each position stands against its estimated purchase price. Berkshire Hathaway is the first.</span>
+          <span data-lang="ko">미국 SEC 에 분기마다 내는 13F 공시를 1998년부터 모아, 무엇을 늘리고 줄였는지와 추정 매수가 대비 지금 어디에 와 있는지를 봅니다. 투자자마다 한 화면입니다.</span>
+          <span data-lang="en">It collects the 13F filings sent to the SEC every quarter since 1998 and shows what was added and trimmed, and where each position stands against its estimated purchase price, one page per investor.</span>
         </p>
         <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
       </div>
       <div class="read" id="r-titans">
-        <div class="cap"><span data-lang="ko">버크셔 해서웨이 · 최근 공시</span><span data-lang="en">Berkshire Hathaway · latest filing</span></div>
-        <div class="big" id="bk-total">—</div>
-        <div class="sub" id="bk-sub"></div>
-        <table class="tbl" id="bk-tbl" hidden>
-          <thead><tr><th><span data-lang="ko">비중 상위</span><span data-lang="en">Largest</span></th><th></th></tr></thead>
+        <div class="cap"><span data-lang="ko">최근 공시</span><span data-lang="en">Latest filings</span></div>
+        <div class="big" id="ti-count">—</div>
+        <table class="tbl" id="ti-tbl" hidden>
+          <thead><tr><th><span data-lang="ko">투자자</span><span data-lang="en">Investor</span></th>
+            <th><span data-lang="ko">총액</span><span data-lang="en">Total</span></th>
+            <th><span data-lang="ko">종목</span><span data-lang="en">Stocks</span></th></tr></thead>
           <tbody></tbody>
         </table>
+        <div class="sub" id="ti-sub"></div>
       </div>
     </a>
 
@@ -234,16 +238,16 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     en:{title:"Market timing and 13F investor picks — historical records",
         desc:"Common investing questions checked against the record: what the S&P 500 did after each Fear & Greed level, and what Berkshire Hathaway bought in its 13F filings."},
     ko:{title:"투자 타이밍·대가들의 선택 — 과거 기록으로 보는 투자",
-        desc:"투자에서 자주 나오는 질문을 과거 기록으로 되짚어 봅니다. 공포탐욕지수별 S&P 500 수익률과 버크셔 해서웨이의 13F 공시 보유 종목을 봅니다."}
+        desc:"투자에서 자주 나오는 질문을 과거 기록으로 되짚어 봅니다. 공포탐욕지수별 S&P 500 수익률과 버크셔 해서웨이 등 대가들의 13F 공시 보유 종목을 봅니다."}
   };
   const ZONE = {ko:{"fng.exfear":"극단적 공포","fng.fear":"공포","fng.neutral":"중립","fng.greed":"탐욕","fng.exgreed":"극단적 탐욕"},
                 en:{"fng.exfear":"Extreme fear","fng.fear":"Fear","fng.neutral":"Neutral","fng.greed":"Greed","fng.exgreed":"Extreme greed"}};
   const IDX = {ko:{spx:"S&P 500",ndx:"나스닥 100"}, en:{spx:"S&P 500",ndx:"Nasdaq 100"}};
-  let M=null, BT=null, BK=null;
+  let M=null, BT=null, TI=null;
   const $=id=>document.getElementById(id);
   const esc=t=>String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;");
   const pct=(v,s)=>(s&&v>0?"+":"")+v.toFixed(s?2:0)+"%";
-  const usd=v=>v>=1e9?"$"+(v/1e9).toFixed(0)+"B":"$"+(v/1e6).toFixed(0)+"M";
+  const usd=v=>v>=1e9?"$"+(v/1e9).toFixed(v>=1e10?0:1)+"B":"$"+(v/1e6).toFixed(0)+"M";
   const dot=d=>String(d).replace(/-/g,".");
 
   function paintHead(){
@@ -282,18 +286,16 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
         ? dot(M.fng.date)+" 기준 · 비슷했던 날 "+days.toLocaleString()+"일 · "+from+"–"+to
         : "as of "+dot(M.fng.date)+" · "+days.toLocaleString()+" similar days · "+from+"–"+to;
     }
-    if(BK){
-      const q=BK.quarters[BK.quarters.length-1], g={};
-      /* 대가들의 선택 화면과 같은 범위 — 옵션·원금(PRN)을 빼고 발행사(CUSIP 앞 6자리)로 묶습니다 */
-      for(const r of q.holdings){ if(r.putCall||(r.type||"SH")!=="SH")continue; const k=r.cusip.slice(0,6);(g[k]=g[k]||{v:0,n:r.name}).v+=r.value; }
-      const rows=Object.values(g).sort((a,b)=>b.v-a.v), tot=rows.reduce((s,r)=>s+r.v,0);
-      $("bk-total").innerHTML=usd(tot)+"<small>"+(LANG==="ko"?rows.length+"종목":rows.length+" stocks")+"</small>";
-      $("bk-sub").textContent = LANG==="ko"
-        ? dot(q.period)+" 분기말 · "+dot(q.filed)+" 공시"
-        : "quarter ended "+dot(q.period)+" · filed "+dot(q.filed);
-      const tb=$("bk-tbl").tBodies[0]; tb.innerHTML="";
-      rows.slice(0,3).forEach(r=>tb.insertAdjacentHTML("beforeend","<tr><td>"+esc(r.n)+"</td><td>"+(r.v/tot*100).toFixed(1)+"%</td></tr>"));
-      $("bk-tbl").hidden=!tb.rows.length;
+    if(TI){
+      /* 봇이 만든 요약(data/titans/summary.json)을 읽습니다 — 투자자 화면과 같은 범위
+         (옵션·원금 제외, 발행사로 묶음)로 셉니다. 투자자마다 공시책 전체를 받지 않습니다. */
+      const n=TI.investors.length, ko=LANG==="ko";
+      $("ti-count").innerHTML=n+"<small>"+(ko?"곳":(n===1?"investor":"investors"))+"</small>";
+      const tb=$("ti-tbl").tBodies[0]; tb.innerHTML="";
+      TI.investors.forEach(o=>tb.insertAdjacentHTML("beforeend","<tr><td>"+esc(o.name[LANG]||o.name.en)+"</td><td>"+usd(o.total)+"</td><td>"+o.stocks+"</td></tr>"));
+      $("ti-tbl").hidden=!tb.rows.length;
+      const last=TI.investors.map(o=>o.period).sort().pop();
+      $("ti-sub").textContent = last ? (ko ? dot(last)+" 분기말까지" : "through quarter ended "+dot(last)) : "";
     }
   }
   document.querySelectorAll(".langs button").forEach(b=>b.onclick=()=>{
@@ -303,8 +305,8 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   document.querySelectorAll("[data-go]").forEach(a=>a.addEventListener("click",()=>window.track("hub",{to:a.dataset.go,lang:LANG})));
   const j=u=>fetch(u,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
   paint();
-  Promise.all([j("data/dashboard/market.json"),j("data/dashboard/backtest.json"),j("data/titans/berkshire.json")])
-    .then(([m,bt,bk])=>{M=m&&m.fng&&typeof m.fng.value==="number"?m:null;BT=bt&&bt.axes&&bt.indices?bt:null;BK=bk&&bk.quarters&&bk.quarters.length?bk:null;paint();});
+  Promise.all([j("data/dashboard/market.json"),j("data/dashboard/backtest.json"),j("data/titans/summary.json")])
+    .then(([m,bt,ti])=>{M=m&&m.fng&&typeof m.fng.value==="number"?m:null;BT=bt&&bt.axes&&bt.indices?bt:null;TI=ti&&Array.isArray(ti.investors)&&ti.investors.length?ti:null;paint();});
 })();
 </script>
 </body>

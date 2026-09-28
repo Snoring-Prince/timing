@@ -5,6 +5,18 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+투자자 목록 /titans/ · 첫 화면 카드 02 를 목록으로 · 목록용 요약 파일
+- 파일: titans/index.html · index.html · scripts/publish_titans.py(새) ·
+  data/titans/summary.json(새, 봇이 만듦) · titans/shared/investor.js(맨 아래 링크) ·
+  .github/workflows/update-13f.yml · .github/workflows/check-titans.yml · sitemap.xml ·
+  scripts/tests/test_titans_summary.py(새) · scripts/tests/titans.test.cjs ·
+  CLAUDE.md · docs/design-system.md · 이 일지
+- 규칙: 목록·첫 화면 숫자는 summary.json 만 읽는다. 이름 표기는 파이썬·JS 두 벌을
+  검사가 대조한다. 투자자를 더하면 목록 카드도 한 장.
+- 굳힘: 리루 실제 자료 — 2023~24 여섯 분기 천 달러 단위를 unit_by 가 잡음.
+- 넘김: 다음은 테퍼(옛 CIK 한 번 이어 붙이기) · 애크먼 대신 신고자 정찰.
+
+## 2026-09-28 · Claude · PR #93
 리루(히말라야 캐피털) 화면 · 애크먼 대신 신고자 확인 · 새 투자자 주가 대기
 - 파일: titans/himalaya/index.html(새) · data/titans/investors.json · sitemap.xml ·
   scripts/fetch_prices.py · scripts/tests/test_prices.py · scripts/tests/titans.test.cjs ·

@@ -475,6 +475,8 @@ document.documentElement.scrollWidth - document.documentElement.clientWidth
     낸 뒤) 넣고, 없으면 그림 칸이 통째로 빠진다. 인용에는 출처(<cite>)를 꼭 단다
 4  data/titans/investors.json 에 slug·CIK·공시 법인명·표시 이름·첫 연도를 한 번 등록
 5  sitemap.xml 에 줄 하나 (표식 주석을 꼭 달 것 — CLAUDE.md 6-2)
+6  titans/index.html(목록)에 카드 한 장 — 갈래·법인 이름·사람 이름·설명 두 언어.
+   숫자는 안 적는다(summary.json 에서 읽음). 검사가 등록 목록과 카드를 대조한다
 ```
 
 ```js

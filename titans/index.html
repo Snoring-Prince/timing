@@ -1,42 +1,249 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- ═════════════════════════════════════════════════════════════════════
-     이 화면은 **튕기는 자리**입니다 (2026-09-16).
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Great investors' 13F portfolios — Titans' picks</title>
 
-     대가들의 선택이 처음에 `/titans/` 에 있었는데, 투자자가 여럿이 될 자리라
-     `/titans/berkshire/` 로 옮겼습니다. **옮길 거면 지금이 제일 쌉니다** —
-     이 주소를 가리키는 것이 사이트맵 한 줄뿐이고 아직 색인도 안 됐습니다.
+<!-- ══ 대가들의 선택 · 투자자 목록 (2026-09-28) ═════════════════════════
+     예전에는 /titans/berkshire/ 로 튕기는 자리였습니다. 투자자가 둘이 되어
+     목록으로 바꿨습니다(CLAUDE.md 9-3).
 
-     **GitHub Pages 는 301 을 못 합니다**(정적 파일만 내보내므로 서버가 없습니다).
-     그래서 흉내만 냅니다 — `canonical` 로 진짜 주소를 가리키고, 0초 새로고침으로
-     넘기고, **눈에 보이는 링크**를 같이 둡니다. 튕김이 막힌 브라우저에서도
-     갈 곳이 있어야 합니다.
+     **링크만 늘어놓지 않습니다.** 카드마다 그 투자자가 누구이고 어떤 식으로
+     사는지를 글로 적었고, 두 언어 다 HTML 에 박혀 있습니다(CSS 가 한쪽만
+     보임) — JS 를 안 돌리는 크롤러가 받는 본문입니다(6-2).
 
-     **링크를 숨기지 않습니다.** `opacity:0` 같은 것으로 감춘 링크는 구글이
-     스팸으로 보는 항목이고, 이 사이트는 아직 색인 판정을 기다리는 중입니다.
+     **숫자는 손으로 적지 않습니다.** data/titans/summary.json(봇이 공시를
+     받은 뒤 만듦)에서 읽습니다. 투자자를 더하면 여기 카드 하나를 더하고,
+     검사가 등록 목록(investors.json)과 카드가 같은지 봅니다.
 
-     **투자자가 둘이 되면 이 자리를 목록 화면으로 바꾸세요.** 지금 만들면
-     링크 한두 개짜리 얇은 페이지가 되어 색인 판정에 오히려 나쁩니다
-     (루트를 허브로 아직 안 만드는 것과 같은 이유 — CLAUDE.md 2번).
+     **간판에는 법인 이름을 씁니다**(CLAUDE.md 9번). 사람 이름은 설명 줄에만.
 ═════════════════════════════════════════════════════════════════════ -->
-<title>Berkshire Hathaway portfolio — It paid off</title>
-<link rel="canonical" href="https://itpaidoff.com/titans/berkshire/">
-<meta http-equiv="refresh" content="0; url=./berkshire/">
-<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<meta name="description" content="Portfolios of great investors from their SEC 13F filings — Berkshire Hathaway, Himalaya Capital and more: what they hold, what they changed, and how it has done since.">
+<link rel="canonical" href="https://itpaidoff.com/titans/">
+<link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/?lang=en">
+<link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/?lang=ko">
+<link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="itpaidoff.com">
+<meta property="og:url" content="https://itpaidoff.com/titans/">
+<meta property="og:title" content="Great investors' 13F portfolios — Titans' picks">
+<meta property="og:description" content="Portfolios of great investors from their SEC 13F filings — what they hold, what they changed, and how it has done since.">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ko_KR">
+<meta name="twitter:card" content="summary">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#F7F9FB">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+
+<!-- ══ 방문자 통계 — 첫 화면과 같은 블록입니다(CLAUDE.md 5번) ══════════ -->
+<script>
+window.STATS={
+  id : "41e07a57-a87c-403b-bdf8-e12d911457b6",
+  src: "https://cloud.umami.is/script.js"
+};
+(function loadStats(){
+  var s=window.STATS||{};
+  if(!s.id)return;
+  var h=location.hostname;
+  if(h==="localhost"||h==="127.0.0.1"||h==="")return;
+  var t=document.createElement("script");
+  t.defer=true; t.src=s.src;
+  t.setAttribute("data-website-id",s.id);
+  document.head.appendChild(t);
+})();
+window.track=function(name,data){
+  try{ if(window.umami&&typeof umami.track==="function")umami.track(name,data); }
+  catch(e){}
+};
+</script>
 <style>
-  html{background:#E9ECF0;color:#0F1A24;
-    font-family:Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif}
-  body{margin:0;min-height:100svh;display:flex;align-items:center;justify-content:center;
-    padding:24px}
-  p{font-size:15px;line-height:1.7;text-align:center;margin:0}
-  a{color:#0F1A24}
+:root{
+  --paper:#E9ECF0; --card:#FFFFFF;
+  --ink:#0F1A24; --ink-2:#475765; --ink-3:#5F6B74;
+  --rule:#BCC6D0; --rule-2:#DDE3E9;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --cond:"IBM Plex Sans Condensed","Pretendard Variable",Pretendard,sans-serif;
+  --body:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+}
+html[lang="ko"] [data-lang="en"]{display:none}
+html:not([lang="ko"]) [data-lang="ko"]{display:none}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:13.5px;line-height:1.7;
+  background-image:linear-gradient(rgba(15,26,36,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(15,26,36,.028) 1px,transparent 1px);
+  background-size:56px 56px}
+main{max-width:900px;margin:0 auto;padding:36px 20px 72px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase}
+.eyebrow a{color:inherit}
+.langs{display:flex;border:1px solid var(--rule)}
+.langs button{font:600 11.5px var(--cond);border:0;background:var(--card);color:var(--ink-2);padding:3px 10px;cursor:pointer}
+.langs button[aria-pressed="true"]{background:var(--ink);color:#fff}
+h1{font:700 30px/1.25 var(--cond);margin:14px 0 10px;letter-spacing:-.01em}
+.lead{color:var(--ink-2);max-width:640px;margin:0 0 28px}
+.cards{display:grid;gap:14px}
+.card{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;background:var(--card);border:1px solid var(--rule);
+  padding:20px;color:inherit;text-decoration:none}
+a.card:hover{border-color:var(--ink)}
+a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.no{font:600 11px var(--mono);color:var(--ink-3);letter-spacing:.06em}
+.card h2{font:700 20px/1.3 var(--cond);margin:6px 0 2px;display:flex;align-items:center;gap:10px}
+/* 투자자 화면 머리글의 이름표와 같은 네모다(investor.css .tmark). */
+.tmark{width:28px;height:28px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  background:var(--ink);color:var(--card);font:700 12.5px/1 var(--cond);letter-spacing:.02em}
+.who{margin:0 0 8px;font-size:12.5px;color:var(--ink-3)}
+.what{color:var(--ink-2);margin:0}
+.go{display:inline-block;margin-top:12px;font:600 12.5px var(--cond);color:var(--ink);border-bottom:1px solid var(--ink)}
+.read{border-left:1px solid var(--rule-2);padding-left:20px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.cap{font:500 11px/1.35 var(--cond);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.big{font:500 38px/1 var(--mono);letter-spacing:-.02em}
+.big small{font:600 19px var(--body);margin-left:8px;letter-spacing:0}
+.tbl{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px;margin-top:4px}
+.tbl th{font:500 11px/1.25 var(--cond);color:var(--ink-3);text-align:left;padding:0 0 3px;letter-spacing:.04em}
+.tbl td{text-align:right;padding:2px 0;border-top:1px solid var(--rule-2)}
+.tbl td:first-child{text-align:left;font-family:var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;width:100%;padding-right:10px}
+.sub{font:11px/1.5 var(--mono);color:var(--ink-3)}
+.foot{margin-top:28px;font-size:12.5px;color:var(--ink-3)}
+.foot p{margin:0 0 8px}
+.back{display:inline-block;margin-top:6px;font-family:var(--mono);color:var(--ink-3)}
+@media (max-width:640px){
+  main{padding:24px 14px 56px}
+  h1{font-size:25px}
+  .card{grid-template-columns:1fr;padding:14px;gap:14px}
+  .read{border-left:0;border-top:1px solid var(--rule-2);padding:14px 0 0}
+}
 </style>
 </head>
 <body>
-  <p>This page moved to <a href="./berkshire/">itpaidoff.com/titans/berkshire/</a></p>
-  <script>location.replace("./berkshire/"+location.search+location.hash);</script>
+<main>
+  <div class="top">
+    <div class="eyebrow"><a href="/">itpaidoff.com</a> · Titans' picks</div>
+    <div class="langs" role="group" aria-label="Language">
+      <button type="button" data-set="ko">한국어</button><button type="button" data-set="en">English</button>
+    </div>
+  </div>
+
+  <h1><span data-lang="ko">대가들은 무엇을 샀나</span><span data-lang="en">What the great investors bought</span></h1>
+  <p class="lead">
+    <span data-lang="ko">미국에서 1억 달러 넘게 굴리는 운용사는 분기마다 SEC 에 13F 공시를 내고 보유 주식을 밝힙니다. 그 공시를 모아 무엇을 늘리고 줄였는지, 추정 매수가 대비 어디에 와 있는지를 투자자마다 한 화면에 담았습니다. 분기 마지막 날의 기록이고, 미국 상장 주식만 나오며, 무엇을 사라고 말하지 않습니다.</span>
+    <span data-lang="en">Every US manager overseeing more than $100 million files a 13F with the SEC each quarter, listing the shares it holds. These pages gather those filings, one investor each, to show what was added and trimmed and where each position stands against its estimated purchase price. They record the last day of each quarter, cover US-listed shares only, and are not advice on what to buy.</span>
+  </p>
+
+  <div class="cards" id="cards">
+    <a class="card" href="/titans/berkshire/" data-slug="berkshire">
+      <div>
+        <div class="no"><span data-lang="ko">가치투자</span><span data-lang="en">Value</span></div>
+        <h2><span class="tmark" aria-hidden="true">BH</span><span><span data-lang="ko">버크셔 해서웨이</span><span data-lang="en">Berkshire Hathaway</span></span></h2>
+        <p class="who"><span data-lang="ko">워런 버핏</span><span data-lang="en">Warren Buffett</span></p>
+        <p class="what">
+          <span data-lang="ko">워런 버핏이 1965년 경영을 맡은 회사입니다. 이해할 수 있고 경쟁자가 흉내 내기 어려운 사업을 골라 여러 해를 들고 갑니다. 1998년부터의 공시가 있습니다.</span>
+          <span data-lang="en">The company Warren Buffett took over in 1965. It picks businesses it can understand and rivals find hard to copy, and holds them for years. Filings go back to 1998.</span>
+        </p>
+        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
+      </div>
+      <div class="read"></div>
+    </a>
+
+    <a class="card" href="/titans/himalaya/" data-slug="himalaya">
+      <div>
+        <div class="no"><span data-lang="ko">가치투자</span><span data-lang="en">Value</span></div>
+        <h2><span class="tmark" aria-hidden="true">HC</span><span><span data-lang="ko">히말라야 캐피털</span><span data-lang="en">Himalaya Capital</span></span></h2>
+        <p class="who"><span data-lang="ko">리루</span><span data-lang="en">Li Lu</span></p>
+        <p class="what">
+          <span data-lang="ko">리루가 1997년 세운 운용사입니다. 몇 안 되는 회사에 크게 싣고 오래 갖습니다. 미국 밖 거래소에서 산 주식은 13F 에 실리지 않아 여기에 나오지 않습니다. 2016년부터의 공시가 있습니다.</span>
+          <span data-lang="en">The firm Li Lu founded in 1997. It puts large sums into a handful of companies and keeps them for a long time. Shares bought on exchanges outside the US never reach a 13F, so they are not shown. Filings go back to 2016.</span>
+        </p>
+        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
+      </div>
+      <div class="read"></div>
+    </a>
+  </div>
+
+  <div class="foot">
+    <p>
+      <span data-lang="ko">13F 는 분기 마지막 날 하루의 보유이고, 공시는 그로부터 45일 안에 나옵니다. 현금·채권·공매도·해외 주식은 들어 있지 않습니다. 과거 기록일 뿐 투자 권유가 아니며, 투자 판단과 그 결과는 본인의 몫입니다.</span>
+      <span data-lang="en">A 13F shows holdings on the last day of a quarter and is filed within 45 days of it. Cash, bonds, short positions and shares held abroad are not included. This is a record of the past, not investment advice; decisions and their outcomes are your own.</span>
+    </p>
+    <a class="back" href="/">← itpaidoff.com</a>
+  </div>
+</main>
+
+<script>
+(function(){
+  /* 언어 고르는 순서는 다른 화면과 같습니다 — 같은 저장값(dt.lang)을 씁니다. */
+  const LANGS=["en","ko"];
+  function pick(){
+    try{ const q=(new URLSearchParams(location.search).get("lang")||"").slice(0,2).toLowerCase(); if(LANGS.includes(q))return q; }catch(e){}
+    try{ const s=localStorage.getItem("dt.lang"); if(LANGS.includes(s))return s; }catch(e){}
+    const nav=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||"en"]);
+    for(const l of nav){ const t=String(l).slice(0,2).toLowerCase(); if(LANGS.includes(t))return t; }
+    return "en";
+  }
+  let LANG=pick(), S=null;
+  const HEAD={
+    en:{title:"Great investors' 13F portfolios — Titans' picks",
+        desc:"Portfolios of great investors from their SEC 13F filings — Berkshire Hathaway, Himalaya Capital and more: what they hold, what they changed, and how it has done since."},
+    ko:{title:"대가들의 13F 보유 종목 — 대가들의 선택",
+        desc:"버크셔 해서웨이·히말라야 캐피털 등 대가들이 SEC 13F 공시에 밝힌 보유 종목을 봅니다. 무엇을 들고 있고, 무엇을 늘리고 줄였고, 그 뒤 어떻게 됐는지."}
+  };
+  const $=id=>document.getElementById(id);
+  const esc=t=>String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  const usd=v=>v>=1e9?"$"+(v/1e9).toFixed(v>=1e10?0:1)+"B":"$"+(v/1e6).toFixed(0)+"M";
+  const dot=d=>String(d).replace(/-/g,".");
+
+  function paintHead(){
+    const h=HEAD[LANG], set=(sel,attr,val)=>{const e=document.head.querySelector(sel);if(e)e.setAttribute(attr,val)};
+    document.title=h.title;
+    set('meta[name="description"]',"content",h.desc);
+    set('meta[property="og:title"]',"content",h.title);
+    set('meta[property="og:description"]',"content",h.desc);
+    set('meta[property="og:locale"]',"content",LANG==="ko"?"ko_KR":"en_US");
+    set('meta[property="og:locale:alternate"]',"content",LANG==="ko"?"en_US":"ko_KR");
+    const hasParam=new URLSearchParams(location.search).get("lang");
+    const self="https://itpaidoff.com/titans/"+(hasParam?"?lang="+LANG:"");
+    set('link[rel="canonical"]',"href",self);
+    set('meta[property="og:url"]',"content",self);
+  }
+
+  /* 카드 오른쪽 칸. 첫 화면 카드 02 와 같은 모양(총액·종목 수·비중 상위 셋)이다. */
+  function readHTML(o){
+    const ko=LANG==="ko";
+    return '<div class="cap">'+(ko?"최근 공시":"Latest filing")+'</div>'
+      +'<div class="big">'+usd(o.total)+'<small>'+(ko?o.stocks+"종목":o.stocks+(o.stocks===1?" stock":" stocks"))+'</small></div>'
+      +'<div class="sub">'+(ko?dot(o.period)+" 분기말 · "+dot(o.filed)+" 공시":"quarter ended "+dot(o.period)+" · filed "+dot(o.filed))+'</div>'
+      +'<table class="tbl"><thead><tr><th colspan="2">'+(ko?"비중 상위":"Largest")+'</th></tr></thead><tbody>'
+      +o.top.map(t=>'<tr><td>'+esc(t.name)+'</td><td>'+t.w.toFixed(1)+'%</td></tr>').join("")
+      +'</tbody></table>'
+      +'<div class="sub">'+(ko?o.since+"년부터 "+o.quarters+"개 분기":o.quarters+" quarters since "+o.since)+'</div>';
+  }
+
+  function paint(){
+    document.documentElement.lang=LANG;
+    paintHead();
+    document.querySelectorAll(".langs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.set===LANG));
+    if(!S)return;
+    const by={}; for(const o of S.investors) by[o.slug]=o;
+    document.querySelectorAll(".card[data-slug]").forEach(c=>{
+      const o=by[c.dataset.slug], r=c.querySelector(".read");
+      r.innerHTML=o?readHTML(o):"";
+    });
+  }
+  document.querySelectorAll(".langs button").forEach(b=>b.onclick=()=>{
+    LANG=b.dataset.set; try{ localStorage.setItem("dt.lang",LANG) }catch(e){}
+    window.track("lang",{lang:LANG}); paint();
+  });
+  document.querySelectorAll(".card[data-slug]").forEach(a=>a.addEventListener("click",()=>window.track("titans",{to:a.dataset.slug,lang:LANG})));
+  paint();
+  fetch("../data/titans/summary.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)
+    .then(s=>{ S=s&&Array.isArray(s.investors)?s:null; paint(); });
+})();
+</script>
 </body>
 </html>
