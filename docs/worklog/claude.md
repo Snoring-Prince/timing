@@ -5,6 +5,17 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+오크트리 종가 — 짝 없는 11종목
+- 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
+- 규칙: OpenFIGI 이름의 A주 꼬리(`-A`·`CLASS A`)만 뗌. 워런트는 둘째 종류로 안 셈.
+  이름으로 붙인 티커는 분기말 종가가 공시 금액÷주식수와 0.5% 안일 때만.
+  짝 없음(OpenFIGI 가 답했는데 없음 · 처음 보는 티커 404 · 종가 대조 실패)은
+  `prices.json` 의 `unpriced` 에 적고 처음만 빨간불.
+- 넘김: 머지 뒤 Update Titans Prices — 한 번은 빨간불(목록을 처음 적는 날)이 정상.
+  로그에서 TRMD·LBTYA·XP·KRSP·ALVO 가 `N days` 로 붙었는지, 안 붙었으면
+  `fallback rejected · raw` 줄을 볼 것. 그다음 실행이 초록불이어야 한다.
+
+## 2026-09-28 · Claude · PR #99
 오크트리 첫 수집의 빨간불 — 텍스트 원본에 붙은 XML 정정
 - 파일: scripts/fetch_13f.py · scripts/tests/test_audit_regressions.py · CLAUDE.md · 이 일지
 - 규칙: 원본이 pre-xml 인 분기의 XML 정정은 `original-pre-xml` 로 기록하고 초록불.
