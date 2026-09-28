@@ -98,7 +98,12 @@ def marks(books):
 
     번호로 짝을 못 찾아 이름으로 붙인 티커를 확인하는 자다. 이미 붙어 있는
     102종목을 재 보니 99개는 공시 금액 ÷ 주식수와 그날 종가가 소수 여섯째
-    자리까지 같았고, 가장 먼 것도 0.73% 였다(2026-09-28)."""
+    자리까지 같았고, 가장 먼 것도 0.73% 였다(2026-09-28).
+
+    그래서 문턱은 2% 다. 처음엔 0.5% 였는데 토름(TRMD)이 +1.06% 로 떨어졌다 —
+    코펜하겐에도 상장된 회사라 공시가 그쪽 종가를 달러로 바꿔 적은 것으로
+    보인다. 엉뚱한 종목이면 보통 이보다 훨씬 벌어지고, 같은 회사의 다른 보통주
+    (A·C)는 이 자가 아니라 '보통주가 둘이면 안 붙인다' 규칙이 막는다."""
     got = {}
     for book in books:
         quarters = book.get("quarters", [])
@@ -126,7 +131,7 @@ def mark_close(values, splits, mark):
     return near[-1][0], close
 
 
-def mark_matches(values, splits, mark, tolerance=.005):
+def mark_matches(values, splits, mark, tolerance=.02):
     """분기말 종가(그 뒤 분할만큼 되돌림)가 공시의 금액 ÷ 주식수와 맞는가."""
     got = mark_close(values, splits, mark)
     return bool(got) and abs(got[1]/mark[1]-1) <= tolerance
