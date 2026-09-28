@@ -5,6 +5,15 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+ASML 종가 — 해외 종목 우회 규칙이 뉴욕 등록주를 받게
+- 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
+- 규칙: CINS 우회는 한 종류뿐인 본주 표기만(COM·SHS·ORD·N Y REGISTRY SHS·REG SHS·
+  NAMEN AKT). 이름 비교에서 HLDG 를 버림. 못 붙이면 OpenFIGI 원본을 로그에 찍음.
+- 넘김: 머지 뒤 Update Prices 를 눌러 초록불인지, 로그에 `N07059210 ASML: N days` 가
+  찍히는지 확인. 빨간불이면 로그의 `fallback rejected · raw` 줄이 이유다.
+  다음은 막스(오크트리) · 애크먼 대신 신고자 정찰.
+
+## 2026-09-28 · Claude · PR #95
 테퍼(애팔루사) 화면 · 예전 CIK 를 이어 붙이는 수집
 - 파일: titans/appaloosa/index.html(새) · titans/index.html(카드) · data/titans/investors.json ·
   scripts/titans/registry.py · scripts/fetch_13f.py · titans/shared/investor.js(각주 출처) ·

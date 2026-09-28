@@ -75,6 +75,31 @@ class PricesTests(unittest.TestCase):
             self.assertEqual(p.resolve(list(required), required, {"G12345100": "GUESS"}), {})
             self.assertEqual(req.call_count, 1)
 
+    def test_ny_registry_shares_map_through_the_verified_ticker(self):
+        # ASML(네덜란드)은 미국에서 본주 그대로 '뉴욕 등록주'로 거래된다.
+        # CINS 로는 OpenFIGI 가 모르고, 옛 규칙은 'COM' 만 받아서 떨어졌다.
+        required = {"N07059210": {"name": "ASML HLDG NV", "class": "N Y REGISTRY SHS"}}
+        row = {"ticker": "ASML", "name": "ASML HOLDING NV", "securityType": "NY Reg Shrs",
+               "securityType2": "Common Stock", "shareClassFIGI": "BBG001SDT3F5"}
+        with patch.object(p, "request", side_effect=[[{}], [{"data": [row]}]]):
+            self.assertEqual(p.resolve(list(required), required, {"N07059210": "ASML"}), {"N07059210": "ASML"})
+
+    def test_registry_fallback_still_refuses_adrs_classes_and_other_names(self):
+        required = {"N07059210": {"name": "ASML HLDG NV", "class": "N Y REGISTRY SHS"}}
+        adr = {"ticker": "ASML", "name": "ASML HOLDING NV", "securityType": "ADR",
+               "securityType2": "Depositary Receipt", "shareClassFIGI": "X"}
+        other = {"ticker": "ASML", "name": "ASM INTERNATIONAL NV", "securityType": "NY Reg Shrs",
+                 "securityType2": "Common Stock", "shareClassFIGI": "Y"}
+        for bad in (adr, other):
+            with patch.object(p, "request", side_effect=[[{}], [{"data": [bad]}]]):
+                self.assertEqual(p.resolve(list(required), required, {"N07059210": "ASML"}), {})
+        for cls in ("SHS CL A", "ORD SHS CL A", "SPONSORED ADR", "PFD SHS", "UNIT 12/20/2025"):
+            with self.subTest(cls=cls):
+                req = {"N07059210": {"name": "ASML HLDG NV", "class": cls}}
+                with patch.object(p, "request", return_value=[{}]) as call:
+                    self.assertEqual(p.resolve(list(req), req, {"N07059210": "ASML"}), {})
+                    self.assertEqual(call.call_count, 1)
+
     def test_mapping_outage_does_not_block_existing_ticker_updates(self):
         previous = {"series": {"123456100": {"ticker": "AAPL", "values": [["2026-09-15", 99]], "splits": {}}}}
         required = {c: {"name": "Issuer", "class": "COM"} for c in ["123456100", "654321100"]}
