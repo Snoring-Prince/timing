@@ -10,6 +10,8 @@ on:
       - "scripts/fetch_prices.py"
       - "scripts/fetch_tickers.py"
       - "scripts/fetch_sectors.py"
+      - "scripts/publish_titans.py"
+      - "index.html"
       - "data/titans/investors.json"
       - "data/titans/prices.json"
       - "data/titans/prices/**"

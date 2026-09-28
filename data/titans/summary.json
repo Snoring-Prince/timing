@@ -1,0 +1,58 @@
+{
+ "investors": [
+  {
+   "slug": "berkshire",
+   "name": {
+    "en": "Berkshire Hathaway",
+    "ko": "버크셔 해서웨이"
+   },
+   "since": 1998,
+   "period": "2026-06-30",
+   "filed": "2026-08-14",
+   "quarters": 111,
+   "total": 299253556246,
+   "stocks": 26,
+   "top": [
+    {
+     "name": "Apple Inc",
+     "w": 22.0
+    },
+    {
+     "name": "American Express Co",
+     "w": 17.1
+    },
+    {
+     "name": "Alphabet Inc",
+     "w": 12.6
+    }
+   ]
+  },
+  {
+   "slug": "himalaya",
+   "name": {
+    "en": "Himalaya Capital",
+    "ko": "히말라야 캐피털"
+   },
+   "since": 2016,
+   "period": "2026-06-30",
+   "filed": "2026-08-14",
+   "quarters": 35,
+   "total": 3702921099,
+   "stocks": 7,
+   "top": [
+    {
+     "name": "Alphabet Inc",
+     "w": 47.9
+    },
+    {
+     "name": "Pdd Holdings Inc",
+     "w": 22.2
+    },
+    {
+     "name": "Berkshire Hathaway Inc Del",
+     "w": 15.0
+    }
+   ]
+  }
+ ]
+}

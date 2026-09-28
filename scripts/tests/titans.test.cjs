@@ -728,3 +728,50 @@ test('every registered investor page follows the same static rules', () => {
   }
   assert.match(css,/\.bio\.nofigure\{grid-template-columns:minmax\(0,1fr\)\}/);
 });
+
+test('the list page has one card per registered investor, and the home card points to it', () => {
+  const list=fs.readFileSync(path.join(root,'titans/index.html'),'utf8');
+  const hub=fs.readFileSync(path.join(root,'index.html'),'utf8');
+  const reg=JSON.parse(fs.readFileSync(path.join(root,'data/titans/investors.json'),'utf8'));
+  const active=reg.investors.filter(i=>i.active);
+  const cards=[...list.matchAll(/<a class="card" href="\/titans\/([a-z0-9-]+)\/" data-slug="([a-z0-9-]+)">([\s\S]*?)<\/a>/g)];
+  // 등록 목록과 카드가 같은 순서로 하나씩 — 투자자를 넣고 카드를 빠뜨리면 여기서 멈춘다.
+  assert.deepEqual(cards.map(c=>c[1]),active.map(i=>i.slug));
+  const run=page(real);
+  for(const [,href,slug,body] of cards){
+    assert.equal(href,slug);
+    const inv=active.find(i=>i.slug===slug);
+    // 이름표는 그 투자자 화면 머리글의 것과 같은 글자다.
+    assert.match(body,new RegExp(`<span class="tmark" aria-hidden="true">${run(`monogram(${JSON.stringify(inv.name.en)})`)}</span>`));
+    assert.match(body,new RegExp(`<span data-lang="ko">${inv.name.ko}</span><span data-lang="en">${inv.name.en}</span>`));
+    const count=lg=>body.match(new RegExp(`data-lang="${lg}"`,'g')).length;
+    assert.equal(count('en'),count('ko'),slug);
+  }
+  // 숫자는 봇이 만든 작은 요약에서만 읽는다 — 투자자마다 공시책 전체를 받지 않는다.
+  assert.match(list,/fetch\("\.\.\/data\/titans\/summary\.json"/);
+  assert.match(hub,/<a class="card" href="\/titans\/" data-go="titans">/);
+  assert.match(hub,/j\("data\/titans\/summary\.json"\)/);
+  assert.doesNotMatch(hub,/data\/titans\/berkshire\.json/);
+  // 투자자 화면에서 목록으로 돌아가는 길이 있다.
+  assert.match(shared,/<a class="back" href="\/titans\/" id="backlist">/);
+  assert.match(shared,/el\("backlist"\)\.textContent="← "\+tx\("brand"\)/);
+});
+
+test('the summary spells company names exactly as the investor page does', () => {
+  // publish_titans.title() 는 investor.js title() 을 옮긴 것이다. 모든 공시책의 이름으로 대조한다.
+  const {execFileSync}=require('node:child_process');
+  const names=new Set();
+  for(const f of fs.readdirSync(path.join(root,'data/titans')).filter(f=>/^[a-z0-9-]+\.json$/.test(f))){
+    const b=JSON.parse(fs.readFileSync(path.join(root,'data/titans',f),'utf8'));
+    for(const q of b.quarters||[]) for(const h of q.holdings||[]) names.add(h.name);
+  }
+  const list=[...names];
+  assert.ok(list.length>200);
+  const py=process.platform==='win32'?'python':'python3';
+  const out=JSON.parse(execFileSync(py,['-c',
+    'import json,sys;sys.path.insert(0,"scripts");import publish_titans as p;print(json.dumps([p.title(n) for n in json.load(sys.stdin)]))'],
+    {cwd:root,input:JSON.stringify(list),encoding:'utf8'}));
+  const run=page(real);
+  const js=run(`${JSON.stringify(list)}.map(title)`);
+  assert.deepEqual(out,[...js]);
+});

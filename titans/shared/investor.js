@@ -220,7 +220,7 @@ function mountInvestorShell(){
   <footer class="foot">
     <h2 id="foothead">Source and limits</h2>
     <div id="footbody"></div>
-    <a class="back" href="/">← itpaidoff.com</a>
+    <a class="back" href="/titans/" id="backlist">← Titans' picks</a>
   </footer>
 
 </div>`;
@@ -1268,6 +1268,8 @@ function render(){
   el("mobileguide").textContent=tx("mobileGuide");
   el("tradebasis").textContent=tx("tradeBasis");
   el("foothead").textContent=tx("footTitle");
+  /* 투자자 목록(/titans/)으로 돌아가는 길. 이름은 눈썹줄과 같은 말이다. */
+  el("backlist").textContent="← "+tx("brand");
   /* 각주는 이제 자료를 안 읽습니다(문장이 네 개로 줄면서 분할·집계 전 목록이
      빠졌습니다). 그래서 `build()` 뒤에 한 번 더 그리지 않습니다 —
      자료가 없어도 각주는 그대로 나옵니다. */
