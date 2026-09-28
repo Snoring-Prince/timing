@@ -70,10 +70,11 @@ class PricesTests(unittest.TestCase):
         self.assertEqual(len(errors), 1)
 
     def test_foreign_ticker_fallback_does_not_guess_between_share_classes(self):
+        # 종류 글자가 적힌 줄은 로고용 옛 티커(GUESS)를 쓰지 않고 이름 검색만 한다.
         required = {"G12345100": {"name": "Issuer", "class": "CL A"}}
-        with patch.object(p, "request", return_value=[{}]) as req:
+        with patch.object(p, "request", return_value=[{}]) as req, patch("builtins.print"):
             self.assertEqual(p.resolve(list(required), required, {"G12345100": "GUESS"}), {})
-            self.assertEqual(req.call_count, 1)
+        self.assertEqual([c.args[0].rsplit("/", 1)[-1] for c in req.call_args_list], ["mapping", "search"])
 
     def test_ny_registry_shares_map_through_the_verified_ticker(self):
         # ASML(네덜란드)은 미국에서 본주 그대로 '뉴욕 등록주'로 거래된다.
@@ -101,9 +102,11 @@ class PricesTests(unittest.TestCase):
         for cls in ("SHS CL A", "ORD SHS CL A", "SPONSORED ADR", "PFD SHS", "UNIT 12/20/2025"):
             with self.subTest(cls=cls):
                 req = {"N07059210": {"name": "ASML HLDG NV", "class": cls}}
-                with patch.object(p, "request", return_value=[{}]) as call:
+                with patch.object(p, "request", return_value=[{}]) as call, patch("builtins.print"):
                     self.assertEqual(p.resolve(list(req), req, {"N07059210": "ASML"}), {})
-                    self.assertEqual(call.call_count, 1)
+                # 옛 티커로 묻는 길(TICKER)은 어느 것도 안 탄다. 종류 글자 줄만 이름 검색.
+                asked = [c.args[0].rsplit("/", 1)[-1] for c in call.call_args_list]
+                self.assertEqual(asked, ["mapping", "search"] if "CL A" in cls else ["mapping"])
 
     def test_mapping_outage_does_not_block_existing_ticker_updates(self):
         previous = {"series": {"123456100": {"ticker": "AAPL", "values": [["2026-09-15", 99]], "splits": {}}}}
@@ -443,12 +446,57 @@ class UnpricedTests(unittest.TestCase):
         self.assertFalse(p.same_issuer("AB INDUSTRIES", "ABC INDUSTRIES"))
         # 28글자 미만이면 잘린 것이 아니다 — 끝 낱말이 달라도 봐주지 않는다.
         self.assertFalse(p.same_issuer("NORWEGIAN CRUISE LINE X", "NORWEGIAN CRUISE LINE HLDGS"))
-        # 종류가 적힌 줄(CL A 등)은 여전히 묻지도 않는다 — 에이온·리버티 C주.
+        # 종류가 적힌 줄(CL A 등)은 로고용 옛 티커로 붙이지 않는다 — 에이온·리버티 C주.
         for cls in ("SHS CL A", "COM CL C"):
             req = {"G0403H108": {"name": "AON PLC", "class": cls}}
-            with patch.object(p, "request", return_value=[{}]) as call:
+            with patch.object(p, "request", return_value=[{}]), patch("builtins.print"):
                 self.assertEqual(p.resolve(list(req), req, {"G0403H108": "AON"}), {})
-                self.assertEqual(call.call_count, 1)
+
+    def test_class_letter_lines_pick_the_matching_class_from_a_name_search(self):
+        def share(name, ticker):
+            return {"name": name, "ticker": ticker, "exchCode": "US", "securityType": "Common Stock",
+                    "marketSector": "Equity", "shareClassFIGI": ticker}
+        liberty = {"data": [share("LIBERTY GLOBAL LTD-A", "LBTYA"), share("LIBERTY GLOBAL LTD-B", "LBTYB"),
+                            share("LIBERTY GLOBAL LTD-C", "LBTYK"),
+                            share("LIBERTY LATIN AMERICA LTD-C", "LILAK"),
+                            {**share("LIBERTY GLOBAL LTD-C", "LBTYK"), "exchCode": "LN"}]}
+        req = {"G61188127": {"name": "LIBERTY GLOBAL LTD", "class": "COM CL C"}}
+        later = set()
+        with patch.object(p, "request", side_effect=[[{}], liberty]):
+            # 로고 표에 적힌 LBTYA(A주)가 아니라 C주를 고른다.
+            self.assertEqual(p.resolve(list(req), req, {"G61188127": "LBTYA"}, later), {"G61188127": "LBTYK"})
+        self.assertEqual(later, {"G61188127"})
+        # 같은 글자가 둘이거나(모호) 없으면 안 붙인다.
+        twice = {"data": liberty["data"] + [share("LIBERTY GLOBAL LTD-C", "LBTYC")]}
+        for found in (twice, {"data": liberty["data"][:2]}, {"data": []}):
+            with patch.object(p, "request", side_effect=[[{}], found]), patch("builtins.print"):
+                self.assertEqual(p.resolve(list(req), req, {}), {})
+        # 종류 꼬리 없는 이름: 그 회사 미국 보통주가 하나뿐이고 공시가 A주일 때만.
+        aon = {"G0403H108": {"name": "AON PLC", "class": "SHS CL A"}}
+        with patch.object(p, "request", side_effect=[[{}], {"data": [share("AON PLC", "AON")]}]):
+            self.assertEqual(p.resolve(list(aon), aon, {}), {"G0403H108": "AON"})
+        aon_c = {"G0403H108": {"name": "AON PLC", "class": "SHS CL C"}}
+        with patch.object(p, "request", side_effect=[[{}], {"data": [share("AON PLC", "AON")]}]), patch("builtins.print"):
+            self.assertEqual(p.resolve(list(aon_c), aon_c, {}), {})
+        # 이름 검색이 통신 장애면 조용히 넘어가지 않는다(짝 없음이 아니라 고장).
+        with patch.object(p, "request", side_effect=[[{}], ValueError("offline")]):
+            with self.assertRaises(ValueError):
+                p.resolve(list(aon), aon, {})
+
+    def test_a_failed_class_search_is_an_outage_for_that_line_only(self):
+        required = {"G0403H108": {"name": "AON PLC", "class": "SHS CL A"},
+                    "G66721104": {"name": "NORWEGIAN CRUISE LINE HLDGS", "class": "SHS"}}
+        ncl = {"name": "NORWEGIAN CRUISE LINE HOLDIN", "ticker": "NCLH", "exchCode": "US",
+               "securityType": "Common Stock", "marketSector": "Equity", "shareClassFIGI": "N"}
+        now = dt.datetime(2026, 9, 18, 1, tzinfo=p.UTC)
+        with patch.object(p, "request", side_effect=[[{}, {}], [{"data": [ncl]}], ValueError("429"),
+                                                     chart(symbol="NCLH")]), \
+                patch.object(p.time, "sleep"), patch("builtins.print"):
+            result, errors = p.collect(required, {}, now, known={"G66721104": "NCLH"},
+                                       quarter_marks={"G66721104": ("2026-09-17", 101)})
+        # 노르웨이지언은 그대로 붙고, 에이온은 '짝 없음'이 아니라 고장(빨간불)으로 남는다.
+        self.assertEqual(result["series"]["G66721104"]["ticker"], "NCLH")
+        self.assertEqual((len(errors), result.get("unpriced")), (1, None))
 
     def test_quarter_end_mark_undoes_later_splits(self):
         self.assertTrue(p.mark_matches([("2026-06-29", 49), ("2026-06-30", 50)], {"2026-08-01": "2:1"}, ("2026-06-30", 100)))
