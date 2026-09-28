@@ -144,7 +144,7 @@ class Unpriced(ValueError):
     분기말 가격으로만 그린다."""
 
 
-def resolve(cusips, required, known, unverified=None):
+def resolve(cusips, required, known, unverified=None, outage=None):
     result = {}
     for offset in range(0, len(cusips), 10):
         batch = cusips[offset:offset+10]
@@ -188,7 +188,70 @@ def resolve(cusips, required, known, unverified=None):
             # 왜 못 붙였는지 **원본을 찍는다.** 개발 환경에서 OpenFIGI 가 막혀 있어
             # 응답 모양을 짐작으로 맞춘 자리다(9-3 — gzip·OpenFIGI 때 두 번 틀림).
             print(f"{cusip} {ticker}: fallback rejected · raw {json.dumps(rows, ensure_ascii=False)[:600]}", flush=True)
+    # 종류 글자가 적힌 해외 주식(에이온 `SHS CL A` · 리버티글로벌 `COM CL C`).
+    # 위의 옛 티커는 회사 이름으로 찾은 로고용이라 A·C 를 못 가린다 — 리버티 C주
+    # 칸에는 LBTYA 가 적혀 있다. 그래서 OpenFIGI 이름 검색으로 그 회사의 미국
+    # 보통주를 모두 받고, 이름 끝 종류 글자가 공시와 **같은 것 하나**만 받는다.
+    # 이렇게 붙인 것도 종가 대조를 한 번 더 거친다.
+    searched = False
+    for cusip in cusips:
+        identity = required[cusip]
+        letter = CLASS_LETTER.fullmatch(identity["class"].upper().strip())
+        if cusip in result or cusip[0].isdigit() or not letter:
+            continue
+        if searched:
+            time.sleep(13)   # 이름 검색은 열쇠 없이 분당 몇 번뿐이다
+        searched = True
+        try:
+            found = request("https://api.openfigi.com/v3/search",
+                            {"query": identity["name"], "exchCode": "US", "marketSecDes": "Equity"})
+        except Exception as exc:
+            # 검색이 막힌 날은 그 줄만 고장으로 적는다 — 이미 찾은 다른 짝까지 잃지 않게.
+            if outage is None:
+                raise
+            outage.add(cusip)
+            print(f"{cusip}: class search failed ({exc})", flush=True)
+            continue
+        ticker = pick_class(found.get("data", []) if isinstance(found, dict) else [],
+                            identity["name"], letter.group(1))
+        if ticker:
+            result[cusip] = ticker
+            if unverified is not None:
+                unverified.add(cusip)
+        else:
+            # 응답 모양을 아직 본 적이 없다 — 원본을 찍고 사람이 본다.
+            print(f"{cusip} {identity['class']}: class search rejected · raw "
+                  f"{json.dumps(found, ensure_ascii=False)[:1500]}", flush=True)
     return result
+
+
+# 공시의 종류 칸에서 종류 글자 하나: `CL A`, `SHS CL A`, `COM CL C`, `ORD SHS CL A`.
+CLASS_LETTER = re.compile(r"(?:(?:COM(?:MON)?|ORD(?:INARY)?)\s+)?(?:SHS\s+)?CL(?:ASS)?\s+([A-Z])")
+
+
+def pick_class(rows, filed, letter):
+    """이름 검색 결과에서 공시와 같은 회사·같은 종류의 티커 하나. 못 가리면 None.
+
+    OpenFIGI 는 종류를 이름 끝에 단다: `LIBERTY GLOBAL LTD-A`, `XP INC - CLASS A`
+    (러너 실측). 그 글자가 공시의 글자와 같은 것만 받는다. 종류 꼬리가 없는
+    이름은 그 회사의 미국 보통주가 **그것 하나뿐이고** 공시가 A주일 때만 받는다 —
+    미국에 한 종류만 상장한 회사(에이온으로 보임, 짐작)가 그 모양일 수 있다."""
+    shares = [r for r in rows if r.get("exchCode") == "US" and r.get("securityType") in SHARE_TYPES
+              and r.get("ticker") and " " not in r["ticker"]]
+    tagged, plain = [], []
+    for r in shares:
+        words = [w for w in norm(r.get("name", "")) if w not in NOT_NAME]
+        if len(words) >= 2 and len(words[-1]) == 1:
+            if same_issuer(" ".join(words[:-1]), filed):
+                tagged.append((words[-1], r))
+        elif same_issuer(r.get("name", ""), filed):
+            plain.append(r)
+    hit = {r["ticker"] for tail, r in tagged if tail == letter}
+    if len(hit) == 1:
+        return hit.pop().replace("/", "-").replace(".", "-")
+    if not tagged and letter == "A" and len({r["ticker"] for r in plain}) == 1:
+        return plain[0]["ticker"].replace("/", "-").replace(".", "-")
+    return None
 
 
 # 해외 법인이 미국에 낸 **한 종류뿐인 보통주**의 공시 표기. 네덜란드 법인의
@@ -293,7 +356,8 @@ def collect(required, previous, now, full=False, known=None, since=None, quarter
     unpriced = {}
     unverified = set()
     try:
-        mapped = resolve(missing, required, known or {}, unverified) if missing else {}
+        outage = set()
+        mapped = resolve(missing, required, known or {}, unverified, outage) if missing else {}
         answered = True
     except Exception as exc:
         mapped = {}
@@ -306,7 +370,7 @@ def collect(required, previous, now, full=False, known=None, since=None, quarter
         ticker = mapped.get(cusip) or old.get("ticker")
         try:
             if not ticker:
-                raise (Unpriced if answered else ValueError)("exact CUSIP mapping unavailable")
+                raise (Unpriced if answered and cusip not in outage else ValueError)("exact CUSIP mapping unavailable")
             refresh = full or not old.get("values") or now.weekday() == 5
             # 상장 때부터는 **종목마다 한 번만** 훑는다. 1983년 분할은 앞으로도
             # 1983년 분할이라, 매주 40년치 바를 다시 받아 같은 답을 얻는 것은

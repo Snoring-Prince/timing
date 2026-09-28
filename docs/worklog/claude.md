@@ -5,6 +5,17 @@
 ---
 
 ## 2026-09-28 · Claude · (이 PR)
+종류 글자 줄(CL A·CL C)을 이름 검색으로 찾기
+- 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
+- 결과(PR #104): NCLH·AXTA·HLF 붙음. 남은 에이온(`SHS CL A`)·리버티 C주(`COM CL C`).
+- 규칙: OpenFIGI `/v3/search` 로 회사 이름 검색 → 미국 보통주 중 이름 끝 종류 글자가 공시와 같은
+  하나만. 꼬리 없는 이름은 유일하고 A주일 때만. 붙인 것도 종가 대조 2%. 검색 장애는 그 줄만 고장.
+  되돌려 다섯 가지 모두 검사가 잡는 것 확인. 검색 응답 모양은 짐작 — 거절되면 원본이 로그에 찍힘.
+- 넘김: 머지 뒤 Update Titans Prices. 초록불이면 로그에서 G0403H108·G61188127 줄을 볼 것 —
+  `AON`/`LBTYK` 로 붙었는지, `class search rejected · raw …` 면 원본을 보고 규칙을 고칠 것.
+  빨간불(HTTP 400 등)이면 검색 요청 모양이 틀린 것.
+
+## 2026-09-28 · Claude · PR #104
 바우포스트 종가 — 이름 표기 차이 셋
 - 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
 - 결과(PR #103): 토름 붙음. 바우포스트 해외 5종목 짝 없음 — NCLH(OpenFIGI 이름 28자 잘림) ·
