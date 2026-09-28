@@ -415,6 +415,41 @@ class UnpricedTests(unittest.TestCase):
             self.assertEqual(p.resolve(list(both), both, {c: "LILA" for c in both}), {})
             self.assertEqual(req.call_count, 1)
 
+    def test_abbreviated_truncated_and_com_shs_names_from_baupost(self):
+        # 러너 원본 그대로(2026-09-28, Update Titans Prices #16).
+        ncl = {"figi": "BBG000BSRN78", "name": "NORWEGIAN CRUISE LINE HOLDIN", "ticker": "NCLH", "exchCode": "US",
+               "compositeFIGI": "BBG000BSRN78", "securityType": "Common Stock", "marketSector": "Equity",
+               "shareClassFIGI": "BBG001SCKPS2", "securityType2": "Common Stock", "securityDescription": "NCLH"}
+        axta = {"figi": "BBG0060CPLJ5", "name": "AXALTA COATING SYSTEMS LTD", "ticker": "AXTA", "exchCode": "US",
+                "compositeFIGI": "BBG0060CPLJ5", "securityType": "Common Stock", "marketSector": "Equity",
+                "shareClassFIGI": "BBG0060CPLK3", "securityType2": "Common Stock", "securityDescription": "AXTA"}
+        # 허벌라이프는 아직 원본을 못 봤다 — 옛 규칙이 'COM SHS' 에서 묻지도 않았다.
+        # 그래서 여기서는 종류 칸이 통과하는지만 본다(이름은 가장 흔한 모양).
+        hlf = {**axta, "name": "HERBALIFE LTD", "ticker": "HLF", "shareClassFIGI": "H"}
+        for cusip, name, cls, ticker, row in (("G66721104", "NORWEGIAN CRUISE LINE HLDGS", "SHS", "NCLH", ncl),
+                                              ("G0750C108", "AXALTA COATING SYS LTD", "COM", "AXTA", axta),
+                                              ("G4412G101", "HERBALIFE LTD", "COM SHS", "HLF", hlf)):
+            with self.subTest(ticker=ticker):
+                required = {cusip: {"name": name, "class": cls}}
+                later = set()
+                with patch.object(p, "request", side_effect=[[{}], [{"data": [row]}]]):
+                    self.assertEqual(p.resolve([cusip], required, {cusip: ticker}, later), {cusip: ticker})
+                self.assertEqual(later, {cusip})
+
+    def test_loose_name_rules_still_refuse_other_companies(self):
+        self.assertFalse(p.same_issuer("NORWEGIAN AIR SHUTTLE ASA", "NORWEGIAN CRUISE LINE HLDGS"))
+        self.assertFalse(p.same_issuer("AXALTA COATING SYSTEMS LTD", "AXON ENTERPRISE INC"))
+        # 짧은 앞부분(2글자 이하)은 줄임말로 안 받는다.
+        self.assertFalse(p.same_issuer("AB INDUSTRIES", "ABC INDUSTRIES"))
+        # 28글자 미만이면 잘린 것이 아니다 — 끝 낱말이 달라도 봐주지 않는다.
+        self.assertFalse(p.same_issuer("NORWEGIAN CRUISE LINE X", "NORWEGIAN CRUISE LINE HLDGS"))
+        # 종류가 적힌 줄(CL A 등)은 여전히 묻지도 않는다 — 에이온·리버티 C주.
+        for cls in ("SHS CL A", "COM CL C"):
+            req = {"G0403H108": {"name": "AON PLC", "class": cls}}
+            with patch.object(p, "request", return_value=[{}]) as call:
+                self.assertEqual(p.resolve(list(req), req, {"G0403H108": "AON"}), {})
+                self.assertEqual(call.call_count, 1)
+
     def test_quarter_end_mark_undoes_later_splits(self):
         self.assertTrue(p.mark_matches([("2026-06-29", 49), ("2026-06-30", 50)], {"2026-08-01": "2:1"}, ("2026-06-30", 100)))
         self.assertFalse(p.mark_matches([("2026-06-30", 50)], {}, ("2026-06-30", 100)))
