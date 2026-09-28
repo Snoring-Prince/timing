@@ -109,24 +109,46 @@ def resolve(cusips, required, known):
         if offset+10 < len(cusips):
             time.sleep(3)
     # CINS mapping is absent for some foreign issuers. An old logo ticker is
-    # usable only for the sole plain common class and a verified US common-stock
+    # usable only for the sole plain ordinary class and a verified US share
     # issuer match. Never apply this fallback to A/B/C, preferred or ADR classes.
     for cusip in cusips:
         identity = required[cusip]
         issuer_classes = [c for c in required if c[:6] == cusip[:6]]
-        if cusip in result or cusip[0].isdigit() or len(issuer_classes) != 1 or not re.fullmatch(r"COM(?:MON(?: STOCK)?)?", identity["class"].upper().strip()):
+        if cusip in result or cusip[0].isdigit() or len(issuer_classes) != 1 or not PLAIN.fullmatch(identity["class"].upper().strip()):
             continue
         ticker = known.get(cusip)
         if not ticker:
             continue
         rows = request("https://api.openfigi.com/v3/mapping", [
             {"idType": "TICKER", "idValue": ticker, "exchCode": "US"}])
-        candidates = [r for r in rows[0].get("data", []) if r.get("ticker") == ticker
-                      and r.get("securityType") == "Common Stock"
-                      and sorted(norm(r.get("name", ""))) == sorted(norm(identity["name"]))]
+        data = rows[0].get("data", []) if isinstance(rows, list) and rows else []
+        candidates = [r for r in data if r.get("ticker") == ticker
+                      and (r.get("securityType") in SHARE_TYPES or r.get("securityType2") == "Common Stock")
+                      and same_issuer(r.get("name", ""), identity["name"])]
         if candidates and len({r.get("shareClassFIGI") for r in candidates}) == 1:
             result[cusip] = ticker
+        else:
+            # 왜 못 붙였는지 **원본을 찍는다.** 개발 환경에서 OpenFIGI 가 막혀 있어
+            # 응답 모양을 짐작으로 맞춘 자리다(9-3 — gzip·OpenFIGI 때 두 번 틀림).
+            print(f"{cusip} {ticker}: fallback rejected · raw {json.dumps(rows, ensure_ascii=False)[:600]}", flush=True)
     return result
+
+
+# 해외 법인이 미국에 낸 **한 종류뿐인 보통주**의 공시 표기. 네덜란드 법인의
+# 뉴욕 등록주(ASML `N Y REGISTRY SHS`)도 여기 든다 — ADR 이 아니라 본주 그대로다.
+# 종류 글자(CL A·SHS CL C)·우선주·단위(UNIT)는 넣지 않는다.
+PLAIN = re.compile(r"COM(?:MON(?: STOCK)?)?|SHS|ORD(?: SHS)?|ORDINARY SHARES|"
+                   r"N ?Y REGISTRY SHS|NY REG(?:ISTRY)? SHS|REG SHS|NAMEN AKT")
+# OpenFIGI 의 securityType. 뉴욕 등록주는 'NY Reg Shrs' 로 온다고 알려져 있지만
+# 실물을 못 봤으므로 넓은 칸(securityType2)이 'Common Stock' 이어도 받는다.
+# ADR 은 둘 다 아니다('ADR' · 'Depositary Receipt').
+SHARE_TYPES = {"Common Stock", "NY Reg Shrs"}
+
+
+def same_issuer(a, b):
+    """공시는 `ASML HLDG NV`, OpenFIGI 는 `ASML HOLDING NV` 로 적는다."""
+    drop = lambda n: sorted(w for w in norm(n) if w != "HLDG")
+    return drop(a) == drop(b)
 
 
 def parse_chart(payload, ticker, now):
