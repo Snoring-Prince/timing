@@ -49,6 +49,17 @@
       },
       "since": 2013,
       "active": true
+    },
+    {
+      "slug": "baupost",
+      "cik": "0001061768",
+      "filing_name": "Baupost Group LLC",
+      "name": {
+        "en": "Baupost Group",
+        "ko": "바우포스트 그룹"
+      },
+      "since": 2013,
+      "active": true
     }
   ]
 }
