@@ -5,6 +5,15 @@
 ---
 
 ## 2026-09-29 · Claude · (이 PR)
+캐시 우드(ARK 인베스트) 화면 — 여덟 번째 투자자
+- 파일: titans/ark/index.html(새) · titans/index.html(카드) · data/titans/investors.json ·
+  sitemap.xml · CLAUDE.md · docs/masters-13f.md · 이 일지. 코드 변경 없음.
+- 결과(PR #113 정찰): CIK 맞음 · 13F 39건(2016~) · 184종목 · 상위 50 이 88% · 달러 단위 정상.
+- 규칙: 184종목 전부(사용자 — 넣고 나서 자를지 봄) · 13F 만 · 인용 없음 · 이름표 AI.
+- 넘김: 머지 뒤 Update 13F → 끝나면 Update Titans Prices. `data/titans/prices/ark.json` 크기를
+  재서(gzip) 사용자와 자를지 정함. 짝 없는 종목은 `unpriced` 로 남음.
+
+## 2026-09-29 · Claude · PR #113
 캐시 우드(ARK) 정찰 후보 추가 — 새 봇 없이 13F 로 넣기 위한 첫걸음
 - 파일: scripts/probe_titans.py · CLAUDE.md · 이 일지
 - 결과(PR #112): 머지됨.

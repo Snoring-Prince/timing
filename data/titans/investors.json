@@ -89,6 +89,17 @@
       },
       "since": 2013,
       "active": true
+    },
+    {
+      "slug": "ark",
+      "cik": "0001697748",
+      "filing_name": "ARK Investment Management LLC",
+      "name": {
+        "en": "ARK Invest",
+        "ko": "ARK 인베스트"
+      },
+      "since": 2016,
+      "active": true
     }
   ]
 }
