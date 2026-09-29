@@ -98,6 +98,9 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 /* 투자자 화면 머리글의 이름표와 같은 네모다(investor.css .tmark). */
 .tmark{width:28px;height:28px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
   background:var(--ink);color:var(--card);font:700 12.5px/1 var(--cond);letter-spacing:.02em}
+/* 로고 그림이 있으면 흰 네모에 담는다. 못 받으면 onerror 가 머리글자 타일로 되돌린다. */
+.tmark.img{background:var(--card);border:1px solid var(--rule-2);overflow:hidden}
+.tmark img{width:100%;height:100%;object-fit:contain;display:block}
 .who{margin:0 0 8px;font-size:12.5px;color:var(--ink-3)}
 .what{color:var(--ink-2);margin:0}
 .go{display:inline-block;margin-top:12px;font:600 12.5px var(--cond);color:var(--ink);border-bottom:1px solid var(--ink)}
@@ -140,7 +143,7 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     <a class="card" href="/titans/berkshire/" data-slug="berkshire">
       <div>
         <div class="no"><span data-lang="ko">가치투자</span><span data-lang="en">Value</span></div>
-        <h2><span class="tmark" aria-hidden="true">BH</span><span><span data-lang="ko">버크셔 해서웨이</span><span data-lang="en">Berkshire Hathaway</span></span></h2>
+        <h2><span class="tmark img" aria-hidden="true"><img src="berkshire/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('BH')"></span><span><span data-lang="ko">버크셔 해서웨이</span><span data-lang="en">Berkshire Hathaway</span></span></h2>
         <p class="who"><span data-lang="ko">워런 버핏</span><span data-lang="en">Warren Buffett</span></p>
         <p class="what">
           <span data-lang="ko">워런 버핏이 1965년 경영을 맡은 회사입니다. 이해할 수 있고 경쟁자가 흉내 내기 어려운 사업을 골라 여러 해를 들고 갑니다. 1998년부터의 공시가 있습니다.</span>
@@ -154,7 +157,7 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     <a class="card" href="/titans/himalaya/" data-slug="himalaya">
       <div>
         <div class="no"><span data-lang="ko">가치투자</span><span data-lang="en">Value</span></div>
-        <h2><span class="tmark" aria-hidden="true">HC</span><span><span data-lang="ko">히말라야 캐피털</span><span data-lang="en">Himalaya Capital</span></span></h2>
+        <h2><span class="tmark img" aria-hidden="true"><img src="himalaya/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('HC')"></span><span><span data-lang="ko">히말라야 캐피털</span><span data-lang="en">Himalaya Capital</span></span></h2>
         <p class="who"><span data-lang="ko">리루</span><span data-lang="en">Li Lu</span></p>
         <p class="what">
           <span data-lang="ko">리루가 1997년 세운 운용사입니다. 몇 안 되는 회사에 크게 싣고 오래 갖습니다. 미국 밖 거래소에서 산 주식은 13F 에 실리지 않아 여기에 나오지 않습니다. 2016년부터의 공시가 있습니다.</span>
@@ -167,7 +170,7 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     <a class="card" href="/titans/appaloosa/" data-slug="appaloosa">
       <div>
         <div class="no"><span data-lang="ko">역발상</span><span data-lang="en">Contrarian</span></div>
-        <h2><span class="tmark" aria-hidden="true">AP</span><span><span data-lang="ko">애팔루사</span><span data-lang="en">Appaloosa</span></span></h2>
+        <h2><span class="tmark img" aria-hidden="true"><img src="appaloosa/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('AP')"></span><span><span data-lang="ko">애팔루사</span><span data-lang="en">Appaloosa</span></span></h2>
         <p class="who"><span data-lang="ko">데이비드 테퍼</span><span data-lang="en">David Tepper</span></p>
         <p class="what">
           <span data-lang="ko">데이비드 테퍼가 1993년 세운 운용사입니다. 남들이 피하는 자산을 사는 쪽으로 알려졌습니다. 채권과 대부분의 옵션은 13F 에 나오지 않아 주식 부분만 봅니다. 2016년에 법인이 바뀐 두 공시 이력을 이어 2013년부터 봅니다.</span>
@@ -180,7 +183,7 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     <a class="card" href="/titans/oaktree/" data-slug="oaktree">
       <div>
         <div class="no"><span data-lang="ko">부실채권</span><span data-lang="en">Distressed debt</span></div>
-        <h2><span class="tmark" aria-hidden="true">OC</span><span><span data-lang="ko">오크트리 캐피털</span><span data-lang="en">Oaktree Capital</span></span></h2>
+        <h2><span class="tmark img" aria-hidden="true"><img src="oaktree/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('OC')"></span><span><span data-lang="ko">오크트리 캐피털</span><span data-lang="en">Oaktree Capital</span></span></h2>
         <p class="who"><span data-lang="ko">하워드 막스</span><span data-lang="en">Howard Marks</span></p>
         <p class="what">
           <span data-lang="ko">하워드 막스가 동료들과 1995년 세운 운용사입니다. 본업은 고위험 채권과 어려움에 빠진 회사의 빚이고, 구조조정 끝에 받은 주식이 13F 에 나오기도 합니다. 옵션과 전환사채는 빼고 주식만 봅니다. 2013년부터의 공시가 있습니다.</span>
@@ -193,7 +196,7 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     <a class="card" href="/titans/baupost/" data-slug="baupost">
       <div>
         <div class="no"><span data-lang="ko">가치투자</span><span data-lang="en">Value</span></div>
-        <h2><span class="tmark" aria-hidden="true">BA</span><span><span data-lang="ko">바우포스트 그룹</span><span data-lang="en">Baupost Group</span></span></h2>
+        <h2><span class="tmark img" aria-hidden="true"><img src="baupost/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('BA')"></span><span><span data-lang="ko">바우포스트 그룹</span><span data-lang="en">Baupost Group</span></span></h2>
         <p class="who"><span data-lang="ko">세스 클라만</span><span data-lang="en">Seth Klarman</span></p>
         <p class="what">
           <span data-lang="ko">세스 클라만이 1982년 세울 때부터 이끄는 운용사입니다. 싸게 살 것이 없으면 현금을 들고 기다리는 것으로 알려졌습니다. 부실채권·부동산·비상장 투자는 13F 에 나오지 않아 미국 상장 주식만 봅니다. 2013년부터의 공시가 있습니다.</span>
@@ -207,7 +210,7 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     <a class="card" href="/titans/pershing/" data-slug="pershing">
       <div>
         <div class="no"><span data-lang="ko">행동주의</span><span data-lang="en">Activist</span></div>
-        <h2><span class="tmark" aria-hidden="true">PS</span><span><span data-lang="ko">퍼싱 스퀘어</span><span data-lang="en">Pershing Square</span></span></h2>
+        <h2><span class="tmark img" aria-hidden="true"><img src="pershing/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('PS')"></span><span><span data-lang="ko">퍼싱 스퀘어</span><span data-lang="en">Pershing Square</span></span></h2>
         <p class="who"><span data-lang="ko">빌 애크먼</span><span data-lang="en">Bill Ackman</span></p>
         <p class="what">
           <span data-lang="ko">빌 애크먼이 이끄는 행동주의 펀드입니다. 열 곳 안팎의 회사에 큰 지분을 사고 경영진에게 변화를 요구합니다. 미국 상장 주식만 보며, 2013년부터의 공시가 있습니다.</span>
@@ -220,7 +223,7 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     <a class="card" href="/titans/duquesne/" data-slug="duquesne">
       <div>
         <div class="no"><span data-lang="ko">거시</span><span data-lang="en">Macro</span></div>
-        <h2><span class="tmark" aria-hidden="true">DF</span><span><span data-lang="ko">듀케인 패밀리 오피스</span><span data-lang="en">Duquesne Family Office</span></span></h2>
+        <h2><span class="tmark img" aria-hidden="true"><img src="duquesne/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('DF')"></span><span><span data-lang="ko">듀케인 패밀리 오피스</span><span data-lang="en">Duquesne Family Office</span></span></h2>
         <p class="who"><span data-lang="ko">스탠리 드러켄밀러</span><span data-lang="en">Stanley Druckenmiller</span></p>
         <p class="what">
           <span data-lang="ko">스탠리 드러켄밀러가 자기 돈을 굴리는 패밀리 오피스입니다. 금리·통화에 거는 거시 투자자라 채권·선물은 13F 에 나오지 않아 주식 부분만 봅니다. 종목이 분기마다 많이 바뀝니다. 2013년부터의 공시가 있습니다.</span>
@@ -233,7 +236,7 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     <a class="card" href="/titans/ark/" data-slug="ark">
       <div>
         <div class="no"><span data-lang="ko">성장 투자</span><span data-lang="en">Growth</span></div>
-        <h2><span class="tmark" aria-hidden="true">AI</span><span><span data-lang="ko">ARK 인베스트</span><span data-lang="en">ARK Invest</span></span></h2>
+        <h2><span class="tmark img" aria-hidden="true"><img src="ark/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('AI')"></span><span><span data-lang="ko">ARK 인베스트</span><span data-lang="en">ARK Invest</span></span></h2>
         <p class="who"><span data-lang="ko">캐시 우드</span><span data-lang="en">Cathie Wood</span></p>
         <p class="what">
           <span data-lang="ko">캐시 우드가 세운 운용사입니다. 새 기술로 크게 바뀔 것이라고 보는 회사를 여러 종목에 나눠 담고, 주식 수가 분기마다 거의 다 바뀝니다. 매일 공개하는 자료 대신 다른 투자자와 같은 13F 만 봅니다. 2016년부터의 공시가 있습니다.</span>
