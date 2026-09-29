@@ -176,6 +176,19 @@ class WatcherTests(unittest.TestCase):
         self.assertEqual(result, 0)
         collect.assert_not_called()
 
+    def test_an_amendment_to_a_text_era_original_is_not_new_every_day(self):
+        # 오크트리 2013-03-31 — 원본은 텍스트, 정정만 XML. 수집기가 영영 못 합친다고 적어 둔 것.
+        self.output.write_text(json.dumps({"quarters": [], "skipped_filings": [
+            {"accession": "text-original", "reason": "pre-xml"},
+            {"accession": "xml-amendment", "reason": "original-pre-xml"}]}), encoding="utf-8")
+        rows = [{"form": "13F-HR", "period": "2013-03-31", "filed": "2013-05-15",
+                 "accession": "text-original"},
+                {"form": "13F-HR/A", "period": "2013-03-31", "filed": "2013-07-08",
+                 "accession": "xml-amendment"}]
+        result, collect = self.run_watch(rows)
+        self.assertEqual(result, 0)
+        collect.assert_not_called()
+
     def test_new_accession_runs_only_that_investor_collector(self):
         rows = [{"form": "13F-HR", "period": "2026-03-31",
                  "filed": "2026-05-15", "accession": "new-regular"}]

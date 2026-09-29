@@ -5,6 +5,17 @@
 ---
 
 ## 2026-09-29 · Claude · (이 PR)
+Codex 통합 검수(PR #88–#111) 세 건 수정 — 사용자가 보고서를 건넴, 셋 다 코드로 재현 확인
+- 파일: scripts/fetch_13f.py · scripts/watch_13f.py · titans/index.html ·
+  scripts/tests/test_fetch_13f.py · scripts/tests/test_13f_watch.py · CLAUDE.md · 이 일지
+- 결과(PR #111): JBS 종가 붙음(323일) · 듀케인 85/86 · 테바만 알려진 상태.
+- R1: 저장된 분기에 짝 접수번호가 새로 생기면 다시 합침 · 짝의 단독 기록 삭제 · 짝 실패면 그대로 둠.
+- R2: 감시기가 `original-pre-xml` 도 이미 아는 접수로 봄.
+- R3: /titans/ 언어 버튼 `flex:none`·`nowrap` — 320/360px 51/36px → 21px(고치기 전 재현 확인).
+- 검사: Python 126(새 4) · Node 68. 고친 곳을 하나씩 되돌리면 새 검사가 각각 실패.
+- 넘김: 없음. 자료 파일은 안 바뀜(지금 퍼싱 네 분기는 이미 짝이 붙어 있어 다시 만들지 않음).
+
+## 2026-09-29 · Claude · PR #111
 종가 요청이 429(너무 잦음)를 받으면 1분 쉬고 다시 묻기
 - 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
 - 결과(PR #110): STX·TBBB·BTDR 붙음 · 테바는 OpenFIGI 가 번호를 모름(알려진 상태) ·

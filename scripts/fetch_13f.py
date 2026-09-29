@@ -659,8 +659,15 @@ def main(slug=None) -> int:
     got, failed, prexml = 0, 0, []
     for f in filings:
         keep = old.get(f["accession"])
-        if keep or f["accession"] in skipped:
+        if f["accession"] in skipped:
             continue
+        # 이미 받은 분기라도 **합칠 짝이 새로 생겼으면** 다시 만듭니다. 두 법인이
+        # 같은 분기를 며칠 차이로 내면, 먼저 받은 한쪽만 저장된 채 멈춥니다.
+        # 목록에서 짝이 빠진 것은 다시 만들 이유가 아닙니다(이미 합친 것을 지키려고).
+        if keep:
+            have = {p.get("accession") for p in keep.get("partners") or []}
+            if not {p["accession"] for p in f.get("partners") or []} - have:
+                continue
         xml, cover = filing_docs(f["accession"], contact)
         if xml is NO_XML:
             # 고장이 아니라 옛 형식입니다. 따로 셉니다 — 실패로 세면
@@ -779,6 +786,10 @@ def main(slug=None) -> int:
         if f["period"] in amend_by:
             mark += "  ※ 정정 공시 있음"
 
+        # 짝으로 합친 공시를 앞서 따로 저장해 둔 기록이 있으면 지웁니다 — 안 지우면
+        # 같은 분기가 단독 한 건과 합친 한 건, 두 번 남습니다.
+        for p in partners:
+            saved.pop(p["accession"], None)
         saved[f["accession"]] = q
         got += 1
         print(f"  {f['period']}  줄 {lines:>4} → 종목 {len(held):>3}  "
