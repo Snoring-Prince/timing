@@ -5,6 +5,14 @@
 ---
 
 ## 2026-09-29 · Claude · (이 PR)
+캐시 우드(ARK) 정찰 후보 추가 — 새 봇 없이 13F 로 넣기 위한 첫걸음
+- 파일: scripts/probe_titans.py · CLAUDE.md · 이 일지
+- 결과(PR #112): 머지됨.
+- 규칙: ARK 도 다른 일곱 명과 같은 13F 수집기로. 매일 공개 자료는 쓰지 않음(사용자 판단).
+- 넘김: 머지 뒤 Probe Titans 를 only=`ark,berkshire` 로. CIK 이름 · 종목 수 · 상위 50 비중 ·
+  분기마다 새로 드는 비율 · 옵션/ETF 비중을 보고 사용자와 넣을지 정함.
+
+## 2026-09-29 · Claude · PR #112
 Codex 통합 검수(PR #88–#111) 세 건 수정 — 사용자가 보고서를 건넴, 셋 다 코드로 재현 확인
 - 파일: scripts/fetch_13f.py · scripts/watch_13f.py · titans/index.html ·
   scripts/tests/test_fetch_13f.py · scripts/tests/test_13f_watch.py · CLAUDE.md · 이 일지
