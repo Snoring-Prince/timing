@@ -1602,7 +1602,7 @@ function langSeg(){
 function paintStatic(){
   const put=(id,html)=>{const e=document.getElementById(id);if(e)e.innerHTML=html};
   put("foot",tx("foot").join("<br>"));
-  put("disc",tx("disclaimer")+'<br><a class="guide" href="/titans/13f/">'+tx("guide")+'</a>');
+  put("disc",tx("disclaimer")+'<br><a class="guide" href="/titans/13f/?lang='+LANG+'">'+tx("guide")+'</a>');
   paintSupport();
   put("tagline",tx("tagline"));
   put("fng-name",axName(btAx));

@@ -800,7 +800,14 @@ test('every screen carries the same disclaimer and a way to the 13F guide', () =
   assert.equal(run('D.en.disclaimer'),EN);
   // 안내 페이지로 가는 길이 네 화면 모두에 있다.
   for(const [p,s] of [['index.html',read('index.html')],['titans/index.html',read('titans/index.html')],['timing/index.html',timing],['investor.js',shared]])
-    assert.match(s,/href="\/titans\/13f\/"/,p);
+    assert.match(s,/href="\/titans\/13f\/(?:\?lang=[^"]*)?"/,p);
+  // 실제로 그린 투자자 푸터도 현재 언어를 링크에 전달한다(저장 설정이 없어도 유지).
+  for(const lang of ['ko','en']){
+    const footer=run(`LANG="${lang}";L10N=D[LANG];globalThis.footEl={innerHTML:""};
+      document.getElementById=()=>footEl;paintFoot();footEl.innerHTML`);
+    const href=footer.match(/class="guide" href="([^"]+)"/)[1];
+    assert.equal(new URL(href,'https://itpaidoff.com').searchParams.get('lang'),lang);
+  }
   // 투자자 화면 유의사항은 숫자를 읽는 법 두 줄만 — 자세한 것은 안내 페이지가 한다.
   for(const lg of ['ko','en']) assert.equal(run(`D.${lg}.foot().length`),2,lg);
   assert.match(run('D.en.source()'),/Form 13F-HR/);
