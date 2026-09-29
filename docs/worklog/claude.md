@@ -5,6 +5,15 @@
 ---
 
 ## 2026-09-29 · Claude · (이 PR)
+면책 문구 한 벌 + 13F 자료 안내 페이지(`/titans/13f/`)
+- 파일: index.html · timing/index.html · titans/index.html · titans/13f/index.html(새) ·
+  titans/shared/investor.js·.css · sitemap.xml · scripts/tests/titans.test.cjs · CLAUDE.md · 이 일지
+- 결과(PR #116): 로고 여덟 곳 사이트에 나옴(사용자 확인).
+- 규칙: 면책 문구는 다섯 곳이 글자까지 같음(검사). 투자자 화면 유의사항은 두 줄 + 출처 + 면책 + 안내 링크.
+  안내 글은 코드의 계산을 옮긴 것 — 계산을 바꾸면 같이 고친다.
+- 넘김: 없음.
+
+## 2026-09-29 · Claude · PR #116
 투자사 로고 여덟 곳 — 투자자 화면 머리글과 목록 카드
 - 파일: titans/<slug>/logo.webp ×8(새) · titans/<slug>/index.html ×8(mark·정적 h1) · titans/index.html ·
   scripts/tests/titans.test.cjs · docs/design-system.md · CLAUDE.md · 이 일지

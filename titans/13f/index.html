@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About the 13F data — how Titans' picks is built</title>
+
+<!-- ══ 13F 자료 안내 (2026-09-29, 사용자 판단) ═══════════════════════════
+     모든 화면의 푸터에 있는 "13F 자료 안내" 링크가 오는 곳입니다. 투자자 화면의
+     유의사항에는 숫자를 읽는 법 두 줄만 두고, 자세한 설명은 여기 둡니다.
+     **글은 HTML 에 박습니다**(두 언어, CSS 가 한쪽만 보임) — 크롤러가 받는 본문입니다.
+     여기 적은 방법이 코드와 어긋나면 이 글이 거짓말이 됩니다. 계산을 바꾸면 같이 고치세요.
+     면책 문구는 다섯 화면이 글자까지 같습니다 — 검사가 대조합니다(CLAUDE.md 9-3).
+═════════════════════════════════════════════════════════════════════ -->
+<meta name="description" content="What a 13F filing is, what it leaves out, and how estimated average cost, returns, stock splits and reporting units are handled on Titans' picks.">
+<link rel="canonical" href="https://itpaidoff.com/titans/13f/">
+<link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/13f/?lang=en">
+<link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/13f/?lang=ko">
+<link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/13f/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="itpaidoff.com">
+<meta property="og:url" content="https://itpaidoff.com/titans/13f/">
+<meta property="og:title" content="About the 13F data — how Titans' picks is built">
+<meta property="og:description" content="What a 13F filing is, what it leaves out, and how estimated average cost, returns, stock splits and reporting units are handled on Titans' picks.">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ko_KR">
+<meta name="twitter:card" content="summary">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#F7F9FB">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+
+<!-- ══ 방문자 통계 — 첫 화면과 같은 블록입니다(CLAUDE.md 5번) ══════════ -->
+<script>
+window.STATS={
+  id : "41e07a57-a87c-403b-bdf8-e12d911457b6",
+  src: "https://cloud.umami.is/script.js"
+};
+(function loadStats(){
+  var s=window.STATS||{};
+  if(!s.id)return;
+  var h=location.hostname;
+  if(h==="localhost"||h==="127.0.0.1"||h==="")return;
+  var t=document.createElement("script");
+  t.defer=true; t.src=s.src;
+  t.setAttribute("data-website-id",s.id);
+  document.head.appendChild(t);
+})();
+window.track=function(name,data){
+  try{ if(window.umami&&typeof umami.track==="function")umami.track(name,data); }
+  catch(e){}
+};
+</script>
+<style>
+:root{
+  --paper:#E9ECF0; --card:#FFFFFF;
+  --ink:#0F1A24; --ink-2:#475765; --ink-3:#5F6B74;
+  --rule:#BCC6D0; --rule-2:#DDE3E9;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --cond:"IBM Plex Sans Condensed","Pretendard Variable",Pretendard,sans-serif;
+  --body:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+}
+html[lang="ko"] [data-lang="en"]{display:none}
+html:not([lang="ko"]) [data-lang="ko"]{display:none}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:13.5px;line-height:1.7;
+  background-image:linear-gradient(rgba(15,26,36,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(15,26,36,.028) 1px,transparent 1px);
+  background-size:56px 56px}
+main{max-width:900px;margin:0 auto;padding:36px 20px 72px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{min-width:0;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase}
+.eyebrow a{color:inherit}
+.langs{display:flex;flex:none;border:1px solid var(--rule)}
+.langs button{font:600 11.5px var(--cond);white-space:nowrap;border:0;background:var(--card);color:var(--ink-2);padding:3px 10px;cursor:pointer}
+.langs button[aria-pressed="true"]{background:var(--ink);color:#fff}
+h1{font:700 30px/1.25 var(--cond);margin:14px 0 10px;letter-spacing:-.01em}
+.lead{color:var(--ink-2);max-width:640px;margin:0 0 28px}
+.doc{background:var(--card);border:1px solid var(--rule);padding:8px 24px 18px}
+.doc h2{font:700 18px/1.35 var(--cond);margin:20px 0 6px}
+.doc p,.doc li{color:var(--ink-2);margin:0 0 8px}
+.doc ul{margin:0 0 8px;padding-left:18px}
+.foot{margin-top:28px;font-size:12.5px;color:var(--ink-3)}
+.foot p{margin:0 0 8px}
+.back{display:inline-block;margin-top:6px;margin-right:14px;font-family:var(--mono);color:var(--ink-3)}
+@media (max-width:640px){
+  main{padding:24px 14px 56px}
+  h1{font-size:25px}
+  .doc{padding:4px 14px 12px}
+}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div class="eyebrow"><a href="/">itpaidoff.com</a> · <a href="/titans/">Titans' picks</a></div>
+    <div class="langs" role="group" aria-label="Language">
+      <button type="button" data-set="ko">한국어</button><button type="button" data-set="en">English</button>
+    </div>
+  </div>
+
+  <h1><span data-lang="ko">13F 자료 안내</span><span data-lang="en">About the 13F data</span></h1>
+  <p class="lead"><span data-lang="ko">대가들의 선택의 숫자가 어디서 오고 어떻게 계산되는지, 무엇을 보여 주지 못하는지 적었습니다.</span><span data-lang="en">Where the numbers on Titans' picks come from, how they are worked out, and what they cannot show.</span></p>
+
+  <article class="doc">
+    <h2><span data-lang="ko">13F 공시란</span><span data-lang="en">What a 13F filing is</span></h2>
+    <p><span data-lang="ko">미국 증권거래위원회(SEC)는 미국 상장 주식 같은 13F 대상 증권을 1억 달러 이상 운용하는 기관에 분기마다 보유 내역을 공시하게 합니다. 이것이 Form 13F-HR 입니다. 공시에는 분기 마지막 날의 종목·주식 수·평가 금액이 적히고, 분기가 끝난 뒤 45일 안에 제출합니다. 미국 정부 기관에 낸 공시라 누구나 SEC EDGAR 에서 원문을 볼 수 있습니다.</span><span data-lang="en">The US Securities and Exchange Commission requires institutional managers with $100 million or more in 13F securities — mostly US-listed shares — to report their holdings every quarter on Form 13F-HR. Each filing lists the securities, share counts and market values held on the last day of the quarter, and is due within 45 days after the quarter ends. The filings are public, and anyone can read the originals on the SEC's EDGAR system.</span></p>
+
+    <h2><span data-lang="ko">이 화면이 보여 주는 것과 빠지는 것</span><span data-lang="en">What these pages show, and what they leave out</span></h2>
+    <ul>
+      <li><span data-lang="ko">13F 에 적힌 미국 상장 주식을 보여 줍니다. 같은 회사의 여러 종류 주식(예: 알파벳 A주·C주)은 한 줄로 묶고, 우선주는 따로 둡니다.</span><span data-lang="en">The pages show the US-listed shares reported on the 13F. Different share classes of one company (Alphabet's A and C shares, for example) are combined into one line; preferred shares are kept apart.</span></li>
+      <li><span data-lang="ko">13F 에 함께 적히는 옵션과, 원금으로 적히는 전환사채 같은 채권은 화면에서 뺍니다. 금액·비중도 주식만으로 셉니다.</span><span data-lang="en">Options, and convertible notes or other debt reported by principal amount, are left out, and totals and weights are counted on shares alone.</span></li>
+      <li><span data-lang="ko">현금·채권·미국 밖 거래소에서 산 주식·비상장 회사·공매도는 13F 에 처음부터 실리지 않습니다. 채권이나 해외 주식이 많은 운용사는 가진 것의 일부만 보입니다.</span><span data-lang="en">Cash, bonds, shares bought on exchanges outside the US, private companies and short positions are not reported on a 13F at all. For managers with large bond or overseas books, only part of the picture is visible.</span></li>
+      <li><span data-lang="ko">분기 중간의 매매는 보이지 않습니다. 두 공시 사이에 주식 수가 얼마나 달라졌는지만 알 수 있어서, 화면의 매수·매도는 그 분기 동안의 순변화입니다. 언제, 얼마에 사고팔았는지는 공시에 없습니다.</span><span data-lang="en">Trades within a quarter cannot be seen. Only the change in share count between two filings is known, so the buys and sells on these pages are net changes over the quarter. When, and at what price, the trades happened is not in the filing.</span></li>
+    </ul>
+
+    <h2><span data-lang="ko">추정 매수 평균가와 수익률</span><span data-lang="en">Estimated average cost and return</span></h2>
+    <p><span data-lang="ko">13F 에는 체결가가 없습니다. 그래서 어느 분기에 늘어난 주식은 직전 분기말 가격과 그 분기말 가격의 중간값으로 샀다고 보고, 분기마다 이어 평균 매수가를 추정합니다. 분기말 가격은 공시의 평가 금액을 주식 수로 나눈 값입니다.</span><span data-lang="en">A 13F carries no trade prices. Shares added in a quarter are therefore assumed to have been bought at the midpoint of the previous and the current quarter-end prices, and the average cost is carried forward quarter by quarter. A quarter-end price is the reported market value divided by the share count.</span></p>
+    <p><span data-lang="ko">수익률은 이 추정 평균가를 가장 최근 공시의 분기말 가격과 견준 것이고, 배당은 들어 있지 않습니다. 실제 매수가와 크게 다를 수 있습니다. 우리가 가진 첫 공시에 이미 들어 있던 종목은 산 가격을 알 수 없어 ‘집계 전부터 보유’로 적고 수익률을 계산하지 않습니다.</span><span data-lang="en">The return compares that estimated average cost with the quarter-end price in the latest filing, and leaves dividends out. It can differ widely from the real purchase price. Positions already present in the earliest filing we hold have no known purchase price; they are marked “held before records” and no return is worked out for them.</span></p>
+
+    <h2><span data-lang="ko">액면분할과 분사</span><span data-lang="en">Stock splits and spin-offs</span></h2>
+    <p><span data-lang="ko">액면분할로 주식 수가 늘면 매수로 잘못 읽힙니다. 그래서 종가 자료에 적힌 분할 기록으로 주식 수와 가격을 맞춥니다. 분사처럼 주식 수는 그대로이고 가격만 바뀌는 일은 가격만 보정합니다. 분할 기록이 닿지 않는 오래된 구간에서는 주식 수가 정수배로 늘고 가격이 그만큼 내려간 분기를 분할로 봅니다.</span><span data-lang="en">A stock split raises the share count and would otherwise read as a purchase, so share counts and prices are adjusted using the split history in the price data. Events such as spin-offs, where the share count stays the same and only the price changes, adjust the price alone. For older periods the split history does not reach, a quarter in which the share count rose by a whole multiple while the price fell by the same factor is treated as a split.</span></p>
+
+    <h2><span data-lang="ko">금액 단위와 정정 공시</span><span data-lang="en">Reporting units and amendments</span></h2>
+    <p><span data-lang="ko">13F 의 금액은 2023년 1월 제출분부터 달러 단위이고, 그 전에는 천 달러 단위였습니다. 바뀐 뒤에도 천 달러로 내는 공시가 있어서, 같은 종목의 직전 분기 가격과 견줘 단위가 1000배 어긋나면 바로잡습니다.</span><span data-lang="en">Values on a 13F have been reported in dollars since filings made in January 2023, and in thousands of dollars before that. Some filers kept using thousands after the change, so when a filing is off by a factor of 1,000 against the same stocks' prices in the previous quarter, the unit is corrected.</span></p>
+    <p><span data-lang="ko">정정 공시(13F-HR/A)가 나오면, 공시에 적힌 종류대로 원래 공시를 통째로 바꾸거나 빠진 종목을 더합니다.</span><span data-lang="en">When an amendment (13F-HR/A) is filed, it either replaces the original filing or adds the holdings left out of it, as the amendment itself states.</span></p>
+
+    <h2><span data-lang="ko">주가선과 갱신</span><span data-lang="en">Price lines and updates</span></h2>
+    <p><span data-lang="ko">차트의 주가선은 일별 종가입니다(분할 보정, 배당 미반영). 종목마다 공시의 분기말 가격과 그날 종가가 맞는지 한 번 더 대조하고, 맞는 종가를 찾지 못한 종목은 분기말 가격으로만 그립니다. 가장 최근 공시 이후의 매매는 알 수 없습니다.</span><span data-lang="en">The price lines on the charts are daily closing prices, adjusted for splits but not for dividends. Each stock's closing price is checked against the quarter-end price in the filing, and stocks with no matching daily price are drawn from quarter-end prices only. Trades made after the latest filing are not known.</span></p>
+    <p><span data-lang="ko">새 공시는 평일 하루 두 번 확인하고, 종가는 미국 장이 끝난 뒤 평일마다 받습니다.</span><span data-lang="en">New filings are checked twice every weekday, and closing prices are collected after each US trading day.</span></p>
+  </article>
+
+  <div class="foot">
+    <p class="disc"><span data-lang="ko">본 사이트에서 제공하는 시장 지표, 13F 공시 자료와 과거 수익률은 미래의 투자 수익을 보장하지 않습니다. 모든 정보는 참고용이며 투자 권유가 아닙니다. 이를 바탕으로 한 투자 결정의 책임은 전적으로 사용자에게 있습니다.</span><span data-lang="en">Past performance is not indicative of future results. All market indicators, 13F filing data and historical returns are provided for informational purposes only and are not investment advice. Any investment decision made on the basis of this information is solely the user's responsibility.</span></p>
+    <a class="back" href="/titans/"><span data-lang="ko">← 대가들의 선택</span><span data-lang="en">← Titans' picks</span></a><a class="back" href="/">← itpaidoff.com</a>
+  </div>
+</main>
+
+<script>
+(function(){
+  /* 언어 고르는 순서는 다른 화면과 같습니다 — 같은 저장값(dt.lang)을 씁니다. */
+  const LANGS=["en","ko"];
+  function pick(){
+    try{ const q=(new URLSearchParams(location.search).get("lang")||"").slice(0,2).toLowerCase(); if(LANGS.includes(q))return q; }catch(e){}
+    try{ const s=localStorage.getItem("dt.lang"); if(LANGS.includes(s))return s; }catch(e){}
+    const nav=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||"en"]);
+    for(const l of nav){ const t=String(l).slice(0,2).toLowerCase(); if(LANGS.includes(t))return t; }
+    return "en";
+  }
+  let LANG=pick();
+  const HEAD={
+    en:{title:"About the 13F data — how Titans' picks is built",
+        desc:"What a 13F filing is, what it leaves out, and how estimated average cost, returns, stock splits and reporting units are handled on Titans' picks."},
+    ko:{title:"13F 자료 안내 — 대가들의 선택은 어떻게 만드나",
+        desc:"13F 공시가 무엇이고 무엇이 빠지는지, 대가들의 선택이 추정 매수가·수익률·액면분할·금액 단위를 어떻게 다루는지 적었습니다."}
+  };
+  function paint(){
+    document.documentElement.lang=LANG;
+    const h=HEAD[LANG], set=(sel,attr,val)=>{const e=document.head.querySelector(sel);if(e)e.setAttribute(attr,val)};
+    document.title=h.title;
+    set('meta[name="description"]',"content",h.desc);
+    set('meta[property="og:title"]',"content",h.title);
+    set('meta[property="og:description"]',"content",h.desc);
+    set('meta[property="og:locale"]',"content",LANG==="ko"?"ko_KR":"en_US");
+    set('meta[property="og:locale:alternate"]',"content",LANG==="ko"?"en_US":"ko_KR");
+    const hasParam=new URLSearchParams(location.search).get("lang");
+    const self="https://itpaidoff.com/titans/13f/"+(hasParam?"?lang="+LANG:"");
+    set('link[rel="canonical"]',"href",self);
+    set('meta[property="og:url"]',"content",self);
+    document.querySelectorAll(".langs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.set===LANG));
+  }
+  document.querySelectorAll(".langs button").forEach(b=>b.onclick=()=>{
+    LANG=b.dataset.set; try{ localStorage.setItem("dt.lang",LANG) }catch(e){}
+    window.track("lang",{lang:LANG}); paint();
+  });
+  paint();
+})();
+</script>
+</body>
+</html>

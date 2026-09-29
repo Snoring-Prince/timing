@@ -10,6 +10,7 @@
        root 표식이 달린 줄    update-data.yml  (평일 매일 — 첫 화면도 그날 숫자를 보여 줌)
        timing 표식이 달린 줄  update-data.yml  (평일 매일)
        titans 표식이 달린 줄  update-13f.yml   (분기마다)
+       titans-13f 표식이 달린 줄  손으로 — 13F 자료 안내 글을 고친 날에만 옮깁니다
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
@@ -36,6 +37,14 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/"/>
     <lastmod>2026-09-29</lastmod><!-- titans -->
     <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/13f/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/13f/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/13f/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/13f/"/>
+    <lastmod>2026-09-29</lastmod><!-- titans-13f -->
+    <changefreq>yearly</changefreq>
   </url>
   <url>
     <loc>https://itpaidoff.com/titans/berkshire/</loc>

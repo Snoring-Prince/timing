@@ -126,6 +126,8 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .soon{opacity:.75}
 .tag{position:absolute;top:20px;right:20px;font:600 11px var(--cond);border:1px dashed var(--rule);color:var(--ink-3);padding:1px 8px;letter-spacing:.06em}
 .foot{margin-top:28px;font-size:12.5px;color:var(--ink-3)}
+.foot p{margin:0 0 6px}
+.guide{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
 @media (max-width:640px){
   main{padding:24px 14px 56px}
   h1{font-size:25px}
@@ -216,10 +218,11 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     </div>
   </div>
 
-  <p class="foot">
-    <span data-lang="ko">과거 성과일 뿐 미래를 보장하지 않습니다. 투자 판단과 그 결과는 본인의 몫입니다.</span>
-    <span data-lang="en">Past performance does not guarantee future results. Investment decisions and their outcomes are your own.</span>
-  </p>
+  <!-- 면책 문구는 네 화면(첫 화면·타이밍·투자자 목록·투자자 화면)이 같은 글자를 씁니다 — 검사가 대조합니다. -->
+  <div class="foot">
+    <p class="disc"><span data-lang="ko">본 사이트에서 제공하는 시장 지표, 13F 공시 자료와 과거 수익률은 미래의 투자 수익을 보장하지 않습니다. 모든 정보는 참고용이며 투자 권유가 아닙니다. 이를 바탕으로 한 투자 결정의 책임은 전적으로 사용자에게 있습니다.</span><span data-lang="en">Past performance is not indicative of future results. All market indicators, 13F filing data and historical returns are provided for informational purposes only and are not investment advice. Any investment decision made on the basis of this information is solely the user's responsibility.</span></p>
+    <a class="guide" href="/titans/13f/"><span data-lang="ko">13F 자료 안내 →</span><span data-lang="en">About the 13F data →</span></a>
+  </div>
 </main>
 
 <script>

@@ -507,6 +507,8 @@ details.rec>summary:focus-visible .recbtn{outline:2px solid var(--ink);
   text-transform:uppercase;color:var(--ink-3);margin:0 0 8px}
 .foot p{margin:0 0 7px}
 .foot a{color:inherit}
+/* 면책 문구는 본문 글꼴로 둡니다(CLAUDE.md 6-2) — 고정폭 작은 글씨면 제일 중요한 문장이 제일 안 읽힙니다. */
+.foot .disc{font-family:var(--body);line-height:1.7;margin-top:12px}
 .back{display:inline-block;margin-top:14px;font-family:var(--mono);font-size:var(--t-text);color:var(--ink-3)}
 
 /* ── 애니메이션 — 최초 1회만 ─────────────────────────────── */
