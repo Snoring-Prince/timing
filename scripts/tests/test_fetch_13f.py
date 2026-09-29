@@ -294,7 +294,7 @@ class MergeOverlapTests(unittest.TestCase):
                 f'<tableEntryTotal>{len(rows)}</tableEntryTotal></summaryPage>'
                 '</formData></edgarSubmission>').encode()
 
-    def run_merge(self, merge=True, docs_patch=None):
+    def run_merge(self, merge=True, docs_patch=None, hide=(), where=None):
         hh = ('HOWARD HUGHES HOLDINGS INC', self.HHH)
         docs = {
             # 예전 번호(펀드)
@@ -314,6 +314,12 @@ class MergeOverlapTests(unittest.TestCase):
                                 ('13F-HR', '2025-06-30', '2025-08-14', '1111111111-25-000002'),
                                 ('13F-HR/A', '2025-06-30', '2025-09-01', '1111111111-25-000003')]),
         }
+        if hide:
+            # 아직 안 나온 공시 — 목록에서 뺍니다(늦게 도착하는 경우를 흉내 냅니다).
+            subs = {cik: json.dumps({'filings': {'recent': {k: [v for v, a in zip(
+                        vals, raw['filings']['recent']['accessionNumber']) if a not in hide]
+                        for k, vals in raw['filings']['recent'].items()}}}).encode()
+                    for cik, raw in ((c, json.loads(b)) for c, b in subs.items())}
         asked = []
 
         def fake_get(url, contact):
@@ -334,7 +340,7 @@ class MergeOverlapTests(unittest.TestCase):
                 return self.cover(docs[acc], amend.get(acc, ''))
             return None
 
-        with tempfile.TemporaryDirectory() as tmp:
+        with (contextlib.nullcontext(where) if where else tempfile.TemporaryDirectory()) as tmp:
             out = Path(tmp) / 'pershing.json'
             inv = SimpleNamespace(slug='pershing', cik=self.NEW, filing_name='Pershing Square Inc.',
                                   output=out, since=2013, name={'ko': '퍼싱 스퀘어', 'en': 'Pershing Square'},
@@ -385,6 +391,40 @@ class MergeOverlapTests(unittest.TestCase):
         self.assertNotIn('partners', q)
         self.assertEqual({h['cusip'] for h in q['holdings']}, {self.HHH, self.BETA})
         self.assertFalse(any('111111111125000002' in u for u in asked))
+
+    def late_partner(self, first_hidden):
+        # 두 법인이 같은 분기를 며칠 차이로 냅니다 — 첫 실행에는 한쪽만 보입니다.
+        with tempfile.TemporaryDirectory() as tmp:
+            self.run_merge(hide={*first_hidden, '1111111111-25-000003'}, where=tmp)
+            code, book, _ = self.run_merge(where=tmp)
+        return code, book
+
+    def test_a_partner_that_arrives_later_is_added_to_the_saved_quarter(self):
+        code, book = self.late_partner({'1111111111-25-000002'})
+        self.assertEqual(code, 0)
+        rows = [q for q in book['quarters'] if q['period'] == '2025-06-30']
+        self.assertEqual(len(rows), 1)
+        held = {h['cusip']: h for h in rows[0]['holdings']}
+        self.assertEqual(held[self.HHH]['shares'], 27852064)
+        self.assertEqual([p['accession'] for p in rows[0]['partners']], ['1111111111-25-000002'])
+
+    def test_a_standalone_old_number_quarter_is_replaced_by_the_merged_one(self):
+        code, book = self.late_partner({'2222222222-25-000001'})
+        self.assertEqual(code, 0)
+        rows = [q for q in book['quarters'] if q['period'] == '2025-06-30']
+        self.assertEqual([q['accession'] for q in rows], ['2222222222-25-000001'])
+        held = {h['cusip']: h for h in rows[0]['holdings']}
+        self.assertEqual(held[self.HHH]['shares'], 27852064)
+        self.assertEqual(held[self.GAMMA]['shares'], 10)
+
+    def test_a_late_partner_that_cannot_be_read_keeps_the_saved_quarter(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.run_merge(hide={'1111111111-25-000002', '1111111111-25-000003'}, where=tmp)
+            code, book, _ = self.run_merge(where=tmp, docs_patch={'111111111125000002'})
+        self.assertEqual(code, 1)
+        rows = [q for q in book['quarters'] if q['period'] == '2025-06-30']
+        self.assertEqual(len(rows), 1)
+        self.assertEqual({h['cusip']: h for h in rows[0]['holdings']}[self.HHH]['shares'], 9000000)
 
     def test_a_missing_partner_filing_does_not_save_half_a_quarter(self):
         code, book, _ = self.run_merge(docs_patch={'111111111125000002'})

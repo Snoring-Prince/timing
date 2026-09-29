@@ -18,8 +18,10 @@ def known_accessions(path):
     book = json.loads(Path(path).read_text(encoding="utf-8"))
     known = {q["accession"] for q in book.get("quarters", []) if q.get("accession")}
     known.update(a for q in book.get("quarters", []) for a in q.get("amended_by", []))
+    # 둘 다 영영 다시 받을 일이 없는 알려진 상태입니다. 여기서 모르면 새 공시가
+    # 없는 날에도 그 투자자의 전체 수집을 매번 다시 겁니다(오크트리 2013-03-31 정정).
     known.update(f["accession"] for f in book.get("skipped_filings", [])
-                 if f.get("reason") == "pre-xml")
+                 if f.get("reason") in ("pre-xml", "original-pre-xml"))
     return known
 
 
