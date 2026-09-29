@@ -115,7 +115,7 @@ h1{font:700 30px/1.25 var(--cond);margin:14px 0 10px;letter-spacing:-.01em}
     <ul>
       <li><span data-lang="ko">13F 에 적힌 미국 상장 주식을 보여 줍니다. 같은 회사의 여러 종류 주식(예: 알파벳 A주·C주)은 한 줄로 묶고, 우선주는 따로 둡니다.</span><span data-lang="en">The pages show the US-listed shares reported on the 13F. Different share classes of one company (Alphabet's A and C shares, for example) are combined into one line; preferred shares are kept apart.</span></li>
       <li><span data-lang="ko">13F 에 함께 적히는 옵션과, 원금으로 적히는 전환사채 같은 채권은 화면에서 뺍니다. 금액·비중도 주식만으로 셉니다.</span><span data-lang="en">Options, and convertible notes or other debt reported by principal amount, are left out, and totals and weights are counted on shares alone.</span></li>
-      <li><span data-lang="ko">현금·채권·미국 밖 거래소에서 산 주식·비상장 회사·공매도는 13F 에 처음부터 실리지 않습니다. 채권이나 해외 주식이 많은 운용사는 가진 것의 일부만 보입니다.</span><span data-lang="en">Cash, bonds, shares bought on exchanges outside the US, private companies and short positions are not reported on a 13F at all. For managers with large bond or overseas books, only part of the picture is visible.</span></li>
+      <li><span data-lang="ko">현금·미국 밖 거래소에서 산 주식·비상장 회사·공매도는 13F 에 실리지 않습니다. 일반 채권도 대부분 대상이 아니지만 일부 전환사채는 공시에 포함됩니다. 이 사이트는 그 전환사채를 제외하므로, 채권이나 해외 주식이 많은 운용사는 가진 것의 일부만 보입니다.</span><span data-lang="en">Cash, shares bought on exchanges outside the US, private companies and short positions are not reported on a 13F. Most bonds are also outside its scope, but certain convertible debt securities are included. This site excludes that debt, so for managers with large bond or overseas books, only part of the picture is visible.</span></li>
       <li><span data-lang="ko">분기 중간의 매매는 보이지 않습니다. 두 공시 사이에 주식 수가 얼마나 달라졌는지만 알 수 있어서, 화면의 매수·매도는 그 분기 동안의 순변화입니다. 언제, 얼마에 사고팔았는지는 공시에 없습니다.</span><span data-lang="en">Trades within a quarter cannot be seen. Only the change in share count between two filings is known, so the buys and sells on these pages are net changes over the quarter. When, and at what price, the trades happened is not in the filing.</span></li>
     </ul>
 
@@ -131,7 +131,7 @@ h1{font:700 30px/1.25 var(--cond);margin:14px 0 10px;letter-spacing:-.01em}
     <p><span data-lang="ko">정정 공시(13F-HR/A)가 나오면, 공시에 적힌 종류대로 원래 공시를 통째로 바꾸거나 빠진 종목을 더합니다.</span><span data-lang="en">When an amendment (13F-HR/A) is filed, it either replaces the original filing or adds the holdings left out of it, as the amendment itself states.</span></p>
 
     <h2><span data-lang="ko">주가선과 갱신</span><span data-lang="en">Price lines and updates</span></h2>
-    <p><span data-lang="ko">차트의 주가선은 일별 종가입니다(분할 보정, 배당 미반영). 종목마다 공시의 분기말 가격과 그날 종가가 맞는지 한 번 더 대조하고, 맞는 종가를 찾지 못한 종목은 분기말 가격으로만 그립니다. 가장 최근 공시 이후의 매매는 알 수 없습니다.</span><span data-lang="en">The price lines on the charts are daily closing prices, adjusted for splits but not for dividends. Each stock's closing price is checked against the quarter-end price in the filing, and stocks with no matching daily price are drawn from quarter-end prices only. Trades made after the latest filing are not known.</span></p>
+    <p><span data-lang="ko">차트의 주가선은 일별 종가입니다(분할 보정, 배당 미반영). 종목은 먼저 증권 식별번호(CUSIP)로 연결합니다. 번호로 찾지 못해 이름으로 연결한 종목은 공시의 분기말 가격과 그날 종가가 맞는지 추가로 대조합니다. 일별 종가를 연결하지 못한 종목은 분기말 가격으로만 그립니다. 가장 최근 공시 이후의 매매는 알 수 없습니다.</span><span data-lang="en">The price lines on the charts are daily closing prices, adjusted for splits but not for dividends. Securities are first matched by their CUSIP identifiers. When an identifier cannot be matched and a name is used instead, the closing price is also checked against the quarter-end price in the filing. Stocks with no daily price series linked are drawn from quarter-end prices only. Trades made after the latest filing are not known.</span></p>
     <p><span data-lang="ko">새 공시는 평일 하루 두 번 확인하고, 종가는 미국 장이 끝난 뒤 평일마다 받습니다.</span><span data-lang="en">New filings are checked twice every weekday, and closing prices are collected after each US trading day.</span></p>
   </article>
 
@@ -173,6 +173,12 @@ h1{font:700 30px/1.25 var(--cond);margin:14px 0 10px;letter-spacing:-.01em}
     set('link[rel="canonical"]',"href",self);
     set('meta[property="og:url"]',"content",self);
     document.querySelectorAll(".langs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.set===LANG));
+    // URL로 지정한 언어도 저장 설정에 기대지 않고 돌아갈 화면에 전달합니다.
+    document.querySelectorAll(".back,.eyebrow a").forEach(a=>{
+      const u=new URL(a.href);
+      u.searchParams.set("lang",LANG);
+      a.href=u.href;
+    });
   }
   document.querySelectorAll(".langs button").forEach(b=>b.onclick=()=>{
     LANG=b.dataset.set; try{ localStorage.setItem("dt.lang",LANG) }catch(e){}

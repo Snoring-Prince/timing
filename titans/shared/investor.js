@@ -1265,7 +1265,7 @@ function paintFoot(){
   if(el) el.innerHTML=tx("foot").map(s=>`<p>${s}</p>`).join("")
     +`<p class="src">${tx("source")}</p>`
     +`<p class="disc">${tx("disclaimer")}</p>`
-    +`<p><a class="guide" href="/titans/13f/">${tx("guide")}</a></p>`;
+    +`<p><a class="guide" href="/titans/13f/?lang=${LANG}">${tx("guide")}</a></p>`;
 }
 
 function render(){

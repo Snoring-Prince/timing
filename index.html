@@ -271,6 +271,7 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   function paint(){
     document.documentElement.lang=LANG;
     paintHead();
+    document.querySelector(".guide").href="/titans/13f/?lang="+LANG;
     document.querySelectorAll(".langs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.set===LANG));
     if(M&&BT){
       const v=Math.round(M.fng.value), ax=BT.axes.find(a=>a.key==="fng");

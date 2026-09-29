@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-09-29 · Codex · (이 PR)
+PR #117 검수 후속 — 13F 안내 정확성·안내 페이지 왕복 언어 유지
+- 파일: index.html · timing/index.html · titans/index.html · titans/13f/index.html · shared/investor.js · titans.test.cjs · CLAUDE.md · 이 일지
+- 규칙: 가격 대조 범위·채권 예외·안내 링크의 언어 전달은 CLAUDE.md 9-3의 안내문 검수 후속이 정본.
+- 굳힘: 수집·계산·전체 종목·공통 면책 문구 유지. 사이트에서 제외한 자료와 원래 공시에 없는 자료를 구분.
+- 넘김: 사용자 merge. 별도 수동 배포·데이터 재수집 없음.
+
 ## 2026-09-26 · Codex · (이 PR)
 메인 VIX 숨김 — 기능·수집·계산 보존, 방문자 파일 분리와 중계소 선택 응답
 - 파일: index.html · data/dashboard/* · publish_dashboard.py · workers/live.js · 검사/워크플로 · CLAUDE.md · 이 일지
