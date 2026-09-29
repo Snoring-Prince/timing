@@ -784,3 +784,31 @@ test('the summary spells company names exactly as the investor page does', () =>
   const js=run(`${JSON.stringify(list)}.map(title)`);
   assert.deepEqual(out,[...js]);
 });
+
+test('every screen carries the same disclaimer and a way to the 13F guide', () => {
+  // 사용자가 정한 문구(2026-09-29). 네 화면과 안내 페이지가 **글자까지 같아야** 한다 —
+  // 두 벌이 되면 갈라진다. 문구를 바꿀 때는 여기부터 고치고 다섯 곳을 따라 고친다.
+  const KO="본 사이트에서 제공하는 시장 지표, 13F 공시 자료와 과거 수익률은 미래의 투자 수익을 보장하지 않습니다. 모든 정보는 참고용이며 투자 권유가 아닙니다. 이를 바탕으로 한 투자 결정의 책임은 전적으로 사용자에게 있습니다.";
+  const EN="Past performance is not indicative of future results. All market indicators, 13F filing data and historical returns are provided for informational purposes only and are not investment advice. Any investment decision made on the basis of this information is solely the user's responsibility.";
+  const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+  for(const p of ['index.html','titans/index.html','titans/13f/index.html'])
+    assert.ok(read(p).includes(`<p class="disc"><span data-lang="ko">${KO}</span><span data-lang="en">${EN}</span></p>`),p);
+  const timing=read('timing/index.html');
+  assert.ok(timing.includes(`disclaimer:"${KO}"`)&&timing.includes(`disclaimer:"${EN}"`),'timing');
+  const run=page(real);
+  assert.equal(run('D.ko.disclaimer'),KO);
+  assert.equal(run('D.en.disclaimer'),EN);
+  // 안내 페이지로 가는 길이 네 화면 모두에 있다.
+  for(const [p,s] of [['index.html',read('index.html')],['titans/index.html',read('titans/index.html')],['timing/index.html',timing],['investor.js',shared]])
+    assert.match(s,/href="\/titans\/13f\/"/,p);
+  // 투자자 화면 유의사항은 숫자를 읽는 법 두 줄만 — 자세한 것은 안내 페이지가 한다.
+  for(const lg of ['ko','en']) assert.equal(run(`D.${lg}.foot().length`),2,lg);
+  assert.match(run('D.en.source()'),/Form 13F-HR/);
+  // 안내 페이지: 크롤러용 글이 두 언어로 같은 조각 수, 대표 주소·사이트맵 줄.
+  const guide=read('titans/13f/index.html');
+  const n=lg=>guide.match(new RegExp(`data-lang="${lg}"`,'g')).length;
+  assert.equal(n('ko'),n('en'));
+  assert.ok(n('en')>=15);
+  assert.match(guide,/<link rel="canonical" href="https:\/\/itpaidoff\.com\/titans\/13f\/">/);
+  assert.match(read('sitemap.xml'),/<loc>https:\/\/itpaidoff\.com\/titans\/13f\/<\/loc>/);
+});
