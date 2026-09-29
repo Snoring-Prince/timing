@@ -231,6 +231,22 @@ Tepper (old) 2015-12-31     47   100%       12.8%           2%
   four overlap quarters carry `partners`, 12 rows each, HHH 27,852,064 sh; no
   `merged_dups`, no total mismatch. All 14 latest holdings priced.
 
+### ARK registered (2026-09-29)
+
+- Probe run 7 (run 36505978083): CIK 0001697748 `ARK Investment Management LLC`
+  (St. Petersburg, FL). 39 13F-HR since 2016-12-31, 1 amendment. 2026-06-30: 191
+  rows, 184 stock issuers, $15.4B, top-10 40%, top-50 88%, median new issuers per
+  quarter 5%, 1 option row, ETF-by-name <1%, value/shares median $58.73 (dollars),
+  no other managers on the cover. But 120-140 of ~175 continuing issuers change
+  shares by >5% every quarter (likely fund flows — unverified).
+- Registered as `ark`, since 2016, name `ARK Invest`/`ARK 인베스트`, tile `AI`.
+  All 184 issuers (owner: "add all, decide on trimming after"). 13F only — ARK's
+  daily disclosures are not used, so the page reads on the same terms as the other
+  seven; bio and card say so. No quote.
+- Watch after the first price run: gzip size of `data/titans/prices/ark.json`
+  (estimate ~2.5MB vs Duquesne 1.1MB; top-50 would be ~0.7MB). SpaceX and CRISPR
+  (Swiss CINS) may land in `unpriced`.
+
 ### Druckenmiller registered (2026-09-28)
 
 - `duquesne`, CIK 0001536411 `Duquesne Family Office LLC` (probe 2, NY), since 2013.
