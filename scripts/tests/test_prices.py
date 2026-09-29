@@ -468,6 +468,19 @@ class UnpricedTests(unittest.TestCase):
             self.assertEqual(p.resolve(["881624209"], {"881624209": {"name": "TEVA", "class": "SPONSORED ADS"}}, {}), {})
         self.assertIn("raw", " ".join(str(c) for c in out.call_args_list))
 
+    def test_too_many_requests_waits_a_minute_not_five_seconds(self):
+        import io, urllib.error
+        def busy(retry_after=None):
+            hdrs = {"Retry-After": retry_after} if retry_after else {}
+            return urllib.error.HTTPError("https://api.openfigi.com/v3/search", 429, "Too Many Requests", hdrs, io.BytesIO())
+        for hdr, wait in ((None, 60), ("7", 7)):
+            with self.subTest(retry_after=hdr):
+                ok = io.BytesIO(b'{"data": []}')
+                with patch.object(p.urllib.request, "urlopen", side_effect=[busy(hdr), ok]), \
+                        patch.object(p.time, "sleep") as nap:
+                    self.assertEqual(p.request("https://api.openfigi.com/v3/search", {}), {"data": []})
+                nap.assert_called_once_with(wait)
+
     def test_loose_name_rules_still_refuse_other_companies(self):
         self.assertFalse(p.same_issuer("NORWEGIAN AIR SHUTTLE ASA", "NORWEGIAN CRUISE LINE HLDGS"))
         self.assertFalse(p.same_issuer("AXALTA COATING SYSTEMS LTD", "AXON ENTERPRISE INC"))
