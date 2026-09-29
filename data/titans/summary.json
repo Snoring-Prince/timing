@@ -188,6 +188,33 @@
      "w": 5.3
     }
    ]
+  },
+  {
+   "slug": "ark",
+   "name": {
+    "en": "ARK Invest",
+    "ko": "ARK 인베스트"
+   },
+   "since": 2016,
+   "period": "2026-06-30",
+   "filed": "2026-08-14",
+   "quarters": 39,
+   "total": 15402068886,
+   "stocks": 184,
+   "top": [
+    {
+     "name": "Tesla Inc",
+     "w": 7.5
+    },
+    {
+     "name": "Advanced Micro Devices Inc",
+     "w": 5.3
+    },
+    {
+     "name": "Space Exploration Technologies Corp",
+     "w": 5.0
+    }
+   ]
   }
  ]
 }
