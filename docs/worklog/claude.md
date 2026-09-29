@@ -4,7 +4,15 @@
 
 ---
 
-## 2026-09-28 · Claude · (이 PR)
+## 2026-09-29 · Claude · (이 PR)
+종가 요청이 429(너무 잦음)를 받으면 1분 쉬고 다시 묻기
+- 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
+- 결과(PR #110): STX·TBBB·BTDR 붙음 · 테바는 OpenFIGI 가 번호를 모름(알려진 상태) ·
+  JBS 는 이름 검색 세 번째에 HTTP 429.
+- 규칙: 429 면 Retry-After(최대 120초), 없으면 60초 쉬고 다시(최대 3번). 다른 오류는 예전 5·10초.
+- 넘김: 머지 뒤 Update Titans Prices. JBS 가 붙는지(못 붙으면 `class search rejected · raw` 줄) 볼 것.
+
+## 2026-09-28 · Claude · PR #110
 드러켄밀러 종가 짝 찾기 — 잘린 공시 이름 · 종류 글자 뒤 낱말 · N.V.
 - 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
 - 결과(PR #109): 53분기 · 천 달러 14분기 전부 prev-quarter 로 바로잡힘 · 종가 첫 실행 새 짝 없음 5

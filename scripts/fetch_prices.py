@@ -65,7 +65,19 @@ def request(url, payload=None):
         except (urllib.error.URLError, TimeoutError) as exc:
             if attempt == 2 or getattr(exc, "code", None) == 404:
                 raise
-            time.sleep(5*(attempt+1))
+            time.sleep(backoff(exc, attempt))
+
+
+def backoff(exc, attempt):
+    """다시 묻기 전에 쉴 시간. **429(너무 잦음)는 분 단위 제한**이라 5·10초로는 안 풀린다 —
+    OpenFIGI 이름 검색이 세 번째에 429 로 떨어졌다(2026-09-29 러너, JBS). 서버가
+    `Retry-After` 를 주면 그만큼(최대 2분), 없으면 60초를 쉰다."""
+    if getattr(exc, "code", None) == 429:
+        try:
+            return min(120, max(1, int((exc.headers or {}).get("Retry-After", ""))))
+        except (TypeError, ValueError):
+            return 60
+    return 5*(attempt+1)
 
 
 def first_seen(books):
