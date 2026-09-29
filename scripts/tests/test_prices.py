@@ -439,6 +439,35 @@ class UnpricedTests(unittest.TestCase):
                     self.assertEqual(p.resolve([cusip], required, {cusip: ticker}, later), {cusip: ticker})
                 self.assertEqual(later, {cusip})
 
+    def test_duquesne_names_cut_at_28_and_class_words_after_the_letter(self):
+        # 러너 원본 그대로(2026-09-28, Update Titans Prices #20). 공시 이름이 28글자에서 잘렸다.
+        stx = {"figi": "BBG0113JGQF0", "name": "SEAGATE TECHNOLOGY HOLDINGS", "ticker": "STX", "exchCode": "US",
+               "compositeFIGI": "BBG0113JGQF0", "securityType": "Common Stock", "marketSector": "Equity",
+               "shareClassFIGI": "BBG0113JGQG9", "securityType2": "Common Stock", "securityDescription": "STX"}
+        required = {"G7997R103": {"name": "Seagate Technology Hldngs Pl", "class": "ORD SHS"}}
+        later = set()
+        with patch.object(p, "request", side_effect=[[{}], [{"data": [stx]}]]):
+            self.assertEqual(p.resolve(list(required), required, {"G7997R103": "STX"}, later), {"G7997R103": "STX"})
+        self.assertEqual(later, {"G7997R103"})
+        # 잘리지 않은 공시 이름은 끝 낱말이 달라도 봐주지 않는다.
+        self.assertFalse(p.same_issuer("SEAGATE TECHNOLOGY HOLDINGS", "SEAGATE TECHNOLOGY MOTORS"))
+        # 종류 글자 뒤에 주식 낱말이 오는 공시 — 이름 검색으로 간다.
+        for cls in ("CL A COM", "CL A ORD SHS", "CL A SHS"):
+            self.assertEqual(p.CLASS_LETTER.fullmatch(cls).group(1), "A")
+        self.assertIsNone(p.CLASS_LETTER.fullmatch("CL A PFD"))
+        # `N.V.` 는 회사 형태 — 한 글자씩 끊긴 채로 남으면 JBS 가 다른 회사가 된다.
+        share = {"name": "JBS NV-A", "ticker": "JBS", "exchCode": "US", "securityType": "Common Stock",
+                 "marketSector": "Equity", "shareClassFIGI": "J"}
+        req = {"N4732M103": {"name": "Jbs N.V.", "class": "CL A SHS"}}
+        with patch.object(p, "request", side_effect=[[{}], {"data": [share]}]):
+            self.assertEqual(p.resolve(list(req), req, {}), {"N4732M103": "JBS"})
+
+    def test_a_us_cusip_without_one_ticker_prints_the_raw_answer(self):
+        with patch.object(p, "request", return_value=[{"warning": "No identifier found."}]), \
+                patch("builtins.print") as out:
+            self.assertEqual(p.resolve(["881624209"], {"881624209": {"name": "TEVA", "class": "SPONSORED ADS"}}, {}), {})
+        self.assertIn("raw", " ".join(str(c) for c in out.call_args_list))
+
     def test_loose_name_rules_still_refuse_other_companies(self):
         self.assertFalse(p.same_issuer("NORWEGIAN AIR SHUTTLE ASA", "NORWEGIAN CRUISE LINE HLDGS"))
         self.assertFalse(p.same_issuer("AXALTA COATING SYSTEMS LTD", "AXON ENTERPRISE INC"))
