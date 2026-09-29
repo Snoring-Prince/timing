@@ -5,6 +5,17 @@
 ---
 
 ## 2026-09-29 · Claude · (이 PR)
+투자사 로고 여덟 곳 — 투자자 화면 머리글과 목록 카드
+- 파일: titans/<slug>/logo.webp ×8(새) · titans/<slug>/index.html ×8(mark·정적 h1) · titans/index.html ·
+  scripts/tests/titans.test.cjs · docs/design-system.md · CLAUDE.md · 이 일지
+- 결과(PR #115): 누뱅크 종가 붙음(NU). 남은 짝 없음 8개는 전부 알려진 상태.
+- 규칙: 사용자가 준 그림만 씀(자동 경로 없음 — elbstream CIK 요청 400). 심벌만 자르거나 여백만 자름.
+  못 받으면 머리글자 타일.
+- 검사: Python 127 · Node 68. 로고 파일 삭제·카드 경로 오류를 넣으면 각각 1건 실패.
+  브라우저: 목록·버크셔·ARK·듀케인 × 두 언어 × 320/390/900px, 가로 넘침 0·JS 오류 0·로고 8/8, 그림 막으면 타일.
+- 넘김: 없음.
+
+## 2026-09-29 · Claude · PR #115
 누뱅크 종가 짝 — OpenFIGI 이름의 `/소재지` 꼬리를 떼고 비교
 - 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
 - 결과(PR #114): ARK 39분기 · 종가 186종류 중 184 · prices/ark.json 압축 2.36MB.

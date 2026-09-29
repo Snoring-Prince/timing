@@ -477,6 +477,9 @@ document.documentElement.scrollWidth - document.documentElement.clientWidth
 5  sitemap.xml 에 줄 하나 (표식 주석을 꼭 달 것 — CLAUDE.md 6-2)
 6  titans/index.html(목록)에 카드 한 장 — 갈래·법인 이름·사람 이름·설명 두 언어.
    숫자는 안 적는다(summary.json 에서 읽음). 검사가 등록 목록과 카드를 대조한다
+7  로고가 있으면 titans/<slug>/logo.webp(128×128, 흰 바탕, 여백을 잘라 심벌 위주)를 넣고
+   window.TITAN.mark 에 "logo.webp", 목록 카드 이름표도 같은 그림으로. 없으면 둘 다
+   머리글자 타일 그대로. 정적 h1 은 taglineHTML() 과 글자까지 같아야 한다(검사)
 ```
 
 ```js

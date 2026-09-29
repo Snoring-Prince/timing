@@ -741,8 +741,17 @@ test('the list page has one card per registered investor, and the home card poin
   for(const [,href,slug,body] of cards){
     assert.equal(href,slug);
     const inv=active.find(i=>i.slug===slug);
-    // 이름표는 그 투자자 화면 머리글의 것과 같은 글자다.
-    assert.match(body,new RegExp(`<span class="tmark" aria-hidden="true">${run(`monogram(${JSON.stringify(inv.name.en)})`)}</span>`));
+    // 이름표는 그 투자자 화면 머리글의 것과 같다 — 로고를 넣었으면 같은 그림을 쓰고,
+    // 못 받으면 같은 머리글자 타일로 떨어진다. 로고 파일은 저장소 안에 있어야 한다.
+    const mono=run(`monogram(${JSON.stringify(inv.name.en)})`);
+    const pageSrc=fs.readFileSync(path.join(root,'titans',slug,'index.html'),'utf8');
+    const mark=(pageSrc.match(/\bmark\s*:\s*"([^"]*)"/)||[])[1]||'';
+    if(mark){
+      assert.ok(fs.existsSync(path.join(root,'titans',slug,mark)),`${slug}/${mark}`);
+      assert.ok(body.includes(`<span class="tmark img" aria-hidden="true"><img src="${slug}/${mark}" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('${mono}')"></span>`),slug);
+    }else{
+      assert.match(body,new RegExp(`<span class="tmark" aria-hidden="true">${mono}</span>`));
+    }
     assert.match(body,new RegExp(`<span data-lang="ko">${inv.name.ko}</span><span data-lang="en">${inv.name.en}</span>`));
     const count=lg=>body.match(new RegExp(`data-lang="${lg}"`,'g')).length;
     assert.equal(count('en'),count('ko'),slug);

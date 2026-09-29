@@ -47,7 +47,7 @@ window.TITAN = {
   prices: "../../data/titans/prices/pershing.json",
   // 머리글 이름표. 비워 두면 영어 이름의 머리글자 타일이 나온다.
   // 진짜 로고를 쓰려면 그림 파일을 저장소에 넣고 그 경로를 여기 한 줄 적는다.
-  mark: ""
+  mark: "logo.webp"
 };
 </script>
 <link rel="stylesheet" href="../shared/investor.css">
@@ -57,7 +57,7 @@ window.TITAN = {
   <header class="masthead">
     <div>
       <p class="eyebrow">Titans' picks</p>
-      <h1 id="tagline"><span class="tmark" aria-hidden="true">PS</span><span class="ttext"><b class="tname">Pershing Square</b> holdings · latest filing</span></h1>
+      <h1 id="tagline"><span class="tmark img" aria-hidden="true"><img src="logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('PS')"></span><span class="ttext"><b class="tname">Pershing Square</b> holdings · latest filing</span></h1>
     </div>
   </header>
 
