@@ -90,6 +90,26 @@ class PricesTests(unittest.TestCase):
         with patch.object(p, "request", side_effect=[[{}], [{"data": [row]}]]):
             self.assertEqual(p.resolve(list(required), required, {"N07059210": "ASML"}), {"N07059210": "ASML"})
 
+    def test_domicile_tag_in_the_figi_name_is_not_part_of_the_issuer(self):
+        # 누뱅크(케이맨 법인). OpenFIGI 는 이름 뒤에 `/소재지` 와 종류 꼬리를 같이 단다.
+        # 러너가 받은 응답 그대로(2026-09-29, Update Titans Prices #24 로그).
+        required = {"G6683N103": {"name": "NU Holdings Ltd", "class": "Common Stock"}}
+        row = {"figi": "BBG0136WM1M4", "name": "NU HOLDINGS LTD/CAYMAN ISL-A", "ticker": "NU",
+               "exchCode": "US", "compositeFIGI": "BBG0136WM1M4", "securityType": "Common Stock",
+               "marketSector": "Equity", "shareClassFIGI": "BBG0136WM2Y9",
+               "securityType2": "Common Stock", "securityDescription": "NU"}
+        with patch.object(p, "request", side_effect=[[{}], [{"data": [row]}]]):
+            self.assertEqual(p.resolve(list(required), required, {"G6683N103": "NU"}), {"G6683N103": "NU"})
+        # 소재지만 뗀다 — 다른 회사, B·C 꼬리, 예탁증서(SDR)는 그대로 떨어진다.
+        self.assertFalse(p.same_issuer("NU HOLDINGS LTD/CAYMAN ISL-A", "NU Skin Enterprises Inc"))
+        self.assertFalse(p.same_issuer("LIBERTY GLOBAL LTD/BERMUDA-C", "Liberty Global Ltd"))
+        # Octave Intelligence 는 미국에서 스웨덴 예탁증서로만 거래된다(같은 로그) — 안 붙인다.
+        sdr = dict(row, name="OCTAVE INTELLIGENCE PLC-SDR", ticker="OCTLF", securityType="SDR",
+                   securityType2="Depositary Receipt", shareClassFIGI="BBG0219HXHR5")
+        octave = {"G22845104": {"name": "Octave Intelligence PLC", "class": "Common Stock"}}
+        with patch.object(p, "request", side_effect=[[{}], [{"data": [sdr]}]]), patch("builtins.print"):
+            self.assertEqual(p.resolve(list(octave), octave, {"G22845104": "OCTLF"}), {})
+
     def test_registry_fallback_still_refuses_adrs_classes_and_other_names(self):
         required = {"N07059210": {"name": "ASML HLDG NV", "class": "N Y REGISTRY SHS"}}
         adr = {"ticker": "ASML", "name": "ASML HOLDING NV", "securityType": "ADR",

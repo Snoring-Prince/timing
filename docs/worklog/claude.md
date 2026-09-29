@@ -5,6 +5,16 @@
 ---
 
 ## 2026-09-29 · Claude · (이 PR)
+누뱅크 종가 짝 — OpenFIGI 이름의 `/소재지` 꼬리를 떼고 비교
+- 파일: scripts/fetch_prices.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
+- 결과(PR #114): ARK 39분기 · 종가 186종류 중 184 · prices/ark.json 압축 2.36MB.
+  빨간불 둘 = 누뱅크(`NU HOLDINGS LTD/CAYMAN ISL-A`, 우리 구멍) · Octave(SDR, 정상 거부).
+- 규칙: `/소재지` 만 떼고 `-A` 꼬리는 남김. 끝이 `-X` 인 28글자 이름은 잘린 이름으로 안 봄.
+- 검사: Python 127(새 1) · Node 68. 두 고침을 하나씩 되돌리면 새 검사가 실패.
+- 결정: ARK 종가 파일은 자르지 않고 184종목 전부(사용자 — "이정도는 다 넣자", 압축 2.36MB).
+- 넘김: 머지 뒤 다음 종가 실행에서 NU 가 붙는지 확인.
+
+## 2026-09-29 · Claude · PR #114
 캐시 우드(ARK 인베스트) 화면 — 여덟 번째 투자자
 - 파일: titans/ark/index.html(새) · titans/index.html(카드) · data/titans/investors.json ·
   sitemap.xml · CLAUDE.md · docs/masters-13f.md · 이 일지. 코드 변경 없음.

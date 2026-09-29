@@ -290,9 +290,15 @@ NOT_NAME = {"HLDG", "HLDNGS", "NY", "N", "Y", "REG", "REGISTRY", "SHS"}
 CUT = 28
 
 
+# 법인 소재지 꼬리. OpenFIGI 는 `NU HOLDINGS LTD/CAYMAN ISL-A` 처럼 이름 뒤에
+# `/소재지` 를 붙이고 그 뒤에 종류 꼬리를 또 단다(ARK 2026-06-30 러너 실측).
+# 공시는 `NU Holdings Ltd`. 끝의 종류 꼬리(`-A`)는 남기고 소재지만 뗀다.
+DOMICILE = re.compile(r"\s*/[A-Za-z][A-Za-z .]*?/?(?=\s*-\s*[A-Za-z]\s*$|\s*$)")
+
+
 def name_words(name):
     """비교용 낱말. `N.V.` 처럼 한 글자씩 끊긴 낱말은 붙여서(`NV`) 회사 형태로 버린다."""
-    joined = re.sub(r"\b([A-Za-z])\.(?=[A-Za-z]\b)", r"\1", str(name))
+    joined = re.sub(r"\b([A-Za-z])\.(?=[A-Za-z]\b)", r"\1", DOMICILE.sub("", str(name)))
     return [w for w in norm(joined) if w not in NOT_NAME]
 
 
@@ -315,7 +321,9 @@ def same_issuer(figi, filed):
         a = a[:-1]
     if sorted(a) == sorted(b):
         return True
-    if len(str(figi).strip()) >= CUT and len(a) >= 3:
+    # 끝이 종류 꼬리(`-C`)면 잘린 이름이 아니다 — 28글자여도 그 글자를 떼면
+    # C주가 A주 공시와 같은 회사로 붙는다(`LIBERTY GLOBAL LTD/BERMUDA-C` 는 딱 28글자).
+    if len(str(figi).strip()) >= CUT and len(a) >= 3 and not re.search(r"-\s*[A-Za-z]\s*$", str(figi)):
         a = a[:-1]
         b = b[:len(a)]
     elif len(str(filed).strip()) >= CUT and len(b) >= 3:
