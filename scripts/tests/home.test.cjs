@@ -45,20 +45,22 @@ test('latest real visitor data renders valid prices and never carries fear past 
   assert.doesNotMatch(ctx.previewSVG(got,220).body,/NaN|Infinity|undefined/);
 });
 
-test('each service has a closed, native story and bilingual static content before JavaScript',()=>{
+test('each service card is one link with a button, bilingual static content before JavaScript',()=>{
   const body=html.match(/<body>([\s\S]*?)<script id="home-app">/)[1];
-  const cards=[...body.matchAll(/<article\b[^>]*>([\s\S]*?)<\/article>/g)];
-  assert.ok(cards.length>=2);
-  const ids=new Set();
-  for(const [,card] of cards){
-    const details=card.match(/<details ([^>]*)>([\s\S]*?)<\/details>/);assert.ok(details);
-    assert.match(details[1],/name="service-stories"/);assert.doesNotMatch(details[1],/\bopen(?:\s|=|$)/);
-    const id=details[1].match(/id="([^"]+)"/)[1];assert.ok(!ids.has(id));ids.add(id);
-    assert.match(details[2],/<summary>[\s\S]*?<\/summary>/);
+  // 카드 한 장이 통째로 링크이고, 오른쪽 아래 따로 가는 링크·여닫는 이야기는 없습니다(2026-09-30 사용자 요청).
+  const cards=[...body.matchAll(/<a class="s-service[^"]*" href="(\/(?:timing|titans)\/)" data-go="(\w+)" data-route="([^"]+)">([\s\S]*?)<\/a>\n/g)];
+  assert.equal(cards.length,2);
+  const want={timing:['이야기 읽기','Read the story'],titans:['거장들 만나보기','Meet the investors']};
+  for(const [,href,go,route,card] of cards){
+    assert.equal(route,href);assert.equal(href,`/${go}/`);
+    assert.doesNotMatch(card,/<a[\s>]|<button|<details/);   // 링크 안에 링크·버튼을 넣지 않습니다
+    const [ko,en]=want[go];
+    assert.ok(card.includes(`<span class="go"><span data-lang="ko">${ko}</span><span data-lang="en">${en}</span></span>`),go);
     assert.equal((card.match(/data-lang="ko"/g)||[]).length,(card.match(/data-lang="en"/g)||[]).length);
-    assert.match(card,/<a class="home-direct" href="\/(?:timing|titans)\/"/);
   }
-  assert.doesNotMatch(body,/Coming|준비 중|class="s-person"|class="s-story"/);
+  assert.doesNotMatch(body,/<details|home-direct|결실|Did it pay off|Coming|준비 중|class="s-person"|class="s-story"/);
+  // 올리면 버튼의 글자색과 바탕색이 뒤바뀝니다.
+  assert.match(html,/a\.s-service:hover \.go\{background:var\(--s-accent\);color:#fff\}/);
   assert.ok(fs.statSync(path.join(root,'assets/home/titans-group.webp')).size<250000);
   assert.match(body,/alt="An imagined group portrait/);
 });

@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Market timing and 13F investor picks — historical records</title>
 
-<!-- 이야기로 들어가는 서비스 허브. 한영 본문은 정적 HTML이며 이야기는 처음에 접습니다.
-     서비스 추가: .s-service 한 장과 고유 id의 details[name=service-stories]를 더합니다.
+<!-- 서비스로 들어가는 허브. 한영 본문은 정적 HTML입니다. 카드 한 장이 통째로 링크입니다.
+     서비스 추가: a.s-service 한 장(href·data-route·data-go)을 더합니다.
      차트는 방문자용 market.json만 읽고, 수집·계산·각 서비스의 화면은 바꾸지 않습니다. -->
 <meta name="description" content="Common investing questions checked against the record: how the S&amp;P 500 moved alongside Fear &amp; Greed, and what great investors held in their filings.">
 <link rel="canonical" href="https://itpaidoff.com/">
@@ -73,7 +73,7 @@ window.track=function(name,data){
 #two-stream-home{--s-bg:#fff;--s-ink:#182132;--s-muted:#626a78;--s-line:#e5e8ee;--s-blue:#224ddb;--s-blue-bg:#edf2ff;--s-orange:#ac481c;--s-orange-bg:#fff0e6;--s-surface:#f6f7fa;--s-panel:#fff;font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;font-size:15px;line-height:1.65;color:var(--s-ink);background:var(--s-bg);padding:0 5% 25px;text-align:left}
 #two-stream-home *{box-sizing:border-box}#two-stream-home h1,#two-stream-home h2,#two-stream-home h3,#two-stream-home p,#two-stream-home figure{margin:0;font-family:inherit}#two-stream-home button{font:inherit}#two-stream-home a{color:inherit;text-decoration:none}#two-stream-home button,#two-stream-home a{-webkit-tap-highlight-color:transparent}#two-stream-home [hidden]{display:none!important}
 #two-stream-home .s-header{height:86px;display:flex;align-items:center;justify-content:space-between;gap:20px}#two-stream-home .s-brand{display:flex;align-items:center;gap:9px;font-size:22px;font-weight:800;letter-spacing:-1px}#two-stream-home .s-mark{display:inline-flex;width:25px;height:25px;align-items:center;justify-content:center;background:var(--s-blue);color:var(--s-bg);border-radius:8px;font-size:17px;font-weight:600;letter-spacing:0}#two-stream-home .s-nav{display:flex;gap:27px;color:var(--s-muted);font-size:12px}#two-stream-home .s-nav a{padding:12px 0}#two-stream-home .s-nav a:hover{color:var(--s-blue)}
-#two-stream-home .s-intro{display:grid;grid-template-columns:1.5fr 1fr;gap:32px;align-items:end;padding:39px 0 35px}#two-stream-home .s-intro h1{font-size:clamp(32px,4.5vw,48px);line-height:1.25;font-weight:750;letter-spacing:-2px;word-break:keep-all}#two-stream-home .s-intro p{font-size:14px;line-height:1.85;color:var(--s-muted);word-break:keep-all;padding-bottom:3px}#two-stream-home .s-eyebrow{font-size:12px;font-weight:600;margin-bottom:15px;color:var(--s-blue)}
+#two-stream-home .s-intro{display:grid;grid-template-columns:1.5fr 1fr;gap:32px;align-items:end;padding:39px 0 35px}#two-stream-home .s-intro h1{font-size:clamp(32px,4.5vw,48px);line-height:1.25;font-weight:750;letter-spacing:-2px;word-break:keep-all}#two-stream-home .s-intro p{font-size:14px;line-height:1.85;color:var(--s-muted);word-break:keep-all;padding-bottom:3px}
 #two-stream-home .s-services{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding-bottom:35px}#two-stream-home .s-service{--s-accent:var(--s-blue);--s-tint:var(--s-blue-bg);background:var(--s-tint);border-radius:20px;min-width:0;overflow:hidden;position:relative}#two-stream-home .s-service.s-titans{--s-accent:var(--s-orange);--s-tint:var(--s-orange-bg)}#two-stream-home .s-service-head{padding:26px 26px 0}#two-stream-home .s-service-label{display:flex;gap:10px;align-items:center}#two-stream-home .s-number{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;line-height:1;width:29px;height:29px;border-radius:50%;background:var(--s-panel);color:var(--s-accent);flex-shrink:0;font-variant-numeric:tabular-nums}#two-stream-home .s-service h2{font-size:21px;line-height:1.4;font-weight:750;letter-spacing:-.6px}#two-stream-home .service-question{font-size:28px;line-height:1.35;font-weight:650;letter-spacing:-1px;margin:24px 0 10px;word-break:keep-all}#two-stream-home .s-service .s-sub{font-size:13px;color:var(--s-muted);line-height:1.8;word-break:keep-all;min-height:46px}
 #two-stream-home .s-visual{height:173px;padding:19px 26px 0;position:relative}#two-stream-home .s-chart-box{height:154px;border-radius:12px 12px 0 0;background:var(--s-panel);padding:13px 15px 0;overflow:hidden}#two-stream-home .s-chart-head{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:11px;color:var(--s-muted)}#two-stream-home .s-chart-head strong{font-weight:600;color:var(--s-ink)}#two-stream-home .s-chart-box svg{display:block;width:100%;height:110px}
 
@@ -88,7 +88,7 @@ body{margin:0;background:#fff}
 #two-stream-home{--fear:#c4362c}
 html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
 #two-stream-home .home-wrap{max-width:1040px;margin:auto}
-#two-stream-home a:focus-visible,#two-stream-home button:focus-visible,#two-stream-home summary:focus-visible{outline:2px solid var(--s-blue);outline-offset:4px}
+#two-stream-home a:focus-visible,#two-stream-home button:focus-visible{outline:2px solid var(--s-blue);outline-offset:4px}
 #two-stream-home .s-header{min-height:86px;height:auto;padding:18px 0;flex-wrap:wrap;gap:18px}
 #two-stream-home .s-nav{margin-left:auto}
 #two-stream-home .langs{display:flex;gap:2px;background:#f3f5f9;border-radius:8px;padding:3px}
@@ -106,28 +106,21 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
 #two-stream-home .chart-caption{display:flex;flex-wrap:wrap;justify-content:space-between;font-size:11px;color:var(--s-muted);line-height:1.4;gap:0 5px}
 #two-stream-home .chart-status{font-size:12px;color:var(--s-muted);margin:auto;line-height:1.8}
 #two-stream-home .image-fallback{height:186px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--s-orange);font-weight:600}
-#two-stream-home .home-actions{position:relative;padding:18px 26px 23px}
-#two-stream-home .home-direct{position:absolute;right:26px;top:18px;font-size:12px;font-weight:550;padding:11px 0;white-space:nowrap}
-#two-stream-home .home-direct:hover{text-decoration:underline}
-#two-stream-home .story summary{width:fit-content;max-width:48%;border-radius:8px;min-height:44px;background:#fff;color:var(--s-accent);font-size:12px;font-weight:650;padding:10px 13px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:5px}
-#two-stream-home .story summary::-webkit-details-marker{display:none}
-#two-stream-home .story summary:after{content:"+"}
-#two-stream-home .story[open] summary{background:var(--s-accent);color:#fff}
-#two-stream-home .story[open] summary:after{content:"−"}
-#two-stream-home .story:not([open]) .when-open,#two-stream-home .story[open] .when-closed{display:none}
-#two-stream-home .story-body{padding-top:20px;color:var(--s-muted);font-size:13px;line-height:1.9;word-break:keep-all}
-#two-stream-home .story-body:before{content:"";display:block;height:1px;background:var(--s-accent);opacity:.17;margin-bottom:21px}
-#two-stream-home .story-body h3{font-size:19px;line-height:1.5;letter-spacing:-.5px;color:var(--s-ink);margin-bottom:15px;font-weight:650}
-#two-stream-home .story-body p+p{margin-top:13px}
-#two-stream-home .story-body strong{font-weight:600;color:var(--s-ink)}
-#two-stream-home .story-body a{display:inline-block;color:var(--s-accent);font-weight:650;margin-top:16px;min-height:32px}
+#two-stream-home .home-actions{padding:18px 26px 23px}
+/* 카드 한 장이 링크입니다(투자자 목록 /titans/ 와 같은 요령). 올리면 바탕이 한 단 진해지고
+   버튼은 글자색과 바탕색이 뒤바뀝니다. 손가락 화면에서는 눌린 채 남지 않게 hover 기기에만 겁니다. */
+#two-stream-home a.s-service{display:block;transition:background-color .15s}
+#two-stream-home .s-service{--s-tint-2:#e3eaff}#two-stream-home .s-service.s-titans{--s-tint-2:#ffe6d6}
+#two-stream-home .go{display:inline-flex;align-items:center;min-height:44px;border-radius:8px;background:#fff;color:var(--s-accent);font-size:12px;font-weight:650;padding:10px 14px;transition:background-color .15s,color .15s}
+@media(hover:hover){#two-stream-home a.s-service:hover{background:var(--s-tint-2)}#two-stream-home a.s-service:hover .go{background:var(--s-accent);color:#fff}}
+#two-stream-home a.s-service:focus-visible{background:var(--s-tint-2)}#two-stream-home a.s-service:focus-visible .go{background:var(--s-accent);color:#fff}
 #two-stream-home .foot{font-size:12px;color:var(--s-muted);line-height:1.85}
 #two-stream-home .foot .signature{color:var(--s-ink);font-weight:600;margin:0 0 14px}
 #two-stream-home .foot .disc{max-width:900px;margin:0 0 8px}
 #two-stream-home .guide{text-decoration:underline;text-underline-offset:3px;font-size:11px}
 @media(min-width:701px){#two-stream-home .s-service-head{min-height:230px}}
-@media(max-width:700px){#two-stream-home .s-header{min-height:72px;gap:12px}#two-stream-home .s-nav{order:3;width:100%;margin:0;gap:20px;font-size:12px}#two-stream-home .langs{margin-left:auto}#two-stream-home .langs button{min-height:38px}#two-stream-home .service-question{font-size:27px;margin-top:19px}#two-stream-home .home-actions{padding:17px 22px 22px}#two-stream-home .home-direct{right:22px;top:17px}}
-@media(max-width:370px){#two-stream-home .service-question{font-size:25px}#two-stream-home .home-actions{padding:17px 18px 22px}#two-stream-home .home-direct{right:18px}#two-stream-home .story summary{padding:10px}}
+@media(max-width:700px){#two-stream-home .s-header{min-height:72px;gap:12px}#two-stream-home .s-nav{order:3;width:100%;margin:0;gap:20px;font-size:12px}#two-stream-home .langs{margin-left:auto}#two-stream-home .langs button{min-height:38px}#two-stream-home .service-question{font-size:27px;margin-top:19px}#two-stream-home .home-actions{padding:17px 22px 22px}}
+@media(max-width:370px){#two-stream-home .service-question{font-size:25px}#two-stream-home .home-actions{padding:17px 18px 22px}}
 @media(pointer:coarse){#two-stream-home .langs button,#two-stream-home .s-nav a{min-height:44px}}
 
 </style>
@@ -141,11 +134,11 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
       <div class="langs" role="group" aria-label="Language"><button type="button" data-set="ko">한국어</button><button type="button" data-set="en" aria-pressed="true">English</button></div>
     </header>
     <section class="s-intro" aria-labelledby="home-title">
-      <div><p class="s-eyebrow"><span data-lang="ko">그 선택은 결실을 맺었을까?</span><span data-lang="en">Did it pay off?</span></p><h1 id="home-title"><span data-lang="ko">투자 앞에서 망설이는<br>우리들의 이야기.</span><span data-lang="en">Behind every investment,<br>there’s a question.</span></h1></div>
+      <div><h1 id="home-title"><span data-lang="ko">투자 앞에서 망설이는<br>우리들의 이야기.</span><span data-lang="en">Behind every investment,<br>there’s a question.</span></h1></div>
       <p><span data-lang="ko">평범한 투자자의 고민부터<br>오랜 거장들의 선택까지.<br>궁금했던 투자의 순간을 데이터로 따라가 봅니다.</span><span data-lang="en">From an everyday investor’s doubts<br>to the choices of seasoned investors.<br>Follow their stories through the data.</span></p>
     </section>
     <div class="s-services" id="stream-services">
-      <article class="s-service" aria-labelledby="daniel-title">
+      <a class="s-service" href="/timing/" data-go="timing" data-route="/timing/">
         <div class="s-service-head">
           <div class="s-service-label"><span class="s-number">01</span><h2 id="daniel-title"><span data-lang="ko">다니엘의 타이밍</span><span data-lang="en">Daniel’s timing</span></h2></div>
           <p class="service-question"><span data-lang="ko">살 건 정했는데,<br>언제 사지?</span><span data-lang="en">I know what to buy.<br>But when?</span></p>
@@ -159,21 +152,9 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
             <figcaption class="chart-caption" id="chart-caption" hidden><span id="chart-dates"></span><span><span data-lang="ko">배당 반영 · USD</span><span data-lang="en">Dividend-adjusted · USD</span></span></figcaption>
           </div>
         </figure>
-        <div class="home-actions">
-          <details class="story" name="service-stories" id="daniel-story">
-            <summary><span class="when-closed"><span data-lang="ko">이야기 읽기</span><span data-lang="en">Read the story</span></span><span class="when-open"><span data-lang="ko">이야기 접기</span><span data-lang="en">Close the story</span></span></summary>
-            <div class="story-body">
-              <h3><span data-lang="ko">“공포에 사라던데.<br>정말 그랬을까?”</span><span data-lang="en">“Buy when others are fearful.<br>Did that actually work?”</span></h3>
-              <p><span data-lang="ko">개별 주식에서는 좀처럼 재미를 보지 못했다. 그래서 S&amp;P 500과 Nasdaq 100에 투자하기로 했다. 그런데, 돈을 넣을 때가 되니 또 망설여졌다.</span><span data-lang="en">Picking individual stocks hadn’t worked out for Daniel. He decided to invest in the S&amp;P 500 and Nasdaq 100 instead. But when it was time to put his cash to work, he hesitated again.</span></p>
-              <p><span data-lang="ko">다니엘은 오래된 격언을 떠올렸다. 그리고 <strong>CNN 공포·탐욕 지수와 주가를 같은 시간 위에</strong> 놓아보기로 했다.</span><span data-lang="en">He remembered an old investing saying and decided to put <strong>CNN’s Fear &amp; Greed Index and market prices on the same timeline.</strong></span></p>
-              <p><span data-lang="ko">여기서 한 걸음 더. 비슷한 공포 구간에 시작했다면, 얼마나 자주 수익이 났고 수익과 손실은 어느 정도였을까? 다니엘은 지나온 시장의 기록에서 그 결과를 세어보기로 했다.</span><span data-lang="en">Then he took it a step further. After starting at similar fear levels, how often had an investment made money? How large were the gains and losses? He went back through the historical record to find out.</span></p>
-              <a href="/timing/" data-go="timing" data-route="/timing/"><span data-lang="ko">그 질문으로 만든 차트와 데이터 보기 ↗</span><span data-lang="en">Explore the charts and historical results ↗</span></a>
-            </div>
-          </details>
-          <a class="home-direct" href="/timing/" data-go="timing" data-route="/timing/"><span data-lang="ko">차트 바로 보기 ↗</span><span data-lang="en">Open the charts ↗</span></a>
-        </div>
-      </article>
-      <article class="s-service s-titans" aria-labelledby="titans-title">
+        <div class="home-actions"><span class="go"><span data-lang="ko">이야기 읽기</span><span data-lang="en">Read the story</span></span></div>
+      </a>
+      <a class="s-service s-titans" href="/titans/" data-go="titans" data-route="/titans/">
         <div class="s-service-head">
           <div class="s-service-label"><span class="s-number">02</span><h2 id="titans-title"><span data-lang="ko">거장들의 선택</span><span data-lang="en">Titans’ picks</span></h2></div>
           <p class="service-question"><span data-lang="ko">잘하는 사람들은,<br>무엇을 샀을까?</span><span data-lang="en">What did the great<br>investors buy?</span></p>
@@ -183,20 +164,8 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
           <img class="s-group-image" src="/assets/home/titans-group.webp" width="1774" height="887" alt="An imagined group portrait of eight investors as caricature figurines" data-alt-ko="여덟 투자 거장을 캐리커처 모형으로 표현한 가상의 단체사진" data-alt-en="An imagined group portrait of eight investors as caricature figurines" onerror="this.hidden=true;document.getElementById('group-fallback').hidden=false">
           <p class="image-fallback" id="group-fallback" hidden><span data-lang="ko">같은 시장, 서로 다른 선택.</span><span data-lang="en">One market. Different choices.</span></p>
         </figure>
-        <div class="home-actions">
-          <details class="story" name="service-stories" id="titans-story">
-            <summary><span class="when-closed"><span data-lang="ko">이야기 읽기</span><span data-lang="en">Read the story</span></span><span class="when-open"><span data-lang="ko">이야기 접기</span><span data-lang="en">Close the story</span></span></summary>
-            <div class="story-body">
-              <h3><span data-lang="ko">“그 사람은 왜,<br>그 종목을 샀을까?”</span><span data-lang="en">“Why did they choose<br>that company?”</span></h3>
-              <p><span data-lang="ko">같은 시장을 보는데도 선택은 달랐다. 누군가는 팔고, 누군가는 더 샀다. 오랫동안 자기 방식으로 투자해 온 사람들은 무엇을 보고 있었을까?</span><span data-lang="en">They watched the same market and made different choices. Some sold; others added more. What were these seasoned investors looking at?</span></p>
-              <p><span data-lang="ko">속마음까지 알 수는 없다. 대신 <strong>기록에 남은 선택과 그 뒤의 주가</strong>를 함께 따라가 본다. 내가 눈여겨본 기업을 그들은 어떻게 바라봤는지, 어디서 생각이 갈렸는지.</span><span data-lang="en">We can’t read their minds. But we can follow <strong>their recorded holdings and the prices that followed.</strong> What did they hold in a company I’d been watching? Where did their choices differ from mine?</span></p>
-              <p><span data-lang="ko">그들의 선택을 들여다보며, 나만의 질문을 하나씩 만들어 간다.</span><span data-lang="en">By exploring their choices, we start asking better questions of our own.</span></p>
-              <a href="/titans/" data-go="titans" data-route="/titans/"><span data-lang="ko">거장들의 선택 들여다보기 ↗</span><span data-lang="en">Explore the investors’ choices ↗</span></a>
-            </div>
-          </details>
-          <a class="home-direct" href="/titans/" data-go="titans" data-route="/titans/"><span data-lang="ko">거장들 만나보기 ↗</span><span data-lang="en">Meet the investors ↗</span></a>
-        </div>
-      </article>
+        <div class="home-actions"><span class="go"><span data-lang="ko">거장들 만나보기</span><span data-lang="en">Meet the investors</span></span></div>
+      </a>
     </div>
     <!-- 공통 면책은 다른 네 화면과 같은 문구를 유지합니다. -->
     <footer class="foot" id="stream-about">
@@ -285,12 +254,6 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
     LANG=b.dataset.set;try{localStorage.setItem('dt.lang',LANG);}catch(e){}
     const url=new URL(location.href);url.searchParams.set('lang',LANG);try{history.replaceState(null,'',url);}catch(e){}
     window.track('lang',{lang:LANG});paint();
-  }));
-  // details.name 미지원 브라우저에서도 개수에 관계없이 하나만 엽니다.
-  document.querySelectorAll('.story').forEach(story=>story.addEventListener('toggle',()=>{
-    if(!story.open)return;
-    document.querySelectorAll('.story').forEach(other=>{if(other!==story)other.open=false;});
-    window.track('hub-story',{story:story.id,lang:LANG});
   }));
   document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',()=>window.track('hub',{to:a.dataset.go,lang:LANG})));
   paint();

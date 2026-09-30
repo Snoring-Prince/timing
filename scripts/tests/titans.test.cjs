@@ -768,7 +768,7 @@ test('the list page has one card per registered investor, and the home card poin
   assert.match(list,/<span data-lang="en">The portraits are imagined caricatures[^<]*<\/span>/);
   // 숫자는 봇이 만든 작은 요약에서만 읽는다 — 투자자마다 공시책 전체를 받지 않는다.
   assert.match(list,/fetch\("\.\.\/data\/titans\/summary\.json"/);
-  assert.match(hub,/<a class="home-direct" href="\/titans\/" data-go="titans"/);
+  assert.match(hub,/<a class="s-service s-titans" href="\/titans\/" data-go="titans"/);
   // 사용자 승인 대문은 투자자 숫자 대신 단체 그림을 보여 줍니다. 목록의 요약 수집은 그대로.
   assert.doesNotMatch(hub,/data\/titans\/summary\.json/);
   assert.doesNotMatch(hub,/data\/titans\/berkshire\.json/);

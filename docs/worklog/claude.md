@@ -5,6 +5,13 @@
 ---
 
 ## 2026-09-30 · Claude · (이 PR)
+첫 화면 카드를 통째 링크로 — 눈썹줄·이야기 여닫이·오른쪽 아래 링크 삭제, 올리면 버튼 색 반전
+- 파일: index.html · scripts/tests/home.test.cjs · scripts/tests/titans.test.cjs · CLAUDE.md · design-system.md · 이 일지
+- 결과(PR #122): 머지됨.
+- 규칙: 바꾸기 전 자리 backup/v1.5. 카드 안에 링크·버튼을 넣지 않음(검사). 이야기 글이 빠져 대문 본문이 줄었음 — CLAUDE.md 1번.
+- 넘김: 없음.
+
+## 2026-09-30 · Claude · PR #122
 투자자 화면 그림이 잘리고 글과 겹치던 것 — 공통 파일 캐시 표식 + 그림 줄임
 - 파일: titans/<slug>/index.html ×8 · titans/shared/investor.css · scripts/tests/titans.test.cjs · CLAUDE.md · design-system.md · 이 일지
 - 결과(PR #121): 머지됨 — 그런데 사용자 화면에서 옛 CSS 와 섞여 그림 잘림·겹침(재현함).
