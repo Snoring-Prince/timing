@@ -477,7 +477,9 @@ document.documentElement.scrollWidth - document.documentElement.clientWidth
 ## 12-2. 투자자 화면은 틀입니다 (2026-09-17)
 
 `/titans/shared/investor.css`와 `/titans/shared/investor.js`가 모든 투자자 화면의
-**단일 공통 틀**입니다. 사용자가 못박았습니다 — *"다른 투자자를 추가할 때마다
+**단일 공통 틀**입니다. 각 투자자 페이지는 둘을 `?v=날짜` 를 붙여 부릅니다 —
+**공통 파일을 고친 날에는 여덟 곳의 날짜를 함께 올립니다**(안 올리면 방문자 캐시에 옛 CSS 가
+남아 새 HTML 과 섞입니다. 2026-09-30 에 실제로 그림이 잘리고 글이 겹쳤습니다). 사용자가 못박았습니다 — *"다른 투자자를 추가할 때마다
 같은 서식으로 해야 하거든. 앞으로 모든 수정은 이 점을 감안해야 해."*
 
 `/titans/berkshire/index.html`에는 버크셔 고유 설정과 검색엔진이 JavaScript 없이도

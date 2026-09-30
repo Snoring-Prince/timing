@@ -105,13 +105,14 @@ body{
    **그림이 없으면 그림 칸이 통째로 빠집니다**(`.nofigure`). 파일을 아직
    안 넣었거나 못 받아도 글이 폭을 다 쓰고 깨진 그림이 안 남습니다 —
    `LIVE`·`MARKS` 와 같은 요령입니다. */
-.bio{display:grid;grid-template-columns:180px minmax(0,1fr);gap:24px;align-items:start}
+.bio{display:grid;grid-template-columns:150px minmax(0,1fr);gap:24px;align-items:start}
 .bio.nofigure{grid-template-columns:minmax(0,1fr)}
 /* 목록 카드와 같은 가상 캐리커처(정사각 200×200, 2026-09-30). 그림 아래에
    '가상 캐리커처' 한 줄을 늘 붙입니다 — 실존 인물의 사진으로 읽히면 안 됩니다.
-   `cover`·`50% 30%` 는 다른 비율을 가져와도 머리가 안 잘리게 하는 보험입니다. */
+   **자르지 않습니다(`contain`).** 목록 카드와 똑같은 그림이 그대로 보여야 합니다 —
+   다른 비율이 오면 자르는 대신 여백이 남습니다. */
 .bio-fig{margin:0;display:flex;flex-direction:column;gap:6px}
-.bio-face{display:block;width:180px;height:180px;object-fit:cover;object-position:50% 30%;
+.bio-face{display:block;width:150px;height:150px;object-fit:contain;
   background:var(--card)}
 .bio-fig figcaption{font-family:var(--cond);font-size:var(--t-micro);color:var(--ink-3)}
 /* **`gap` 이지 `margin` 이 아닙니다.** 두 언어를 다 넣어 두고 한쪽을
@@ -569,7 +570,7 @@ body.settled .fade{animation:none}
   /* 좁은 화면에서는 위아래로 쌓습니다. 240px 짜리를 옆에 두면 글 칸이
      138px 밖에 안 남아 한 줄에 열 글자가 못 들어갑니다(실측). */
   .bio{grid-template-columns:minmax(0,1fr);gap:15px}
-  .bio-face{width:140px;height:140px}
+  .bio-face{width:120px;height:120px}
   .val{font-size:18px}
   .mk{width:26px;height:26px}
   .mk svg{width:16px;height:16px}

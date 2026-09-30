@@ -5,6 +5,13 @@
 ---
 
 ## 2026-09-30 · Claude · (이 PR)
+투자자 화면 그림이 잘리고 글과 겹치던 것 — 공통 파일 캐시 표식 + 그림 줄임
+- 파일: titans/<slug>/index.html ×8 · titans/shared/investor.css · scripts/tests/titans.test.cjs · CLAUDE.md · design-system.md · 이 일지
+- 결과(PR #121): 머지됨 — 그런데 사용자 화면에서 옛 CSS 와 섞여 그림 잘림·겹침(재현함).
+- 규칙: 공통 CSS·JS 를 고치면 여덟 페이지의 ?v= 날짜를 같이 올림(검사). 그림은 자르지 않음(contain) 150/120px.
+- 넘김: 없음.
+
+## 2026-09-30 · Claude · PR #121
 투자자 화면 여덟 곳 소개에 가상 캐리커처 · 버크셔 팝아트 초상 교체
 - 파일: titans/<slug>/index.html ×8 · titans/shared/investor.css · titans/berkshire/portrait.webp(삭제) ·
   scripts/tests/titans.test.cjs · CLAUDE.md · design-system.md · 이 일지
