@@ -773,6 +773,18 @@ test('the list page has one card per registered investor, and the home card poin
   assert.match(shared,/el\("backlist"\)\.textContent="← "\+tx\("brand"\)/);
 });
 
+test('the service goes by one Korean name everywhere', () => {
+  // 사용자 결정(2026-09-30): 첫 화면의 '거장들의 선택' 으로 통일. 같은 것을 두 이름으로 부르면 갈라진다.
+  const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+  const NAME='거장들의 선택';
+  assert.match(read('index.html'),new RegExp(`<span data-lang="ko">${NAME}</span>`));
+  assert.match(read('titans/index.html'),new RegExp(`<p class="eyebrow"><span data-lang="ko">${NAME}</span>`));
+  assert.match(read('titans/13f/index.html'),new RegExp(`<span data-lang="ko">← ${NAME}</span>`));
+  assert.equal(page(real)('D.ko.brand'),NAME);
+  for(const p of ['index.html','titans/index.html','titans/13f/index.html','titans/shared/investor.js'])
+    assert.doesNotMatch(read(p),/대가들/,p);
+});
+
 test('the summary spells company names exactly as the investor page does', () => {
   // publish_titans.title() 는 investor.js title() 을 옮긴 것이다. 모든 공시책의 이름으로 대조한다.
   const {execFileSync}=require('node:child_process');
