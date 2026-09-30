@@ -63,4 +63,4 @@ jobs:
               tail -n 20 prices-fetch.log
             fi
           } > prices-alert.txt
-          python scripts/notify.py --title "대가들의 선택 주가 갱신 오류" --body-file prices-alert.txt
+          python scripts/notify.py --title "거장들의 선택 주가 갱신 오류" --body-file prices-alert.txt

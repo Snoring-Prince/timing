@@ -753,9 +753,15 @@ test('the list page has one card per registered investor, and the home card poin
       assert.match(body,new RegExp(`<span class="tmark" aria-hidden="true">${mono}</span>`));
     }
     assert.match(body,new RegExp(`<span data-lang="ko">${inv.name.ko}</span><span data-lang="en">${inv.name.en}</span>`));
+    // 카드마다 그 사람의 초상화 — 파일이 저장소에 있고, 못 받으면 그림 칸만 빠진다(2026-09-30).
+    assert.ok(body.includes(`<img class="face" src="${slug}/face.webp" width="200" height="200" alt="" onerror="this.remove()">`),slug);
+    assert.ok(fs.existsSync(path.join(root,'titans',slug,'face.webp')),`${slug}/face.webp`);
     const count=lg=>body.match(new RegExp(`data-lang="${lg}"`,'g')).length;
     assert.equal(count('en'),count('ko'),slug);
   }
+  // 초상화가 가상의 그림이라는 것을 두 언어로 밝힌다.
+  assert.match(list,/<span data-lang="ko">초상화는 [^<]*가상의 캐리커처[^<]*<\/span>/);
+  assert.match(list,/<span data-lang="en">The portraits are imagined caricatures[^<]*<\/span>/);
   // 숫자는 봇이 만든 작은 요약에서만 읽는다 — 투자자마다 공시책 전체를 받지 않는다.
   assert.match(list,/fetch\("\.\.\/data\/titans\/summary\.json"/);
   assert.match(hub,/<a class="home-direct" href="\/titans\/" data-go="titans"/);
@@ -765,6 +771,18 @@ test('the list page has one card per registered investor, and the home card poin
   // 투자자 화면에서 목록으로 돌아가는 길이 있다.
   assert.match(shared,/<a class="back" href="\/titans\/" id="backlist">/);
   assert.match(shared,/el\("backlist"\)\.textContent="← "\+tx\("brand"\)/);
+});
+
+test('the service goes by one Korean name everywhere', () => {
+  // 사용자 결정(2026-09-30): 첫 화면의 '거장들의 선택' 으로 통일. 같은 것을 두 이름으로 부르면 갈라진다.
+  const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+  const NAME='거장들의 선택';
+  assert.match(read('index.html'),new RegExp(`<span data-lang="ko">${NAME}</span>`));
+  assert.match(read('titans/index.html'),new RegExp(`<p class="eyebrow"><span data-lang="ko">${NAME}</span>`));
+  assert.match(read('titans/13f/index.html'),new RegExp(`<span data-lang="ko">← ${NAME}</span>`));
+  assert.equal(page(real)('D.ko.brand'),NAME);
+  for(const p of ['index.html','titans/index.html','titans/13f/index.html','titans/shared/investor.js'])
+    assert.doesNotMatch(read(p),/대가들/,p);
 });
 
 test('the summary spells company names exactly as the investor page does', () => {
