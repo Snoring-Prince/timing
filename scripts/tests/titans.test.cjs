@@ -723,11 +723,13 @@ test('every registered investor page follows the same static rules', () => {
     for(const q of bio.match(/<blockquote[\s\S]*?<\/blockquote>/g)||[])
       assert.match(q,/<cite>[^<]+<\/cite>/,inv.slug);
     // 그림이 있으면 못 받을 때 칸이 빠지고, 없으면 처음부터 칸이 없다.
-    // 모든 투자자에 목록과 같은 가상 캐리커처 — 파일이 있고, 가상 그림이라고 밝히고,
+    // 모든 투자자에 목록과 같은 가상 캐리커처 — 파일이 있고,
     // 못 받으면 칸이 빠진다(2026-09-30).
     assert.match(bio,/<img class="bio-face" src="\.\/face\.webp"/,inv.slug);
     assert.ok(fs.existsSync(path.join(root,'titans',inv.slug,'face.webp')),inv.slug);
-    assert.match(bio,/<figcaption><span data-lang="ko">가상 캐리커처<\/span><span data-lang="en">Imagined caricature<\/span><\/figcaption>/,inv.slug);
+    // 그림 밑 '가상 캐리커처' 한 줄은 사용자 결정으로 뺐다(2026-09-30). 가상 그림이라는 말은 alt 에 남긴다.
+    assert.doesNotMatch(bio,/<figcaption/,inv.slug);
+    assert.match(bio,/alt="Imagined caricature of [^"]+"[^>]*data-alt-ko="[^"]+의 가상 캐리커처"/,inv.slug);
     assert.match(bio,/onerror="this\.closest\('\.bio'\)\.classList\.add\('nofigure'\)/,inv.slug);
   }
   assert.match(css,/\.bio\.nofigure\{grid-template-columns:minmax\(0,1fr\)\}/);
@@ -763,9 +765,8 @@ test('the list page has one card per registered investor, and the home card poin
     const count=lg=>body.match(new RegExp(`data-lang="${lg}"`,'g')).length;
     assert.equal(count('en'),count('ko'),slug);
   }
-  // 초상화가 가상의 그림이라는 것을 두 언어로 밝힌다.
-  assert.match(list,/<span data-lang="ko">초상화는 [^<]*가상의 캐리커처[^<]*<\/span>/);
-  assert.match(list,/<span data-lang="en">The portraits are imagined caricatures[^<]*<\/span>/);
+  // 13F 설명·초상화 설명 두 줄은 13F 자료 안내와 겹치거나 불필요해 뺐다(2026-09-30, 사용자 결정).
+  assert.doesNotMatch(list,/data-lang="ko">초상화는|The portraits are|분기 마지막 날 하루의 보유/);
   // 숫자는 봇이 만든 작은 요약에서만 읽는다 — 투자자마다 공시책 전체를 받지 않는다.
   assert.match(list,/fetch\("\.\.\/data\/titans\/summary\.json"/);
   assert.match(hub,/<a class="s-service s-titans" href="\/titans\/" data-go="titans"/);
