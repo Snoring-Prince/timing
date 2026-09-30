@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-09-30 · Codex · (이 PR)
+승인한 이야기형 대문 — 접히는 서비스 카드와 새 캐리커처 단체사진
+- 파일: index.html · assets/home/* · home/titans 검사 · check.yml · AGENTS.md · CLAUDE.md · design-system.md · 이 일지
+- 규칙: 현재 디자인·자료 범위·검증은 CLAUDE.md 1번이 정본. 변경 전 backup/v1.2 확보.
+- 굳힘: 번호 동등, 이야기는 처음에 접기. 큰 Q·신문형·준비 중 카드·버크셔 요약 복구 금지. 서비스는 계속 추가 가능.
+- 넘김: 사용자 merge. 별도 데이터 수집·수동 배포 없음.
+
 ## 2026-09-29 · Codex · (이 PR)
 PR #117 검수 후속 — 13F 안내 정확성·안내 페이지 왕복 언어 유지
 - 파일: index.html · timing/index.html · titans/index.html · titans/13f/index.html · shared/investor.js · titans.test.cjs · CLAUDE.md · 이 일지

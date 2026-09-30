@@ -5,18 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Market timing and 13F investor picks — historical records</title>
 
-<!-- ══ 첫 화면(허브) ══════════════════════════════════════════════════
-     itpaidoff.com/ 은 세 화면으로 갈라 주는 자리입니다. 대시보드는
-     /timing/ 으로 옮겼습니다(CLAUDE.md 2번).
-
-     정적 머리글은 영어입니다 — 크롤러 대부분은 JS 를 안 돌립니다(6-2).
-     한국어 방문자에게는 paintHead() 가 제목·설명·og:* 를 갈아끼웁니다.
-
-     **링크만 셋 놓지 않습니다.** 카드마다 "무슨 질문에 답하나"를 글로
-     적었고, 그 글은 두 언어 다 HTML 에 박혀 있습니다(CSS 가 한쪽만 보임).
-     숫자는 저장소의 자료 파일에서 읽으므로 봇이 갱신하면 같이 바뀝니다.
-═════════════════════════════════════════════════════════════════════ -->
-<meta name="description" content="Common investing questions checked against the record: what the S&amp;P 500 did after each Fear &amp; Greed level, and what Berkshire Hathaway and other great investors bought in their 13F filings.">
+<!-- 이야기로 들어가는 서비스 허브. 한영 본문은 정적 HTML이며 이야기는 처음에 접습니다.
+     서비스 추가: .s-service 한 장과 고유 id의 details[name=service-stories]를 더합니다.
+     차트는 방문자용 market.json만 읽고, 수집·계산·각 서비스의 화면은 바꾸지 않습니다. -->
+<meta name="description" content="Common investing questions checked against the record: how the S&amp;P 500 moved alongside Fear &amp; Greed, and what great investors held in their filings.">
 <link rel="canonical" href="https://itpaidoff.com/">
 <link rel="alternate" hreflang="en" href="https://itpaidoff.com/?lang=en">
 <link rel="alternate" hreflang="ko" href="https://itpaidoff.com/?lang=ko">
@@ -26,7 +18,7 @@
 <meta property="og:site_name" content="itpaidoff.com">
 <meta property="og:url" content="https://itpaidoff.com/">
 <meta property="og:title" content="Market timing and 13F investor picks — historical records">
-<meta property="og:description" content="What the S&amp;P 500 did after each Fear &amp; Greed level, and what great investors bought — from the record, not advice.">
+<meta property="og:description" content="Common investing questions checked against the record: how the S&amp;P 500 moved alongside Fear &amp; Greed, and what great investors held in their filings.">
 <meta property="og:image" content="https://itpaidoff.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -40,7 +32,7 @@
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="theme-color" content="#F7F9FB">
+<meta name="theme-color" content="#ffffff">
 
 <script type="application/ld+json">
 {
@@ -49,13 +41,10 @@
   "name": "itpaidoff.com",
   "url": "https://itpaidoff.com/",
   "inLanguage": ["en", "ko"],
-  "description": "Common investing questions checked against the record: what the S&P 500 did after each Fear & Greed level, and what Berkshire Hathaway bought in its 13F filings."
+  "description": "Common investing questions checked against the record: how the S&P 500 moved alongside Fear & Greed, and what great investors held in their filings."
 }
 </script>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 
 <!-- ══ 방문자 통계 — 대시보드와 같은 블록입니다(CLAUDE.md 5번) ══════════ -->
@@ -80,237 +69,237 @@ window.track=function(name,data){
 };
 </script>
 <style>
-:root{
-  --paper:#E9ECF0; --card:#FFFFFF;
-  --ink:#0F1A24; --ink-2:#475765; --ink-3:#5F6B74;
-  --rule:#BCC6D0; --rule-2:#DDE3E9;
-  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-  --cond:"IBM Plex Sans Condensed","Pretendard Variable",Pretendard,sans-serif;
-  --body:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
-}
-html[lang="ko"] [data-lang="en"]{display:none}
-html:not([lang="ko"]) [data-lang="ko"]{display:none}
-*{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:13.5px;line-height:1.7;
-  background-image:linear-gradient(rgba(15,26,36,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(15,26,36,.028) 1px,transparent 1px);
-  background-size:56px 56px}
-main{max-width:900px;margin:0 auto;padding:36px 20px 72px}
-.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
-.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase}
-.langs{display:flex;border:1px solid var(--rule)}
-.langs button{font:600 11.5px var(--cond);border:0;background:var(--card);color:var(--ink-2);padding:3px 10px;cursor:pointer}
-.langs button[aria-pressed="true"]{background:var(--ink);color:#fff}
-h1{font:700 30px/1.25 var(--cond);margin:14px 0 10px;letter-spacing:-.01em}
-.lead{color:var(--ink-2);max-width:640px;margin:0 0 28px}
-.cards{display:grid;gap:14px}
-.card{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;background:var(--card);border:1px solid var(--rule);
-  padding:20px;color:inherit;text-decoration:none;position:relative}
-a.card:hover{border-color:var(--ink)}
-a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-.no{font:600 11px var(--mono);color:var(--ink-3);letter-spacing:.06em}
-.card h2{font:700 20px/1.3 var(--cond);margin:4px 0 6px}
-.q{font-size:15px;font-weight:600;margin:0 0 8px}
-.what{color:var(--ink-2);margin:0}
-.go{display:inline-block;margin-top:12px;font:600 12.5px var(--cond);color:var(--ink);border-bottom:1px solid var(--ink)}
-.read{border-left:1px solid var(--rule-2);padding-left:20px;display:flex;flex-direction:column;justify-content:center;gap:6px}
-.cap{font:500 11px/1.35 var(--cond);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
-.big{font:500 38px/1 var(--mono);letter-spacing:-.02em}
-.big small{font:600 19px var(--body);margin-left:8px;letter-spacing:0}
-.tbl{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px;margin-top:4px}
-.tbl th{font:500 11px/1.25 var(--cond);color:var(--ink-3);text-align:right;padding:0 0 3px;letter-spacing:.04em}
-.tbl th:first-child,.tbl td:first-child{text-align:left;font-family:var(--body);white-space:nowrap}
-.tbl td{text-align:right;padding:2px 0;border-top:1px solid var(--rule-2)}
-.sub{font:11px/1.5 var(--mono);color:var(--ink-3)}
-/* 카드 03 의 '준비 중' 꼬리표가 번호 줄과 겹치지 않게 그 폭만큼 비워 둔다 */
-.soon .no{padding-right:76px}
-.soon{opacity:.75}
-.tag{position:absolute;top:20px;right:20px;font:600 11px var(--cond);border:1px dashed var(--rule);color:var(--ink-3);padding:1px 8px;letter-spacing:.06em}
-.foot{margin-top:28px;font-size:12.5px;color:var(--ink-3)}
-.foot p{margin:0 0 6px}
-.guide{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
-@media (max-width:640px){
-  main{padding:24px 14px 56px}
-  h1{font-size:25px}
-  .card{grid-template-columns:1fr;padding:14px;gap:14px}
-  .read{border-left:0;border-top:1px solid var(--rule-2);padding:14px 0 0}
-  .tag{top:14px;right:14px}
-}
+
+#two-stream-home{--s-bg:#fff;--s-ink:#182132;--s-muted:#626a78;--s-line:#e5e8ee;--s-blue:#224ddb;--s-blue-bg:#edf2ff;--s-orange:#ac481c;--s-orange-bg:#fff0e6;--s-surface:#f6f7fa;--s-panel:#fff;font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;font-size:15px;line-height:1.65;color:var(--s-ink);background:var(--s-bg);padding:0 5% 25px;text-align:left}
+#two-stream-home *{box-sizing:border-box}#two-stream-home h1,#two-stream-home h2,#two-stream-home h3,#two-stream-home p,#two-stream-home figure{margin:0;font-family:inherit}#two-stream-home button{font:inherit}#two-stream-home a{color:inherit;text-decoration:none}#two-stream-home button,#two-stream-home a{-webkit-tap-highlight-color:transparent}#two-stream-home [hidden]{display:none!important}
+#two-stream-home .s-header{height:86px;display:flex;align-items:center;justify-content:space-between;gap:20px}#two-stream-home .s-brand{display:flex;align-items:center;gap:9px;font-size:22px;font-weight:800;letter-spacing:-1px}#two-stream-home .s-mark{display:inline-flex;width:25px;height:25px;align-items:center;justify-content:center;background:var(--s-blue);color:var(--s-bg);border-radius:8px;font-size:17px;font-weight:600;letter-spacing:0}#two-stream-home .s-nav{display:flex;gap:27px;color:var(--s-muted);font-size:12px}#two-stream-home .s-nav a{padding:12px 0}#two-stream-home .s-nav a:hover{color:var(--s-blue)}
+#two-stream-home .s-intro{display:grid;grid-template-columns:1.5fr 1fr;gap:32px;align-items:end;padding:39px 0 35px}#two-stream-home .s-intro h1{font-size:clamp(32px,4.5vw,48px);line-height:1.25;font-weight:750;letter-spacing:-2px;word-break:keep-all}#two-stream-home .s-intro p{font-size:14px;line-height:1.85;color:var(--s-muted);word-break:keep-all;padding-bottom:3px}#two-stream-home .s-eyebrow{font-size:12px;font-weight:600;margin-bottom:15px;color:var(--s-blue)}
+#two-stream-home .s-services{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding-bottom:35px}#two-stream-home .s-service{--s-accent:var(--s-blue);--s-tint:var(--s-blue-bg);background:var(--s-tint);border-radius:20px;min-width:0;overflow:hidden;position:relative}#two-stream-home .s-service.s-titans{--s-accent:var(--s-orange);--s-tint:var(--s-orange-bg)}#two-stream-home .s-service-head{padding:26px 26px 0}#two-stream-home .s-service-label{display:flex;gap:10px;align-items:center}#two-stream-home .s-number{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;line-height:1;width:29px;height:29px;border-radius:50%;background:var(--s-panel);color:var(--s-accent);flex-shrink:0;font-variant-numeric:tabular-nums}#two-stream-home .s-service h2{font-size:21px;line-height:1.4;font-weight:750;letter-spacing:-.6px}#two-stream-home .service-question{font-size:28px;line-height:1.35;font-weight:650;letter-spacing:-1px;margin:24px 0 10px;word-break:keep-all}#two-stream-home .s-service .s-sub{font-size:13px;color:var(--s-muted);line-height:1.8;word-break:keep-all;min-height:46px}
+#two-stream-home .s-visual{height:173px;padding:19px 26px 0;position:relative}#two-stream-home .s-chart-box{height:154px;border-radius:12px 12px 0 0;background:var(--s-panel);padding:13px 15px 0;overflow:hidden}#two-stream-home .s-chart-head{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:11px;color:var(--s-muted)}#two-stream-home .s-chart-head strong{font-weight:600;color:var(--s-ink)}#two-stream-home .s-chart-box svg{display:block;width:100%;height:110px}
+
+
+
+@media(max-width:700px){#two-stream-home{padding:0 6% 24px}#two-stream-home .s-header{height:72px}#two-stream-home .s-brand{font-size:19px}#two-stream-home .s-mark{width:22px;height:22px;font-size:15px}#two-stream-home .s-nav{gap:14px;font-size:11px}#two-stream-home .s-intro{grid-template-columns:1fr;padding:24px 0 28px;gap:17px}#two-stream-home .s-intro h1{font-size:36px;letter-spacing:-1.5px}#two-stream-home .s-intro p{font-size:13px}#two-stream-home .s-services{gap:16px;grid-template-columns:1fr;padding-bottom:24px}#two-stream-home .s-service-head{padding:23px 22px 0}#two-stream-home .s-service h2{font-size:21px}#two-stream-home .service-question{font-size:27px;margin-top:19px}#two-stream-home .s-service .s-sub{min-height:0}#two-stream-home .s-visual{padding:18px 22px 0}}@media(max-width:370px){#two-stream-home .s-nav{gap:9px;font-size:10px}#two-stream-home .s-brand{font-size:17px}#two-stream-home .s-mark{display:none}#two-stream-home .s-intro h1{font-size:31px}#two-stream-home .s-service-head{padding:21px 18px 0}#two-stream-home .s-service h2{font-size:19px}#two-stream-home .service-question{font-size:25px}#two-stream-home .s-visual{padding:18px 18px 0}}
+#two-stream-home .s-services{align-items:start}#two-stream-home .s-visual{height:205px}#two-stream-home .s-chart-box{height:186px}#two-stream-home .s-chart-box svg{height:140px}#two-stream-home .s-group-image{display:block;width:100%;height:186px;object-fit:contain;border-radius:12px;background:#fff0e6}
+
+:root{color-scheme:light}
+html[lang="ko"] [data-lang="en"],html:not([lang="ko"]) [data-lang="ko"],[hidden]{display:none!important}
+body{margin:0;background:#fff}
+#two-stream-home{--fear:#c4362c}
+html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
+#two-stream-home .home-wrap{max-width:1040px;margin:auto}
+#two-stream-home a:focus-visible,#two-stream-home button:focus-visible,#two-stream-home summary:focus-visible{outline:2px solid var(--s-blue);outline-offset:4px}
+#two-stream-home .s-header{min-height:86px;height:auto;padding:18px 0;flex-wrap:wrap;gap:18px}
+#two-stream-home .s-nav{margin-left:auto}
+#two-stream-home .langs{display:flex;gap:2px;background:#f3f5f9;border-radius:8px;padding:3px}
+#two-stream-home .langs button{border:0;border-radius:6px;background:transparent;color:var(--s-muted);font-size:11px;font-weight:600;padding:7px 9px;white-space:nowrap;cursor:pointer}
+#two-stream-home .langs button[aria-pressed="true"]{background:var(--s-ink);color:#fff}
+#two-stream-home .service-question{font-size:28px;line-height:1.35;font-weight:650;letter-spacing:-1px;margin:24px 0 10px;word-break:keep-all}
+#two-stream-home .s-chart-box{display:flex;flex-direction:column;padding:12px 14px 8px}
+#two-stream-home .s-chart-head{flex-wrap:wrap}
+#two-stream-home .fear-key:before{content:"";display:inline-block;width:9px;height:9px;background:var(--fear);opacity:.25;margin-right:4px}
+#two-stream-home .s-chart-box .preview{width:100%;height:118px;display:block;flex:1;min-height:0;margin-top:5px}
+#two-stream-home .preview text{font:11px "Pretendard Variable",Pretendard,sans-serif;fill:var(--s-muted)}
+#two-stream-home .preview .grid{stroke:var(--s-line);stroke-width:.7}
+#two-stream-home .preview .price{fill:none;stroke:var(--s-blue);stroke-width:1.7;stroke-linejoin:round}
+#two-stream-home .preview .fear{fill:var(--fear);opacity:.14}
+#two-stream-home .chart-caption{display:flex;flex-wrap:wrap;justify-content:space-between;font-size:11px;color:var(--s-muted);line-height:1.4;gap:0 5px}
+#two-stream-home .chart-status{font-size:12px;color:var(--s-muted);margin:auto;line-height:1.8}
+#two-stream-home .image-fallback{height:186px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--s-orange);font-weight:600}
+#two-stream-home .home-actions{position:relative;padding:18px 26px 23px}
+#two-stream-home .home-direct{position:absolute;right:26px;top:18px;font-size:12px;font-weight:550;padding:11px 0;white-space:nowrap}
+#two-stream-home .home-direct:hover{text-decoration:underline}
+#two-stream-home .story summary{width:fit-content;max-width:48%;border-radius:8px;min-height:44px;background:#fff;color:var(--s-accent);font-size:12px;font-weight:650;padding:10px 13px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:5px}
+#two-stream-home .story summary::-webkit-details-marker{display:none}
+#two-stream-home .story summary:after{content:"+"}
+#two-stream-home .story[open] summary{background:var(--s-accent);color:#fff}
+#two-stream-home .story[open] summary:after{content:"−"}
+#two-stream-home .story:not([open]) .when-open,#two-stream-home .story[open] .when-closed{display:none}
+#two-stream-home .story-body{padding-top:20px;color:var(--s-muted);font-size:13px;line-height:1.9;word-break:keep-all}
+#two-stream-home .story-body:before{content:"";display:block;height:1px;background:var(--s-accent);opacity:.17;margin-bottom:21px}
+#two-stream-home .story-body h3{font-size:19px;line-height:1.5;letter-spacing:-.5px;color:var(--s-ink);margin-bottom:15px;font-weight:650}
+#two-stream-home .story-body p+p{margin-top:13px}
+#two-stream-home .story-body strong{font-weight:600;color:var(--s-ink)}
+#two-stream-home .story-body a{display:inline-block;color:var(--s-accent);font-weight:650;margin-top:16px;min-height:32px}
+#two-stream-home .foot{font-size:12px;color:var(--s-muted);line-height:1.85}
+#two-stream-home .foot .signature{color:var(--s-ink);font-weight:600;margin:0 0 14px}
+#two-stream-home .foot .disc{max-width:900px;margin:0 0 8px}
+#two-stream-home .guide{text-decoration:underline;text-underline-offset:3px;font-size:11px}
+@media(min-width:701px){#two-stream-home .s-service-head{min-height:230px}}
+@media(max-width:700px){#two-stream-home .s-header{min-height:72px;gap:12px}#two-stream-home .s-nav{order:3;width:100%;margin:0;gap:20px;font-size:12px}#two-stream-home .langs{margin-left:auto}#two-stream-home .langs button{min-height:38px}#two-stream-home .service-question{font-size:27px;margin-top:19px}#two-stream-home .home-actions{padding:17px 22px 22px}#two-stream-home .home-direct{right:22px;top:17px}}
+@media(max-width:370px){#two-stream-home .service-question{font-size:25px}#two-stream-home .home-actions{padding:17px 18px 22px}#two-stream-home .home-direct{right:18px}#two-stream-home .story summary{padding:10px}}
+@media(pointer:coarse){#two-stream-home .langs button,#two-stream-home .s-nav a{min-height:44px}}
+
 </style>
 </head>
 <body>
-<main>
-  <div class="top">
-    <div class="eyebrow">itpaidoff.com</div>
-    <div class="langs" role="group" aria-label="Language">
-      <button type="button" data-set="ko">한국어</button><button type="button" data-set="en">English</button>
+<main id="two-stream-home">
+  <div class="home-wrap">
+    <header class="s-header">
+      <a class="s-brand" href="/" data-route="/"><span class="s-mark" aria-hidden="true">↗</span>itpaidoff.</a>
+      <nav class="s-nav" aria-label="Main"><a href="#stream-services"><span data-lang="ko">이야기 둘러보기</span><span data-lang="en">Explore the stories</span></a><a href="#stream-about"><span data-lang="ko">이곳은</span><span data-lang="en">About</span></a></nav>
+      <div class="langs" role="group" aria-label="Language"><button type="button" data-set="ko">한국어</button><button type="button" data-set="en" aria-pressed="true">English</button></div>
+    </header>
+    <section class="s-intro" aria-labelledby="home-title">
+      <div><p class="s-eyebrow"><span data-lang="ko">그 선택은 결실을 맺었을까?</span><span data-lang="en">Did it pay off?</span></p><h1 id="home-title"><span data-lang="ko">투자 앞에서 망설이는<br>우리들의 이야기.</span><span data-lang="en">Behind every investment,<br>there’s a question.</span></h1></div>
+      <p><span data-lang="ko">평범한 투자자의 고민부터<br>오랜 거장들의 선택까지.<br>궁금했던 투자의 순간을 데이터로 따라가 봅니다.</span><span data-lang="en">From an everyday investor’s doubts<br>to the choices of seasoned investors.<br>Follow their stories through the data.</span></p>
+    </section>
+    <div class="s-services" id="stream-services">
+      <article class="s-service" aria-labelledby="daniel-title">
+        <div class="s-service-head">
+          <div class="s-service-label"><span class="s-number">01</span><h2 id="daniel-title"><span data-lang="ko">다니엘의 타이밍</span><span data-lang="en">Daniel’s timing</span></h2></div>
+          <p class="service-question"><span data-lang="ko">살 건 정했는데,<br>언제 사지?</span><span data-lang="en">I know what to buy.<br>But when?</span></p>
+          <p class="s-sub"><span data-lang="ko">S&amp;P 500과 Nasdaq 100을 사기로 한 다니엘.<br>이번엔 시장의 공포에서 실마리를 찾습니다.</span><span data-lang="en">Daniel has settled on the S&amp;P 500 and Nasdaq 100.<br>Now he’s looking at fear for a clue about timing.</span></p>
+        </div>
+        <figure class="s-visual" aria-labelledby="chart-label">
+          <div class="s-chart-box">
+            <div class="s-chart-head" id="chart-label"><strong>S&amp;P 500 · SPY</strong><span class="fear-key"><span data-lang="ko">공포 · F&amp;G &lt; 45</span><span data-lang="en">Fear · F&amp;G &lt; 45</span></span></div>
+            <svg class="preview" id="market-preview" role="img" aria-label="Historical SPY prices" hidden></svg>
+            <p class="chart-status" id="chart-status"><span data-lang="ko">시장의 감정과 주가를, 같은 시간 위에.</span><span data-lang="en">Market sentiment and prices, on one timeline.</span></p>
+            <figcaption class="chart-caption" id="chart-caption" hidden><span id="chart-dates"></span><span><span data-lang="ko">배당 반영 · USD</span><span data-lang="en">Dividend-adjusted · USD</span></span></figcaption>
+          </div>
+        </figure>
+        <div class="home-actions">
+          <details class="story" name="service-stories" id="daniel-story">
+            <summary><span class="when-closed"><span data-lang="ko">이야기 읽기</span><span data-lang="en">Read the story</span></span><span class="when-open"><span data-lang="ko">이야기 접기</span><span data-lang="en">Close the story</span></span></summary>
+            <div class="story-body">
+              <h3><span data-lang="ko">“공포에 사라던데.<br>정말 그랬을까?”</span><span data-lang="en">“Buy when others are fearful.<br>Did that actually work?”</span></h3>
+              <p><span data-lang="ko">개별 주식에서는 좀처럼 재미를 보지 못했다. 그래서 S&amp;P 500과 Nasdaq 100에 투자하기로 했다. 그런데, 돈을 넣을 때가 되니 또 망설여졌다.</span><span data-lang="en">Picking individual stocks hadn’t worked out for Daniel. He decided to invest in the S&amp;P 500 and Nasdaq 100 instead. But when it was time to put his cash to work, he hesitated again.</span></p>
+              <p><span data-lang="ko">다니엘은 오래된 격언을 떠올렸다. 그리고 <strong>CNN 공포·탐욕 지수와 주가를 같은 시간 위에</strong> 놓아보기로 했다.</span><span data-lang="en">He remembered an old investing saying and decided to put <strong>CNN’s Fear &amp; Greed Index and market prices on the same timeline.</strong></span></p>
+              <p><span data-lang="ko">여기서 한 걸음 더. 비슷한 공포 구간에 시작했다면, 얼마나 자주 수익이 났고 수익과 손실은 어느 정도였을까? 다니엘은 지나온 시장의 기록에서 그 결과를 세어보기로 했다.</span><span data-lang="en">Then he took it a step further. After starting at similar fear levels, how often had an investment made money? How large were the gains and losses? He went back through the historical record to find out.</span></p>
+              <a href="/timing/" data-go="timing" data-route="/timing/"><span data-lang="ko">그 질문으로 만든 차트와 데이터 보기 ↗</span><span data-lang="en">Explore the charts and historical results ↗</span></a>
+            </div>
+          </details>
+          <a class="home-direct" href="/timing/" data-go="timing" data-route="/timing/"><span data-lang="ko">차트 바로 보기 ↗</span><span data-lang="en">Open the charts ↗</span></a>
+        </div>
+      </article>
+      <article class="s-service s-titans" aria-labelledby="titans-title">
+        <div class="s-service-head">
+          <div class="s-service-label"><span class="s-number">02</span><h2 id="titans-title"><span data-lang="ko">거장들의 선택</span><span data-lang="en">Titans’ picks</span></h2></div>
+          <p class="service-question"><span data-lang="ko">잘하는 사람들은,<br>무엇을 샀을까?</span><span data-lang="en">What did the great<br>investors buy?</span></p>
+          <p class="s-sub"><span data-lang="ko">시장의 소음 속에서도 자기 길을 가는 투자자들.<br>공시에 남은 그들의 선택을 들여다봅니다.</span><span data-lang="en">Investors who follow their own path through the noise.<br>Explore the choices recorded in their filings.</span></p>
+        </div>
+        <figure class="s-visual">
+          <img class="s-group-image" src="/assets/home/titans-group.webp" width="1774" height="887" alt="An imagined group portrait of eight investors as caricature figurines" data-alt-ko="여덟 투자 거장을 캐리커처 모형으로 표현한 가상의 단체사진" data-alt-en="An imagined group portrait of eight investors as caricature figurines" onerror="this.hidden=true;document.getElementById('group-fallback').hidden=false">
+          <p class="image-fallback" id="group-fallback" hidden><span data-lang="ko">같은 시장, 서로 다른 선택.</span><span data-lang="en">One market. Different choices.</span></p>
+        </figure>
+        <div class="home-actions">
+          <details class="story" name="service-stories" id="titans-story">
+            <summary><span class="when-closed"><span data-lang="ko">이야기 읽기</span><span data-lang="en">Read the story</span></span><span class="when-open"><span data-lang="ko">이야기 접기</span><span data-lang="en">Close the story</span></span></summary>
+            <div class="story-body">
+              <h3><span data-lang="ko">“그 사람은 왜,<br>그 종목을 샀을까?”</span><span data-lang="en">“Why did they choose<br>that company?”</span></h3>
+              <p><span data-lang="ko">같은 시장을 보는데도 선택은 달랐다. 누군가는 팔고, 누군가는 더 샀다. 오랫동안 자기 방식으로 투자해 온 사람들은 무엇을 보고 있었을까?</span><span data-lang="en">They watched the same market and made different choices. Some sold; others added more. What were these seasoned investors looking at?</span></p>
+              <p><span data-lang="ko">속마음까지 알 수는 없다. 대신 <strong>기록에 남은 선택과 그 뒤의 주가</strong>를 함께 따라가 본다. 내가 눈여겨본 기업을 그들은 어떻게 바라봤는지, 어디서 생각이 갈렸는지.</span><span data-lang="en">We can’t read their minds. But we can follow <strong>their recorded holdings and the prices that followed.</strong> What did they hold in a company I’d been watching? Where did their choices differ from mine?</span></p>
+              <p><span data-lang="ko">그들의 선택을 들여다보며, 나만의 질문을 하나씩 만들어 간다.</span><span data-lang="en">By exploring their choices, we start asking better questions of our own.</span></p>
+              <a href="/titans/" data-go="titans" data-route="/titans/"><span data-lang="ko">거장들의 선택 들여다보기 ↗</span><span data-lang="en">Explore the investors’ choices ↗</span></a>
+            </div>
+          </details>
+          <a class="home-direct" href="/titans/" data-go="titans" data-route="/titans/"><span data-lang="ko">거장들 만나보기 ↗</span><span data-lang="en">Meet the investors ↗</span></a>
+        </div>
+      </article>
     </div>
-  </div>
-
-  <h1><span data-lang="ko">그 선택은 결실을 맺었나</span><span data-lang="en">Did it pay off?</span></h1>
-  <p class="lead">
-    <span data-lang="ko">투자에서 자주 나오는 질문 셋을 과거 기록으로 되짚어 봅니다. 여기 있는 숫자는 모두 지나간 일이고, 무엇을 사라고 말하지 않습니다.</span>
-    <span data-lang="en">Three common investing questions, checked against the historical record. Every number here describes the past; none of it is advice on what to buy.</span>
-  </p>
-
-  <div class="cards">
-    <!-- 1 -->
-    <a class="card" href="/timing/" data-go="timing">
-      <div>
-        <div class="no">01 · <span data-lang="ko">다니엘의 타이밍</span><span data-lang="en">Daniel's timing</span></div>
-        <h2><span data-lang="ko">시장이 겁먹었을 때, 그 뒤엔 어땠나</span><span data-lang="en">When the market was scared, what came next</span></h2>
-        <p class="what">
-          <span data-lang="ko">CNN 공포탐욕지수가 지금과 비슷했던 날들을 2011년부터 모아, S&amp;P 500 과 나스닥 100 이 그 뒤 얼마나 움직였는지 셉니다. 현금을 언제 넣을지 고민하는 사람을 위한 화면입니다.</span>
-          <span data-lang="en">It gathers every day since 2011 when CNN's Fear &amp; Greed Index sat near today's level and counts what the S&amp;P 500 and Nasdaq 100 did afterwards. It is built for anyone weighing when to put cash to work.</span>
-        </p>
-        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
-      </div>
-      <div class="read" id="r-timing">
-        <div class="cap"><span data-lang="ko">지금 공포탐욕</span><span data-lang="en">Fear &amp; Greed now</span></div>
-        <div class="big" id="fng">—</div>
-        <table class="tbl" id="fng-tbl" hidden>
-          <thead><tr><th><span data-lang="ko">이 수준 1년 뒤</span><span data-lang="en">1 year later</span></th>
-            <th><span data-lang="ko">오른 비율</span><span data-lang="en">Up</span></th>
-            <th><span data-lang="ko">중위 수익률</span><span data-lang="en">Median</span></th></tr></thead>
-          <tbody></tbody>
-        </table>
-        <div class="sub" id="fng-sub"></div>
-      </div>
-    </a>
-
-    <!-- 2 -->
-    <a class="card" href="/titans/" data-go="titans">
-      <div>
-        <div class="no">02 · <span data-lang="ko">대가들의 선택</span><span data-lang="en">Titans' picks</span></div>
-        <h2><span data-lang="ko">대가들은 무엇을 샀고, 그래서 어떻게 됐나</span><span data-lang="en">What the great investors bought, and how it turned out</span></h2>
-        <p class="what">
-          <span data-lang="ko">미국 SEC 에 분기마다 내는 13F 공시를 1998년부터 모아, 무엇을 늘리고 줄였는지와 추정 매수가 대비 지금 어디에 와 있는지를 봅니다. 투자자마다 한 화면입니다.</span>
-          <span data-lang="en">It collects the 13F filings sent to the SEC every quarter since 1998 and shows what was added and trimmed, and where each position stands against its estimated purchase price, one page per investor.</span>
-        </p>
-        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
-      </div>
-      <div class="read" id="r-titans">
-        <div class="cap"><span data-lang="ko">최근 공시</span><span data-lang="en">Latest filings</span></div>
-        <div class="big" id="ti-count">—</div>
-        <table class="tbl" id="ti-tbl" hidden>
-          <thead><tr><th><span data-lang="ko">투자자</span><span data-lang="en">Investor</span></th>
-            <th><span data-lang="ko">총액</span><span data-lang="en">Total</span></th>
-            <th><span data-lang="ko">종목</span><span data-lang="en">Stocks</span></th></tr></thead>
-          <tbody></tbody>
-        </table>
-        <div class="sub" id="ti-sub"></div>
-      </div>
-    </a>
-
-    <!-- 3 -->
-    <div class="card soon">
-      <span class="tag"><span data-lang="ko">준비 중</span><span data-lang="en">Coming</span></span>
-      <div>
-        <div class="no">03 · <span data-lang="ko">사무엘의 결정 (가제)</span><span data-lang="en">Samuel's decision (working title)</span></div>
-        <h2><span data-lang="ko">매달 꾸준히 넣었다면 어떻게 됐나</span><span data-lang="en">What if you had put money in every month</span></h2>
-        <p class="what">
-          <span data-lang="ko">S&amp;P 500 이나 나스닥 100 에 매달 같은 금액을 넣었을 때 쌓여 가는 곡선을 보여 줄 예정입니다.</span>
-          <span data-lang="en">It will show how a fixed monthly amount in the S&amp;P 500 or Nasdaq 100 would have built up over time.</span>
-        </p>
-      </div>
-      <div class="read">
-        <div class="cap"><span data-lang="ko">아직 계산을 검증하는 중입니다</span><span data-lang="en">Figures still being checked</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 면책 문구는 네 화면(첫 화면·타이밍·투자자 목록·투자자 화면)이 같은 글자를 씁니다 — 검사가 대조합니다. -->
-  <div class="foot">
-    <p class="disc"><span data-lang="ko">본 사이트에서 제공하는 시장 지표, 13F 공시 자료와 과거 수익률은 미래의 투자 수익을 보장하지 않습니다. 모든 정보는 참고용이며 투자 권유가 아닙니다. 이를 바탕으로 한 투자 결정의 책임은 전적으로 사용자에게 있습니다.</span><span data-lang="en">Past performance is not indicative of future results. All market indicators, 13F filing data and historical returns are provided for informational purposes only and are not investment advice. Any investment decision made on the basis of this information is solely the user's responsibility.</span></p>
-    <a class="guide" href="/titans/13f/"><span data-lang="ko">13F 자료 안내 →</span><span data-lang="en">About the 13F data →</span></a>
+    <!-- 공통 면책은 다른 네 화면과 같은 문구를 유지합니다. -->
+    <footer class="foot" id="stream-about">
+      <p class="signature"><span data-lang="ko">좋은 질문에서 시작해, 데이터로 확인합니다.</span><span data-lang="en">Start with a good question. Look to the data.</span></p>
+      <p class="disc"><span data-lang="ko">본 사이트에서 제공하는 시장 지표, 13F 공시 자료와 과거 수익률은 미래의 투자 수익을 보장하지 않습니다. 모든 정보는 참고용이며 투자 권유가 아닙니다. 이를 바탕으로 한 투자 결정의 책임은 전적으로 사용자에게 있습니다.</span><span data-lang="en">Past performance is not indicative of future results. All market indicators, 13F filing data and historical returns are provided for informational purposes only and are not investment advice. Any investment decision made on the basis of this information is solely the user's responsibility.</span></p>
+      <a class="guide" href="/titans/13f/" data-route="/titans/13f/"><span data-lang="ko">13F 자료 안내 →</span><span data-lang="en">About the 13F data →</span></a>
+    </footer>
   </div>
 </main>
-
-<script>
+<script id="home-app">
 (function(){
-  /* 언어 고르는 순서는 대시보드·대가들의 선택과 같습니다 — 같은 저장값(dt.lang)을 씁니다. */
-  const LANGS=["en","ko"];
+  const DAY=86400000;
+  function validDate(d){
+    return typeof d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d)&&Number.isFinite(Date.parse(d))&&new Date(d).toISOString().slice(0,10)===d;
+  }
+  function seriesRows(rows,validValue){
+    const unique=new Map();
+    for(const row of Array.isArray(rows)?rows:[]){
+      if(!Array.isArray(row)||!validDate(row[0]))continue;
+      unique.set(row[0],typeof row[1]==='number'&&Number.isFinite(row[1])&&validValue(row[1])?row[1]:null);
+    }
+    return [...unique].sort((a,b)=>a[0].localeCompare(b[0]));
+  }
+  function previewModel(market){
+    const rows=seriesRows(market?.indices?.spx?.series,v=>v>0),valid=rows.filter(r=>r[1]!==null);
+    if(valid.length<2)return null;
+    const to=valid.at(-1)[0],cutoff=new Date(to);cutoff.setUTCFullYear(cutoff.getUTCFullYear()-1);
+    const prices=rows.filter(([d])=>d>=cutoff.toISOString().slice(0,10)&&d<=to);
+    const points=prices.filter(r=>r[1]!==null);if(points.length<2)return null;
+    const from=points[0][0],sentiment=new Map(seriesRows(market?.fng?.series,v=>v>=0&&v<=100));
+    // 같은 날짜의 관측치만 칠합니다. 결측·주말·마지막 공표일 이후까지 띠를 늘리지 않습니다.
+    const fear=points.filter(([d])=>sentiment.has(d)&&sentiment.get(d)!==null&&sentiment.get(d)<45).map(([d])=>d);
+    return {from,to,prices:prices.filter(([d])=>d>=from),fear};
+  }
+  function previewSVG(model,width){
+    const W=Math.max(180,Math.round(width)),H=118,L=35,R=W-3,T=8,B=109;
+    const values=model.prices.filter(r=>r[1]!==null).map(r=>r[1]);
+    const lo=Math.min(...values),hi=Math.max(...values),pad=Math.max((hi-lo)*.12,hi*.005),min=lo-pad,max=hi+pad;
+    const first=Date.parse(model.from),span=Date.parse(model.to)-first;
+    const x=d=>L+(Date.parse(d)-first)/span*(R-L),y=v=>B-(v-min)/(max-min)*(B-T),n=v=>v.toFixed(2);
+    let drawing='',pen=false,previous=null;
+    for(const [d,v] of model.prices){
+      if(v===null){pen=false;continue;}
+      if(previous&&Date.parse(d)-Date.parse(previous)>7*DAY)pen=false;
+      drawing+=(pen?'L':'M')+n(x(d))+' '+n(y(v))+' ';pen=true;previous=d;
+    }
+    const bands=model.fear.map(d=>{const a=Math.max(L,x(d)),b=Math.min(R,x(d)+(R-L)*DAY/span);return `<rect class="fear" x="${n(a)}" y="${T}" width="${n(b-a)}" height="${B-T}"/>`;}).join('');
+    const ticks=[...new Set([hi,lo])].map(v=>`<path class="grid" d="M${L} ${n(y(v))}H${R}"/><text x="${L-5}" y="${n(y(v)+4)}" text-anchor="end">${Math.round(v)}</text>`).join('');
+    return {width:W,height:H,body:bands+ticks+`<path class="price" d="${drawing.trim()}"/>`};
+  }
+  // Page setup: helpers above are tested without a browser or network.
+  const LANGS=['en','ko'];
   function pick(){
-    try{ const q=(new URLSearchParams(location.search).get("lang")||"").slice(0,2).toLowerCase(); if(LANGS.includes(q))return q; }catch(e){}
-    try{ const s=localStorage.getItem("dt.lang"); if(LANGS.includes(s))return s; }catch(e){}
-    const nav=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||"en"]);
-    for(const l of nav){ const t=String(l).slice(0,2).toLowerCase(); if(LANGS.includes(t))return t; }
-    return "en";
+    const q=(new URLSearchParams(location.search).get('lang')||'').slice(0,2).toLowerCase();if(LANGS.includes(q))return q;
+    try{const s=localStorage.getItem('dt.lang');if(LANGS.includes(s))return s;}catch(e){}
+    for(const l of navigator.languages?.length?navigator.languages:[navigator.language||'en']){const t=String(l).slice(0,2).toLowerCase();if(LANGS.includes(t))return t;}
+    return 'en';
   }
-  let LANG=pick();
+  let LANG=pick(),MODEL=null;
   const HEAD={
-    en:{title:"Market timing and 13F investor picks — historical records",
-        desc:"Common investing questions checked against the record: what the S&P 500 did after each Fear & Greed level, and what Berkshire Hathaway bought in its 13F filings."},
-    ko:{title:"투자 타이밍·대가들의 선택 — 과거 기록으로 보는 투자",
-        desc:"투자에서 자주 나오는 질문을 과거 기록으로 되짚어 봅니다. 공포탐욕지수별 S&P 500 수익률과 버크셔 해서웨이 등 대가들의 13F 공시 보유 종목을 봅니다."}
+    en:{title:'Market timing and 13F investor picks — historical records',desc:'Common investing questions checked against the record: how the S&P 500 moved alongside Fear & Greed, and what great investors held in their filings.'},
+    ko:{title:'투자 타이밍·거장들의 선택 — 과거 기록으로 보는 투자',desc:'다니엘의 투자 타이밍 고민부터 거장들의 선택까지. CNN 공포탐욕지수와 S&P 500·Nasdaq 100의 과거 수익률, 투자 거장들의 보유 종목을 기록으로 살펴봅니다.'}
   };
-  const ZONE = {ko:{"fng.exfear":"극단적 공포","fng.fear":"공포","fng.neutral":"중립","fng.greed":"탐욕","fng.exgreed":"극단적 탐욕"},
-                en:{"fng.exfear":"Extreme fear","fng.fear":"Fear","fng.neutral":"Neutral","fng.greed":"Greed","fng.exgreed":"Extreme greed"}};
-  const IDX = {ko:{spx:"S&P 500",ndx:"나스닥 100"}, en:{spx:"S&P 500",ndx:"Nasdaq 100"}};
-  let M=null, BT=null, TI=null;
-  const $=id=>document.getElementById(id);
-  const esc=t=>String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;");
-  const pct=(v,s)=>(s&&v>0?"+":"")+v.toFixed(s?2:0)+"%";
-  const usd=v=>v>=1e9?"$"+(v/1e9).toFixed(v>=1e10?0:1)+"B":"$"+(v/1e6).toFixed(0)+"M";
-  const dot=d=>String(d).replace(/-/g,".");
-
-  function paintHead(){
-    const h=HEAD[LANG], set=(sel,attr,val)=>{const e=document.head.querySelector(sel);if(e)e.setAttribute(attr,val)};
-    document.title=h.title;
-    set('meta[name="description"]',"content",h.desc);
-    set('meta[property="og:title"]',"content",h.title);
-    set('meta[property="og:description"]',"content",h.desc);
-    set('meta[property="og:locale"]',"content",LANG==="ko"?"ko_KR":"en_US");
-    set('meta[property="og:locale:alternate"]',"content",LANG==="ko"?"en_US":"ko_KR");
-    set('meta[property="og:image"]',"content","https://itpaidoff.com/"+(LANG==="ko"?"og-ko.png":"og.png"));
-    const hasParam=new URLSearchParams(location.search).get("lang");
-    const self=hasParam?"https://itpaidoff.com/?lang="+LANG:"https://itpaidoff.com/";
-    set('link[rel="canonical"]',"href",self);
-    set('meta[property="og:url"]',"content",self);
+  const $=id=>document.getElementById(id),svg=$('market-preview');
+  function draw(){
+    if(!MODEL)return;
+    const plot=previewSVG(MODEL,svg.clientWidth||300);
+    svg.setAttribute('viewBox',`0 0 ${plot.width} ${plot.height}`);svg.innerHTML=plot.body;
+    svg.setAttribute('aria-label',LANG==='ko'?`${MODEL.from}부터 ${MODEL.to}까지 SPY 배당 반영 종가(달러). 띠는 같은 날 공포탐욕지수가 45 미만인 관측치입니다.`:`SPY dividend-adjusted closing prices in USD, ${MODEL.from} to ${MODEL.to}. Shading marks observations with Fear & Greed below 45 on the same date.`);
   }
-
   function paint(){
     document.documentElement.lang=LANG;
-    paintHead();
-    document.querySelector(".guide").href="/titans/13f/?lang="+LANG;
-    document.querySelectorAll(".langs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.set===LANG));
-    if(M&&BT){
-      const v=Math.round(M.fng.value), ax=BT.axes.find(a=>a.key==="fng");
-      const z=ax&&ax.zones.find(z=>v>=z.lo&&v<z.hi);
-      $("fng").innerHTML=v+(z?"<small>"+esc(ZONE[LANG][z.key]||z.label)+"</small>":"");
-      const tb=$("fng-tbl").tBodies[0]; tb.innerHTML="";
-      let days=0,from="",to="";
-      for(const k of ["spx","ndx"]){
-        const c=BT.indices[k]&&BT.indices[k].curve&&BT.indices[k].curve.fng; if(!c) continue;
-        const h=c.h&&c.h["1Y"]; if(!h||typeof h.win[v]!=="number"||typeof h.med[v]!=="number") continue;
-        tb.insertAdjacentHTML("beforeend","<tr><td>"+IDX[LANG][k]+"</td><td>"+pct(h.win[v])+"</td><td>"+pct(h.med[v],1)+"</td></tr>");
-        if(k==="spx"){days=h.n[v];from=c.from.slice(0,4);to=c.to.slice(0,4);}
-      }
-      $("fng-tbl").hidden=!tb.rows.length;
-      $("fng-sub").textContent = !tb.rows.length ? "" : LANG==="ko"
-        ? dot(M.fng.date)+" 기준 · 비슷했던 날 "+days.toLocaleString()+"일 · "+from+"–"+to
-        : "as of "+dot(M.fng.date)+" · "+days.toLocaleString()+" similar days · "+from+"–"+to;
-    }
-    if(TI){
-      /* 봇이 만든 요약(data/titans/summary.json)을 읽습니다 — 투자자 화면과 같은 범위
-         (옵션·원금 제외, 발행사로 묶음)로 셉니다. 투자자마다 공시책 전체를 받지 않습니다. */
-      const n=TI.investors.length, ko=LANG==="ko";
-      $("ti-count").innerHTML=n+"<small>"+(ko?"곳":(n===1?"investor":"investors"))+"</small>";
-      const tb=$("ti-tbl").tBodies[0]; tb.innerHTML="";
-      TI.investors.forEach(o=>tb.insertAdjacentHTML("beforeend","<tr><td>"+esc(o.name[LANG]||o.name.en)+"</td><td>"+usd(o.total)+"</td><td>"+o.stocks+"</td></tr>"));
-      $("ti-tbl").hidden=!tb.rows.length;
-      const last=TI.investors.map(o=>o.period).sort().pop();
-      $("ti-sub").textContent = last ? (ko ? dot(last)+" 분기말까지" : "through quarter ended "+dot(last)) : "";
-    }
+    const h=HEAD[LANG],set=(sel,attr,v)=>document.head.querySelector(sel)?.setAttribute(attr,v);
+    document.title=h.title;set('meta[name="description"]','content',h.desc);
+    set('meta[property="og:title"]','content',h.title);set('meta[property="og:description"]','content',h.desc);
+    set('meta[property="og:locale"]','content',LANG==='ko'?'ko_KR':'en_US');set('meta[property="og:locale:alternate"]','content',LANG==='ko'?'en_US':'ko_KR');
+    set('meta[property="og:image"]','content',`https://itpaidoff.com/${LANG==='ko'?'og-ko.png':'og.png'}`);
+    const self='https://itpaidoff.com/'+(new URLSearchParams(location.search).get('lang')?'?lang='+LANG:'');
+    set('link[rel="canonical"]','href',self);set('meta[property="og:url"]','content',self);
+    document.querySelectorAll('.langs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.set===LANG));
+    document.querySelectorAll('[data-route]').forEach(a=>a.href=a.dataset.route+'?lang='+LANG);
+    const img=document.querySelector('.s-group-image');img.alt=img.dataset[LANG==='ko'?'altKo':'altEn'];
+    document.querySelector('nav').setAttribute('aria-label',LANG==='ko'?'메인 메뉴':'Main');draw();
   }
-  document.querySelectorAll(".langs button").forEach(b=>b.onclick=()=>{
-    LANG=b.dataset.set; try{ localStorage.setItem("dt.lang",LANG) }catch(e){}
-    window.track("lang",{lang:LANG}); paint();
-  });
-  document.querySelectorAll("[data-go]").forEach(a=>a.addEventListener("click",()=>window.track("hub",{to:a.dataset.go,lang:LANG})));
-  const j=u=>fetch(u,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
+  document.querySelectorAll('.langs button').forEach(b=>b.addEventListener('click',()=>{
+    LANG=b.dataset.set;try{localStorage.setItem('dt.lang',LANG);}catch(e){}
+    const url=new URL(location.href);url.searchParams.set('lang',LANG);try{history.replaceState(null,'',url);}catch(e){}
+    window.track('lang',{lang:LANG});paint();
+  }));
+  // details.name 미지원 브라우저에서도 개수에 관계없이 하나만 엽니다.
+  document.querySelectorAll('.story').forEach(story=>story.addEventListener('toggle',()=>{
+    if(!story.open)return;
+    document.querySelectorAll('.story').forEach(other=>{if(other!==story)other.open=false;});
+    window.track('hub-story',{story:story.id,lang:LANG});
+  }));
+  document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',()=>window.track('hub',{to:a.dataset.go,lang:LANG})));
   paint();
-  Promise.all([j("data/dashboard/market.json"),j("data/dashboard/backtest.json"),j("data/titans/summary.json")])
-    .then(([m,bt,ti])=>{M=m&&m.fng&&typeof m.fng.value==="number"?m:null;BT=bt&&bt.axes&&bt.indices?bt:null;TI=ti&&Array.isArray(ti.investors)&&ti.investors.length?ti:null;paint();});
+  if(typeof ResizeObserver==='function')new ResizeObserver(draw).observe(svg);else window.addEventListener('resize',draw);
+  fetch('data/dashboard/market.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(m=>{
+    MODEL=previewModel(m);if(!MODEL)return;
+    svg.removeAttribute('hidden');$('chart-status').hidden=true;$('chart-caption').hidden=false;
+    $('chart-dates').textContent=MODEL.from.replaceAll('-','.')+' – '+MODEL.to.replaceAll('-','.');draw();
+  }).catch(()=>{ /* 없는 선을 만들지 않고 정적 안내와 링크를 남깁니다. */ });
 })();
 </script>
 </body>

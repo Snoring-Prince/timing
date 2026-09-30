@@ -208,10 +208,10 @@
 ```text
 timing/
 ├── CNAME              도메인 연결 — 지우지 말 것
-├── index.html         첫 화면(허브) — 세 화면으로 갈라 줌
+├── index.html         첫 화면(허브) — 서비스별 이야기와 입구
 ├── timing/index.html  다니엘의 타이밍 (단일 파일)
 ├── titans/
-│   ├── index.html         튕기는 자리 — /titans/berkshire/ 로 보냄
+│   ├── index.html         투자자 목록 — 각 투자자 화면으로 연결
 │   └── berkshire/
 │       └── index.html     대가들의 선택 · 버크셔 (설정·정적 소개, 공통 틀은 shared/)
 ├── workers/live.js    Cloudflare Worker (실시간 중계)
@@ -222,7 +222,7 @@ timing/
 ```
 
 **`titans/index.html` 과 `titans/berkshire/index.html` 은 다른 파일이다.**
-화면은 뒤쪽이고, 앞쪽은 옛 주소에서 튕겨 보내는 빈 자리다.
+앞쪽은 투자자 목록이고, 뒤쪽은 버크셔 상세 화면이다.
 
 ### 현재 메인 화면
 
