@@ -63,14 +63,19 @@ window.TITAN = {
        버크셔 페이지와 같은 규칙입니다 — 사전(D)으로 옮기지 마세요(CLAUDE.md 6-2).
        두 언어를 다 넣어 두고 CSS 가 한쪽만 보여 줍니다.
 
-       그림이 아직 없어서 처음부터 `nofigure` 입니다. 그림이 생기면
-       portrait.webp(3:2)를 이 폴더에 넣고 버크셔처럼 <img> 한 줄을 더하고
-       이 클래스를 뺍니다.
+       그림은 이 폴더의 face.webp(가상 캐리커처, 목록 카드와 같은 그림)입니다.
 
        인용은 출처를 같이 적습니다. 두 줄 모두 리루 본인의 강연입니다.
        베이징대 강연은 중국어 원문이라 영어는 번역본의 문장입니다.
   ══════════════════════════════════════════════════════════════════ -->
-  <section class="panel bio nofigure" id="titan-bio">
+  <section class="panel bio" id="titan-bio">
+    <figure class="bio-fig">
+      <img class="bio-face" src="./face.webp" width="200" height="200" decoding="async"
+           alt="Imagined caricature of Li Lu"
+           data-alt-en="Imagined caricature of Li Lu" data-alt-ko="리루의 가상 캐리커처"
+           onerror="this.closest('.bio').classList.add('nofigure');this.closest('figure').remove()">
+      <figcaption><span data-lang="ko">가상 캐리커처</span><span data-lang="en">Imagined caricature</span></figcaption>
+    </figure>
     <div class="bio-text">
 
       <p data-lang="en">Li Lu grew up in China, studied economics, business and law at Columbia University, and founded Himalaya Capital in 1997. He buys a business as if he were its owner — only one he understands, only at a price that leaves room for his own mistakes — and holds a handful of such companies for years. Charlie Munger entrusted his family's money to him. Himalaya also buys shares on markets outside the United States; those never appear in a 13F filing, so this page shows only the part listed in the US.</p>

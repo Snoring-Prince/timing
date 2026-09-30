@@ -71,10 +71,13 @@ window.TITAN = {
        인용은 출처를 같이 적습니다. 적을 수 없는 말은 싣지 않습니다.
   ══════════════════════════════════════════════════════════════════ -->
   <section class="panel bio" id="titan-bio">
-    <img class="bio-face" src="./portrait.webp" width="300" height="200" decoding="async"
-         alt="Caricature of Warren Buffett"
-         data-alt-en="Caricature of Warren Buffett" data-alt-ko="워런 버핏 캐리커처"
-         onerror="this.closest('.bio').classList.add('nofigure');this.remove()">
+    <figure class="bio-fig">
+      <img class="bio-face" src="./face.webp" width="200" height="200" decoding="async"
+           alt="Imagined caricature of Warren Buffett"
+           data-alt-en="Imagined caricature of Warren Buffett" data-alt-ko="워런 버핏의 가상 캐리커처"
+           onerror="this.closest('.bio').classList.add('nofigure');this.closest('figure').remove()">
+      <figcaption><span data-lang="ko">가상 캐리커처</span><span data-lang="en">Imagined caricature</span></figcaption>
+    </figure>
     <div class="bio-text">
 
       <p data-lang="en">Warren Buffett took control of Berkshire Hathaway in 1965 and, over the decades, moved away from buying cheap companies toward holding good ones. He looks for a business whose earnings he can understand, that rivals find hard to copy, and whose managers he can leave alone — and then keeps it for years. Open any row below to see how a position moved, quarter by quarter.</p>
