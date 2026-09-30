@@ -61,7 +61,7 @@ window.TITAN = {
 
   <!-- ══ 투자자 소개 ═══════════════════════════════════════
        버크셔 페이지와 같은 규칙입니다 — 사전(D)으로 옮기지 마세요(CLAUDE.md 6-2).
-       두 언어를 다 넣어 두고 CSS 가 한쪽만 보여 줍니다. 그림이 없어 `nofigure` 입니다.
+       두 언어를 다 넣어 두고 CSS 가 한쪽만 보여 줍니다. 그림은 이 폴더의 face.webp 입니다.
 
        13F 는 이 운용사의 일부만 보여 줍니다 — 부실채권·부동산·비상장 투자와 현금은
        안 나옵니다. 그래서 "미국 상장 주식만" 을 적습니다. 숫자는 분기마다 낡으므로
@@ -70,7 +70,14 @@ window.TITAN = {
        인용은 1991년 책 『Margin of Safety』 의 정의 문장입니다(여러 요약본에서 같은
        글자로 확인 — 2026-09-28). 1982년 설립·공동 설립은 위키백과·CNBC 기사로 확인.
   ══════════════════════════════════════════════════════════════════ -->
-  <section class="panel bio nofigure" id="titan-bio">
+  <section class="panel bio" id="titan-bio">
+    <figure class="bio-fig">
+      <img class="bio-face" src="./face.webp" width="200" height="200" decoding="async"
+           alt="Imagined caricature of Seth Klarman"
+           data-alt-en="Imagined caricature of Seth Klarman" data-alt-ko="세스 클라만의 가상 캐리커처"
+           onerror="this.closest('.bio').classList.add('nofigure');this.closest('figure').remove()">
+      <figcaption><span data-lang="ko">가상 캐리커처</span><span data-lang="en">Imagined caricature</span></figcaption>
+    </figure>
     <div class="bio-text">
 
       <p data-lang="en">Seth Klarman has run Baupost since he helped found it in 1982, straight out of business school, with a small group of partners and families. It buys what looks cheap against what it is worth, and when little does, it is known for holding a large share in cash rather than lowering the bar. Much of its money goes into distressed debt, real estate and private deals, none of which a 13F shows; this page covers only its US-listed shares. The filings run from 2013.</p>

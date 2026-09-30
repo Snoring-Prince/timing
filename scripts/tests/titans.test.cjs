@@ -723,8 +723,12 @@ test('every registered investor page follows the same static rules', () => {
     for(const q of bio.match(/<blockquote[\s\S]*?<\/blockquote>/g)||[])
       assert.match(q,/<cite>[^<]+<\/cite>/,inv.slug);
     // 그림이 있으면 못 받을 때 칸이 빠지고, 없으면 처음부터 칸이 없다.
-    if(/<img /.test(bio)) assert.match(bio,/onerror="this\.closest\('\.bio'\)\.classList\.add\('nofigure'\)/);
-    else assert.match(src,/<section class="panel bio nofigure" id="titan-bio">/,inv.slug);
+    // 모든 투자자에 목록과 같은 가상 캐리커처 — 파일이 있고, 가상 그림이라고 밝히고,
+    // 못 받으면 칸이 빠진다(2026-09-30).
+    assert.match(bio,/<img class="bio-face" src="\.\/face\.webp"/,inv.slug);
+    assert.ok(fs.existsSync(path.join(root,'titans',inv.slug,'face.webp')),inv.slug);
+    assert.match(bio,/<figcaption><span data-lang="ko">가상 캐리커처<\/span><span data-lang="en">Imagined caricature<\/span><\/figcaption>/,inv.slug);
+    assert.match(bio,/onerror="this\.closest\('\.bio'\)\.classList\.add\('nofigure'\)/,inv.slug);
   }
   assert.match(css,/\.bio\.nofigure\{grid-template-columns:minmax\(0,1fr\)\}/);
 });

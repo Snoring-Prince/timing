@@ -63,7 +63,7 @@ window.TITAN = {
        버크셔 페이지와 같은 규칙입니다 — 사전(D)으로 옮기지 마세요(CLAUDE.md 6-2).
        두 언어를 다 넣어 두고 CSS 가 한쪽만 보여 줍니다.
 
-       그림이 아직 없어서 처음부터 `nofigure` 입니다.
+       그림은 이 폴더의 face.webp(가상 캐리커처, 목록 카드와 같은 그림)입니다.
 
        **본업은 채권입니다.** 13F 에는 주식·옵션·전환사채(원금)가 함께 실리는데
        화면은 주식만 셉니다(정찰 3차: 13F $7.2B 중 주식 $3.8B). 그래서 소개 글에
@@ -73,7 +73,14 @@ window.TITAN = {
        인용은 메모 제목 그대로이고, 오크트리 누리집의 원문 PDF 이름
        (2001-11-20-you-cant-predict-you-can-prepare.pdf)으로 날짜를 확인했습니다.
   ══════════════════════════════════════════════════════════════════ -->
-  <section class="panel bio nofigure" id="titan-bio">
+  <section class="panel bio" id="titan-bio">
+    <figure class="bio-fig">
+      <img class="bio-face" src="./face.webp" width="200" height="200" decoding="async"
+           alt="Imagined caricature of Howard Marks"
+           data-alt-en="Imagined caricature of Howard Marks" data-alt-ko="하워드 막스의 가상 캐리커처"
+           onerror="this.closest('.bio').classList.add('nofigure');this.closest('figure').remove()">
+      <figcaption><span data-lang="ko">가상 캐리커처</span><span data-lang="en">Imagined caricature</span></figcaption>
+    </figure>
     <div class="bio-text">
 
       <p data-lang="en">Howard Marks, Bruce Karsh and three colleagues left TCW in 1995 to found Oaktree, and its core business is still debt — high-yield bonds and the loans of companies in distress. When such a company is restructured, lenders are often paid in new shares, so some of the stocks here arrived that way rather than through a purchase in the market. A 13F shows only part of this: it lists shares, options and convertible bonds, and this page counts the shares alone. The filings run from 2013.</p>

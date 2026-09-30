@@ -61,13 +61,20 @@ window.TITAN = {
 
   <!-- ══ 투자자 소개 ═══════════════════════════════════════
        버크셔 페이지와 같은 규칙입니다 — 사전(D)으로 옮기지 마세요(CLAUDE.md 6-2).
-       두 언어를 다 넣어 두고 CSS 가 한쪽만 보여 줍니다. 그림이 없어 `nofigure` 입니다.
+       두 언어를 다 넣어 두고 CSS 가 한쪽만 보여 줍니다. 그림은 이 폴더의 face.webp 입니다.
 
        본업은 거시 투자(금리·통화·원자재)라 채권·통화·선물은 13F 에 안 나옵니다.
        그래서 "주식 부분만" 을 적습니다. 종목 수·회전율은 분기마다 낡으므로 적지 않습니다.
        인용은 없습니다 — 널리 도는 문장들이 출처마다 글자가 달라 원문과 맞춰 보지 못했습니다.
   ══════════════════════════════════════════════════════════════════ -->
-  <section class="panel bio nofigure" id="titan-bio">
+  <section class="panel bio" id="titan-bio">
+    <figure class="bio-fig">
+      <img class="bio-face" src="./face.webp" width="200" height="200" decoding="async"
+           alt="Imagined caricature of Stanley Druckenmiller"
+           data-alt-en="Imagined caricature of Stanley Druckenmiller" data-alt-ko="스탠리 드러켄밀러의 가상 캐리커처"
+           onerror="this.closest('.bio').classList.add('nofigure');this.closest('figure').remove()">
+      <figcaption><span data-lang="ko">가상 캐리커처</span><span data-lang="en">Imagined caricature</span></figcaption>
+    </figure>
     <div class="bio-text">
 
       <p data-lang="en">Stanley Druckenmiller founded Duquesne Capital in 1981 and, from 1988 to 2000, also ran George Soros's Quantum Fund. In 2010 he returned his clients' money and has since invested his own through this family office. He is a macro investor: his biggest bets are often on interest rates, currencies and commodities, made through bonds and futures that a 13F does not show. This page covers only the shares it reports, which change a great deal from quarter to quarter. The filings run from 2013.</p>
