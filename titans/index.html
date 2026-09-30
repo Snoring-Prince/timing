@@ -36,11 +36,8 @@
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="theme-color" content="#F7F9FB">
+<meta name="theme-color" content="#ffffff">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 
 <!-- ══ 방문자 통계 — 첫 화면과 같은 블록입니다(CLAUDE.md 5번) ══════════ -->
@@ -66,74 +63,100 @@ window.track=function(name,data){
 </script>
 <style>
 :root{
-  --paper:#E9ECF0; --card:#FFFFFF;
-  --ink:#0F1A24; --ink-2:#475765; --ink-3:#5F6B74;
-  --rule:#BCC6D0; --rule-2:#DDE3E9;
-  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-  --cond:"IBM Plex Sans Condensed","Pretendard Variable",Pretendard,sans-serif;
+  /* 첫 화면(index.html)과 같은 재료. 목록은 거장들 카드의 주황 한 벌만 씁니다. */
+  --bg:#fff; --ink:#182132; --muted:#626a78; --line:#e5e8ee;
+  --accent:#ac481c; --tint:#fff0e6; --tint-2:#ffe6d6; --panel:#fff;
   --body:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  color-scheme:light;
 }
 html[lang="ko"] [data-lang="en"]{display:none}
 html:not([lang="ko"]) [data-lang="ko"]{display:none}
 *{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:13.5px;line-height:1.7;
-  background-image:linear-gradient(rgba(15,26,36,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(15,26,36,.028) 1px,transparent 1px);
-  background-size:56px 56px}
-main{max-width:900px;margin:0 auto;padding:36px 20px 72px}
-.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
-.eyebrow{min-width:0;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase}
-.eyebrow a{color:inherit}
-.langs{display:flex;flex:none;border:1px solid var(--rule)}
-.langs button{font:600 11.5px var(--cond);white-space:nowrap;border:0;background:var(--card);color:var(--ink-2);padding:3px 10px;cursor:pointer}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.65}
+a{color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
+main{max-width:1040px;margin:0 auto;padding:0 5% 40px}
+.top{min-height:86px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 0}
+.brand{display:flex;align-items:center;gap:9px;font-size:22px;font-weight:800;letter-spacing:-1px}
+.mark{display:inline-flex;width:25px;height:25px;align-items:center;justify-content:center;background:#224ddb;color:#fff;
+  border-radius:8px;font-size:17px;font-weight:600;letter-spacing:0}
+.langs{display:flex;flex:none;gap:2px;background:#f3f5f9;border-radius:8px;padding:3px}
+.langs button{font:600 11px var(--body);white-space:nowrap;border:0;border-radius:6px;background:transparent;color:var(--muted);padding:7px 9px;cursor:pointer}
 .langs button[aria-pressed="true"]{background:var(--ink);color:#fff}
-h1{font:700 30px/1.25 var(--cond);margin:14px 0 10px;letter-spacing:-.01em}
-.lead{color:var(--ink-2);max-width:640px;margin:0 0 28px}
-.cards{display:grid;gap:14px}
-.card{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;background:var(--card);border:1px solid var(--rule);
-  padding:20px;color:inherit;text-decoration:none}
-a.card:hover{border-color:var(--ink)}
-a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-.no{font:600 11px var(--mono);color:var(--ink-3);letter-spacing:.06em}
-.card h2{font:700 20px/1.3 var(--cond);margin:6px 0 2px;display:flex;align-items:center;gap:10px}
-/* 투자자 화면 머리글의 이름표와 같은 네모다(investor.css .tmark). */
-.tmark{width:28px;height:28px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
-  background:var(--ink);color:var(--card);font:700 12.5px/1 var(--cond);letter-spacing:.02em}
-/* 로고 그림이 있으면 흰 네모에 담는다. 못 받으면 onerror 가 머리글자 타일로 되돌린다. */
-.tmark.img{background:var(--card);border:1px solid var(--rule-2);overflow:hidden}
+.eyebrow{margin:39px 0 15px;font-size:12px;font-weight:600;color:var(--accent)}
+h1{font-size:clamp(32px,4.5vw,48px);line-height:1.25;font-weight:750;letter-spacing:-2px;margin:0 0 18px;word-break:keep-all}
+.lead{font-size:14px;line-height:1.85;color:var(--muted);max-width:700px;margin:0 0 35px;word-break:keep-all}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.card{display:flex;flex-direction:column;background:var(--tint);border-radius:20px;padding:24px 24px 22px;min-width:0;transition:background .15s}
+a.card:hover{background:var(--tint-2)}
+a.card:focus-visible,.brand:focus-visible,.langs button:focus-visible,.foot a:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.head{display:flex;gap:16px;align-items:center}
+/* 초상화는 카드와 같은 둥근 네모. 못 받으면 onerror 가 통째로 뺀다. */
+.face{width:84px;height:84px;flex:none;border-radius:16px;object-fit:cover;background:#ecd9c2}
+.id{min-width:0}
+.no{display:inline-block;font-size:11px;font-weight:650;color:var(--accent);background:var(--panel);border-radius:999px;padding:2px 9px}
+.card h2{font-size:21px;line-height:1.35;font-weight:750;letter-spacing:-.6px;margin:7px 0 1px;display:flex;align-items:center;gap:8px;word-break:keep-all}
+/* 투자자 화면 머리글의 이름표와 같은 그림(investor.css .tmark). 여기서는 카드 결에 맞춰 둥글게. */
+.tmark{width:24px;height:24px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;border-radius:6px;
+  background:var(--ink);color:#fff;font:700 10.5px/1 var(--body);letter-spacing:.02em}
+.tmark.img{background:var(--panel);overflow:hidden}
 .tmark img{width:100%;height:100%;object-fit:contain;display:block}
-.who{margin:0 0 8px;font-size:12.5px;color:var(--ink-3)}
-.what{color:var(--ink-2);margin:0}
-.go{display:inline-block;margin-top:12px;font:600 12.5px var(--cond);color:var(--ink);border-bottom:1px solid var(--ink)}
-.read{border-left:1px solid var(--rule-2);padding-left:20px;display:flex;flex-direction:column;justify-content:center;gap:6px}
-.cap{font:500 11px/1.35 var(--cond);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
-.big{font:500 38px/1 var(--mono);letter-spacing:-.02em}
-.big small{font:600 19px var(--body);margin-left:8px;letter-spacing:0}
-.tbl{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px;margin-top:4px}
-.tbl th{font:500 11px/1.25 var(--cond);color:var(--ink-3);text-align:left;padding:0 0 3px;letter-spacing:.04em}
-.tbl td{text-align:right;padding:2px 0;border-top:1px solid var(--rule-2)}
-.tbl td:first-child{text-align:left;font-family:var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;width:100%;padding-right:10px}
-.sub{font:11px/1.5 var(--mono);color:var(--ink-3)}
-.foot{margin-top:28px;font-size:12.5px;color:var(--ink-3)}
-.foot p{margin:0 0 8px}
-.back{display:inline-block;margin-top:6px;font-family:var(--mono);color:var(--ink-3)}
-.guide{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
-@media (max-width:640px){
-  main{padding:24px 14px 56px}
-  h1{font-size:25px}
-  .card{grid-template-columns:1fr;padding:14px;gap:14px}
-  .read{border-left:0;border-top:1px solid var(--rule-2);padding:14px 0 0}
+.who{margin:0;font-size:13px;color:var(--muted)}
+.what{flex:1;margin:16px 0 18px;font-size:13px;line-height:1.8;color:var(--muted);word-break:keep-all}
+.read{background:var(--panel);border-radius:12px;padding:14px 16px 12px;display:flex;flex-direction:column;gap:5px;font-variant-numeric:tabular-nums}
+.cap{font-size:11px;font-weight:600;color:var(--muted)}
+.big{font-size:28px;line-height:1.15;font-weight:750;letter-spacing:-.8px}
+.big small{font-size:14px;font-weight:600;margin-left:8px;letter-spacing:0;color:var(--muted)}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+.tbl th{font-size:11px;font-weight:600;color:var(--muted);text-align:left;padding:0 0 3px}
+.tbl td{text-align:right;padding:3px 0;border-top:1px solid var(--line)}
+.tbl td:first-child{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;width:100%;padding-right:10px}
+.sub{font-size:11px;line-height:1.5;color:var(--muted)}
+.go{align-self:flex-start;margin-top:16px;display:inline-flex;align-items:center;min-height:40px;padding:9px 14px;border-radius:8px;
+  background:var(--panel);color:var(--accent);font-size:12px;font-weight:650}
+a.card:hover .go{background:var(--accent);color:#fff}
+.foot{margin-top:35px;font-size:12px;line-height:1.85;color:var(--muted)}
+.foot p{margin:0 0 8px;max-width:900px}
+.foot .disc{margin-bottom:10px}
+.guide{font-size:11px;text-decoration:underline;text-underline-offset:3px}
+.back{display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:var(--ink)}
+/* 두 줄 카드는 칸이 좁으면 이름이 세 줄로 꺾입니다(701px 실측) — 860px 아래는 한 줄. */
+@media (max-width:860px){.cards{grid-template-columns:1fr}}
+@media (max-width:700px){
+  main{padding:0 6% 32px}
+  .top{min-height:72px;gap:12px}
+  .brand{font-size:19px}
+  .mark{width:22px;height:22px;font-size:15px}
+  .langs button{min-height:38px}
+  .eyebrow{margin-top:24px}
+  h1{font-size:36px;letter-spacing:-1.5px}
+  .lead{font-size:13px;margin-bottom:28px}
+  .cards{grid-template-columns:1fr;gap:16px}
+  .card{padding:22px 20px 20px}
+  .face{width:72px;height:72px;border-radius:14px}
+  .card h2{font-size:19px}
 }
+@media (max-width:370px){
+  .brand{font-size:17px}
+  .mark{display:none}
+  h1{font-size:31px}
+  .card{padding:20px 16px 18px}
+  .head{gap:12px}
+  .face{width:64px;height:64px}
+  .card h2{font-size:18px}
+}
+@media (pointer:coarse){.langs button{min-height:44px}}
 </style>
 </head>
 <body>
 <main>
-  <div class="top">
-    <div class="eyebrow"><a href="/">itpaidoff.com</a> · Titans' picks</div>
+  <header class="top">
+    <a class="brand" href="/" data-route="/"><span class="mark" aria-hidden="true">↗</span>itpaidoff.</a>
     <div class="langs" role="group" aria-label="Language">
       <button type="button" data-set="ko">한국어</button><button type="button" data-set="en">English</button>
     </div>
-  </div>
+  </header>
 
+  <p class="eyebrow">Titans' picks</p>
   <h1><span data-lang="ko">대가들은 무엇을 샀나</span><span data-lang="en">What the great investors bought</span></h1>
   <p class="lead">
     <span data-lang="ko">미국에서 1억 달러 넘게 굴리는 운용사는 분기마다 SEC 에 13F 공시를 내고 보유 주식을 밝힙니다. 그 공시를 모아 무엇을 늘리고 줄였는지, 추정 매수가 대비 어디에 와 있는지를 투자자마다 한 화면에 담았습니다. 분기 마지막 날의 기록이고, 미국 상장 주식만 나오며, 무엇을 사라고 말하지 않습니다.</span>
@@ -142,110 +165,108 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
   <div class="cards" id="cards">
     <a class="card" href="/titans/berkshire/" data-slug="berkshire">
-      <div>
-        <div class="no"><span data-lang="ko">가치투자</span><span data-lang="en">Value</span></div>
-        <h2><span class="tmark img" aria-hidden="true"><img src="berkshire/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('BH')"></span><span><span data-lang="ko">버크셔 해서웨이</span><span data-lang="en">Berkshire Hathaway</span></span></h2>
-        <p class="who"><span data-lang="ko">워런 버핏</span><span data-lang="en">Warren Buffett</span></p>
-        <p class="what">
-          <span data-lang="ko">워런 버핏이 1965년 경영을 맡은 회사입니다. 이해할 수 있고 경쟁자가 흉내 내기 어려운 사업을 골라 여러 해를 들고 갑니다. 1998년부터의 공시가 있습니다.</span>
-          <span data-lang="en">The company Warren Buffett took over in 1965. It picks businesses it can understand and rivals find hard to copy, and holds them for years. Filings go back to 1998.</span>
-        </p>
-        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
+      <div class="head">
+        <img class="face" src="berkshire/face.webp" width="200" height="200" alt="" onerror="this.remove()">
+        <div class="id">
+          <div class="no"><span data-lang="ko">가치투자</span><span data-lang="en">Value</span></div>
+          <h2><span class="tmark img" aria-hidden="true"><img src="berkshire/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('BH')"></span><span><span data-lang="ko">버크셔 해서웨이</span><span data-lang="en">Berkshire Hathaway</span></span></h2>
+          <p class="who"><span data-lang="ko">워런 버핏</span><span data-lang="en">Warren Buffett</span></p>
+        </div>
       </div>
+      <p class="what"><span data-lang="ko">워런 버핏이 1965년 경영을 맡은 회사입니다. 이해할 수 있고 경쟁자가 흉내 내기 어려운 사업을 골라 여러 해를 들고 갑니다. 1998년부터의 공시가 있습니다.</span> <span data-lang="en">The company Warren Buffett took over in 1965. It picks businesses it can understand and rivals find hard to copy, and holds them for years. Filings go back to 1998.</span></p>
       <div class="read"></div>
+      <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
     </a>
-
     <a class="card" href="/titans/himalaya/" data-slug="himalaya">
-      <div>
-        <div class="no"><span data-lang="ko">가치투자</span><span data-lang="en">Value</span></div>
-        <h2><span class="tmark img" aria-hidden="true"><img src="himalaya/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('HC')"></span><span><span data-lang="ko">히말라야 캐피털</span><span data-lang="en">Himalaya Capital</span></span></h2>
-        <p class="who"><span data-lang="ko">리루</span><span data-lang="en">Li Lu</span></p>
-        <p class="what">
-          <span data-lang="ko">리루가 1997년 세운 운용사입니다. 몇 안 되는 회사에 크게 싣고 오래 갖습니다. 미국 밖 거래소에서 산 주식은 13F 에 실리지 않아 여기에 나오지 않습니다. 2016년부터의 공시가 있습니다.</span>
-          <span data-lang="en">The firm Li Lu founded in 1997. It puts large sums into a handful of companies and keeps them for a long time. Shares bought on exchanges outside the US never reach a 13F, so they are not shown. Filings go back to 2016.</span>
-        </p>
-        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
+      <div class="head">
+        <img class="face" src="himalaya/face.webp" width="200" height="200" alt="" onerror="this.remove()">
+        <div class="id">
+          <div class="no"><span data-lang="ko">가치투자</span><span data-lang="en">Value</span></div>
+          <h2><span class="tmark img" aria-hidden="true"><img src="himalaya/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('HC')"></span><span><span data-lang="ko">히말라야 캐피털</span><span data-lang="en">Himalaya Capital</span></span></h2>
+          <p class="who"><span data-lang="ko">리루</span><span data-lang="en">Li Lu</span></p>
+        </div>
       </div>
+      <p class="what"><span data-lang="ko">리루가 1997년 세운 운용사입니다. 몇 안 되는 회사에 크게 싣고 오래 갖습니다. 미국 밖 거래소에서 산 주식은 13F 에 실리지 않아 여기에 나오지 않습니다. 2016년부터의 공시가 있습니다.</span> <span data-lang="en">The firm Li Lu founded in 1997. It puts large sums into a handful of companies and keeps them for a long time. Shares bought on exchanges outside the US never reach a 13F, so they are not shown. Filings go back to 2016.</span></p>
       <div class="read"></div>
+      <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
     </a>
     <a class="card" href="/titans/appaloosa/" data-slug="appaloosa">
-      <div>
-        <div class="no"><span data-lang="ko">역발상</span><span data-lang="en">Contrarian</span></div>
-        <h2><span class="tmark img" aria-hidden="true"><img src="appaloosa/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('AP')"></span><span><span data-lang="ko">애팔루사</span><span data-lang="en">Appaloosa</span></span></h2>
-        <p class="who"><span data-lang="ko">데이비드 테퍼</span><span data-lang="en">David Tepper</span></p>
-        <p class="what">
-          <span data-lang="ko">데이비드 테퍼가 1993년 세운 운용사입니다. 남들이 피하는 자산을 사는 쪽으로 알려졌습니다. 채권과 대부분의 옵션은 13F 에 나오지 않아 주식 부분만 봅니다. 2016년에 법인이 바뀐 두 공시 이력을 이어 2013년부터 봅니다.</span>
-          <span data-lang="en">The firm David Tepper founded in 1993, known for buying what others are fleeing. Bonds and most options do not appear in a 13F, so this shows the stock side only. Two filing histories, split by a change of legal entity in 2016, are joined from 2013 on.</span>
-        </p>
-        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
+      <div class="head">
+        <img class="face" src="appaloosa/face.webp" width="200" height="200" alt="" onerror="this.remove()">
+        <div class="id">
+          <div class="no"><span data-lang="ko">역발상</span><span data-lang="en">Contrarian</span></div>
+          <h2><span class="tmark img" aria-hidden="true"><img src="appaloosa/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('AP')"></span><span><span data-lang="ko">애팔루사</span><span data-lang="en">Appaloosa</span></span></h2>
+          <p class="who"><span data-lang="ko">데이비드 테퍼</span><span data-lang="en">David Tepper</span></p>
+        </div>
       </div>
+      <p class="what"><span data-lang="ko">데이비드 테퍼가 1993년 세운 운용사입니다. 남들이 피하는 자산을 사는 쪽으로 알려졌습니다. 채권과 대부분의 옵션은 13F 에 나오지 않아 주식 부분만 봅니다. 2016년에 법인이 바뀐 두 공시 이력을 이어 2013년부터 봅니다.</span> <span data-lang="en">The firm David Tepper founded in 1993, known for buying what others are fleeing. Bonds and most options do not appear in a 13F, so this shows the stock side only. Two filing histories, split by a change of legal entity in 2016, are joined from 2013 on.</span></p>
       <div class="read"></div>
+      <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
     </a>
     <a class="card" href="/titans/oaktree/" data-slug="oaktree">
-      <div>
-        <div class="no"><span data-lang="ko">부실채권</span><span data-lang="en">Distressed debt</span></div>
-        <h2><span class="tmark img" aria-hidden="true"><img src="oaktree/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('OC')"></span><span><span data-lang="ko">오크트리 캐피털</span><span data-lang="en">Oaktree Capital</span></span></h2>
-        <p class="who"><span data-lang="ko">하워드 막스</span><span data-lang="en">Howard Marks</span></p>
-        <p class="what">
-          <span data-lang="ko">하워드 막스가 동료들과 1995년 세운 운용사입니다. 본업은 고위험 채권과 어려움에 빠진 회사의 빚이고, 구조조정 끝에 받은 주식이 13F 에 나오기도 합니다. 옵션과 전환사채는 빼고 주식만 봅니다. 2013년부터의 공시가 있습니다.</span>
-          <span data-lang="en">The firm Howard Marks co-founded in 1995. Its core business is high-yield bonds and the debt of companies in distress, and shares received in restructurings can show up in its 13F. Options and convertible bonds are left out; this shows the shares only. Filings go back to 2013.</span>
-        </p>
-        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
+      <div class="head">
+        <img class="face" src="oaktree/face.webp" width="200" height="200" alt="" onerror="this.remove()">
+        <div class="id">
+          <div class="no"><span data-lang="ko">부실채권</span><span data-lang="en">Distressed debt</span></div>
+          <h2><span class="tmark img" aria-hidden="true"><img src="oaktree/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('OC')"></span><span><span data-lang="ko">오크트리 캐피털</span><span data-lang="en">Oaktree Capital</span></span></h2>
+          <p class="who"><span data-lang="ko">하워드 막스</span><span data-lang="en">Howard Marks</span></p>
+        </div>
       </div>
+      <p class="what"><span data-lang="ko">하워드 막스가 동료들과 1995년 세운 운용사입니다. 본업은 고위험 채권과 어려움에 빠진 회사의 빚이고, 구조조정 끝에 받은 주식이 13F 에 나오기도 합니다. 옵션과 전환사채는 빼고 주식만 봅니다. 2013년부터의 공시가 있습니다.</span> <span data-lang="en">The firm Howard Marks co-founded in 1995. Its core business is high-yield bonds and the debt of companies in distress, and shares received in restructurings can show up in its 13F. Options and convertible bonds are left out; this shows the shares only. Filings go back to 2013.</span></p>
       <div class="read"></div>
+      <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
     </a>
     <a class="card" href="/titans/baupost/" data-slug="baupost">
-      <div>
-        <div class="no"><span data-lang="ko">가치투자</span><span data-lang="en">Value</span></div>
-        <h2><span class="tmark img" aria-hidden="true"><img src="baupost/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('BA')"></span><span><span data-lang="ko">바우포스트 그룹</span><span data-lang="en">Baupost Group</span></span></h2>
-        <p class="who"><span data-lang="ko">세스 클라만</span><span data-lang="en">Seth Klarman</span></p>
-        <p class="what">
-          <span data-lang="ko">세스 클라만이 1982년 세울 때부터 이끄는 운용사입니다. 싸게 살 것이 없으면 현금을 들고 기다리는 것으로 알려졌습니다. 부실채권·부동산·비상장 투자는 13F 에 나오지 않아 미국 상장 주식만 봅니다. 2013년부터의 공시가 있습니다.</span>
-          <span data-lang="en">The firm Seth Klarman has run since its founding in 1982, known for holding cash when nothing is cheap enough. Distressed debt, real estate and private deals do not appear in a 13F; this shows US-listed shares only. Filings go back to 2013.</span>
-        </p>
-        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
+      <div class="head">
+        <img class="face" src="baupost/face.webp" width="200" height="200" alt="" onerror="this.remove()">
+        <div class="id">
+          <div class="no"><span data-lang="ko">가치투자</span><span data-lang="en">Value</span></div>
+          <h2><span class="tmark img" aria-hidden="true"><img src="baupost/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('BA')"></span><span><span data-lang="ko">바우포스트 그룹</span><span data-lang="en">Baupost Group</span></span></h2>
+          <p class="who"><span data-lang="ko">세스 클라만</span><span data-lang="en">Seth Klarman</span></p>
+        </div>
       </div>
+      <p class="what"><span data-lang="ko">세스 클라만이 1982년 세울 때부터 이끄는 운용사입니다. 싸게 살 것이 없으면 현금을 들고 기다리는 것으로 알려졌습니다. 부실채권·부동산·비상장 투자는 13F 에 나오지 않아 미국 상장 주식만 봅니다. 2013년부터의 공시가 있습니다.</span> <span data-lang="en">The firm Seth Klarman has run since its founding in 1982, known for holding cash when nothing is cheap enough. Distressed debt, real estate and private deals do not appear in a 13F; this shows US-listed shares only. Filings go back to 2013.</span></p>
       <div class="read"></div>
+      <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
     </a>
-
     <a class="card" href="/titans/pershing/" data-slug="pershing">
-      <div>
-        <div class="no"><span data-lang="ko">행동주의</span><span data-lang="en">Activist</span></div>
-        <h2><span class="tmark img" aria-hidden="true"><img src="pershing/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('PS')"></span><span><span data-lang="ko">퍼싱 스퀘어</span><span data-lang="en">Pershing Square</span></span></h2>
-        <p class="who"><span data-lang="ko">빌 애크먼</span><span data-lang="en">Bill Ackman</span></p>
-        <p class="what">
-          <span data-lang="ko">빌 애크먼이 이끄는 행동주의 펀드입니다. 열 곳 안팎의 회사에 큰 지분을 사고 경영진에게 변화를 요구합니다. 미국 상장 주식만 보며, 2013년부터의 공시가 있습니다.</span>
-          <span data-lang="en">The activist fund Bill Ackman runs: large stakes in around ten companies, and pressure on management to change. US-listed shares only; filings go back to 2013.</span>
-        </p>
-        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
+      <div class="head">
+        <img class="face" src="pershing/face.webp" width="200" height="200" alt="" onerror="this.remove()">
+        <div class="id">
+          <div class="no"><span data-lang="ko">행동주의</span><span data-lang="en">Activist</span></div>
+          <h2><span class="tmark img" aria-hidden="true"><img src="pershing/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('PS')"></span><span><span data-lang="ko">퍼싱 스퀘어</span><span data-lang="en">Pershing Square</span></span></h2>
+          <p class="who"><span data-lang="ko">빌 애크먼</span><span data-lang="en">Bill Ackman</span></p>
+        </div>
       </div>
+      <p class="what"><span data-lang="ko">빌 애크먼이 이끄는 행동주의 펀드입니다. 열 곳 안팎의 회사에 큰 지분을 사고 경영진에게 변화를 요구합니다. 미국 상장 주식만 보며, 2013년부터의 공시가 있습니다.</span> <span data-lang="en">The activist fund Bill Ackman runs: large stakes in around ten companies, and pressure on management to change. US-listed shares only; filings go back to 2013.</span></p>
       <div class="read"></div>
+      <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
     </a>
     <a class="card" href="/titans/duquesne/" data-slug="duquesne">
-      <div>
-        <div class="no"><span data-lang="ko">거시</span><span data-lang="en">Macro</span></div>
-        <h2><span class="tmark img" aria-hidden="true"><img src="duquesne/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('DF')"></span><span><span data-lang="ko">듀케인 패밀리 오피스</span><span data-lang="en">Duquesne Family Office</span></span></h2>
-        <p class="who"><span data-lang="ko">스탠리 드러켄밀러</span><span data-lang="en">Stanley Druckenmiller</span></p>
-        <p class="what">
-          <span data-lang="ko">스탠리 드러켄밀러가 자기 돈을 굴리는 패밀리 오피스입니다. 금리·통화에 거는 거시 투자자라 채권·선물은 13F 에 나오지 않아 주식 부분만 봅니다. 종목이 분기마다 많이 바뀝니다. 2013년부터의 공시가 있습니다.</span>
-          <span data-lang="en">The family office through which Stanley Druckenmiller invests his own money. A macro investor who bets on rates and currencies; bonds and futures do not appear in a 13F, so this shows the shares only. The names change a lot from quarter to quarter. Filings go back to 2013.</span>
-        </p>
-        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
+      <div class="head">
+        <img class="face" src="duquesne/face.webp" width="200" height="200" alt="" onerror="this.remove()">
+        <div class="id">
+          <div class="no"><span data-lang="ko">거시</span><span data-lang="en">Macro</span></div>
+          <h2><span class="tmark img" aria-hidden="true"><img src="duquesne/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('DF')"></span><span><span data-lang="ko">듀케인 패밀리 오피스</span><span data-lang="en">Duquesne Family Office</span></span></h2>
+          <p class="who"><span data-lang="ko">스탠리 드러켄밀러</span><span data-lang="en">Stanley Druckenmiller</span></p>
+        </div>
       </div>
+      <p class="what"><span data-lang="ko">스탠리 드러켄밀러가 자기 돈을 굴리는 패밀리 오피스입니다. 금리·통화에 거는 거시 투자자라 채권·선물은 13F 에 나오지 않아 주식 부분만 봅니다. 종목이 분기마다 많이 바뀝니다. 2013년부터의 공시가 있습니다.</span> <span data-lang="en">The family office through which Stanley Druckenmiller invests his own money. A macro investor who bets on rates and currencies; bonds and futures do not appear in a 13F, so this shows the shares only. The names change a lot from quarter to quarter. Filings go back to 2013.</span></p>
       <div class="read"></div>
+      <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
     </a>
     <a class="card" href="/titans/ark/" data-slug="ark">
-      <div>
-        <div class="no"><span data-lang="ko">성장 투자</span><span data-lang="en">Growth</span></div>
-        <h2><span class="tmark img" aria-hidden="true"><img src="ark/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('AI')"></span><span><span data-lang="ko">ARK 인베스트</span><span data-lang="en">ARK Invest</span></span></h2>
-        <p class="who"><span data-lang="ko">캐시 우드</span><span data-lang="en">Cathie Wood</span></p>
-        <p class="what">
-          <span data-lang="ko">캐시 우드가 세운 운용사입니다. 새 기술로 크게 바뀔 것이라고 보는 회사를 여러 종목에 나눠 담고, 주식 수가 분기마다 거의 다 바뀝니다. 매일 공개하는 자료 대신 다른 투자자와 같은 13F 만 봅니다. 2016년부터의 공시가 있습니다.</span>
-          <span data-lang="en">The firm Cathie Wood founded. It spreads its money across many companies it expects new technology to transform, and the share counts move for nearly every holding each quarter. This uses the 13F, like the other investors here, rather than ARK's daily disclosures. Filings go back to 2016.</span>
-        </p>
-        <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
+      <div class="head">
+        <img class="face" src="ark/face.webp" width="200" height="200" alt="" onerror="this.remove()">
+        <div class="id">
+          <div class="no"><span data-lang="ko">성장 투자</span><span data-lang="en">Growth</span></div>
+          <h2><span class="tmark img" aria-hidden="true"><img src="ark/logo.webp" alt="" onerror="this.closest('.tmark').classList.remove('img');this.replaceWith('AI')"></span><span><span data-lang="ko">ARK 인베스트</span><span data-lang="en">ARK Invest</span></span></h2>
+          <p class="who"><span data-lang="ko">캐시 우드</span><span data-lang="en">Cathie Wood</span></p>
+        </div>
       </div>
+      <p class="what"><span data-lang="ko">캐시 우드가 세운 운용사입니다. 새 기술로 크게 바뀔 것이라고 보는 회사를 여러 종목에 나눠 담고, 주식 수가 분기마다 거의 다 바뀝니다. 매일 공개하는 자료 대신 다른 투자자와 같은 13F 만 봅니다. 2016년부터의 공시가 있습니다.</span> <span data-lang="en">The firm Cathie Wood founded. It spreads its money across many companies it expects new technology to transform, and the share counts move for nearly every holding each quarter. This uses the 13F, like the other investors here, rather than ARK's daily disclosures. Filings go back to 2016.</span></p>
       <div class="read"></div>
+      <span class="go"><span data-lang="ko">보러 가기 →</span><span data-lang="en">Open →</span></span>
     </a>
   </div>
 
@@ -254,9 +275,13 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
       <span data-lang="ko">13F 는 분기 마지막 날 하루의 보유이고, 공시는 그로부터 45일 안에 나옵니다. 현금·채권·공매도·해외 주식은 들어 있지 않습니다.</span>
       <span data-lang="en">A 13F shows holdings on the last day of a quarter and is filed within 45 days of it. Cash, bonds, short positions and shares held abroad are not included.</span>
     </p>
+    <p>
+      <span data-lang="ko">초상화는 이미지 생성 도구로 만든 가상의 캐리커처이며 실제 사진이 아닙니다.</span>
+      <span data-lang="en">The portraits are imagined caricatures made with an image generator, not photographs.</span>
+    </p>
     <p class="disc"><span data-lang="ko">본 사이트에서 제공하는 시장 지표, 13F 공시 자료와 과거 수익률은 미래의 투자 수익을 보장하지 않습니다. 모든 정보는 참고용이며 투자 권유가 아닙니다. 이를 바탕으로 한 투자 결정의 책임은 전적으로 사용자에게 있습니다.</span><span data-lang="en">Past performance is not indicative of future results. All market indicators, 13F filing data and historical returns are provided for informational purposes only and are not investment advice. Any investment decision made on the basis of this information is solely the user's responsibility.</span></p>
     <a class="guide" href="/titans/13f/"><span data-lang="ko">13F 자료 안내 →</span><span data-lang="en">About the 13F data →</span></a><br>
-    <a class="back" href="/">← itpaidoff.com</a>
+    <a class="back" href="/" data-route="/">← itpaidoff.com</a>
   </div>
 </main>
 
@@ -297,7 +322,7 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     set('meta[property="og:url"]',"content",self);
   }
 
-  /* 카드 오른쪽 칸. 첫 화면 카드 02 와 같은 모양(총액·종목 수·비중 상위 셋)이다. */
+  /* 카드 아래 흰 칸 — 총액·종목 수·비중 상위 셋. */
   function readHTML(o){
     const ko=LANG==="ko";
     return '<div class="cap">'+(ko?"최근 공시":"Latest filing")+'</div>'
@@ -313,6 +338,9 @@ a.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     document.documentElement.lang=LANG;
     paintHead();
     document.querySelector(".guide").href="/titans/13f/?lang="+LANG;
+    /* 저장 설정이 막혀 있어도 이동한 화면이 같은 언어로 열리게 한다(첫 화면과 같은 요령). */
+    document.querySelectorAll("[data-route]").forEach(a=>a.href=a.dataset.route+"?lang="+LANG);
+    document.querySelectorAll(".card[data-slug]").forEach(a=>a.href="/titans/"+a.dataset.slug+"/?lang="+LANG);
     document.querySelectorAll(".langs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.set===LANG));
     if(!S)return;
     const by={}; for(const o of S.investors) by[o.slug]=o;

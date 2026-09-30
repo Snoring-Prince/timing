@@ -4,7 +4,14 @@
 
 ---
 
-## 2026-09-29 · Claude · (이 PR)
+## 2026-09-30 · Claude · (이 PR)
+투자자 목록을 첫 화면 결로 + 카드마다 초상화
+- 파일: titans/index.html · titans/<slug>/face.webp ×8(새) · scripts/tests/titans.test.cjs · CLAUDE.md · design-system.md · 이 일지
+- 결과(PR #118·#119, Codex): 확인함 — 안내 문구 정확성 수정 맞음, 새 첫 화면 넘침·오류 0.
+- 규칙: 바꾸기 전 자리 backup/v1.3. 투자자 화면은 계측기 결 그대로.
+- 넘김: 초상화 짝(특히 막스·클라만)은 사용자 확인 전. 첫 화면 '거장들' vs 안쪽 '대가들' 이름은 사용자 판단 대기.
+
+## 2026-09-29 · Claude · PR #117
 면책 문구 한 벌 + 13F 자료 안내 페이지(`/titans/13f/`)
 - 파일: index.html · timing/index.html · titans/index.html · titans/13f/index.html(새) ·
   titans/shared/investor.js·.css · sitemap.xml · scripts/tests/titans.test.cjs · CLAUDE.md · 이 일지

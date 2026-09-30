@@ -753,9 +753,15 @@ test('the list page has one card per registered investor, and the home card poin
       assert.match(body,new RegExp(`<span class="tmark" aria-hidden="true">${mono}</span>`));
     }
     assert.match(body,new RegExp(`<span data-lang="ko">${inv.name.ko}</span><span data-lang="en">${inv.name.en}</span>`));
+    // 카드마다 그 사람의 초상화 — 파일이 저장소에 있고, 못 받으면 그림 칸만 빠진다(2026-09-30).
+    assert.ok(body.includes(`<img class="face" src="${slug}/face.webp" width="200" height="200" alt="" onerror="this.remove()">`),slug);
+    assert.ok(fs.existsSync(path.join(root,'titans',slug,'face.webp')),`${slug}/face.webp`);
     const count=lg=>body.match(new RegExp(`data-lang="${lg}"`,'g')).length;
     assert.equal(count('en'),count('ko'),slug);
   }
+  // 초상화가 가상의 그림이라는 것을 두 언어로 밝힌다.
+  assert.match(list,/<span data-lang="ko">초상화는 [^<]*가상의 캐리커처[^<]*<\/span>/);
+  assert.match(list,/<span data-lang="en">The portraits are imagined caricatures[^<]*<\/span>/);
   // 숫자는 봇이 만든 작은 요약에서만 읽는다 — 투자자마다 공시책 전체를 받지 않는다.
   assert.match(list,/fetch\("\.\.\/data\/titans\/summary\.json"/);
   assert.match(hub,/<a class="home-direct" href="\/titans\/" data-go="titans"/);
