@@ -261,8 +261,8 @@ test('shared text follows investor settings and canonical stays stable across la
 });
 
 test('all investor visuals and calculations come from the shared assets', () => {
-  assert.match(html,/href="\.\.\/shared\/investor\.css"/);
-  assert.match(html,/src="\.\.\/shared\/investor\.js"/);
+  assert.match(html,/href="\.\.\/shared\/investor\.css(\?v=[\w-]+)?"/);
+  assert.match(html,/src="\.\.\/shared\/investor\.js(\?v=[\w-]+)?"/);
   assert.doesNotMatch(html,/<style>|function build\(|function chartBody\(/);
   assert.match(shared,/function build\(/);
   assert.match(shared,/function chartBody\(/);
@@ -841,4 +841,21 @@ test('every screen carries the same disclaimer and a way to the 13F guide', () =
   assert.ok(n('en')>=15);
   assert.match(guide,/<link rel="canonical" href="https:\/\/itpaidoff\.com\/titans\/13f\/">/);
   assert.match(read('sitemap.xml'),/<loc>https:\/\/itpaidoff\.com\/titans\/13f\/<\/loc>/);
+});
+
+test('every investor page asks for the shared files with the same version tag', () => {
+  // 공통 CSS 가 캐시에 남으면 새 HTML 과 옛 CSS 가 섞여 그림이 잘리고 글이 겹칩니다(2026-09-30 실제로 일어남).
+  // 공통 파일을 고친 날 이 표식을 여덟 곳 모두 같은 값으로 올립니다.
+  const reg=JSON.parse(fs.readFileSync(path.join(root,'data/titans/investors.json'),'utf8'));
+  const list=Array.isArray(reg)?reg:(reg.investors||[]);
+  const tags=new Set();
+  for(const inv of list){
+    const html=fs.readFileSync(path.join(root,'titans',inv.slug,'index.html'),'utf8');
+    const css=html.match(/href="\.\.\/shared\/investor\.css\?v=([\w-]+)"/);
+    const js=html.match(/src="\.\.\/shared\/investor\.js\?v=([\w-]+)"/);
+    assert.ok(css&&js,`${inv.slug}: shared files need ?v=`);
+    assert.equal(css[1],js[1],`${inv.slug}: css and js tags differ`);
+    tags.add(css[1]);
+  }
+  assert.equal(tags.size,1,'all investor pages use one version tag');
 });
