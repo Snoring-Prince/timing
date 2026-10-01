@@ -5,6 +5,13 @@
 ---
 
 ## 2026-09-30 · Claude · (이 PR)
+투자자 목록 발 두 줄(13F 설명·초상화 설명)과 투자자 화면 '가상 캐리커처' 캡션 삭제
+- 파일: titans/index.html · titans/<slug>/index.html ×8 · titans/shared/investor.css · scripts/tests/titans.test.cjs · CLAUDE.md · design-system.md · 이 일지
+- 결과(PR #123): 머지됨.
+- 규칙: 공통 파일 표식 ?v=2026-09-30-2 로 올림. alt 의 가상 그림 표기는 남김(검사).
+- 넘김: 없음.
+
+## 2026-09-30 · Claude · PR #123
 첫 화면 카드를 통째 링크로 — 눈썹줄·이야기 여닫이·오른쪽 아래 링크 삭제, 올리면 버튼 색 반전
 - 파일: index.html · scripts/tests/home.test.cjs · scripts/tests/titans.test.cjs · CLAUDE.md · design-system.md · 이 일지
 - 결과(PR #122): 머지됨.

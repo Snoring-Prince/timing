@@ -498,7 +498,7 @@ document.documentElement.scrollWidth - document.documentElement.clientWidth
 3-1 #titan-bio 덩어리(소개 글·인용·그림)를 그 투자자의 것으로 바꾼다 — 이 글은
     **HTML 에 글자로** 있어야 한다(사전에 넣으면 크롤러가 받는 페이지에서 사라진다).
     두 언어를 다 넣고 조각 수를 맞춘다. 그림은 그 폴더의 face.webp(정사각 가상
-    캐리커처 · 목록 카드와 같은 그림)이고 아래에 '가상 캐리커처' 캡션을 단다.
+    캐리커처 · 목록 카드와 같은 그림)이다. 캡션은 달지 않고 alt 에만 가상 그림이라고 적는다.
     못 받으면 그림 칸이 통째로 빠진다. 인용에는 출처(<cite>)를 꼭 단다
 4  data/titans/investors.json 에 slug·CIK·공시 법인명·표시 이름·첫 연도를 한 번 등록
 5  sitemap.xml 에 줄 하나 (표식 주석을 꼭 달 것 — CLAUDE.md 6-2)
