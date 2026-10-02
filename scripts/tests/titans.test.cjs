@@ -832,9 +832,14 @@ test('every screen carries the same disclaimer and a way to the 13F guide', () =
     const href=footer.match(/class="guide" href="([^"]+)"/)[1];
     assert.equal(new URL(href,'https://itpaidoff.com').searchParams.get('lang'),lang);
   }
-  // 투자자 화면 유의사항은 숫자를 읽는 법 두 줄만 — 자세한 것은 안내 페이지가 한다.
-  for(const lg of ['ko','en']) assert.equal(run(`D.${lg}.foot().length`),2,lg);
-  assert.match(run('D.en.source()'),/Form 13F-HR/);
+  // 투자자 화면 유의사항은 면책 문구와 안내 링크뿐 — 13F 설명·추정·출처는 안내 페이지가 한다
+  // (2026-10-02 사용자 결정). 그린 푸터의 문단이 면책 하나뿐인지 본다.
+  for(const lang of ['ko','en']){
+    const html=run(`LANG="${lang}";L10N=D[LANG];globalThis.footEl={innerHTML:""};
+      document.getElementById=()=>footEl;paintFoot();footEl.innerHTML`);
+    assert.equal((html.match(/<p/g)||[]).length,2,lang);   // 면책 + 안내 링크
+    assert.doesNotMatch(html,/45|CIK|Form 13F-HR|추정|estimate/i,lang);
+  }
   // 안내 페이지: 크롤러용 글이 두 언어로 같은 조각 수, 대표 주소·사이트맵 줄.
   const guide=read('titans/13f/index.html');
   const n=lg=>guide.match(new RegExp(`data-lang="${lg}"`,'g')).length;

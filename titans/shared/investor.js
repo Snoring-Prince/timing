@@ -79,15 +79,11 @@ en:{
      **여기서 빠진 것들이 화면에서 아주 사라지지는 않습니다** —
      `배당 제외` 는 목록 캡션(`costArrow`)이 이미 적고, 날짜와 기간은
      차트 축이 적습니다. 다시 늘리고 싶어지면 그것부터 확인하세요. */
-  /* 유의사항은 **화면의 숫자를 읽는 법** 두 줄만 둡니다. 자세한 설명은 13F 자료 안내
-     페이지(/titans/13f/)가 하고, 면책 문구는 네 화면이 같은 글자를 씁니다(검사가 대조). */
-  source:()=>`Source: Form 13F-HR filed with the SEC by ${TT.name.en} (CIK ${TT.cik}${(TT.formerCiks||[]).map(c=>`; earlier filings under CIK ${c}`).join("")})`,
+  /* 유의사항은 면책 문구와 13F 자료 안내 링크뿐입니다(2026-10-02 사용자 결정). 13F 의 성격·
+     추정 매수가·출처(CIK)는 안내 페이지(/titans/13f/)가 설명합니다. 면책 문구는 다섯 화면이
+     같은 글자를 씁니다(검사가 대조). */
   disclaimer:"Past performance is not indicative of future results. All market indicators, 13F filing data and historical returns are provided for informational purposes only and are not investment advice. Any investment decision made on the basis of this information is solely the user's responsibility.",
-  guide:"About the 13F data \u2192",
-  foot:()=>[
-    "A 13F records a single day \u2014 the last day of the quarter \u2014 and is filed within 45 days of it, so the holdings may already have changed. This page shows US-listed share holdings from 13F filings; cash, bonds, foreign listings, wholly owned businesses and short positions are not included.",
-    "Average cost and return are estimates. A 13F carries no trade prices, so both are worked out from value \u00F7 shares and can be off by a wide margin."
-  ]
+  guide:"About the 13F data \u2192"
 },
 ko:{
   locale:"ko-KR", dir:"ltr", tab:"한국어",
@@ -136,13 +132,8 @@ ko:{
   foldOpen:n=>`${n}개 종목 더 보기`, foldClose:n=>`${n}개 종목 숨기기`,
   noData:"공시를 불러오지 못했습니다.",
   footTitle:"유의사항",
-  source:()=>`출처: ${TT.name.ko}(CIK ${TT.cik}${(TT.formerCiks||[]).map(c=>` · 이전 공시는 CIK ${c}`).join("")})가 SEC 에 낸 Form 13F-HR`,
   disclaimer:"본 사이트에서 제공하는 시장 지표, 13F 공시 자료와 과거 수익률은 미래의 투자 수익을 보장하지 않습니다. 모든 정보는 참고용이며 투자 권유가 아닙니다. 이를 바탕으로 한 투자 결정의 책임은 전적으로 사용자에게 있습니다.",
-  guide:"13F 자료 안내 \u2192",
-  foot:()=>[
-    "13F 공시는 분기의 마지막 날 하루를 적은 것이고, 공시는 그로부터 45일 안에 냅니다. 그 사이에 이미 바뀌었을 수 있습니다. 이 화면에는 13F 공시의 미국 상장 주식 보유분을 표시합니다 \u2014 현금\u00B7채권\u00B7해외 주식\u00B7통째로 소유한 회사\u00B7공매도는 포함되어 있지 않습니다.",
-    "매수 평균가와 수익률은 추정입니다. 13F 공시에는 체결가가 없어서 금액\u00F7주식 수로 어림한 값이라 크게 빗나갈 수 있습니다."
-  ]
+  guide:"13F 자료 안내 \u2192"
 }
 };
 
@@ -1257,14 +1248,10 @@ function settleLife(root){
   sc.scrollLeft=sc.scrollWidth;
 }
 
-/* 각주. 분할 목록과 '집계 전' 종목은 자료에서 오므로 **새 분기가 들어오면
-   글도 따라 바뀝니다** — 새 분할이 잡히면 저절로 실리고, 집계 전 종목을
-   팔면 그 이름이 저절로 빠집니다. */
+/* 유의사항 — 공통 면책 문구와 13F 자료 안내 링크(현재 언어를 들고 감). */
 function paintFoot(){
   const el=document.getElementById("footbody");
-  if(el) el.innerHTML=tx("foot").map(s=>`<p>${s}</p>`).join("")
-    +`<p class="src">${tx("source")}</p>`
-    +`<p class="disc">${tx("disclaimer")}</p>`
+  if(el) el.innerHTML=`<p class="disc">${tx("disclaimer")}</p>`
     +`<p><a class="guide" href="/titans/13f/?lang=${LANG}">${tx("guide")}</a></p>`;
 }
 

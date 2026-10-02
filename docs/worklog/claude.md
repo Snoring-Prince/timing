@@ -4,7 +4,14 @@
 
 ---
 
-## 2026-09-30 · Claude · (이 PR)
+## 2026-10-02 · Claude · (이 PR)
+투자자 화면 유의사항에서 13F 설명·추정 설명 두 줄과 출처(CIK) 줄 삭제
+- 파일: titans/shared/investor.js · titans/<slug>/index.html ×8(캐시 표식) · scripts/tests/titans.test.cjs · CLAUDE.md · 이 일지
+- 결과(PR #124): 머지됨.
+- 규칙: 유의사항은 면책 문구 + 13F 자료 안내 링크뿐(검사). 공통 파일 표식 ?v=2026-10-02.
+- 넘김: 없음.
+
+## 2026-09-30 · Claude · PR #124
 투자자 목록 발 두 줄(13F 설명·초상화 설명)과 투자자 화면 '가상 캐리커처' 캡션 삭제
 - 파일: titans/index.html · titans/<slug>/index.html ×8 · titans/shared/investor.css · scripts/tests/titans.test.cjs · CLAUDE.md · design-system.md · 이 일지
 - 결과(PR #123): 머지됨.
