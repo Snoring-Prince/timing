@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-10-02 · Codex · (이 PR)
+다니엘 화면을 대문과 잇는 디자인·상단 서사
+- 파일: timing/index.html · scripts/tests/home.test.cjs · CLAUDE.md · design-system.md · 이 일지
+- 규칙: PR #120~#125 확인 및 backup/v1.6 확보. 디자인·서사·검증은 CLAUDE.md 1번이 정본.
+- 굳힘: 대문의 카드 전체 링크 유지. 다니엘 서사는 상단 정적 한영 본문. 차트·계산·VIX 숨김·기존 면책 유지.
+- 넘김: 사용자 디자인 확인 및 merge. 별도 수동 배포·자료 재수집 없음.
+
 ## 2026-09-30 · Codex · (이 PR)
 승인한 이야기형 대문 — 접히는 서비스 카드와 새 캐리커처 단체사진
 - 파일: index.html · assets/home/* · home/titans 검사 · check.yml · AGENTS.md · CLAUDE.md · design-system.md · 이 일지
