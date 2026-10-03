@@ -422,7 +422,8 @@ body{
 
 /* controls */
 .mast-right{display:flex;flex-direction:column;align-items:flex-end;gap:9px}
-/* 선 버튼(왼쪽)과 기간 버튼(오른쪽)을 한 줄에. 좁으면 줄 전체가 옆으로 밀린다. */
+/* 기본은 선 버튼(왼쪽)과 기간 버튼(오른쪽) 한 줄.
+   아래 story-design에서 모바일은 각 그룹을 독립된 한 줄로 배치한다. */
 .ctl-row{display:flex;align-items:center;justify-content:space-between;gap:14px;
   padding:12px 20px 0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .ctl-row::-webkit-scrollbar{display:none}
@@ -786,11 +787,21 @@ html[lang="ko"] [data-copy="en"],html:not([lang="ko"]) [data-copy="ko"]{display:
 h2.name,.name h2,.bt-title{font-family:var(--body);font-size:17px;font-weight:700;letter-spacing:-.3px}
 .stamp{font-family:var(--body);font-size:11px;line-height:1.6}
 .ctl-row{padding:16px 20px 4px}
+.chart{padding:12px 20px 0}
+.chart .svg-grid{stroke:#edf0f4}
+.chart .axis-inset{paint-order:stroke;stroke:var(--card);stroke-width:3px;stroke-linejoin:round}
+body.settled .bt-series{stroke-dasharray:var(--series-dash)}
+@media(prefers-reduced-motion:reduce){.bt-series{stroke-dasharray:var(--series-dash)}}
 .seg{border:0;background:#f3f5f9;border-radius:9px;padding:3px;gap:2px}
 .seg button,.seg.mini button,.seg.mini.lines button,.seg.mini.ax button{font-family:var(--body);
   font-size:11px;font-weight:600;letter-spacing:0;border-radius:6px;min-height:32px;padding:7px 9px}
 .seg button+button{border-left:0}
 .seg button[aria-pressed="true"]{background:var(--accent);color:white}
+.panel .seg.mini button[aria-pressed="true"]{background:#fff;color:var(--ink);
+  box-shadow:0 1px 3px rgba(24,33,50,.12),inset 0 0 0 1px #d7dee9}
+.panel .seg.mini.lines button[aria-pressed="true"]{background:#edf2ff;color:#224ddb;
+  box-shadow:inset 0 0 0 1px #c9d5fa}
+.panel .seg.mini button{min-height:36px}
 .readout dt,.readout .num,.readout .sub{font-family:var(--body);font-variant-numeric:tabular-nums}
 .readout dt{font-size:11px;letter-spacing:0}
 .readout .num{font-size:22px;font-weight:650}
@@ -806,6 +817,9 @@ h2.name,.name h2,.bt-title{font-family:var(--body);font-size:17px;font-weight:70
 .bt-sum .now .v{font-weight:650}
 .bt-sum .grid .q{font-weight:600}
 .bt-foot{font-family:var(--body);font-size:12px}
+.bt-key{font-family:var(--body);font-size:11px;letter-spacing:0;text-transform:none;flex-wrap:wrap}
+#panel-results .bt-key i{border-top:2.2px solid var(--ink-2);width:22px}
+#panel-results .bt-key i.d{border-top:1.8px dashed #687b91}
 .about{background:#f8faff;margin-top:32px}
 .about summary{font-family:var(--body);font-weight:650;padding:18px 22px}
 .about summary:hover{border-radius:20px}
@@ -826,8 +840,13 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
   .site-header{min-height:76px}
   .site-brand{font-size:20px}
   .panel-head{padding:17px 14px;align-items:flex-start}
-  .ctl-row{padding:12px 14px 2px;gap:12px}
-  .seg.mini button,.seg.mini.lines button{padding:7px;min-height:32px}
+  .ctl-row{padding:14px 14px 2px;gap:10px;flex-direction:column;align-items:stretch;overflow:visible}
+  .ctl-row>div{width:100%;min-width:0}
+  .ctl-row .seg,#bt-tools .seg{width:100%;min-width:0;margin:0}
+  .ctl-row .seg button,#bt-tools .seg button{flex:1;white-space:nowrap;padding:7px 5px}
+  .chart{padding:12px 8px 0}
+  .bt-ctl,#bt-tools{width:100%}
+  #bt-axes:empty{display:none}
   .notes{padding:18px 14px}
   .bt-head{padding:18px 14px 12px}
   .readout .num{font-size:20px}
@@ -1076,16 +1095,16 @@ const shift=(iso,d)=>{const t=new Date(iso+"T00:00:00Z");t.setUTCDate(t.getUTCDa
 /* 뷰박스 폭을 패널의 실제 폭에 맞춘다.
    창 폭으로 판정하면 패널마다 좌표계가 어긋날 수 있고,
    1:1로 그리면 축소가 없어 글자가 지정한 px 그대로 찍힌다. */
-function geo(el){
+function geo(el,paddingEl=el){
   const raw=(el&&el.clientWidth)||796;
   /* 좌우 여백을 실제로 읽는다. 예전에는 8px 을 전제로 16을 빼고 있어서
      여백을 바꾸면 뷰박스가 어긋났다. */
   let pad=16;
-  if(el&&window.getComputedStyle){
-    const c=getComputedStyle(el);
+  if(paddingEl&&window.getComputedStyle){
+    const c=getComputedStyle(paddingEl);
     pad=(parseFloat(c.paddingLeft)||0)+(parseFloat(c.paddingRight)||0);
   }
-  return {W:Math.max(300,Math.round(raw-pad)),sm:raw<560};
+  return {W:Math.max(240,Math.round(raw-pad)),sm:raw<560};
 }
 
 /* ================= JSON → 차트용 배열 ================= */
@@ -1263,9 +1282,9 @@ const mainLines=()=>{
   if(!LONG||!LONG.series)return [];
   const S=LONG.series,out=[];
   if(MSHOW.price&&S[MSHOW.price])
-    out.push({key:MSHOW.price,side:"L",s:S[MSHOW.price],col:"var(--down)",wd:2.1,dash:""});
+    out.push({key:MSHOW.price,side:"L",s:S[MSHOW.price],col:"var(--down)",wd:2.2,dash:""});
   if(MSHOW.gauge&&S[btAx])
-    out.push({key:btAx,side:"R",s:S[btAx],col:"rgba(120,135,150,.95)",wd:1.3,dash:""});
+    out.push({key:btAx,side:"R",s:S[btAx],col:"#687b91",wd:1.2,dash:""});
   return out;
 };
 const inf=k=>(tx("info")||{})[k]||{};
@@ -1353,7 +1372,7 @@ function renderMain(){
 
   const {W,sm}=geo(document.getElementById("main-chart"));
   const hasG=drawn.some(l=>l.side==="R");
-  /* 오른쪽 여백은 세 층이다 — 선 끝의 현재값, 축 숫자, 구간 이름.
+  /* 넓은 화면의 오른쪽 여백은 세 층이다 — 선 끝의 현재값, 축 숫자, 구간 이름.
      현재값을 그림 안에 두면 선 위에 얹혀 읽기 어렵다. */
   const labW=sm?44:52, numW=sm?24:26;
   /* 구간 이름 자리는 실제 이름 길이로 잡는다. 영어 "EXTREME GREED" 는
@@ -1363,8 +1382,10 @@ function renderMain(){
   const zLines=zNm.length?[].concat(...zNm.map(zSplit)):[];
   const nameW=zLines.length
     ?Math.min(96,Math.max(...zLines.map(zW))+4):0;
-  const g=sm?{L:40,T:26,ph:215,B:38,ticks:3,names:false,
-              R:6+labW+(hasG?5+numW:0)}
+  /* 좁은 화면은 오른쪽 축 숫자를 그림 안쪽 가장자리에 놓고,
+     현재값은 계속 바깥에 둔다. 값과 눈금이 같은 열에서 겹치지 않는다. */
+  const g=sm?{L:36,T:26,ph:215,B:38,ticks:3,names:false,
+              R:6+labW}
             :{L:56,T:30,ph:295,B:44,ticks:5,names:hasG,
               R:7+labW+(hasG?7+numW+10+nameW:0)};
   const Lm=g.L,Rm=g.R,T=g.T,ph=g.ph,H=T+ph+g.B;
@@ -1372,7 +1393,7 @@ function renderMain(){
   const X=t=>Lm+pw*(t-t0)/((t1-t0)||1);
   MAINGEO={span:t1-t0,W,pw,tEnd,tMin};
   const xLab=Lm+pw+(sm?6:7);                 /* 선 끝의 현재값 */
-  const xNum=xLab+labW+(sm?5:7);             /* 오른쪽 축 숫자 */
+  const xNum=sm?Lm+pw-6:xLab+labW+7;         /* 오른쪽 축 숫자 */
   const xName=xNum+numW+10;                  /* 구간 이름 */
 
   /* 왼쪽 — 가격. 켜진 가격선들의 실제 범위에 맞춘다. */
@@ -1400,7 +1421,7 @@ function renderMain(){
     const vis=G.zones.map(z=>[Math.max(z[0],gs.lo),Math.min(z[1],gs.hi),z[2],z[3]])
                      .filter(z=>z[1]>z[0]);
     const tint=t=>t<0?downRGB():t>0?upRGB():"120,135,150";
-    const soft={"-2":.085,"-1":.05,"0":.028,"1":.05,"2":.085};
+    const soft={"-2":.055,"-1":.028,"0":.012,"1":.028,"2":.055};
     zbands=vis.map(([a,bb,t])=>
       `<rect x="${Lm}" y="${YR(bb).toFixed(1)}" width="${pw}" height="${(YR(a)-YR(bb)).toFixed(1)}" fill="rgba(${tint(t)},${soft[t]})"/>`).join("");
     if(g.names){
@@ -1459,21 +1480,21 @@ function renderMain(){
     const dd=(last/peak-1)*100;
     peakArt=(post.length>1
         ?`<path d="${seg(post)} L ${xEnd.toFixed(1)} ${yPk.toFixed(1)} L ${xPk.toFixed(1)} ${yPk.toFixed(1)} Z" fill="url(#${hid})"/>`:"")+
-      `<line x1="${Lm}" y1="${yPk.toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${yPk.toFixed(1)}" stroke="var(--up)" stroke-width="1.2" stroke-dasharray="7 4"/>`+
+      `<line x1="${Lm}" y1="${yPk.toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${yPk.toFixed(1)}" stroke="var(--up)" stroke-width="1" stroke-dasharray="5 4"/>`+
       `<text x="${Lm}" y="${(yPk-7).toFixed(1)}" class="svg-label" fill="var(--up)">${tx("peakMark",fmt(peak))}</text>`+
       `<circle cx="${xPk.toFixed(1)}" cy="${yPk.toFixed(1)}" r="3.2" fill="var(--up)"/>`;
     /* 지금 값은 그림 밖 오른쪽에 둔다. 안에 두면 선 위에 얹혀 읽기 어렵다.
        값과 낙폭을 두 줄로 나눠 층의 폭 안에 들어오게 한다. */
-    yEndPrice=Math.min(T+ph-12,Math.max(T+8,YL(last)));
+    yEndPrice=Math.min(T+ph-20,Math.max(T+8,YL(last)));
     priceEnd=`<circle cx="${xEnd.toFixed(1)}" cy="${YL(last).toFixed(1)}" r="3.2" fill="var(--down)"/>`+
       `<line x1="${xEnd.toFixed(1)}" y1="${YL(last).toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${YL(last).toFixed(1)}" stroke="var(--down)" stroke-width="1" stroke-dasharray="2 2" opacity=".5"/>`;
     /* .svg-axis 가 fill 을 쥐고 있어 속성으로는 색이 안 먹는다. 인라인으로 준다. */
     const ddCol=dd<-0.005?"var(--down)":"var(--up)";
     priceLab=v=>`<text x="${xLab.toFixed(1)}" y="${(v+3.5).toFixed(1)}" class="svg-num" style="fill:${ddCol}">${fmt(last)}</text>`+
-      `<text x="${xLab.toFixed(1)}" y="${(v+16).toFixed(1)}" class="svg-axis" style="fill:${ddCol}">${dd>-0.005?"0.00":dd.toFixed(2)}%</text>`;
+      `<text x="${xLab.toFixed(1)}" y="${(v+21).toFixed(1)}" class="svg-axis" style="fill:${ddCol}">${dd>-0.005?"0.00":dd.toFixed(2)}%</text>`;
     priceArt=
-      (pre.length>1?`<path d="${seg(pre)}" fill="none" stroke="var(--ink-2)" stroke-width="1.6" stroke-linejoin="round"${anim}/>`:"")+
-      (post.length>1?`<path d="${seg(post)}" fill="none" stroke="var(--down)" stroke-width="2.1" stroke-linejoin="round"${anim}/>`:"");
+      (pre.length>1?`<path d="${seg(pre)}" fill="none" stroke="var(--ink-2)" stroke-width="2" stroke-linejoin="round"${anim}/>`:"")+
+      (post.length>1?`<path d="${seg(post)}" fill="none" stroke="var(--down)" stroke-width="2.2" stroke-linejoin="round"${anim}/>`:"");
     /* 차트 아래 네 칸 계기판. 그림에서 눈금을 읽어 어림하는 대신 값을 그대로 적는다.
        전고점은 "보이는 구간 안"의 최고 종가라서, 끌면 이 숫자들도 같이 움직인다. */
     const pkDay=pts[pk][0],curDay=pts[pts.length-1][0];
@@ -1511,21 +1532,26 @@ function renderMain(){
   }
   /* 두 값이 같은 높이로 오면 서로 밀어낸다. 가격 쪽은 두 줄이라 자리를 더 쓴다. */
   if(yEndPrice!=null&&yEndGauge!=null){
-    const need=22;
+    const need=yEndPrice<=yEndGauge?38:20;
     if(Math.abs(yEndPrice-yEndGauge)<need){
-      if(yEndPrice<=yEndGauge){yEndPrice=Math.max(T+8,yEndGauge-need)}
-      else{yEndGauge=Math.max(T+8,yEndPrice-need)}
+      if(yEndPrice<=yEndGauge){
+        yEndPrice=Math.max(T+8,yEndGauge-need);
+        yEndGauge=Math.max(yEndGauge,yEndPrice+need);
+      }else{
+        yEndGauge=Math.max(T+8,yEndPrice-need);
+        yEndPrice=Math.max(yEndPrice,yEndGauge+need);
+      }
     }
   }
   const endLabs=(priceLab?priceLab(yEndPrice):"")+(gaugeLab?gaugeLab(yEndGauge):"");
 
-  const grid=ps?ps.ticks.map(t=>`<line x1="${Lm}" y1="${YL(t).toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${YL(t).toFixed(1)}" stroke="var(--rule-2)" stroke-width="1"/>`+
+  const grid=ps?ps.ticks.map(t=>`<line x1="${Lm}" y1="${YL(t).toFixed(1)}" x2="${(Lm+pw).toFixed(1)}" y2="${YL(t).toFixed(1)}" stroke="var(--rule-2)" stroke-width="1" class="svg-grid"/>`+
     `<text x="${Lm-6}" y="${(YL(t)+3.5).toFixed(1)}" text-anchor="end" class="svg-axis">${num(t)}</text>`).join(""):"";
-  const rax=gs?gs.ticks.map(t=>`<text x="${xNum.toFixed(1)}" y="${(YR(t)+3.5).toFixed(1)}" class="svg-axis">${t}</text>`).join(""):"";
+  const rax=gs?gs.ticks.map(t=>`<text x="${xNum.toFixed(1)}" y="${(YR(t)+3.5).toFixed(1)}" text-anchor="${sm?'end':'start'}" class="svg-axis${sm?' axis-inset':''}">${t}</text>`).join(""):"";
 
   /* 지수선은 오른쪽 축이라 배경처럼 깔아 두고, 가격선을 그 위에 얹는다 */
   const area=gaugeRuns.filter(a=>a.length>1).map(a=>
-    `<path d="${path(gl,a)} L ${X(dnum(a[a.length-1][0])).toFixed(1)} ${yBot} L ${X(dnum(a[0][0])).toFixed(1)} ${yBot} Z" fill="rgba(120,135,150,.10)"/>`).join("");
+    `<path d="${path(gl,a)} L ${X(dnum(a[a.length-1][0])).toFixed(1)} ${yBot} L ${X(dnum(a[0][0])).toFixed(1)} ${yBot} Z" fill="rgba(120,135,150,.045)"/>`).join("");
 
   const xt=tTicks(t0,t1,g.ticks).map(t=>{
     const x=Lm+pw*t.x,anc=t.x<0.04?"start":t.x>0.96?"end":"middle";
@@ -1836,8 +1862,8 @@ function axZone(v){
 }
 const toneColor=t=>t<0?"var(--down)":t>0?"var(--up)":"var(--ink-2)";
 /* 색 띠 — 음수 tone 이 공포(파랑), 양수가 탐욕(빨강) */
-const tone=()=>({"-2":[downRGB(),.075],"-1":[downRGB(),.045],
-                 "0":["120,135,150",.025],"1":[upRGB(),.045],"2":[upRGB(),.075]});
+const tone=()=>({"-2":[downRGB(),.055],"-1":[downRGB(),.028],
+                 "0":["120,135,150",.012],"1":[upRGB(),.028],"2":[upRGB(),.055]});
 
 function btTools(){
   /* .tools 래퍼 없이 세그먼트만 — 카드 안쪽 소제목 줄에 얹힌다 */
@@ -1864,7 +1890,7 @@ function btSeries(){
     const cv=(BT.indices[k].curve||{})[btAx]||{};
     const c=(cv.h||{})[btH]||{};
     return {k,from:cv.from,to:cv.to,days:cv.days||0,name:idxName(k,BT.indices[k]),win:c.win||[],med:c.med||[],avg:c.avg||[],n:c.n||[],
-            col:i?"var(--ink-3)":"var(--ink)",wd:i?1.5:2.1,dash:i?"4 3":""};
+            col:i?"#687b91":"var(--ink-2)",wd:i?1.8:2.2,dash:i?"5 3":""};
   });
 }
 
@@ -1904,10 +1930,13 @@ function btGeo(){
   if(!meds.length||!wins.length)return null;
 
   /* T 는 머리 여백. 구간 이름 줄과 세로축 이름 줄, 두 줄이 들어간다. */
-  const {W,sm}=geo(document.getElementById("bt-body"));
-  /* 아래 칸(승률)은 값이 70~100%에 몰려 선이 납작해 보인다. 위 칸 대비 높이를 1.5배로 준다. */
-  const g=sm?{L:36,R:10,T:38,ph1:180,gap:26,ph2:93,B:30,names:false}
-            :{L:48,R:16,T:46,ph1:230,gap:30,ph2:117,B:38,names:true};
+  /* 첫 렌더에는 bt-c가 없다. 같은 .chart 여백을 가진 위 차트에서
+     padding을 읽어 bt-body 안에 생길 SVG의 실제 너비를 구한다. */
+  const {W,sm}=geo(document.getElementById("bt-body"),document.getElementById("main-chart"));
+  /* 수익률과 승률은 독립적인 세로축을 쓰고 가로축을 공유한다.
+     두 단 사이에는 아래 축 제목과 위 단의 마지막 눈금이 겹치지 않을 공간을 둔다. */
+  const g=sm?{L:42,R:8,T:38,ph1:180,gap:40,ph2:93,B:30,names:false}
+            :{L:48,R:16,T:52,ph1:230,gap:40,ph2:117,B:38,names:true};
   const L=g.L,pw=W-L-g.R;
   const T1=g.T,B1=T1+g.ph1,T2=B1+g.gap,B2=T2+g.ph2,H=B2+g.B;
 
@@ -1946,12 +1975,12 @@ function btChart(){
     const wd=X(c[1])-X(c[0]);
     const nm=zoneText(z);
     if(wd<nm.length*9+6)return "";
-    return `<text x="${((X(c[0])+X(c[1]))/2).toFixed(1)}" y="${T1-27}" text-anchor="middle" class="svg-label" fill="var(--ink-3)">${nm}</text>`;
+    return `<text x="${((X(c[0])+X(c[1]))/2).toFixed(1)}" y="${T1-35}" text-anchor="middle" class="svg-label" fill="var(--ink-3)">${nm}</text>`;
   }).join(""):"";
 
   /* 수익률 축만 + 부호를 붙인다. 승률에 +90% 라고 쓰면 안 된다. */
   const grid=(ticks,Y,signed)=>ticks.map(t=>
-    `<line x1="${L}" y1="${Y(t).toFixed(1)}" x2="${(L+pw).toFixed(1)}" y2="${Y(t).toFixed(1)}" stroke="var(--rule-2)" stroke-width="1"/>`+
+    `<line x1="${L}" y1="${Y(t).toFixed(1)}" x2="${(L+pw).toFixed(1)}" y2="${Y(t).toFixed(1)}" stroke="var(--rule-2)" stroke-width="1" class="svg-grid"/>`+
     `<text x="${L-6}" y="${(Y(t)+3.5).toFixed(1)}" text-anchor="end" class="svg-axis">${signed&&t>0?"+":""}${t}%</text>`).join("");
 
   /* 0% 선은 수익이냐 손실이냐를 가르는 기준이라 굵게 */
@@ -1969,7 +1998,7 @@ function btChart(){
       d+=(open?"L":"M")+X(v).toFixed(1)+" "+Y(y).toFixed(1)+" ";
       open=true;
     }
-    return d?`<path d="${d.trim()}" fill="none" stroke="${s.col}" stroke-width="${s.wd}" stroke-linejoin="round"${s.dash?` stroke-dasharray="${s.dash}"`:""} class="draw${si?" d1":""}" style="--len:${(pw*2).toFixed(0)}"/>`:"";
+    return d?`<path d="${d.trim()}" fill="none" stroke="${s.col}" stroke-width="${s.wd}" stroke-linejoin="round"${s.dash?` stroke-dasharray="${s.dash}"`:""} class="draw bt-series${si?" d1":""}" style="--series-dash:${s.dash||'none'};--len:${(pw*2).toFixed(0)}"/>`:"";
   };
   const paths=S.map((s,i)=>line(s,"med",Y1,i)).join("")+
               S.map((s,i)=>line(s,"win",Y2,i)).join("");
@@ -2007,7 +2036,7 @@ function btChart(){
     ${grid(w.ticks,Y2,false)}${half}
     <rect x="${L}" y="${T1}" width="${pw}" height="${(B1-T1).toFixed(1)}" fill="none" stroke="var(--rule)" stroke-width="1"/>
     <rect x="${L}" y="${T2}" width="${pw}" height="${(B2-T2).toFixed(1)}" fill="none" stroke="var(--rule)" stroke-width="1"/>
-    ${zn}${cap(T1-9,tx("capMed"))}${cap(T2-9,tx("capWin"))}
+    ${zn}${cap(T1-16,tx("capMed"))}${cap(T2-16,tx("capWin"))}
     ${paths}${mark}
     ${xt}
     <g class="cross" style="opacity:0">
