@@ -3,6 +3,13 @@
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
 ## 2026-10-03 · Codex · (이 PR)
+대문 상단에 서비스 바로가기 메뉴
+- 파일: index.html · CLAUDE.md · docs/design-system.md · 이 일지
+- 규칙: 메뉴·확장·검증은 CLAUDE.md 1번의 상단 서비스 메뉴가 정본.
+- 굳힘: 서비스 카드·스토리 유지. 확인되지 않은 실시간 표시나 상태 배지 없음.
+- 넘김: 사용자 디자인 확인 및 merge. 별도 자료 수집·수동 배포 없음.
+
+## 2026-10-03 · Codex · (이 PR)
 다니엘의 두 차트 — 모바일 폭·조작부·선과 배경 정리
 - 파일: timing/index.html · CLAUDE.md · docs/design-system.md · 이 일지
 - 규칙: 변경 전 backup/v1.7 보관. 구현·검증은 CLAUDE.md 4번의 두 차트 디자인 조정이 정본.

@@ -6,7 +6,7 @@
 <title>Market timing and 13F investor picks — historical records</title>
 
 <!-- 서비스로 들어가는 허브. 한영 본문은 정적 HTML입니다. 카드 한 장이 통째로 링크입니다.
-     서비스 추가: a.s-service 한 장(href·data-route·data-go)을 더합니다.
+     서비스 추가: a.s-service 카드와 .s-nav 링크(href·data-route·data-go)를 함께 더합니다.
      차트는 방문자용 market.json만 읽고, 수집·계산·각 서비스의 화면은 바꾸지 않습니다. -->
 <meta name="description" content="Common investing questions checked against the record: how the S&amp;P 500 moved alongside Fear &amp; Greed, and what great investors held in their filings.">
 <link rel="canonical" href="https://itpaidoff.com/">
@@ -123,6 +123,23 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
 @media(max-width:370px){#two-stream-home .service-question{font-size:25px}#two-stream-home .home-actions{padding:17px 18px 22px}}
 @media(pointer:coarse){#two-stream-home .langs button,#two-stream-home .s-nav a{min-height:44px}}
 
+/* 서비스로 바로 이동하는 메뉴. 서비스가 늘어도 같은 링크를 추가한다. */
+#two-stream-home .s-header{position:sticky;top:0;z-index:10;background:var(--s-bg);
+  border-bottom:1px solid var(--s-line);gap:16px;padding:16px 0;min-height:82px}
+#two-stream-home .s-brand{flex-shrink:0}
+#two-stream-home .s-nav{gap:4px;align-items:center;flex-wrap:wrap;font-size:13px;font-weight:600}
+#two-stream-home .s-nav a{display:inline-flex;align-items:center;justify-content:center;
+  min-height:44px;padding:10px 13px;border-radius:8px;white-space:nowrap}
+#two-stream-home .s-nav a[aria-current="page"]{background:var(--s-blue-bg);color:var(--s-blue)}
+@media(hover:hover){#two-stream-home .s-nav a:hover{background:var(--s-surface);color:var(--s-ink)}}
+@media(max-width:860px){
+  #two-stream-home .s-header{gap:8px 16px;padding:12px 0 10px}
+  #two-stream-home .langs{margin-left:auto}
+  #two-stream-home .s-nav{order:3;width:100%;margin:0;gap:4px;font-size:13px}
+  #two-stream-home .s-nav a{padding:10px}
+}
+@media(max-width:370px){#two-stream-home .s-nav{font-size:12px;gap:2px}#two-stream-home .s-nav a{padding:10px 8px}}
+
 </style>
 </head>
 <body>
@@ -130,12 +147,16 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
   <div class="home-wrap">
     <header class="s-header">
       <a class="s-brand" href="/" data-route="/"><span class="s-mark" aria-hidden="true">↗</span>itpaidoff.</a>
-      <nav class="s-nav" aria-label="Main"><a href="#stream-services"><span data-lang="ko">이야기 둘러보기</span><span data-lang="en">Explore the stories</span></a><a href="#stream-about"><span data-lang="ko">이곳은</span><span data-lang="en">About</span></a></nav>
+      <nav class="s-nav" aria-label="Main">
+        <a href="/" data-route="/" aria-current="page"><span data-lang="ko">홈</span><span data-lang="en">Home</span></a>
+        <a href="/timing/" data-route="/timing/" data-go="timing"><span data-lang="ko">다니엘의 타이밍</span><span data-lang="en">Daniel’s timing</span></a>
+        <a href="/titans/" data-route="/titans/" data-go="titans"><span data-lang="ko">거장들의 선택</span><span data-lang="en">Titans’ picks</span></a>
+      </nav>
       <div class="langs" role="group" aria-label="Language"><button type="button" data-set="ko">한국어</button><button type="button" data-set="en" aria-pressed="true">English</button></div>
     </header>
     <section class="s-intro" aria-labelledby="home-title">
       <div><h1 id="home-title"><span data-lang="ko">투자 앞에서 망설이는<br>우리들의 이야기.</span><span data-lang="en">Behind every investment,<br>there’s a question.</span></h1></div>
-      <p><span data-lang="ko">평범한 투자자의 고민부터<br>오랜 거장들의 선택까지.<br>궁금했던 투자의 순간을 데이터로 따라가 봅니다.</span><span data-lang="en">From an everyday investor’s doubts<br>to the choices of seasoned investors.<br>Follow their stories through the data.</span></p>
+      <p><span data-lang="ko">평범한 투자자의 고민부터<br>오랜 거장들의 선택까지.<br>자동으로 갱신되는 시장 차트와 공시로 살펴봅니다.</span><span data-lang="en">From an everyday investor’s doubts<br>to the choices of seasoned investors.<br>Explore market charts and filings that update automatically.</span></p>
     </section>
     <div class="s-services" id="stream-services">
       <a class="s-service" href="/timing/" data-go="timing" data-route="/timing/">
