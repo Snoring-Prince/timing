@@ -40,7 +40,7 @@
      아이콘은 한 장뿐이라 어느 쪽으로 칠해도 절반은 반대로 읽힙니다. -->
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="theme-color" content="#F7F9FB">
+<meta name="theme-color" content="#ffffff">
 
 <!-- 구조화 데이터. 검색엔진에 "이게 무엇인지"를 한 번 더 알려 줍니다.
      사실만 적습니다 — 무료이고, 언어는 둘이고, 금융 자료를 보여 준다는 것. -->
@@ -751,29 +751,130 @@ svg.sm .svg-axis{font-size:11px}
   .stamp{font-size:11.5px}
 }
 </style>
+<style id="story-design">
+/* 대문에서 이어지는 이야기형 화면. 차트의 SVG 눈금·상승/하락 토큰은 보존한다. */
+:root{--paper:#fff;--ink:#182132;--ink-2:#475765;--ink-3:#626a78;
+  --rule:#d7dee9;--rule-2:#e5e8ee;--accent:#224ddb;color-scheme:light}
+body{background:#fff;background-image:none}
+.wrap{max-width:1144px;padding:0 52px 56px}
+.site-header{min-height:86px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 0}
+.site-brand{display:inline-flex;align-items:center;gap:9px;font-size:22px;font-weight:800;
+  letter-spacing:-1px;color:var(--ink);text-decoration:none}
+.site-mark{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;
+  border-radius:8px;background:var(--accent);color:white;font-size:17px;letter-spacing:0}
+.seg.mini.lang{background:#f3f5f9;border:0;border-radius:8px;padding:3px;gap:2px}
+.seg.mini.lang button{font-family:var(--body);font-size:11px;font-weight:600;padding:7px 9px;min-height:32px}
+.seg.mini.lang button+button{border:0}
+.seg.mini.lang button[aria-pressed="true"]{background:var(--ink)}
+html[lang="ko"] [data-copy="en"],html:not([lang="ko"]) [data-copy="ko"]{display:none}
+.daniel-story{padding:18px 0 24px;margin:0 0 30px;border-bottom:1px solid var(--rule-2)}
+.daniel-story h1{margin:0 0 14px;font-size:26px;line-height:1.35;font-weight:700;
+  letter-spacing:-.6px;word-break:keep-all}
+.story-actions{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center;margin-top:8px}
+.story-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;
+  font-size:12px;font-weight:500;text-decoration:underline;text-decoration-color:var(--rule);
+  text-underline-offset:4px;color:var(--ink-3);gap:8px}
+.story-prose{max-width:850px;font-size:13.5px;line-height:1.85;color:var(--ink-2);word-break:keep-all;overflow-wrap:break-word}
+.story-prose p{margin:0 0 9px}
+.story-prose p:last-child{margin-bottom:0}
+.chapter-intro{margin:0 0 18px;scroll-margin-top:24px}
+.chapter-intro h2{font-size:25px;line-height:1.4;letter-spacing:-.7px;margin:0 0 8px;font-weight:700;word-break:keep-all}
+.chapter-intro p{font-size:14px;line-height:1.8;margin:0;color:var(--ink-3);word-break:keep-all}
+.chapter-intro.results{margin-top:44px}
+.panel{border-color:var(--rule-2);border-radius:20px;margin-bottom:24px}
+.panel-head{align-items:center;flex-wrap:wrap;border-radius:20px 20px 0 0;background:#f8faff;padding:19px 22px;gap:8px 20px}
+h2.name,.name h2,.bt-title{font-family:var(--body);font-size:17px;font-weight:700;letter-spacing:-.3px}
+.stamp{font-family:var(--body);font-size:11px;line-height:1.6}
+.ctl-row{padding:16px 20px 4px}
+.seg{border:0;background:#f3f5f9;border-radius:9px;padding:3px;gap:2px}
+.seg button,.seg.mini button,.seg.mini.lines button,.seg.mini.ax button{font-family:var(--body);
+  font-size:11px;font-weight:600;letter-spacing:0;border-radius:6px;min-height:32px;padding:7px 9px}
+.seg button+button{border-left:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:white}
+.readout dt,.readout .num,.readout .sub{font-family:var(--body);font-variant-numeric:tabular-nums}
+.readout dt{font-size:11px;letter-spacing:0}
+.readout .num{font-size:22px;font-weight:650}
+.notes{padding:20px 22px 22px;background:#f8faff;border-radius:0 0 20px 20px}
+.notes h3{font-family:var(--body);font-size:13px;letter-spacing:0}
+.notes p{font-size:13px;line-height:1.9}
+.bt-sec{border-top:0}
+.bt-head{padding:20px 22px 16px;gap:12px 20px}
+.bt-name{flex-wrap:wrap;min-width:0}
+.ticker{border:0;letter-spacing:0;font-family:var(--body);font-size:11px;padding:0}
+.bt-sum,.bt-sum .now .cap,.bt-sum .now .zn,.bt-sum .grid .hd{font-family:var(--body);font-variant-numeric:tabular-nums}
+.bt-sum .now .cap,.bt-sum .grid .hd{letter-spacing:0;font-size:11px}
+.bt-sum .now .v{font-weight:650}
+.bt-sum .grid .q{font-weight:600}
+.bt-foot{font-family:var(--body);font-size:12px}
+.about{background:#f8faff;margin-top:32px}
+.about summary{font-family:var(--body);font-weight:650;padding:18px 22px}
+.about summary:hover{border-radius:20px}
+.about .prose h3{font-family:var(--body);font-size:14px;letter-spacing:0}
+.about .prose p{font-size:13px}
+.support,.foot,.disc .guide,.back{font-family:var(--body);font-size:12px;line-height:1.9}
+.disc{font-size:12.5px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+@media(hover:hover){.story-actions a:hover,.site-brand:hover{color:var(--accent)}}
+@media(max-width:760px){
+  .wrap{padding:0 24px 44px}
+  .daniel-story{padding:12px 0 18px;margin-bottom:26px}
+  .daniel-story h1{font-size:24px}
+  .chapter-intro h2{font-size:23px}
+}
+@media(max-width:640px){
+  .wrap{padding:0 18px 40px}
+  .site-header{min-height:76px}
+  .site-brand{font-size:20px}
+  .panel-head{padding:17px 14px;align-items:flex-start}
+  .ctl-row{padding:12px 14px 2px;gap:12px}
+  .seg.mini button,.seg.mini.lines button{padding:7px;min-height:32px}
+  .notes{padding:18px 14px}
+  .bt-head{padding:18px 14px 12px}
+  .readout .num{font-size:20px}
+  .about summary{padding:17px 14px}
+  .chapter-intro.results{margin-top:34px}
+}
+@media(max-width:370px){
+  .wrap{padding-right:14px;padding-left:14px}
+  .story-prose{font-size:13px}
+  .chapter-intro h2{font-size:21px}
+  .chapter-intro p{font-size:13px}
+}
+</style>
 </head>
 <body>
 <div class="wrap">
 
-  <header class="masthead">
-    <div>
-      <!-- 브랜드는 번역하지 않으므로 HTML 에 그대로 둔다(사전에 없다).
-           h1 은 구글이 제일 무겁게 보는 줄이라 찾는 말을 넣는다 — 예전에는
-           여기에 브랜드만 있어서 제목 태그에 검색어가 한 번도 안 들어갔다. -->
-      <p class="eyebrow">Daniel's timing</p>
-      <h1 id="tagline">Market timing by Fear &amp; Greed<span class="vix-only"> and VIX</span></h1>
-    </div>
-    <div class="mast-right">
-      <div id="lang-seg"></div>
-      <div class="stamp" id="stamp">Loading…</div>
-    </div>
+  <header class="site-header">
+    <a class="site-brand" id="home-link" href="/"><span class="site-mark" aria-hidden="true">↗</span>itpaidoff.</a>
+    <div id="lang-seg"></div>
   </header>
+
+  <!-- 대문에서 이어지는 이야기. 검색엔진과 JS 없는 방문자에게도 한영 본문이 남는다.
+       data-copy는 언어 버튼의 data-lang 클릭 처리와 의도적으로 구분한다. -->
+  <section class="daniel-story" aria-labelledby="story-title">
+    <h1 id="story-title"><span data-copy="ko">다니엘의 타이밍</span><span data-copy="en">Daniel’s timing</span></h1>
+    <div class="story-prose">
+      <p><span data-copy="ko">개별 주식에서 좀처럼 재미를 보지 못한 다니엘은 S&amp;P 500과 Nasdaq 100에 투자하기로 했다. 살 건 정했지만, 언제 돈을 넣어야 할지는 여전히 어려웠다.</span><span data-copy="en">Picking individual stocks hadn’t worked out for Daniel, so he chose the S&amp;P 500 and Nasdaq 100. He knew what to buy. Deciding when was still difficult.</span></p>
+      <p><span data-copy="ko">‘공포에 사고, 탐욕에 팔아라.’ 그 말이 궁금해 CNN 공포·탐욕 지수와 주가를 나란히 놓아봤다. 비슷한 공포 속에서 시작한 투자는 얼마나 자주 수익이 났고, 수익과 손실은 어느 정도였을까? 아래는 그 질문을 과거 기록으로 살펴본 결과다.</span><span data-copy="en">“Buy when others are fearful. Sell when they’re greedy.” Curious, he compared CNN’s Fear &amp; Greed Index with market prices. How often had investing at similar fear levels made money, and how large were the gains and losses? The charts below explore those questions through past records.</span></p>
+    </div>
+    <div class="story-actions">
+      <a href="#chart-intro"><span data-copy="ko">차트 보기</span><span data-copy="en">Explore the chart</span><span aria-hidden="true">↓</span></a>
+      <a href="#results-intro"><span data-copy="ko">과거 결과 보기</span><span data-copy="en">See past results</span><span aria-hidden="true">↓</span></a>
+    </div>
+  </section>
+
+  <div class="chapter-intro" id="chart-intro">
+    <h2><span data-copy="ko">공포와 주가를, 같은 시간 위에.</span><span data-copy="en">Fear and prices, on one timeline.</span></h2>
+    <p id="tagline">Market timing by Fear &amp; Greed<span class="vix-only"> and VIX</span></p>
+  </div>
 
   <section class="panel" id="panel-main">
     <div class="panel-head">
       <!-- JS 를 안 돌리는 크롤러에게도 h2 가 보이게 기본값을 적어 둔다.
            renderMain() 이 곧 덮어쓰므로 화면에는 영향이 없다. -->
       <h2 class="name" id="main-name">S&amp;P 500 (SPY) and CNN Fear &amp; Greed</h2>
+      <div class="stamp" id="stamp">Loading…</div>
     </div>
     <div class="ctl-row">
       <div id="main-lines"></div>
@@ -785,7 +886,11 @@ svg.sm .svg-axis{font-size:11px}
     <div class="notes" id="main-notes"></div>
   </section>
 
-  <section class="panel">
+  <div class="chapter-intro results" id="results-intro">
+    <h2><span data-copy="ko">그때 시작했다면,<br>그 뒤는 어땠을까?</span><span data-copy="en">What happened<br>after investing in that mood?</span></h2>
+    <p><span data-copy="ko">비슷한 공포·탐욕 수준에서 시작한 과거의 투자. 보유 기간을 바꾸며 결과를 살펴봅니다.</span><span data-copy="en">Look back at investments made at similar Fear &amp; Greed levels. Change the holding period to explore what followed.</span></p>
+  </div>
+  <section class="panel" id="panel-results">
     <div class="bt-sec">
       <div class="bt-head">
         <div class="bt-name">
@@ -1605,6 +1710,10 @@ function paintStatic(){
   put("disc",tx("disclaimer")+'<br><a class="guide" href="/titans/13f/?lang='+LANG+'">'+tx("guide")+'</a>');
   paintSupport();
   put("tagline",tx("tagline"));
+  const home=document.getElementById("home-link");
+  if(home)home.setAttribute("href","/?lang="+LANG);
+  const back=document.querySelector("a.back");
+  if(back)back.setAttribute("href","/?lang="+LANG);
   put("fng-name",axName(btAx));
   const st=document.getElementById("stamp");
   if(st)paintStamp();
