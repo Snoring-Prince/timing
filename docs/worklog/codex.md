@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-10-03 · Codex · (이 PR)
+다니엘의 두 차트 — 모바일 폭·조작부·선과 배경 정리
+- 파일: timing/index.html · CLAUDE.md · docs/design-system.md · 이 일지
+- 규칙: 변경 전 backup/v1.7 보관. 구현·검증은 CLAUDE.md 4번의 두 차트 디자인 조정이 정본.
+- 굳힘: 담백한 상단 서사·기존 통계·낙폭 표시·기간 연동·VIX 숨김 유지. 기간 버튼 자체는 한 줄.
+- 넘김: 사용자 디자인 확인 및 merge. 별도 자료 수집·수동 배포 없음.
+
 ## 2026-10-03 · Codex · PR #126
 다니엘 화면을 대문과 잇는 디자인·담백한 상단 서사
 - 파일: timing/index.html · scripts/tests/home.test.cjs · CLAUDE.md · design-system.md · 이 일지
