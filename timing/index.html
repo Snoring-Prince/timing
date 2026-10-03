@@ -754,7 +754,7 @@ svg.sm .svg-axis{font-size:11px}
 <style id="story-design">
 /* 대문에서 이어지는 이야기형 화면. 차트의 SVG 눈금·상승/하락 토큰은 보존한다. */
 :root{--paper:#fff;--ink:#182132;--ink-2:#475765;--ink-3:#626a78;
-  --rule:#d7dee9;--rule-2:#e5e8ee;--accent:#224ddb;--story-bg:#edf2ff;color-scheme:light}
+  --rule:#d7dee9;--rule-2:#e5e8ee;--accent:#224ddb;color-scheme:light}
 body{background:#fff;background-image:none}
 .wrap{max-width:1144px;padding:0 52px 56px}
 .site-header{min-height:86px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 0}
@@ -767,21 +767,16 @@ body{background:#fff;background-image:none}
 .seg.mini.lang button+button{border:0}
 .seg.mini.lang button[aria-pressed="true"]{background:var(--ink)}
 html[lang="ko"] [data-copy="en"],html:not([lang="ko"]) [data-copy="ko"]{display:none}
-.daniel-story{display:grid;grid-template-columns:1fr 1.15fr;gap:44px;background:var(--story-bg);
-  border-radius:20px;padding:36px 38px;margin:20px 0 44px;align-items:center}
-.story-service{display:flex;align-items:center;gap:10px;margin:0 0 22px;font-size:16px;font-weight:700}
-.story-number{display:inline-flex;align-items:center;justify-content:center;width:29px;height:29px;
-  flex-shrink:0;background:white;border-radius:50%;font-size:13px;color:var(--accent)}
-.daniel-story h1{margin:0;font-size:clamp(32px,3.8vw,42px);line-height:1.25;font-weight:750;
-  letter-spacing:-1.5px;word-break:keep-all}
-.story-actions{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-top:26px}
+.daniel-story{padding:18px 0 24px;margin:0 0 30px;border-bottom:1px solid var(--rule-2)}
+.daniel-story h1{margin:0 0 14px;font-size:26px;line-height:1.35;font-weight:700;
+  letter-spacing:-.6px;word-break:keep-all}
+.story-actions{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center;margin-top:8px}
 .story-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;
-  font-size:12px;font-weight:650;text-decoration:none;color:var(--accent);gap:8px}
-.story-actions .primary{background:var(--accent);color:white;padding:11px 15px;border-radius:9px}
-.story-prose{font-size:14px;line-height:1.9;color:var(--ink-2);word-break:keep-all;overflow-wrap:break-word}
-.story-prose p{margin:0 0 15px}
+  font-size:12px;font-weight:500;text-decoration:underline;text-decoration-color:var(--rule);
+  text-underline-offset:4px;color:var(--ink-3);gap:8px}
+.story-prose{max-width:850px;font-size:13.5px;line-height:1.85;color:var(--ink-2);word-break:keep-all;overflow-wrap:break-word}
+.story-prose p{margin:0 0 9px}
 .story-prose p:last-child{margin-bottom:0}
-.story-prose strong{font-weight:650;color:var(--ink)}
 .chapter-intro{margin:0 0 18px;scroll-margin-top:24px}
 .chapter-intro h2{font-size:25px;line-height:1.4;letter-spacing:-.7px;margin:0 0 8px;font-weight:700;word-break:keep-all}
 .chapter-intro p{font-size:14px;line-height:1.8;margin:0;color:var(--ink-3);word-break:keep-all}
@@ -819,21 +814,17 @@ h2.name,.name h2,.bt-title{font-family:var(--body);font-size:17px;font-weight:70
 .support,.foot,.disc .guide,.back{font-family:var(--body);font-size:12px;line-height:1.9}
 .disc{font-size:12.5px}
 a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
-@media(hover:hover){.story-actions .primary:hover{background:#183bb3}.site-brand:hover{color:var(--accent)}}
+@media(hover:hover){.story-actions a:hover,.site-brand:hover{color:var(--accent)}}
 @media(max-width:760px){
   .wrap{padding:0 24px 44px}
-  .daniel-story{grid-template-columns:1fr;gap:26px;padding:28px;margin:12px 0 32px}
-  .daniel-story h1{font-size:36px}
-  .story-service{margin-bottom:16px}
-  .story-actions{margin-top:20px}
-  .story-prose{font-size:14px}
+  .daniel-story{padding:12px 0 18px;margin-bottom:26px}
+  .daniel-story h1{font-size:24px}
   .chapter-intro h2{font-size:23px}
 }
 @media(max-width:640px){
   .wrap{padding:0 18px 40px}
   .site-header{min-height:76px}
   .site-brand{font-size:20px}
-  .daniel-story{padding:24px 22px}
   .panel-head{padding:17px 14px;align-items:flex-start}
   .ctl-row{padding:12px 14px 2px;gap:12px}
   .seg.mini button,.seg.mini.lines button{padding:7px;min-height:32px}
@@ -845,9 +836,6 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
 }
 @media(max-width:370px){
   .wrap{padding-right:14px;padding-left:14px}
-  .daniel-story{padding:22px 19px}
-  .daniel-story h1{font-size:31px}
-  .story-service{font-size:15px}
   .story-prose{font-size:13px}
   .chapter-intro h2{font-size:21px}
   .chapter-intro p{font-size:13px}
@@ -865,18 +853,14 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
   <!-- 대문에서 이어지는 이야기. 검색엔진과 JS 없는 방문자에게도 한영 본문이 남는다.
        data-copy는 언어 버튼의 data-lang 클릭 처리와 의도적으로 구분한다. -->
   <section class="daniel-story" aria-labelledby="story-title">
-    <div class="story-opening">
-      <p class="story-service"><span class="story-number">01</span><span data-copy="ko">다니엘의 타이밍</span><span data-copy="en">Daniel’s timing</span></p>
-      <h1 id="story-title"><span data-copy="ko">살 건 정했는데,<br>언제 사지?</span><span data-copy="en">I know what to buy.<br>But when?</span></h1>
-      <div class="story-actions">
-        <a class="primary" href="#chart-intro"><span data-copy="ko">차트부터 보기</span><span data-copy="en">Explore the chart</span><span aria-hidden="true">↓</span></a>
-        <a href="#results-intro"><span data-copy="ko">과거 결과 보기</span><span data-copy="en">See past results</span><span aria-hidden="true">↓</span></a>
-      </div>
-    </div>
+    <h1 id="story-title"><span data-copy="ko">다니엘의 타이밍</span><span data-copy="en">Daniel’s timing</span></h1>
     <div class="story-prose">
-      <p><span data-copy="ko">개별 주식에서는 좀처럼 재미를 보지 못한 다니엘. 이번에는 <strong>S&amp;P 500과 Nasdaq 100</strong>에 투자하기로 했다. 그런데 막상 돈을 넣으려니, 또 망설여졌다.</span><span data-copy="en">Picking individual stocks hadn’t worked out for Daniel. This time, he chose the <strong>S&amp;P 500 and Nasdaq 100.</strong> But when it was time to invest, he hesitated again.</span></p>
-      <p><span data-copy="ko">‘공포에 사고, 탐욕에 팔아라.’ 익숙한 격언이 떠올랐다. 정말 사람들이 겁을 낼 때가 기회였을까? <strong>CNN 공포·탐욕 지수와 주가를 같은 시간 위에</strong> 놓아보기로 했다.</span><span data-copy="en">“Buy when others are fearful. Sell when they’re greedy.” Was fear really an opportunity? He decided to put <strong>CNN’s Fear &amp; Greed Index and market prices on the same timeline.</strong></span></p>
-      <p><span data-copy="ko">궁금증은 한 걸음 더 나아갔다. <strong>비슷한 공포 속에서 시작했다면, 얼마나 자주 수익이 났을까?</strong> 수익과 손실은 어느 정도였을까? 아래는 그 질문을 따라 과거의 기록을 펼쳐본 결과다.</span><span data-copy="en">Then came another question: <strong>how often had investing at similar fear levels made money?</strong> How large were the gains and losses? Below is his exploration of the historical record.</span></p>
+      <p><span data-copy="ko">개별 주식에서 좀처럼 재미를 보지 못한 다니엘은 S&amp;P 500과 Nasdaq 100에 투자하기로 했다. 살 건 정했지만, 언제 돈을 넣어야 할지는 여전히 어려웠다.</span><span data-copy="en">Picking individual stocks hadn’t worked out for Daniel, so he chose the S&amp;P 500 and Nasdaq 100. He knew what to buy. Deciding when was still difficult.</span></p>
+      <p><span data-copy="ko">‘공포에 사고, 탐욕에 팔아라.’ 그 말이 궁금해 CNN 공포·탐욕 지수와 주가를 나란히 놓아봤다. 비슷한 공포 속에서 시작한 투자는 얼마나 자주 수익이 났고, 수익과 손실은 어느 정도였을까? 아래는 그 질문을 과거 기록으로 살펴본 결과다.</span><span data-copy="en">“Buy when others are fearful. Sell when they’re greedy.” Curious, he compared CNN’s Fear &amp; Greed Index with market prices. How often had investing at similar fear levels made money, and how large were the gains and losses? The charts below explore those questions through past records.</span></p>
+    </div>
+    <div class="story-actions">
+      <a href="#chart-intro"><span data-copy="ko">차트 보기</span><span data-copy="en">Explore the chart</span><span aria-hidden="true">↓</span></a>
+      <a href="#results-intro"><span data-copy="ko">과거 결과 보기</span><span data-copy="en">See past results</span><span aria-hidden="true">↓</span></a>
     </div>
   </section>
 
