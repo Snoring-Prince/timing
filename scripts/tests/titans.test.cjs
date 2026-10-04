@@ -46,10 +46,10 @@ test('options and principal amounts never inflate stock positions or their weigh
   assert.equal(run('build().list[0].life.filter(o=>o.exit).length'),1);
 });
 
-test('mobile guidance does not invent a quarter comparison in either language', () => {
+test('mobile change labels do not invent a quarter comparison in either language', () => {
   const run=page(book([['2026-06-30',10,50]]));
-  assert.doesNotMatch(run('D.ko.mobileGuide'),/이번 분기/);
-  assert.doesNotMatch(run('D.en.mobileGuide'),/this quarter/);
+  assert.equal(run('D.ko.mobileChange'),'공시 간 증감');
+  assert.equal(run('D.en.mobileChange'),'Share change');
   assert.match(run('D.ko.stockOnly'),/옵션/);
   assert.match(run('D.en.stockOnly'),/options/);
 });
