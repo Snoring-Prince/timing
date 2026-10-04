@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Market timing and 13F investor picks — historical records</title>
+<title>Investing feels hard. A glimpse into other investors’ questions.</title>
 
 <!-- 서비스로 들어가는 허브. 한영 본문은 정적 HTML입니다. 카드 한 장이 통째로 링크입니다.
      서비스 추가: a.s-service 카드와 .s-nav 링크(href·data-route·data-go)를 함께 더합니다.
      차트는 방문자용 market.json만 읽고, 수집·계산·각 서비스의 화면은 바꾸지 않습니다. -->
-<meta name="description" content="Common investing questions checked against the record: how the S&amp;P 500 moved alongside Fear &amp; Greed, and what great investors held in their filings.">
+<meta name="description" content="Am I the only one who finds investing difficult? A collection of questions from people who find investing hard.">
 <link rel="canonical" href="https://itpaidoff.com/">
 <link rel="alternate" hreflang="en" href="https://itpaidoff.com/?lang=en">
 <link rel="alternate" hreflang="ko" href="https://itpaidoff.com/?lang=ko">
@@ -17,8 +17,8 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="itpaidoff.com">
 <meta property="og:url" content="https://itpaidoff.com/">
-<meta property="og:title" content="Market timing and 13F investor picks — historical records">
-<meta property="og:description" content="Common investing questions checked against the record: how the S&amp;P 500 moved alongside Fear &amp; Greed, and what great investors held in their filings.">
+<meta property="og:title" content="Investing feels hard. A glimpse into other investors’ questions.">
+<meta property="og:description" content="Am I the only one who finds investing difficult? A collection of questions from people who find investing hard.">
 <meta property="og:image" content="https://itpaidoff.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -41,7 +41,7 @@
   "name": "itpaidoff.com",
   "url": "https://itpaidoff.com/",
   "inLanguage": ["en", "ko"],
-  "description": "Common investing questions checked against the record: how the S&P 500 moved alongside Fear & Greed, and what great investors held in their filings."
+  "description": "Am I the only one who finds investing difficult? A collection of questions from people who find investing hard."
 }
 </script>
 
@@ -155,8 +155,8 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
       <div class="langs" role="group" aria-label="Language"><button type="button" data-set="ko">한국어</button><button type="button" data-set="en" aria-pressed="true">English</button></div>
     </header>
     <section class="s-intro" aria-labelledby="home-title">
-      <div><h1 id="home-title"><span data-lang="ko">투자 앞에서 망설이는<br>우리들의 이야기.</span><span data-lang="en">Behind every investment,<br>there’s a question.</span></h1></div>
-      <p><span data-lang="ko">평범한 투자자의 고민부터<br>오랜 거장들의 선택까지.<br>자동으로 갱신되는 시장 차트와 공시로 살펴봅니다.</span><span data-lang="en">From an everyday investor’s doubts<br>to the choices of seasoned investors.<br>Explore market charts and filings that update automatically.</span></p>
+      <div><h1 id="home-title"><span data-lang="ko">투자가 너무 어려운<br>어떤 주린이의 이야기</span><span data-lang="en">The story of a beginner<br>who finds investing difficult.</span></h1></div>
+      <p><span data-lang="ko">나만 투자가 어려운 걸까?<br>투자가 어려운 사람들을 위한 고민을 모아놓았어요.</span><span data-lang="en">Am I the only one who finds investing difficult?<br>A collection of questions from people who find investing hard.</span></p>
     </section>
     <div class="s-services" id="stream-services">
       <a class="s-service" href="/timing/" data-go="timing" data-route="/timing/">
@@ -247,8 +247,8 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
   }
   let LANG=pick(),MODEL=null;
   const HEAD={
-    en:{title:'Market timing and 13F investor picks — historical records',desc:'Common investing questions checked against the record: how the S&P 500 moved alongside Fear & Greed, and what great investors held in their filings.'},
-    ko:{title:'투자 타이밍·거장들의 선택 — 과거 기록으로 보는 투자',desc:'다니엘의 투자 타이밍 고민부터 거장들의 선택까지. CNN 공포탐욕지수와 S&P 500·Nasdaq 100의 과거 수익률, 투자 거장들의 보유 종목을 기록으로 살펴봅니다.'}
+    en:{title:'Investing feels hard. A glimpse into other investors’ questions.',desc:'Am I the only one who finds investing difficult? A collection of questions from people who find investing hard.'},
+    ko:{title:'나에겐 너무나 어려운 투자. 다른 사람들의 고민을 엿보다.',desc:'나만 투자가 어려운 걸까? 투자가 어려운 사람들을 위한 고민을 모아놓았어요.'}
   };
   const $=id=>document.getElementById(id),svg=$('market-preview');
   function draw(){
