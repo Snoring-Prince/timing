@@ -19,7 +19,7 @@ en:{
   metaDesc:n=>`${n} holdings in its latest SEC 13F filing — position sizes, share changes and estimated returns based on quarter-end snapshots.`,
   brand:"Titans' picks",
   tagline:n=>`${n} holdings · latest filing`,
-  mobileGuide:"Numbers, left to right: shares held · share change between filings · estimated return. Right: value · portfolio weight.",
+  mobileChange:"Share change", mobileValue:"Holding value", mobileWeight:"Portfolio weight",
   tradeBasis:"Trade amounts are estimated from share changes and quarter-end prices. Full exits use the previous quarter-end value.",
   asOf:d=>`As of ${d}`,
   filedOn:d=>`filed ${d}`,
@@ -91,7 +91,7 @@ ko:{
   metaDesc:n=>`${n}의 최근 SEC 13F 공시 기준 보유 종목 — 분기말 기록으로 비중, 주식 수 증감과 추정 수익률을 살펴봅니다.`,
   brand:"거장들의 선택",
   tagline:n=>`${n} · 최근 공시 기준 보유 종목`,
-  mobileGuide:"숫자는 왼쪽부터 보유 주식 수 · 공시 간 주식 수 증감 · 추정 수익률입니다. 오른쪽은 금액 · 전체 보유 금액에서의 비중입니다.",
+  mobileChange:"공시 간 증감", mobileValue:"보유 금액", mobileWeight:"포트폴리오 비중",
   tradeBasis:"매매 금액은 주식 수 증감과 분기말 가격으로 추정합니다. 전량 매도는 직전 분기말 보유 금액을 사용합니다.",
   asOf:d=>`${d} 기준`,
   filedOn:d=>`${d} 공시`,
@@ -195,7 +195,6 @@ function mountInvestorShell(){
     <p class="cap" id="stockonly" hidden></p>
     <p class="cap" id="bookcut"></p>
     <p class="cap" id="bookcap"></p>
-    <p class="mobile-guide" id="mobileguide"></p>
     <div class="rowin head" id="colhead">
       <div class="who"><b class="caret"></b></div>
       <div class="mid">
@@ -1140,13 +1139,13 @@ function rowHTML(r,rank,maxW){
         ${sec?`<span class="sec">${sec}</span>`:""}
       </div>
       <div class="mid">
-        <span class="hold">${shortShares(r.shares)}</span>
-        ${act}
-        ${gain}
+        <span class="metric"><span class="field-label">${tx("colShares")}</span><span class="hold">${shortShares(r.shares)}</span></span>
+        <span class="metric"><span class="field-label">${tx("mobileChange")}</span>${act}</span>
+        <span class="metric"><span class="field-label">${tx("colRet")}</span>${gain}</span>
       </div>
       <div class="amt">
-        <span class="val">${money(r.value)}</span>
-        <span class="wt">${weightPct(r.w).replace("<","&lt;")}</span>
+        <span class="metric"><span class="field-label">${tx("mobileValue")}</span><span class="val">${money(r.value)}</span></span>
+        <span class="metric"><span class="field-label">${tx("mobileWeight")}</span><span class="wt">${weightPct(r.w).replace("<","&lt;")}</span></span>
       </div>
     </div>
     </summary>
@@ -1259,7 +1258,6 @@ function render(){
   const el=id=>document.getElementById(id);
   el("brand").textContent=tx("brand");
   el("tagline").innerHTML=taglineHTML();
-  el("mobileguide").textContent=tx("mobileGuide");
   el("tradebasis").textContent=tx("tradeBasis");
   el("foothead").textContent=tx("footTitle");
   /* 투자자 목록(/titans/)으로 돌아가는 길. 이름은 눈썹줄과 같은 말이다. */

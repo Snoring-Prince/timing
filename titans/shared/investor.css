@@ -29,6 +29,7 @@
   --t-text:13.5px;   /* 읽는 글 — 각주 · 요약 한 줄        (was 11)      */
   --t-num:14px;      /* 표의 숫자                          (was 12)      */
   --t-name:16px;     /* 종목 이름                          (was 15)      */
+  --t-mobile-value:22px; /* 모바일 보유 금액·비중 — 승인한 시안 */
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -62,7 +63,6 @@ body{
 .tmark img{width:100%;height:100%;object-fit:contain;display:block}
 .mast-right{display:flex;flex-direction:column;align-items:flex-end;gap:9px}
 .stamp{font-family:var(--mono);font-size:var(--t-small);color:var(--ink-3);text-align:right}
-.mobile-guide{display:none}
 .trade-basis{margin:8px 0 0;font-family:var(--mono);font-size:var(--t-small);line-height:1.7;color:var(--ink-3)}
 /* 자료에 구멍이 났을 때만 나오는 줄. 값이 아니라 경고이므로 --ink-2 로
    본문만큼 진하게 두되, 색은 새로 만들지 않습니다(상승·하락 색과 섞이면
@@ -268,7 +268,9 @@ details.fold .rows{margin-top:4px}
 .mid{display:flex;align-items:flex-start;gap:12px;justify-content:center}
 /* 줄 높이를 세 칸에 똑같이 못박습니다 — `.act` 만 다른 값을 쓰면 글자 상자가
    달라져 숫자가 3px 어긋납니다(실측으로 잡았습니다). */
-.mid>span{font-family:var(--mono);font-size:var(--t-num);white-space:nowrap;
+.metric{display:contents}
+.field-label{display:none}
+.mid>span,.mid>.metric>span{font-family:var(--mono);font-size:var(--t-num);white-space:nowrap;
   font-variant-numeric:tabular-nums;text-align:center;line-height:1.25}
 .hold{color:var(--ink-2);min-width:82px}
 /* 이번 분기 칸 — **숫자 한 줄뿐입니다.** 예전에는 위에 `BUY`/`SELL` 이름표를
@@ -295,10 +297,10 @@ details.fold .rows{margin-top:4px}
    **크기를 이름표(11.5px)로 한 칸 내렸습니다** — 14px 두 줄이면 그 줄만
    17px 더 커집니다. `.mid` 가 `flex-start` 라 첫 줄은 옆 숫자와 나란하고
    둘째 줄만 아래로 늘어집니다. */
-/* **선택자를 `.mid>.note` 로 씁니다.** `.note` 만 쓰면 바로 위
-   `.mid>span{white-space:nowrap;font-size:…}` 이 이겨서 두 줄이 안 됩니다
+/* **값까지 경로를 적습니다.** `.note` 만 쓰면 바로 위
+   숫자 기본 규칙이 이겨서 두 줄이 안 됩니다
    (실측: `white-space` 가 `nowrap`, 크기가 14px 그대로였습니다). */
-.mid>.note{color:var(--ink-3);min-width:72px;font-size:var(--t-label);
+.mid>.metric>.note{color:var(--ink-3);min-width:72px;font-size:var(--t-label);
   line-height:1.15;white-space:pre-line}
 /* **한글만 줄 사이를 벌립니다** (2026-09-22, 사용자 지적: "한글 기준으로 줄간이
    너무 붙어 있어"). 잰 잉크 간격은 두 언어가 똑같이 3.21px 인데 **보이는 것이
@@ -306,14 +308,14 @@ details.fold .rows{margin-top:4px}
    읽히고, 영문 소문자는 글자 속이 비어 있어 같은 간격이 넓어 보입니다.
    1.4 로 올리면 간격이 6.1px 이 되고 칸만 5.8px 아래로 자랍니다
    (`.mid` 가 `flex-start` 라 첫 줄은 그대로 옆 숫자와 나란합니다). */
-html[lang="ko"] .mid>.note{line-height:1.4}
+html[lang="ko"] .mid>.metric>.note{line-height:1.4}
 html:not([lang="ko"]) .hold{min-width:82px}
 /* 값은 실측입니다 — 글자를 14px 로 올린 뒤 각 칸의 제일 긴 내용을 재서
    잡았습니다. 안 맞추면 줄마다 칸 폭이 달라져 세로줄이 어긋납니다 —
    실제로 영어에서 23px 씩 흔들렸습니다. */
 html:not([lang="ko"]) .act{min-width:100px}
 html:not([lang="ko"]) .ret,
-html:not([lang="ko"]) .note{min-width:96px}
+html:not([lang="ko"]) .mid>.metric>.note{min-width:96px}
 
 /* ── 목록 머리글 ─────────────────────────────────────────────
    열 이름은 **안 변하는 말**이라 머리에 한 번만 적습니다. 줄마다 바뀌는
@@ -530,18 +532,28 @@ body.settled .fade{animation:none}
    **아래 640px 블록과 따로 둡니다** — 거기에는 여백·제목 크기처럼 정말
    좁은 화면에만 맞는 것들이 들어 있고, 태블릿까지 같이 줄일 이유가 없습니다. */
 @media (max-width:809px){
-  /* 왼쪽은 그대로 두고 가운데·오른쪽만 아래로 내립니다 — 로고와 이름이 먼저
-     읽히는 순서는 지키면서, 숫자 세 칸이 제 너비를 갖습니다. 최소 폭도 풉니다. */
-  .rowin{grid-template-columns:minmax(0,1fr) auto;column-gap:10px;row-gap:7px}
-  .who{grid-column:1/3}
-  .mid{grid-column:1;justify-content:flex-start;flex-wrap:wrap;gap:5px 10px}
-  .amt{grid-column:2;min-width:0}
-  .mid>span,html:not([lang="ko"]) .mid>span{min-width:0;text-align:left;flex:0 0 auto}
-  .act{align-items:flex-start}
-  /* 세 칸이 한 줄에 안 서므로 머리글이 가리키는 자리가 사라집니다.
-     자리를 못 가리키는 이름표는 없느니만 못합니다. 대신 한 번만 안내합니다. */
+  /* 2026-10-04 사용자 승인: 이름 → 금액/비중 → 이름표가 붙은 숫자 세 칸.
+     PC는 같은 값 노드와 기존 열 정렬을 쓰고, 모바일만 이 순서로 놓습니다. */
+  .rowline{padding:18px 0 19px}
+  .rowline>.bar{display:none}
+  .rowin{grid-template-columns:minmax(0,1fr);gap:14px}
+  .who{grid-column:1;grid-row:1;display:grid;grid-template-columns:9px auto auto minmax(0,1fr);gap:3px 8px}
+  .who>.caret,.who>.mk,.who>.rk{grid-row:1/3}
+  .who>.nm{grid-column:4;grid-row:1}
+  .who>.sec{grid-column:4;grid-row:2;white-space:normal;overflow-wrap:anywhere}
+  .mid{grid-column:1;grid-row:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
+    padding-top:12px;border-top:1px solid var(--rule-2)}
+  .amt{grid-column:1;grid-row:2;min-width:0;flex-direction:row;align-items:flex-start;justify-content:space-between;gap:12px}
+  .rowin .metric{display:flex;flex-direction:column;gap:4px;min-width:0;text-align:left}
+  .mid>.metric:last-child,.amt>.metric:last-child{text-align:right}
+  .rowin .metric>.field-label{display:block;font-family:var(--body);font-size:var(--t-label);font-weight:400;
+    color:var(--ink-2);line-height:1.3;white-space:normal;word-break:keep-all;text-align:inherit}
+  .mid>.metric>span:not(.field-label),html:not([lang="ko"]) .mid>.metric>span:not(.field-label){
+    min-width:0;font-family:var(--body);text-align:inherit;line-height:1.4;white-space:normal;overflow-wrap:anywhere}
+  .mid>.metric>span.note,html:not([lang="ko"]) .mid>.metric>span.note{white-space:pre-line}
+  .rowline .val,.rowline .wt{font-family:var(--body);font-size:var(--t-mobile-value);font-weight:500;
+    line-height:1.2;letter-spacing:-.02em;color:var(--ink)}
   .head{display:none}
-  .mobile-guide{display:block;margin:0 0 12px;font-family:var(--mono);font-size:var(--t-small);line-height:1.7;color:var(--ink-2)}
 }
 
 /* ── 좁은 화면 ───────────────────────────────────────────── */
