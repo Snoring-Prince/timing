@@ -3,6 +3,13 @@
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
 ## 2026-10-04 · Codex · (이 PR)
+사용자 확정 대문·카드·다니엘 서사와 직접적인 검색 제목
+- 파일: index.html · timing/index.html · titans/index.html · shared/investor.js · 투자자 index.html ×8 · CLAUDE.md · design-system.md · 이 일지
+- 규칙: 문구·검색 제목·카드 정렬·검증은 CLAUDE.md 1번의 대문 문구·서사·검색 제목 확정 항목이 정본.
+- 굳힘: 사용자 서사 유지. 거장 카드 마지막은 분기별 보유 변화로 명확화. 담백한 다니엘 상단·기존 계산 유지.
+- 넘김: 사용자 merge. 나머지 페이지 문구 확정 후 색인 요청 및 SEO 정비.
+
+## 2026-10-04 · Codex · (이 PR)
 모든 투자자 모바일 보유 현황에 항목별 이름표와 고정 숫자 배치
 - 파일: titans/shared/investor.css·js · 투자자 index.html ×8(캐시 표식) · titans.test.cjs · CLAUDE.md · design-system.md · 이 일지
 - 규칙: 사용자 승인 시안 적용. 구현·검증은 CLAUDE.md 9-3-1의 2026-10-04 항목이 정본. 변경 전 backup/v1.8 보관.
