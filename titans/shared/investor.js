@@ -15,7 +15,7 @@ const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
 const D={
 en:{
   locale:"en-US", dir:"ltr", tab:"English",
-  docTitle:(n,y)=>`${n} portfolio — every 13F filing since ${y}`,
+  docTitle:(n,y)=>`${n} holdings, weights and changes — Titans' picks`,
   metaDesc:n=>`${n} holdings in its latest SEC 13F filing — position sizes, share changes and estimated returns based on quarter-end snapshots.`,
   brand:"Titans' picks",
   tagline:n=>`${n} holdings · latest filing`,
@@ -87,7 +87,7 @@ en:{
 },
 ko:{
   locale:"ko-KR", dir:"ltr", tab:"한국어",
-  docTitle:(n,y)=>`${n} 포트폴리오 — ${y}년부터의 13F 공시`,
+  docTitle:(n,y)=>`${n} 보유 종목·비중·변화 — 거장들의 선택`,
   metaDesc:n=>`${n}의 최근 SEC 13F 공시 기준 보유 종목 — 분기말 기록으로 비중, 주식 수 증감과 추정 수익률을 살펴봅니다.`,
   brand:"거장들의 선택",
   tagline:n=>`${n} · 최근 공시 기준 보유 종목`,
