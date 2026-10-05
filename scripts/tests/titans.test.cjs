@@ -7,10 +7,10 @@ const { test } = require('node:test');
 const root = path.resolve(__dirname, '../..');
 const html = fs.readFileSync(path.join(root, 'titans/berkshire/index.html'), 'utf8');
 const shared = fs.readFileSync(path.join(root, 'titans/shared/investor.js'), 'utf8');
-const sharedCore = shared.slice(0, shared.indexOf('document.getElementById("langtabs").addEventListener'));
+const sharedCore = shared.slice(0, shared.indexOf('/* 곁들이 표 둘'));
 let code = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
   .map(m => m[1]).join('\n')+'\n'+shared;
-code = code.slice(0, code.indexOf('document.getElementById("langtabs").addEventListener'));
+code = code.slice(0, code.indexOf('/* 곁들이 표 둘'));
 
 function page(data,titan=null) {
   const ctx = {window:titan?{TITAN:titan}:{}, console, data, document:{}, navigator:{languages:['ko-KR']},

@@ -24,7 +24,7 @@ function painter(file,search){
   }else if(file.startsWith('titans/')&&!['titans/index.html','titans/13f/index.html'].includes(file)){
     const config=html.match(/<script>\s*(window\.TITAN[\s\S]*?)<\/script>/)[1];
     const shared=read('titans/shared/investor.js');
-    source=config+'\n'+shared.slice(0,shared.indexOf('document.getElementById("langtabs").addEventListener'));
+    source=config+'\n'+shared.slice(0,shared.indexOf('/* 곁들이 표 둘'));
     call='document.title=tx("docTitle",tName(),TT.since);paintHead();';
   }else{
     const headCode=html.match(/const HEAD=({[\s\S]*?\n  });/)[0];

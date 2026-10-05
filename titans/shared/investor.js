@@ -176,7 +176,7 @@ function mountInvestorShell(){
       <h1 id="tagline">This investor holdings · latest filing</h1>
     </div>
     <div class="mast-right">
-      <div class="seg" id="langtabs" role="group" aria-label="Language"></div>
+      <div class="language-control" id="langtabs"></div>
       <div class="stamp" id="stamp"></div>
     </div>
   </header>
@@ -1404,17 +1404,16 @@ function paintHead(){
   c.setAttribute('rel','canonical');c.setAttribute('href',self);
   set('meta[property="og:url"]',"content",self);
 }
-/* 언어를 바꾸면 글자가 바뀌므로 탭은 비우고 다시 그린다(본 사이트와 같은 예외). */
+/* 지원 언어는 사전에서 읽고, 조작은 모든 화면의 공통 부품으로. */
 function paintTabs(){
-  const box=document.getElementById("langtabs");
-  box.innerHTML=Object.keys(D).map(k=>
-    `<button type="button" data-lang="${k}" aria-pressed="${k===LANG}">${D[k].tab}</button>`).join("");
+  if(window.LanguagePicker)window.LanguagePicker.mount(document.getElementById("langtabs"),{
+    lang:LANG,languages:Object.keys(D).map(code=>({code,name:D[code].tab})),
+    onChange:code=>{
+      applyLang(code,true);
+      try{if(window.track)track("lang",{lang:LANG});}catch(err){}
+    }
+  });
 }
-document.getElementById("langtabs").addEventListener("click",e=>{
-  const b=e.target.closest("button[data-lang]"); if(!b)return;
-  applyLang(b.dataset.lang,true);
-  try{ if(window.track) track("lang",{lang:LANG}); }catch(err){}
-});
 
 /* 곁들이 표 둘(티커·섹터)은 있으면 좋고 없어도 그만입니다 — 못 받으면 그 줄만
    글자 타일이 되고 섹터 자리가 빌 뿐입니다. 그래서 따로 받고, 실패를 화면에

@@ -3,6 +3,13 @@
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
 ## 2026-10-05 · Codex · (이 PR)
+12화면의 언어 스위치를 국기·언어 이름 드롭다운으로 통일
+- 파일: shared/language-picker.* · assets/language/* · index.html · timing/index.html · titans/ · 기존 검사 경계·CI · CLAUDE.md · design-system.md · 이 일지
+- 규칙: 구현·새 언어 추가·검증은 CLAUDE.md 6번의 드롭다운 항목이 정본.
+- 굳힘: 기존 주소·우선순위·저장값·언어별 차트색·계산·정적 본문 유지. 투자자 8명 모두 같은 부품.
+- 넘김: 사용자 디자인 확인 및 merge. 네이버 주요 한국어 4주소 수집 요청은 10-05 접수; 재수집 후 제목·설명·색인 확인이 남음.
+
+## 2026-10-05 · Codex · (이 PR)
 전체 화면의 한영 대표 주소·공유 주소·언어 전환과 사이트맵 일치
 - 파일: index.html · timing/index.html · titans/ 페이지·공통 JS · sitemap.xml · SEO 검사·CI · CLAUDE.md · design-system.md · 이 일지
 - 규칙: 현재 한영 검색 주소 규칙과 검증은 CLAUDE.md 6-2의 2026-10-05 항목이 정본.
