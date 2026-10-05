@@ -12,6 +12,8 @@ on:
       - "scripts/fetch_sectors.py"
       - "scripts/publish_titans.py"
       - "index.html"
+      - "shared/language-picker.*"
+      - "assets/language/**"
       - "timing/index.html"
       - "sitemap.xml"
       - "data/titans/investors.json"

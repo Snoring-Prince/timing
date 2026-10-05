@@ -860,13 +860,15 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
   .chapter-intro p{font-size:13px}
 }
 </style>
+<link rel="stylesheet" href="/shared/language-picker.css?v=2026-10-05-lang">
+<script src="/shared/language-picker.js?v=2026-10-05-lang"></script>
 </head>
 <body>
 <div class="wrap">
 
   <header class="site-header">
     <a class="site-brand" id="home-link" href="/"><span class="site-mark" aria-hidden="true">↗</span>itpaidoff.</a>
-    <div id="lang-seg"></div>
+    <div class="language-control" id="lang-seg"></div>
   </header>
 
   <!-- 대문에서 이어지는 이야기. 검색엔진과 JS 없는 방문자에게도 한영 본문이 남는다.
@@ -1723,14 +1725,11 @@ function render(){
 }
 
 /* ================= 언어 전환 =================
-   사전(D)에 언어를 추가하면 버튼이 저절로 하나 늘어난다.
-   .seg.mini 를 쓰지만 data-slot/data-bt 가 없어서 다른 핸들러와 겹치지 않는다. */
+   사전(D)의 지원 언어를 공통 드롭다운에 전달합니다. */
 function langSeg(){
-  const box=document.getElementById("lang-seg");
-  if(!box)return;
-  box.innerHTML='<div class="seg mini lang" role="group" aria-label="'+tx("aria").lang+'">'+
-    Object.keys(D).map(k=>'<button type="button" data-lang="'+k+'" aria-pressed="'+
-      (k===LANG)+'" lang="'+k+'">'+D[k].name+'</button>').join("")+'</div>';
+  if(window.LanguagePicker)window.LanguagePicker.mount(document.getElementById("lang-seg"),{
+    lang:LANG,languages:Object.keys(D).map(code=>({code,name:D[code].name})),onChange:setLang
+  });
 }
 /* JS 로만 그리는 화면 밖의 고정 문구들 */
 function paintStatic(){

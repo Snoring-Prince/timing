@@ -76,9 +76,9 @@ main{max-width:900px;margin:0 auto;padding:36px 20px 72px}
 .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .eyebrow{min-width:0;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase}
 .eyebrow a{color:inherit}
-.langs{display:flex;flex:none;border:1px solid var(--rule)}
-.langs button{font:600 11.5px var(--cond);white-space:nowrap;border:0;background:var(--card);color:var(--ink-2);padding:3px 10px;cursor:pointer}
-.langs button[aria-pressed="true"]{background:var(--ink);color:#fff}
+
+
+
 h1{font:700 30px/1.25 var(--cond);margin:14px 0 10px;letter-spacing:-.01em}
 .lead{color:var(--ink-2);max-width:640px;margin:0 0 28px}
 .doc{background:var(--card);border:1px solid var(--rule);padding:8px 24px 18px}
@@ -94,14 +94,14 @@ h1{font:700 30px/1.25 var(--cond);margin:14px 0 10px;letter-spacing:-.01em}
   .doc{padding:4px 14px 12px}
 }
 </style>
+<link rel="stylesheet" href="/shared/language-picker.css?v=2026-10-05-lang">
+<script src="/shared/language-picker.js?v=2026-10-05-lang"></script>
 </head>
 <body>
 <main>
   <div class="top">
     <div class="eyebrow"><a href="/">itpaidoff.com</a> · <a href="/titans/">Titans' picks</a></div>
-    <div class="langs" role="group" aria-label="Language">
-      <button type="button" data-set="ko">한국어</button><button type="button" data-set="en">English</button>
-    </div>
+    <div class="language-control" id="language-control"></div>
   </div>
 
   <h1><span data-lang="ko">13F 자료 안내</span><span data-lang="en">About the 13F data</span></h1>
@@ -173,7 +173,7 @@ h1{font:700 30px/1.25 var(--cond);margin:14px 0 10px;letter-spacing:-.01em}
     const c=document.head.querySelector('link[rel="canonical"]')||document.head.appendChild(document.createElement('link'));
     c.setAttribute('rel','canonical');c.setAttribute('href',self);
     set('meta[property="og:url"]',"content",self);
-    document.querySelectorAll(".langs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.set===LANG));
+    if(window.LanguagePicker)window.LanguagePicker.mount(document.getElementById("language-control"),{lang:LANG,languages:window.LanguagePicker.options(LANGS),onChange:setLanguage});
     // URL로 지정한 언어도 저장 설정에 기대지 않고 돌아갈 화면에 전달합니다.
     document.querySelectorAll(".back,.eyebrow a").forEach(a=>{
       const u=new URL(a.href);
@@ -181,11 +181,11 @@ h1{font:700 30px/1.25 var(--cond);margin:14px 0 10px;letter-spacing:-.01em}
       a.href=u.href;
     });
   }
-  document.querySelectorAll(".langs button").forEach(b=>b.onclick=()=>{
-    LANG=b.dataset.set; try{ localStorage.setItem("dt.lang",LANG) }catch(e){}
+  function setLanguage(code){
+    LANG=code; try{ localStorage.setItem("dt.lang",LANG) }catch(e){}
     try{const u=new URL(location.href);u.searchParams.set("lang",LANG);history.replaceState(null,"",u);}catch(e){}
     window.track("lang",{lang:LANG}); paint();
-  });
+  }
   paint();
 })();
 </script>

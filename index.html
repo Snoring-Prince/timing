@@ -91,9 +91,6 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
 #two-stream-home a:focus-visible,#two-stream-home button:focus-visible{outline:2px solid var(--s-blue);outline-offset:4px}
 #two-stream-home .s-header{min-height:86px;height:auto;padding:18px 0;flex-wrap:wrap;gap:18px}
 #two-stream-home .s-nav{margin-left:auto}
-#two-stream-home .langs{display:flex;gap:2px;background:#f3f5f9;border-radius:8px;padding:3px}
-#two-stream-home .langs button{border:0;border-radius:6px;background:transparent;color:var(--s-muted);font-size:11px;font-weight:600;padding:7px 9px;white-space:nowrap;cursor:pointer}
-#two-stream-home .langs button[aria-pressed="true"]{background:var(--s-ink);color:#fff}
 #two-stream-home .service-question{font-size:28px;line-height:1.35;font-weight:650;letter-spacing:-1px;margin:24px 0 10px;word-break:keep-all}
 #two-stream-home .s-chart-box{display:flex;flex-direction:column;padding:12px 14px 8px}
 #two-stream-home .s-chart-head{flex-wrap:wrap}
@@ -119,9 +116,9 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
 #two-stream-home .foot .disc{max-width:900px;margin:0 0 8px}
 #two-stream-home .guide{text-decoration:underline;text-underline-offset:3px;font-size:11px}
 @media(min-width:701px){#two-stream-home .s-services{align-items:stretch}#two-stream-home a.s-service{display:flex;flex-direction:column}#two-stream-home .s-service-head{min-height:230px;flex:1}#two-stream-home .s-visual,#two-stream-home .home-actions{flex-shrink:0}}
-@media(max-width:700px){#two-stream-home .s-header{min-height:72px;gap:12px}#two-stream-home .s-nav{order:3;width:100%;margin:0;gap:20px;font-size:12px}#two-stream-home .langs{margin-left:auto}#two-stream-home .langs button{min-height:38px}#two-stream-home .service-question{font-size:27px;margin-top:19px}#two-stream-home .home-actions{padding:17px 22px 22px}}
+@media(max-width:700px){#two-stream-home .s-header{min-height:72px;gap:12px}#two-stream-home .s-nav{order:3;width:100%;margin:0;gap:20px;font-size:12px}#two-stream-home .language-control{margin-left:auto}#two-stream-home .service-question{font-size:27px;margin-top:19px}#two-stream-home .home-actions{padding:17px 22px 22px}}
 @media(max-width:370px){#two-stream-home .service-question{font-size:25px}#two-stream-home .home-actions{padding:17px 18px 22px}}
-@media(pointer:coarse){#two-stream-home .langs button,#two-stream-home .s-nav a{min-height:44px}}
+
 
 /* 서비스로 바로 이동하는 메뉴. 서비스가 늘어도 같은 링크를 추가한다. */
 #two-stream-home .s-header{position:sticky;top:0;z-index:10;background:var(--s-bg);
@@ -134,13 +131,15 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
 @media(hover:hover){#two-stream-home .s-nav a:hover{background:var(--s-surface);color:var(--s-ink)}}
 @media(max-width:860px){
   #two-stream-home .s-header{gap:8px 16px;padding:12px 0 10px}
-  #two-stream-home .langs{margin-left:auto}
+  #two-stream-home .language-control{margin-left:auto}
   #two-stream-home .s-nav{order:3;width:100%;margin:0;gap:4px;font-size:13px}
   #two-stream-home .s-nav a{padding:10px}
 }
 @media(max-width:370px){#two-stream-home .s-nav{font-size:12px;gap:2px}#two-stream-home .s-nav a{padding:10px 8px}}
 
 </style>
+<link rel="stylesheet" href="/shared/language-picker.css?v=2026-10-05-lang">
+<script src="/shared/language-picker.js?v=2026-10-05-lang"></script>
 </head>
 <body>
 <main id="two-stream-home">
@@ -152,7 +151,7 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
         <a href="/timing/" data-route="/timing/" data-go="timing"><span data-lang="ko">다니엘의 타이밍</span><span data-lang="en">Daniel’s timing</span></a>
         <a href="/titans/" data-route="/titans/" data-go="titans"><span data-lang="ko">거장들의 선택</span><span data-lang="en">Titans’ picks</span></a>
       </nav>
-      <div class="langs" role="group" aria-label="Language"><button type="button" data-set="ko">한국어</button><button type="button" data-set="en" aria-pressed="true">English</button></div>
+      <div class="language-control" id="language-control"></div>
     </header>
     <section class="s-intro" aria-labelledby="home-title">
       <div><h1 id="home-title"><span data-lang="ko">투자가 너무 어려운<br>어떤 주린이의 이야기</span><span data-lang="en">The story of a beginner<br>who finds investing difficult.</span></h1></div>
@@ -267,16 +266,16 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
     const self='https://itpaidoff.com/'+(new URLSearchParams(location.search).get('lang')?'?lang='+LANG:'');
     const c=document.head.querySelector('link[rel="canonical"]')||document.head.appendChild(document.createElement('link'));
     c.setAttribute('rel','canonical');c.setAttribute('href',self);set('meta[property="og:url"]','content',self);
-    document.querySelectorAll('.langs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.set===LANG));
+    if(window.LanguagePicker)window.LanguagePicker.mount($('language-control'),{lang:LANG,languages:window.LanguagePicker.options(LANGS),onChange:setLanguage});
     document.querySelectorAll('[data-route]').forEach(a=>a.href=a.dataset.route+'?lang='+LANG);
     const img=document.querySelector('.s-group-image');img.alt=img.dataset[LANG==='ko'?'altKo':'altEn'];
     document.querySelector('nav').setAttribute('aria-label',LANG==='ko'?'메인 메뉴':'Main');draw();
   }
-  document.querySelectorAll('.langs button').forEach(b=>b.addEventListener('click',()=>{
-    LANG=b.dataset.set;try{localStorage.setItem('dt.lang',LANG);}catch(e){}
+  function setLanguage(code){
+    LANG=code;try{localStorage.setItem('dt.lang',LANG);}catch(e){}
     const url=new URL(location.href);url.searchParams.set('lang',LANG);try{history.replaceState(null,'',url);}catch(e){}
     window.track('lang',{lang:LANG});paint();
-  }));
+  }
   document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',()=>window.track('hub',{to:a.dataset.go,lang:LANG})));
   paint();
   if(typeof ResizeObserver==='function')new ResizeObserver(draw).observe(svg);else window.addEventListener('resize',draw);

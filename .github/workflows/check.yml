@@ -6,6 +6,8 @@ on:
   pull_request:
     paths:
       - "index.html"
+      - "shared/language-picker.*"
+      - "assets/language/**"
       - "timing/index.html"
       - "data/backtest.json"
       - "scripts/check_about.py"
