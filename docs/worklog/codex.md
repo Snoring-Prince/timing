@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-10-05 · Codex · (이 PR)
+거장 목록 상단 마지막 문장을 미국 상장 주식 안내로 변경
+- 파일: titans/index.html · CLAUDE.md · 이 일지
+- 규칙: 목록 소개의 현재 문구는 CLAUDE.md 9-3의 사용자 요청 항목이 정본.
+- 굳힘: 지정한 마지막 문장만 한영 교체. 앞 소개·공통 면책·13F 안내 유지.
+- 넘김: 사용자 merge.
+
 ## 2026-10-04 · Codex · (이 PR)
 사용자 확정 대문·카드·다니엘 서사와 직접적인 검색 제목
 - 파일: index.html · timing/index.html · titans/index.html · shared/investor.js · 투자자 index.html ×8 · CLAUDE.md · design-system.md · 이 일지
