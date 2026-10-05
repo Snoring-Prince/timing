@@ -20,7 +20,7 @@
      **간판에는 법인 이름을 씁니다**(CLAUDE.md 9번). 사람 이름은 설명 줄에만.
 ═════════════════════════════════════════════════════════════════════ -->
 <meta name="description" content="Portfolios of great investors from their SEC 13F filings — Berkshire Hathaway, Himalaya Capital, Appaloosa and more: what they hold, what they changed, and how it has done since.">
-<link rel="canonical" href="https://itpaidoff.com/titans/">
+<!-- canonical is set once the language is known; see CLAUDE.md 6-2. -->
 <link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/?lang=en">
 <link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/?lang=ko">
 <link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/">
@@ -310,7 +310,8 @@ a.card:hover .go{background:var(--accent);color:#fff}
     set('meta[property="og:locale:alternate"]',"content",LANG==="ko"?"en_US":"ko_KR");
     const hasParam=new URLSearchParams(location.search).get("lang");
     const self="https://itpaidoff.com/titans/"+(hasParam?"?lang="+LANG:"");
-    set('link[rel="canonical"]',"href",self);
+    const c=document.head.querySelector('link[rel="canonical"]')||document.head.appendChild(document.createElement('link'));
+    c.setAttribute('rel','canonical');c.setAttribute('href',self);
     set('meta[property="og:url"]',"content",self);
   }
 
@@ -344,6 +345,7 @@ a.card:hover .go{background:var(--accent);color:#fff}
   }
   document.querySelectorAll(".langs button").forEach(b=>b.onclick=()=>{
     LANG=b.dataset.set; try{ localStorage.setItem("dt.lang",LANG) }catch(e){}
+    try{const u=new URL(location.href);u.searchParams.set("lang",LANG);history.replaceState(null,"",u);}catch(e){}
     window.track("lang",{lang:LANG}); paint();
   });
   document.querySelectorAll(".card[data-slug]").forEach(a=>a.addEventListener("click",()=>window.track("titans",{to:a.dataset.slug,lang:LANG})));

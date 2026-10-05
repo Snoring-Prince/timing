@@ -13,7 +13,7 @@
      면책 문구는 다섯 화면이 글자까지 같습니다 — 검사가 대조합니다(CLAUDE.md 9-3).
 ═════════════════════════════════════════════════════════════════════ -->
 <meta name="description" content="What a 13F filing is, what it leaves out, and how estimated average cost, returns, stock splits and reporting units are handled on Titans' picks.">
-<link rel="canonical" href="https://itpaidoff.com/titans/13f/">
+<!-- canonical is set once the language is known; see CLAUDE.md 6-2. -->
 <link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/13f/?lang=en">
 <link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/13f/?lang=ko">
 <link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/13f/">
@@ -170,7 +170,8 @@ h1{font:700 30px/1.25 var(--cond);margin:14px 0 10px;letter-spacing:-.01em}
     set('meta[property="og:locale:alternate"]',"content",LANG==="ko"?"en_US":"ko_KR");
     const hasParam=new URLSearchParams(location.search).get("lang");
     const self="https://itpaidoff.com/titans/13f/"+(hasParam?"?lang="+LANG:"");
-    set('link[rel="canonical"]',"href",self);
+    const c=document.head.querySelector('link[rel="canonical"]')||document.head.appendChild(document.createElement('link'));
+    c.setAttribute('rel','canonical');c.setAttribute('href',self);
     set('meta[property="og:url"]',"content",self);
     document.querySelectorAll(".langs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.set===LANG));
     // URL로 지정한 언어도 저장 설정에 기대지 않고 돌아갈 화면에 전달합니다.
@@ -182,6 +183,7 @@ h1{font:700 30px/1.25 var(--cond);margin:14px 0 10px;letter-spacing:-.01em}
   }
   document.querySelectorAll(".langs button").forEach(b=>b.onclick=()=>{
     LANG=b.dataset.set; try{ localStorage.setItem("dt.lang",LANG) }catch(e){}
+    try{const u=new URL(location.href);u.searchParams.set("lang",LANG);history.replaceState(null,"",u);}catch(e){}
     window.track("lang",{lang:LANG}); paint();
   });
   paint();

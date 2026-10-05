@@ -12,6 +12,8 @@ on:
       - "scripts/fetch_sectors.py"
       - "scripts/publish_titans.py"
       - "index.html"
+      - "timing/index.html"
+      - "sitemap.xml"
       - "data/titans/investors.json"
       - "data/titans/prices.json"
       - "data/titans/prices/**"
@@ -39,4 +41,4 @@ jobs:
       - name: 공시 수집 보존 검사
         run: python -m unittest discover -s scripts/tests -p 'test_*.py'
       - name: 화면 계산과 새 분기 검사
-        run: node --test scripts/tests/titans.test.cjs
+        run: node --test scripts/tests/titans.test.cjs scripts/tests/seo.test.cjs

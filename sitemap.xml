@@ -1,16 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 화면마다 한 줄입니다. 언어는 ?lang= 으로 갈리므로 hreflang 으로 묶어 둡니다.
-
-     lastmod 는 손으로 적지 않습니다 — 박아 두면 곧 거짓말이 되고, 구글은
-     못 믿을 lastmod 를 아예 무시합니다. 각 워크플로가 **그 화면의 데이터가
-     실제로 바뀐 날에만** 자기 줄을 옮깁니다. 그래서 줄마다 표식을 달아 뒀습니다
-     — 표식이 없으면 매일 도는 update-data.yml 의 sed 가 분기마다 바뀌는
-     titans 줄까지 같이 찍어서 "매일 바뀐다"는 거짓 신호가 됩니다.
-
-       root 표식이 달린 줄    update-data.yml  (평일 매일 — 첫 화면도 그날 숫자를 보여 줌)
-       timing 표식이 달린 줄  update-data.yml  (평일 매일)
-       titans 표식이 달린 줄  update-13f.yml   (분기마다)
-       titans-13f 표식이 달린 줄  손으로 — 13F 자료 안내 글을 고친 날에만 옮깁니다
+<!-- Each screen has a default URL and explicit English/Korean URLs.
+     Every entry repeats the same reciprocal hreflang links, including itself.
+     Dates change only when that screen's content changes. Keep the markers:
+       root / timing: update-data.yml; titans: update-13f.yml;
+       titans-13f: update manually when the guide changes.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
@@ -19,7 +12,23 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/?lang=en"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/?lang=ko"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/"/>
-    <lastmod>2026-10-03</lastmod><!-- root -->
+    <lastmod>2026-10-05</lastmod><!-- root -->
+    <changefreq>daily</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/"/>
+    <lastmod>2026-10-05</lastmod><!-- root -->
+    <changefreq>daily</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/?lang=ko</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/"/>
+    <lastmod>2026-10-05</lastmod><!-- root -->
     <changefreq>daily</changefreq>
   </url>
   <url>
@@ -27,7 +36,23 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/timing/?lang=en"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/timing/?lang=ko"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/timing/"/>
-    <lastmod>2026-10-03</lastmod><!-- timing -->
+    <lastmod>2026-10-05</lastmod><!-- timing -->
+    <changefreq>daily</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/timing/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/timing/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/timing/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/timing/"/>
+    <lastmod>2026-10-05</lastmod><!-- timing -->
+    <changefreq>daily</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/timing/?lang=ko</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/timing/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/timing/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/timing/"/>
+    <lastmod>2026-10-05</lastmod><!-- timing -->
     <changefreq>daily</changefreq>
   </url>
   <url>
@@ -35,7 +60,23 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/?lang=en"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/?lang=ko"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/"/>
-    <lastmod>2026-09-29</lastmod><!-- titans -->
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/?lang=ko</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
     <changefreq>monthly</changefreq>
   </url>
   <url>
@@ -43,7 +84,23 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/13f/?lang=en"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/13f/?lang=ko"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/13f/"/>
-    <lastmod>2026-09-29</lastmod><!-- titans-13f -->
+    <lastmod>2026-10-05</lastmod><!-- titans-13f -->
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/13f/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/13f/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/13f/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/13f/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans-13f -->
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/13f/?lang=ko</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/13f/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/13f/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/13f/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans-13f -->
     <changefreq>yearly</changefreq>
   </url>
   <url>
@@ -51,7 +108,23 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/berkshire/?lang=en"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/berkshire/?lang=ko"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/berkshire/"/>
-    <lastmod>2026-09-29</lastmod><!-- titans -->
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/berkshire/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/berkshire/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/berkshire/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/berkshire/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/berkshire/?lang=ko</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/berkshire/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/berkshire/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/berkshire/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
     <changefreq>monthly</changefreq>
   </url>
   <url>
@@ -59,7 +132,23 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/himalaya/?lang=en"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/himalaya/?lang=ko"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/himalaya/"/>
-    <lastmod>2026-09-29</lastmod><!-- titans -->
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/himalaya/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/himalaya/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/himalaya/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/himalaya/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/himalaya/?lang=ko</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/himalaya/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/himalaya/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/himalaya/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
     <changefreq>monthly</changefreq>
   </url>
   <url>
@@ -67,7 +156,23 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/appaloosa/?lang=en"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/appaloosa/?lang=ko"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/appaloosa/"/>
-    <lastmod>2026-09-29</lastmod><!-- titans -->
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/appaloosa/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/appaloosa/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/appaloosa/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/appaloosa/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/appaloosa/?lang=ko</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/appaloosa/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/appaloosa/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/appaloosa/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
     <changefreq>monthly</changefreq>
   </url>
   <url>
@@ -75,7 +180,23 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/oaktree/?lang=en"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/oaktree/?lang=ko"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/oaktree/"/>
-    <lastmod>2026-09-29</lastmod><!-- titans -->
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/oaktree/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/oaktree/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/oaktree/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/oaktree/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/oaktree/?lang=ko</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/oaktree/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/oaktree/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/oaktree/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
     <changefreq>monthly</changefreq>
   </url>
   <url>
@@ -83,7 +204,23 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/baupost/?lang=en"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/baupost/?lang=ko"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/baupost/"/>
-    <lastmod>2026-09-29</lastmod><!-- titans -->
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/baupost/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/baupost/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/baupost/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/baupost/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/baupost/?lang=ko</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/baupost/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/baupost/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/baupost/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
     <changefreq>monthly</changefreq>
   </url>
   <url>
@@ -91,7 +228,23 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/pershing/?lang=en"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/pershing/?lang=ko"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/pershing/"/>
-    <lastmod>2026-09-29</lastmod><!-- titans -->
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/pershing/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/pershing/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/pershing/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/pershing/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/pershing/?lang=ko</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/pershing/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/pershing/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/pershing/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
     <changefreq>monthly</changefreq>
   </url>
   <url>
@@ -99,7 +252,23 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/duquesne/?lang=en"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/duquesne/?lang=ko"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/duquesne/"/>
-    <lastmod>2026-09-29</lastmod><!-- titans -->
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/duquesne/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/duquesne/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/duquesne/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/duquesne/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/duquesne/?lang=ko</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/duquesne/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/duquesne/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/duquesne/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
     <changefreq>monthly</changefreq>
   </url>
   <url>
@@ -107,7 +276,23 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/ark/?lang=en"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/ark/?lang=ko"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/ark/"/>
-    <lastmod>2026-09-29</lastmod><!-- titans -->
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/ark/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/ark/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/ark/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/ark/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/titans/ark/?lang=ko</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/titans/ark/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/titans/ark/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/ark/"/>
+    <lastmod>2026-10-05</lastmod><!-- titans -->
     <changefreq>monthly</changefreq>
   </url>
 </urlset>

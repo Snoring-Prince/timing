@@ -1375,7 +1375,10 @@ function fitLife(){
 
 function applyLang(lang,remember){
   LANG=D[lang]?lang:"en"; L10N=D[LANG]; LOCALE=pickLocale(LANG);
-  if(remember){ try{ localStorage.setItem("dt.lang",LANG) }catch(e){} }
+  if(remember){
+    try{ localStorage.setItem("dt.lang",LANG) }catch(e){}
+    try{ const u=new URL(location.href);u.searchParams.set("lang",LANG);history.replaceState(null,"",u); }catch(e){}
+  }
   const r=document.documentElement;
   r.setAttribute("lang",LANG); r.setAttribute("dir",L10N.dir||"ltr");
   const p=REDUP.has(LANG)?PAL.redUp:PAL.greenUp;
@@ -1396,10 +1399,10 @@ function paintHead(){
   set('meta[property="og:description"]',"content",d);
   set('meta[property="og:locale"]',"content",LANG==="ko"?"ko_KR":"en_US");
   set('meta[property="og:locale:alternate"]',"content",LANG==="ko"?"en_US":"ko_KR");
-  const c=document.head.querySelector('link[rel="canonical"]');
-  /* 언어는 같은 정적 페이지의 표시 전환입니다. 원본·실행 후·og:url의 대표
-     주소를 맞춥니다. 투자자를 복제할 때는 head와 TT.slug를 함께 바꿉니다. */
-  if(c) c.setAttribute("href",`https://itpaidoff.com/titans/${TT.slug}/`);
+  const self=`https://itpaidoff.com/titans/${TT.slug}/`+(new URLSearchParams(location.search).get("lang")?"?lang="+LANG:"");
+  const c=document.head.querySelector('link[rel="canonical"]')||document.head.appendChild(document.createElement('link'));
+  c.setAttribute('rel','canonical');c.setAttribute('href',self);
+  set('meta[property="og:url"]',"content",self);
 }
 /* 언어를 바꾸면 글자가 바뀌므로 탭은 비우고 다시 그린다(본 사이트와 같은 예외). */
 function paintTabs(){

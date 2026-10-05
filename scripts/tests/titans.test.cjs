@@ -247,7 +247,7 @@ test('a new quarter updates holdings, exits, share changes and chart endpoint', 
   assert.deepEqual(JSON.parse(after('JSON.stringify(tallyOf(B))')), {nw:1,add:1,trim:0,hold:0,out:1});
 });
 
-test('shared text follows investor settings and canonical stays stable across languages', () => {
+test('shared text and canonical follow investor settings and the explicit language', () => {
   const run=page(real);
   run('TT.slug="sample";TT.name={en:"Example Capital",ko:"샘플 투자사"};TT.since=2020;');
   assert.match(run('taglineHTML()'),/샘플 투자사/);
@@ -255,7 +255,7 @@ test('shared text follows investor settings and canonical stays stable across la
   run('const tags={};document.head={querySelector:sel=>({setAttribute:(attr,val)=>tags[sel+attr]=val})};');
   for(const lang of ['ko','en']){
     run(`LANG="${lang}";L10N=D[LANG];location.search="?lang=${lang}";paintHead();`);
-    assert.equal(run('tags[\'link[rel="canonical"]href\']'),'https://itpaidoff.com/titans/sample/');
+    assert.equal(run('tags[\'link[rel="canonical"]href\']'),`https://itpaidoff.com/titans/sample/?lang=${lang}`);
   }
   assert.match(run('taglineHTML()'),/Example Capital/);
 });
@@ -711,7 +711,7 @@ test('every registered investor page follows the same static rules', () => {
     // 크롤러가 받는 제목·주소가 JS 가 그리는 것과 같아야 한다.
     assert.equal(src.match(/<title>([^<]*)<\/title>/)[1],run('tx("docTitle",tName(),TT.since)'),inv.slug);
     assert.equal(src.match(/<h1 id="tagline">([\s\S]*?)<\/h1>/)[1],run('taglineHTML()'),inv.slug);
-    assert.match(src,new RegExp(`<link rel="canonical" href="${base}">`));
+    assert.doesNotMatch(src,/<link rel="canonical"/); // Query-specific canonical is created after choosing the language.
     assert.match(src,new RegExp(`<meta property="og:url" content="${base}">`));
     assert.match(sitemap,new RegExp(`<loc>${base}</loc>`));
     // 다른 투자자의 이름이 복사한 껍데기에 남지 않는다.
@@ -845,7 +845,7 @@ test('every screen carries the same disclaimer and a way to the 13F guide', () =
   const n=lg=>guide.match(new RegExp(`data-lang="${lg}"`,'g')).length;
   assert.equal(n('ko'),n('en'));
   assert.ok(n('en')>=15);
-  assert.match(guide,/<link rel="canonical" href="https:\/\/itpaidoff\.com\/titans\/13f\/">/);
+  assert.doesNotMatch(guide,/<link rel="canonical"/);
   assert.match(read('sitemap.xml'),/<loc>https:\/\/itpaidoff\.com\/titans\/13f\/<\/loc>/);
 });
 

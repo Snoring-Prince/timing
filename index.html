@@ -9,7 +9,7 @@
      서비스 추가: a.s-service 카드와 .s-nav 링크(href·data-route·data-go)를 함께 더합니다.
      차트는 방문자용 market.json만 읽고, 수집·계산·각 서비스의 화면은 바꾸지 않습니다. -->
 <meta name="description" content="Explore investing questions through Fear &amp; Greed charts alongside the S&amp;P 500 and Nasdaq 100, and great investors’ holdings, portfolio weights and quarterly changes.">
-<link rel="canonical" href="https://itpaidoff.com/">
+<!-- canonical is set once the language is known; see CLAUDE.md 6-2. -->
 <link rel="alternate" hreflang="en" href="https://itpaidoff.com/?lang=en">
 <link rel="alternate" hreflang="ko" href="https://itpaidoff.com/?lang=ko">
 <link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/">
@@ -265,7 +265,8 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
     set('meta[property="og:locale"]','content',LANG==='ko'?'ko_KR':'en_US');set('meta[property="og:locale:alternate"]','content',LANG==='ko'?'en_US':'ko_KR');
     set('meta[property="og:image"]','content',`https://itpaidoff.com/${LANG==='ko'?'og-ko.png':'og.png'}`);
     const self='https://itpaidoff.com/'+(new URLSearchParams(location.search).get('lang')?'?lang='+LANG:'');
-    set('link[rel="canonical"]','href',self);set('meta[property="og:url"]','content',self);
+    const c=document.head.querySelector('link[rel="canonical"]')||document.head.appendChild(document.createElement('link'));
+    c.setAttribute('rel','canonical');c.setAttribute('href',self);set('meta[property="og:url"]','content',self);
     document.querySelectorAll('.langs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.set===LANG));
     document.querySelectorAll('[data-route]').forEach(a=>a.href=a.dataset.route+'?lang='+LANG);
     const img=document.querySelector('.s-group-image');img.alt=img.dataset[LANG==='ko'?'altKo':'altEn'];
