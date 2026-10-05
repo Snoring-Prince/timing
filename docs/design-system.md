@@ -535,7 +535,7 @@ document.documentElement.scrollWidth - document.documentElement.clientWidth
     캐리커처 · 목록 카드와 같은 그림)이다. 캡션은 달지 않고 alt 에만 가상 그림이라고 적는다.
     못 받으면 그림 칸이 통째로 빠진다. 인용에는 출처(<cite>)를 꼭 단다
 4  data/titans/investors.json 에 slug·CIK·공시 법인명·표시 이름·첫 연도를 한 번 등록
-5  sitemap.xml 에 줄 하나 (표식 주석을 꼭 달 것 — CLAUDE.md 6-2)
+5  sitemap.xml 에 기본 주소·?lang=en·?lang=ko 세 항목 (각 항목의 언어 연결·날짜·표식은 CLAUDE.md 6-2)
 6  titans/index.html(목록)에 카드 한 장 — 갈래·법인 이름·사람 이름·설명 두 언어.
    숫자는 안 적는다(summary.json 에서 읽음). 검사가 등록 목록과 카드를 대조한다
 7  로고가 있으면 titans/<slug>/logo.webp(128×128, 흰 바탕, 여백을 잘라 심벌 위주)를 넣고

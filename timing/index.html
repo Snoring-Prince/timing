@@ -15,7 +15,7 @@
      기본은 영어판이고, ?lang=ko 로 열면 한국어판으로 바뀝니다.
 ═════════════════════════════════════════════════════════════════════ -->
 <meta name="description" content="What the S&amp;P 500 and Nasdaq 100 did after each Fear &amp; Greed level, from records since 2011 — so a beginner can judge their own timing.">
-<link rel="canonical" href="https://itpaidoff.com/timing/">
+<!-- canonical is set once the language is known; see CLAUDE.md 6-2. -->
 <link rel="alternate" hreflang="en" href="https://itpaidoff.com/timing/?lang=en">
 <link rel="alternate" hreflang="ko" href="https://itpaidoff.com/timing/?lang=ko">
 <link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/timing/">
@@ -296,7 +296,10 @@ function fdate(iso){
 }
 function applyLang(lang,remember){
   LANG=D[lang]?lang:"en"; L10N=D[LANG]; LOCALE=pickLocale(LANG);
-  if(remember){ try{ localStorage.setItem("dt.lang",LANG) }catch(e){} }
+  if(remember){
+    try{ localStorage.setItem("dt.lang",LANG) }catch(e){}
+    try{ const u=new URL(location.href);u.searchParams.set("lang",LANG);history.replaceState(null,"",u); }catch(e){}
+  }
   const r=document.documentElement;
   r.setAttribute("lang",LANG); r.setAttribute("dir",L10N.dir||"ltr");
   const p=REDUP.has(LANG)?PAL.redUp:PAL.greenUp;
@@ -317,13 +320,10 @@ function paintHead(){
   set('meta[property="og:locale:alternate"]',"content",LANG==="ko"?"en_US":"ko_KR");
   set('meta[property="og:image"]',"content",
       "https://itpaidoff.com/"+(LANG==="ko"?"og-ko.png":"og.png"));
-  /* 주소에 ?lang= 이 있으면 그 주소가 자기 자신의 정본이다.
-     없으면 뿌리 주소가 정본 — hreflang 의 x-default 와 맞춘다. */
-  const hasParam=new URLSearchParams(location.search).get("lang");
-  set('link[rel="canonical"]',"href",
-      hasParam?"https://itpaidoff.com/timing/?lang="+LANG:"https://itpaidoff.com/timing/");
-  const og=document.head.querySelector('meta[property="og:url"]');
-  if(og)og.setAttribute("content",hasParam?"https://itpaidoff.com/timing/?lang="+LANG:"https://itpaidoff.com/timing/");
+  const self="https://itpaidoff.com/timing/"+(new URLSearchParams(location.search).get("lang")?"?lang="+LANG:"");
+  const c=document.head.querySelector('link[rel="canonical"]')||document.head.appendChild(document.createElement('link'));
+  c.setAttribute('rel','canonical');c.setAttribute('href',self);
+  set('meta[property="og:url"]',"content",self);
 }
 const upRGB  =()=>(REDUP.has(LANG)?PAL.redUp:PAL.greenUp).upRGB;
 const downRGB=()=>(REDUP.has(LANG)?PAL.redUp:PAL.greenUp).downRGB;
