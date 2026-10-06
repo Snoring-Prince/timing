@@ -6,8 +6,8 @@
     ko:{title:'S&P500·나스닥100 일시금과 분할 투자 비교 — 사무엘의 결정',desc:'같은 목돈을 한 번에 투자할까, 3·6·12개월로 나눠 투자할까? SPY·QQQ의 과거 총자산 변화와 낙폭을 여러 시작 시점에서 비교해보세요.'}
   };
   const D={
-    ko:{asset:'투자 대상',amount:'준비된 목돈 (USD)',start:'투자 시작월',months:'나눠 넣는 기간',years:'비교할 기간',rate:'현금 연이율 (%)',m3:'3개월',m6:'6개월',m12:'12개월',y1:'1년',y3:'3년',y5:'5년',y10:'10년',lump:'한 번에 넣기',split:'나눠 넣기',return:'총수익률',drawdown:'가장 크게 줄었던 폭',totalAssets:'ETF + 아직 넣지 않은 현금 · USD',higher:'마지막에 돈이 더 남았던 쪽',loading:'과거 일별 자료를 불러오고 있어요.',error:'자료를 불러오지 못했어요. 잠시 뒤 다시 열어주세요.',inputs:'금액·시작월·현금 이율을 확인해주세요.',range:'이 시작월에는 선택한 기간 전체를 비교할 자료가 없어요. 더 이른 시작월이나 짧은 기간을 선택해주세요.',nav:'메인 메뉴',chart:'한 번에 넣기와 나눠 넣기의 과거 총자산 변화. 좌우 방향키로 날짜별 값을 확인할 수 있습니다.'},
-    en:{asset:'Investment',amount:'Initial cash (USD)',start:'Starting month',months:'Phase-in period',years:'Comparison horizon',rate:'Cash interest, annual (%)',m3:'3 months',m6:'6 months',m12:'12 months',y1:'1 year',y3:'3 years',y5:'5 years',y10:'10 years',lump:'All at once',split:'In stages',return:'Total return',drawdown:'Largest peak-to-trough drop',totalAssets:'ETF + uninvested cash · USD',higher:'Which path ended with more?',loading:'Loading daily historical prices…',error:'The price history could not be loaded. Please try again later.',inputs:'Check the amount, starting month and cash interest rate.',range:'There is not enough data for the full selected horizon. Choose an earlier starting month or a shorter horizon.',nav:'Main',chart:'Historical total assets for lump-sum and phased investing. Use left and right arrow keys to inspect dates.'}
+    ko:{asset:'투자 대상',amount:'준비된 목돈 (USD)',start:'투자 시작월',months:'나눠 넣는 기간',years:'비교할 기간',reserve:'기다리는 돈은',m3:'3개월',m6:'6개월',m12:'12개월',y1:'1년',y3:'3년',y5:'5년',y10:'10년',lump:'한 번에 넣기',split:'나눠 넣기',return:'총수익률',drawdown:'가장 크게 줄었던 폭',totalAssets:'주식 ETF + 대기 자금(BIL) · USD',higher:'마지막에 돈이 더 남았던 쪽',loading:'과거 일별 자료를 불러오고 있어요.',error:'자료를 불러오지 못했어요. 잠시 뒤 다시 열어주세요.',inputs:'금액·시작월을 확인해주세요.',range:'두 ETF의 자료가 겹치고 선택한 기간이 모두 끝난 시작월만 비교할 수 있어요. 아래 자료 범위 안의 시작월을 선택하고, 필요하면 비교 기간을 줄여주세요.',nav:'메인 메뉴',chart:'한 번에 넣기와 나눠 넣기의 과거 총자산 변화. 좌우 방향키로 날짜별 값을 확인할 수 있습니다.'},
+    en:{asset:'Investment',amount:'Initial cash (USD)',start:'Starting month',months:'Phase-in period',years:'Comparison horizon',reserve:'While waiting',m3:'3 months',m6:'6 months',m12:'12 months',y1:'1 year',y3:'3 years',y5:'5 years',y10:'10 years',lump:'All at once',split:'In stages',return:'Total return',drawdown:'Largest peak-to-trough drop',totalAssets:'Equity ETF + waiting funds (BIL) · USD',higher:'Which path ended with more?',loading:'Loading daily historical prices…',error:'The price history could not be loaded. Please try again later.',inputs:'Check the amount and starting month.',range:'Both ETF histories must overlap and cover the full selected horizon. Choose a starting month within the range below and shorten the horizon if needed.',nav:'Main',chart:'Historical total assets for lump-sum and phased investing. Use left and right arrow keys to inspect dates.'}
   };
   function pick(){const q=(new URLSearchParams(location.search).get('lang')||'').slice(0,2).toLowerCase();if(D[q])return q;try{const s=localStorage.getItem('dt.lang');if(D[s])return s;}catch(e){}for(const language of navigator.languages||[navigator.language||'en']){const code=language.slice(0,2).toLowerCase();if(D[code])return code;}return 'en';}
   let LANG=pick(),DATA=null,RESULT=null,SAMPLE=[],SAMPLE_KEY='',GEOMETRY=null,HOVER=0,TIMER=null,FAIL=false;
@@ -32,14 +32,14 @@
       paintLanguage();
     }});paintDataRange();render();
   }
-  function options(){return {amount:Number($('amount').value),months:Number($('months').value),years:Number($('years').value),rate:Number($('rate').value)};}
+  function options(){return {amount:Number($('amount').value),months:Number($('months').value),years:Number($('years').value)};}
   function status(key){$('status').textContent=t(key);$('status').hidden=false;$('comparison').hidden=true;$('samples').hidden=true;$('samples-heading').hidden=true;RESULT=null;}
   function render(){
     if(!DATA){status(FAIL?'error':'loading');return;}
     try{
-      if(!$('settings').checkValidity())throw Error('inputs');
-      const rows=M.series(DATA,$('asset').value),o=options();RESULT=M.simulate(rows,$('start').value,o);
-      const key=JSON.stringify([$('asset').value,o.months,o.years,o.rate]);
+      if(!$('settings').checkValidity())throw Error($('start').validity.rangeUnderflow||$('start').validity.rangeOverflow?'range':'inputs');
+      const rows=M.paired(DATA,$('asset').value),o=options();RESULT=M.simulate(rows,$('start').value,o);
+      const key=JSON.stringify([$('asset').value,o.months,o.years]);
       if(key!==SAMPLE_KEY){SAMPLE=M.cohorts(rows,o);SAMPLE_KEY=key;}
       $('status').hidden=true;$('comparison').hidden=false;$('samples').hidden=false;$('samples-heading').hidden=false;
       $('value-lump').textContent=money(RESULT.lump);$('value-split').textContent=money(RESULT.split);
@@ -48,7 +48,7 @@
         $(id).textContent=percent(value);$(id).className=value<0?'negative':value>0?'positive':'';
       }
       $('dates').textContent=RESULT.from.replaceAll('-','.')+' – '+RESULT.to.replaceAll('-','.');
-      $('cash-note').textContent=LANG==='ko'?`월별로 넣는 원금 약 ${money(o.amount/o.months)} · 마지막 총자산에 포함된 현금 ${money(RESULT.cash)}`:`Approx. monthly principal ${money(o.amount/o.months)} · Cash included in ending assets ${money(RESULT.cash)}`;
+      $('reserve-note').textContent=LANG==='ko'?`처음 목돈을 ${o.months}등분합니다. 기다리는 동안 생긴 BIL 수익도 각 몫과 함께 주식으로 옮깁니다.`:`Initial cash is divided into ${o.months} equal portions. Each portion’s BIL return moves into equities with it.`;
       draw();paintSamples();
     }catch(e){status(e.message==='inputs'?'inputs':e.message==='range'?'range':'error');}
   }
@@ -103,15 +103,15 @@
   $('settings').addEventListener('input',()=>{clearTimeout(TIMER);TIMER=setTimeout(render,150);});
   function paintDataRange(){
     if(!DATA)return;
-    const rows=M.series(DATA,$('asset').value),from=rows[0][0],to=rows.at(-1)[0];
+    const rows=M.paired(DATA,$('asset').value),from=rows[0][0],to=rows.at(-1)[0];
     $('start').min=from.slice(0,7);$('start').max=to.slice(0,7);
-    $('data-range').textContent=LANG==='ko'?`일별 자료 ${from} – ${to} · 매주 갱신`:`Daily history ${from} – ${to} · Refreshed weekly`;
+    $('data-range').textContent=LANG==='ko'?`주식 ETF·BIL 공통 일별 자료 ${from} – ${to} · 매주 갱신`:`Shared equity ETF / BIL daily history ${from} – ${to} · Refreshed weekly`;
   }
   $('asset').addEventListener('change',paintDataRange);
   paintLanguage();
   if(typeof ResizeObserver==='function')new ResizeObserver(draw).observe($('chart'));else window.addEventListener('resize',draw);
   fetch('/data/samuel/prices.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('data');return r.json();}).then(data=>{
-    const rows=M.series(data,$('asset').value);M.series(data,'ndx');DATA=data;
+    const rows=M.paired(data,$('asset').value);M.paired(data,'spx');M.paired(data,'ndx');DATA=data;
     paintDataRange();
     $('start').value=M.addMonths(rows.at(-1)[0],-37).slice(0,7);render();
   }).catch(()=>{FAIL=true;DATA=null;status('error');});

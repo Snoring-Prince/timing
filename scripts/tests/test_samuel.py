@@ -70,7 +70,7 @@ class Export(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "gap"):
                 publish(holed, path)
 
-    def test_stale_response_preserves_last_complete_pair(self):
+    def test_stale_response_preserves_last_complete_file(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "prices.json"
             quotes = fixture()
@@ -82,7 +82,7 @@ class Export(unittest.TestCase):
 
     def test_etfs_never_fall_back_to_unadjusted_prices(self):
         raw = json.dumps({"chart": {"result": [{"indicators": {"quote": [{"close": [100]}]}, "timestamp": [1]}]}}).encode()
-        for symbol in ("SPY", "QQQ"):
+        for symbol in ("SPY", "QQQ", "BIL"):
             with patch.object(history, "fetch", return_value=raw), self.assertRaisesRegex(RuntimeError, "배당 반영"):
                 history.yahoo_daily(symbol)
 
@@ -90,13 +90,22 @@ class Export(unittest.TestCase):
         quotes = fixture()
         with tempfile.TemporaryDirectory() as temporary, \
              patch.object(history, "OUT", str(Path(temporary) / "market-long.json")), \
-             patch.object(history, "yahoo_daily", side_effect=[quotes["spx"], quotes["ndx"], quotes["spx"]]), \
+             patch.object(history, "yahoo_daily", side_effect=[quotes["spx"], quotes["ndx"], quotes["spx"], quotes["reserve"]]), \
              patch.object(history, "load_fng", return_value=quotes["spx"]), \
              patch.object(history, "publish_samuel", side_effect=ValueError("export down")) as publish, \
              contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(history.main(), 1)
             self.assertEqual(publish.call_args.args[0], quotes)
             self.assertTrue((Path(temporary) / "market-long.json").exists())
+
+    def test_bil_gap_cannot_be_filled_with_zero_interest_or_a_carried_price(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "prices.json"
+            quotes = fixture()
+            quotes["reserve"].pop(sorted(quotes["reserve"])[500])
+            with self.assertRaisesRegex(ValueError, "BIL session"):
+                publish(quotes, path)
+            self.assertFalse(path.exists())
 
 
 if __name__ == "__main__":

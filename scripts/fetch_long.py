@@ -98,7 +98,7 @@ def yahoo_daily(symbol):
     vals = None
     if ind.get("adjclose"):
         vals = ind["adjclose"][0].get("adjclose")
-    if symbol in ("SPY", "QQQ") and not vals:
+    if symbol in ("SPY", "QQQ", "BIL") and not vals:
         raise RuntimeError(f"{symbol}: 배당 반영 일봉 없음 — 일반 종가로 대체하지 않습니다")
     if not vals:
         vals = ind["quote"][0]["close"]
@@ -226,6 +226,9 @@ def main():
         raise SystemExit("모든 소스 실패 — 기존 파일과 갱신 시각을 보존합니다.")
 
     try:
+        if not all(key in daily_quotes for key in ("spx", "ndx")):
+            raise RuntimeError("주식 ETF 일봉 누락 — BIL 추가 요청을 생략합니다")
+        daily_quotes["reserve"] = yahoo_daily("BIL")
         publish_samuel(daily_quotes)
     except Exception as e:                            # noqa: BLE001
         print(f"사무엘 계산용 일봉 실패, 이전 완전한 파일 유지: {e}")

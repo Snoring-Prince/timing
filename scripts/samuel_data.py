@@ -1,7 +1,7 @@
 """Samuel's daily adjusted prices. Export before chart history is thinned.
 
-No additional requests in the weekly job. A failed/incomplete export preserves
-the last complete pair and fails the existing job so Telegram can notify.
+Reuses the two equity histories and adds BIL to the weekly job. An incomplete
+export preserves the last complete file and fails the job so Telegram can notify.
 """
 import json
 import math
@@ -10,7 +10,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parents[1] / "data/samuel/prices.json"
-SYMBOLS = {"spx": "SPY", "ndx": "QQQ"}
+SYMBOLS = {"spx": "SPY", "ndx": "QQQ", "reserve": "BIL"}
 
 
 def publish(quotes, output=OUT, today=None):
@@ -33,7 +33,13 @@ def publish(quotes, output=OUT, today=None):
             raise ValueError(f"{symbol}: daily history has a long gap")
         packed[key] = {"ticker": symbol, "from": rows[0][0], "to": rows[-1][0], "series": rows}
     output = Path(output)
-    payload = {"version": 1, "basis": "dividend-adjusted", "frequency": "daily", "series": packed}
+    reserve_days = {row[0] for row in packed["reserve"]["series"]}
+    for key in ("spx", "ndx"):
+        start = max(packed[key]["from"], packed["reserve"]["from"])
+        end = min(packed[key]["to"], packed["reserve"]["to"])
+        if any(start <= row[0] <= end and row[0] not in reserve_days for row in packed[key]["series"]):
+            raise ValueError(f"{key}: BIL session missing inside shared history")
+    payload = {"version": 2, "basis": "dividend-adjusted", "frequency": "daily", "series": packed}
     # A shorter response must not silently remove older history or roll back its end.
     if output.exists():
         old = json.loads(output.read_text(encoding="utf-8"))
