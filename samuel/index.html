@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lump sum vs. phased investing in SPY and QQQ — Samuel’s decision</title>
+<meta name="description" content="Compare investing a lump sum with spreading the same cash over 3, 6 or 12 months. Explore historical SPY and QQQ portfolio values, drawdowns and monthly starting points.">
+<!-- canonical follows the existing query-language rule once the language is known. -->
+<link rel="alternate" hreflang="en" href="https://itpaidoff.com/samuel/?lang=en">
+<link rel="alternate" hreflang="ko" href="https://itpaidoff.com/samuel/?lang=ko">
+<link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/samuel/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="itpaidoff.com">
+<meta property="og:url" content="https://itpaidoff.com/samuel/">
+<meta property="og:title" content="Lump sum vs. phased investing in SPY and QQQ — Samuel’s decision">
+<meta property="og:description" content="Compare investing a lump sum with spreading the same cash over 3, 6 or 12 months. Explore historical SPY and QQQ portfolio values, drawdowns and monthly starting points.">
+<meta property="og:image" content="https://itpaidoff.com/og.png">
+<meta property="og:locale" content="en_US"><meta property="og:locale:alternate" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#ffffff">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Samuel’s decision","url":"https://itpaidoff.com/samuel/","inLanguage":["en","ko"],"description":"Historical comparison of lump-sum and phased investing using the same initial cash."}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="style.css?v=2026-10-06">
+<link rel="stylesheet" href="/shared/language-picker.css?v=2026-10-05-lang">
+<script src="/shared/language-picker.js?v=2026-10-05-lang"></script>
+<script src="model.js?v=2026-10-06" defer></script>
+<script src="app.js?v=2026-10-06" defer></script>
+<script>
+window.STATS={id:"41e07a57-a87c-403b-bdf8-e12d911457b6",src:"https://cloud.umami.is/script.js"};
+(function loadStats(){
+  var s=window.STATS||{},h=location.hostname;
+  if(!s.id||h==="localhost"||h==="127.0.0.1"||h==="")return;
+  var t=document.createElement("script");t.defer=true;t.src=s.src;
+  t.setAttribute("data-website-id",s.id);document.head.appendChild(t);
+})();
+</script>
+</head>
+<body>
+<main class="wrap">
+  <header class="header">
+    <a class="brand" href="/" data-route="/"><span class="mark" aria-hidden="true">↗</span>itpaidoff.</a>
+    <nav aria-label="Main">
+      <a href="/" data-route="/"><span data-lang="ko">홈</span><span data-lang="en">Home</span></a>
+      <a href="/timing/" data-route="/timing/"><span data-lang="ko">다니엘의 타이밍</span><span data-lang="en">Daniel’s timing</span></a>
+      <a href="/titans/" data-route="/titans/"><span data-lang="ko">거장들의 선택</span><span data-lang="en">Titans’ picks</span></a>
+      <a href="/samuel/" data-route="/samuel/" aria-current="page"><span data-lang="ko">사무엘의 결정</span><span data-lang="en">Samuel’s decision</span></a>
+    </nav>
+    <div class="language-control" id="language-control"></div>
+  </header>
+  <section class="intro" aria-labelledby="page-title">
+    <h1 id="page-title"><span data-lang="ko">사무엘의 결정</span><span data-lang="en">Samuel’s decision</span></h1>
+    <div data-lang="ko">
+      <p>몇 년 동안 모은 돈을 S&amp;P500에 투자하기로 했습니다. 그런데 사무엘은 마지막 결정을 내리지 못했습니다.</p>
+      <p>전부 넣자니, 내일부터 떨어질까 두렵습니다. 매달 조금씩 넣자니, 기다리는 동안 주가가 올라버릴까 걱정됩니다.</p>
+      <p>같은 돈을 한 번에 넣었을 때와 나눠 넣었을 때. 사무엘은 과거의 여러 시점으로 돌아가 두 방법을 비교해보기로 했습니다.</p>
+    </div>
+    <div data-lang="en">
+      <p>Samuel has decided to invest the money he has saved over several years in the S&amp;P 500. But there is one decision he still cannot make.</p>
+      <p>Investing it all feels frightening: what if prices fall tomorrow? Spreading it out feels uncomfortable too: what if prices rise while he waits?</p>
+      <p>The same money, invested all at once or in stages. Samuel decides to go back to different points in history and compare the two paths.</p>
+    </div>
+  </section>
+  <h2 class="section-heading"><span data-lang="ko">같은 돈, 서로 다른 두 출발.</span><span data-lang="en">The same money. Two ways to begin.</span></h2>
+  <section class="panel" aria-label="Comparison settings">
+    <form id="settings">
+      <div class="controls">
+        <div class="field"><label for="asset" data-i18n="asset">ETF</label><select id="asset"><option value="spx">S&amp;P 500 · SPY</option><option value="ndx">Nasdaq 100 · QQQ</option></select></div>
+        <div class="field"><label for="amount" data-i18n="amount">Initial cash (USD)</label><input id="amount" type="number" min="100" max="1000000" step="100" value="10000" inputmode="decimal" required></div>
+        <div class="field"><label for="start" data-i18n="start">Starting month</label><input id="start" type="month" required></div>
+        <div class="field"><label for="months" data-i18n="months">Phase-in period</label><select id="months"><option value="3" data-i18n="m3">3 months</option><option value="6" data-i18n="m6" selected>6 months</option><option value="12" data-i18n="m12">12 months</option></select></div>
+        <div class="field"><label for="years" data-i18n="years">Comparison horizon</label><select id="years"><option value="1" data-i18n="y1">1 year</option><option value="3" data-i18n="y3" selected>3 years</option><option value="5" data-i18n="y5">5 years</option><option value="10" data-i18n="y10">10 years</option></select></div>
+        <div class="field"><label for="rate" data-i18n="rate">Cash interest, annual (%)</label><input id="rate" type="number" min="0" max="20" step="0.1" value="0" inputmode="decimal" required></div>
+      </div>
+      <p class="control-note"><span data-lang="ko">첫날부터 같은 목돈이 준비돼 있다고 가정합니다. 매달 새로 버는 돈을 투자하는 계산은 아닙니다. 금액은 달러 기준이며, 현금 이율은 직접 정하는 가정값입니다.</span><span data-lang="en">Both paths begin with the same cash already available. This is not a comparison of investing new monthly income. Amounts are in USD; the cash interest rate is your assumption.</span></p>
+      <p class="control-note" id="data-range"></p>
+    </form>
+  </section>
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+  <section class="panel" id="comparison" hidden aria-label="Historical comparison">
+    <div class="summary">
+      <article class="result"><h3 data-i18n="lump">All at once</h3><div class="value" id="value-lump"></div><dl><dt data-i18n="return">Total return</dt><dd id="return-lump"></dd><dt data-i18n="drawdown">Largest peak-to-trough drop</dt><dd id="drawdown-lump"></dd></dl></article>
+      <article class="result split"><h3 id="split-label">In stages</h3><div class="value" id="value-split"></div><dl><dt data-i18n="return">Total return</dt><dd id="return-split"></dd><dt data-i18n="drawdown">Largest peak-to-trough drop</dt><dd id="drawdown-split"></dd></dl></article>
+    </div>
+    <div class="legend"><span data-i18n="lump">All at once</span><span class="split" data-i18n="split">In stages</span></div>
+    <div class="chart-wrap" id="chart-wrap"><svg class="chart" id="chart" role="img" tabindex="0"></svg><div class="tooltip" id="tooltip" role="status" aria-live="polite" hidden></div></div>
+    <div class="chart-caption"><span id="dates"></span><span data-i18n="totalAssets">ETF + uninvested cash · USD</span></div>
+    <p class="after-chart" id="cash-note"></p>
+    <p class="after-chart"><span data-lang="ko">‘가장 크게 줄었던 폭’은 ETF와 현금을 합친 총자산이 이전 최고점에서 얼마나 내려갔는지를 뜻합니다.</span><span data-lang="en">The peak-to-trough drop measures how far total assets, including cash, fell from their previous high.</span></p>
+  </section>
+  <h2 class="section-heading" id="samples-heading" hidden><span data-lang="ko">시작하는 달이 달랐다면?</span><span data-lang="en">What if the starting month were different?</span></h2>
+  <section class="panel" id="samples" hidden aria-label="Monthly starting points">
+    <div class="sample-top"><h3 data-i18n="higher">Which path ended with more?</h3><span id="sample-range"></span></div>
+    <div class="sample-bar" aria-hidden="true"><div class="lump" id="bar-lump"></div><div class="split" id="bar-split"></div></div>
+    <div class="sample-values"><div><p data-i18n="lump">All at once</p><strong id="sample-lump"></strong><p id="median-lump"></p></div><div><p data-i18n="split">In stages</p><strong id="sample-split"></strong><p id="median-split"></p></div></div>
+    <p class="sample-note" id="sample-note"></p>
+    <p class="sample-note"><span data-lang="ko">각 달의 첫 거래일에서 같은 조건으로 시작한 과거 기록입니다. 기간 전체가 있는 시작월만 비교하며, 구간이 서로 겹칩니다. 미래에 더 나을 확률을 뜻하지 않습니다.</span><span data-lang="en">These historical comparisons start on the first trading day of each month under the same settings. Only complete horizons are included. Periods overlap; these shares are not probabilities of future outperformance.</span></p>
+  </section>
+  <details class="method">
+    <summary><span data-lang="ko">어떻게 계산했을까?</span><span data-lang="en">How is this calculated?</span></summary>
+    <div data-lang="ko">
+      <p>SPY·QQQ의 배당과 액면분할을 반영한 일별 조정 종가를 사용합니다. 매주 갱신하며, 자료의 마지막 날짜까지만 비교합니다. 상장 전이나 아직 끝나지 않은 기간의 결과는 만들지 않습니다.</p>
+      <p>한 번에 투자하는 경로는 시작월 첫 거래일의 종가에 목돈 전부를 넣습니다. 상장월에는 상장일부터 시작합니다. 나눠 넣는 경로는 같은 날부터 매달 첫 거래일에 원금을 같은 금액으로 3·6·12회 나눠 넣습니다. 소수 단위 투자와 배당 재투자 효과를 가정하며, 실제 주식수나 매매 체결을 재현한 것은 아닙니다.</p>
+      <p>아직 넣지 않은 현금은 총자산에 포함합니다. 입력한 연이율을 실제 날짜 간격에 따라 복리로 적용하고, 생긴 이자는 현금으로 남깁니다. 이율은 과거 예금 금리나 실제 상품 수익률이 아닙니다.</p>
+      <p>비교 종료일은 시작일로부터 선택한 햇수가 지난 날 또는 그 뒤 첫 거래일입니다. 수익률은 마지막 총자산을 처음 목돈과 비교합니다. 세금·거래 비용·환율·물가는 포함하지 않습니다.</p>
+    </div>
+    <div data-lang="en">
+      <p>Daily adjusted closing prices for SPY and QQQ reflect dividends and splits. Data refreshes weekly. Results require a complete period within the stored history; there are no pre-listing or future prices.</p>
+      <p>The lump-sum path invests all initial cash at the first trading day’s close in the chosen month; the listing month begins on the listing date. The phased path invests equal portions of the same principal on the first trading day of each month for 3, 6 or 12 purchases, starting on the same day. Fractional investment and the effect of dividend reinvestment are assumed; this does not reconstruct actual share counts or executed trades.</p>
+      <p>Uninvested cash is included in total assets. Your assumed annual rate compounds over actual calendar-day intervals; earned interest remains in cash. It is not a historical deposit rate or an actual product return.</p>
+      <p>The horizon ends on the anniversary of the start date, or the next trading day. Total return compares ending assets with initial cash. Taxes, trading costs, exchange rates and inflation are excluded.</p>
+    </div>
+  </details>
+  <p class="disc"><span data-lang="ko">본 사이트에서 제공하는 시장 지표, 13F 공시 자료와 과거 수익률은 미래의 투자 수익을 보장하지 않습니다. 모든 정보는 참고용이며 투자 권유가 아닙니다. 이를 바탕으로 한 투자 결정의 책임은 전적으로 사용자에게 있습니다.</span><span data-lang="en">Past performance is not indicative of future results. All market indicators, 13F filing data and historical returns are provided for informational purposes only and are not investment advice. Any investment decision made on the basis of this information is solely the user's responsibility.</span></p>
+  <noscript><p>JavaScript is needed to calculate and display the historical comparisons. / 과거 비교를 계산하고 표시하려면 JavaScript가 필요합니다.</p></noscript>
+  <p class="after-chart"><a href="/titans/13f/" data-route="/titans/13f/"><span data-lang="ko">13F 자료 안내 →</span><span data-lang="en">About the 13F data →</span></a></p>
+</main>
+</body>
+</html>

@@ -9,6 +9,11 @@ on:
       - "shared/language-picker.*"
       - "assets/language/**"
       - "timing/index.html"
+      - "samuel/**"
+      - "data/samuel/**"
+      - "scripts/samuel_data.py"
+      - "scripts/tests/test_samuel.py"
+      - "scripts/tests/samuel.test.cjs"
       - "data/backtest.json"
       - "scripts/check_about.py"
       - "scripts/notify.py"
@@ -50,8 +55,11 @@ jobs:
       - name: 대시보드 기간 계산과 수집 실패 검사
         run: python -m unittest discover -s scripts/tests -p 'test_dashboard*.py'
 
+      - name: 사무엘 일별 데이터 저장 검사
+        run: python -m unittest discover -s scripts/tests -p 'test_samuel.py'
+
       - name: 대시보드 날짜·결측·실시간 갱신 검사
-        run: node --test scripts/tests/dashboard.test.cjs scripts/tests/live.test.cjs scripts/tests/home.test.cjs
+        run: node --test scripts/tests/dashboard.test.cjs scripts/tests/live.test.cjs scripts/tests/home.test.cjs scripts/tests/samuel.test.cjs
 
       - name: 설명 글 숫자 대조
         run: python scripts/check_about.py

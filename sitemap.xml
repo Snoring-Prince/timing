@@ -3,6 +3,7 @@
      Every entry repeats the same reciprocal hreflang links, including itself.
      Dates change only when that screen's content changes. Keep the markers:
        root / timing: update-data.yml; titans: update-13f.yml;
+       samuel: update-long.yml;
        titans-13f: update manually when the guide changes.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -294,5 +295,29 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/titans/ark/"/>
     <lastmod>2026-10-05</lastmod><!-- titans -->
     <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/samuel/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/samuel/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/samuel/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/samuel/"/>
+    <lastmod>2026-10-06</lastmod><!-- samuel -->
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/samuel/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/samuel/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/samuel/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/samuel/"/>
+    <lastmod>2026-10-06</lastmod><!-- samuel -->
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/samuel/?lang=ko</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/samuel/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/samuel/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/samuel/"/>
+    <lastmod>2026-10-06</lastmod><!-- samuel -->
+    <changefreq>weekly</changefreq>
   </url>
 </urlset>

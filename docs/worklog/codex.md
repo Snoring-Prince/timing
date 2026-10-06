@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-10-06 · Codex · (이 PR)
+사무엘의 결정: 같은 목돈의 일시금·분할 투자 비교를 세 번째 서비스로 추가
+- 파일: samuel/ · data/samuel/ · samuel_data.py · fetch_long.py · 대문·사이트맵·CI·검사 · CLAUDE.md · design-system.md · 이 일지
+- 규칙: 같은 초기 원금·남은 현금 포함·실제 전체 일봉·완료 기간만. 구현·자료·검증은 CLAUDE.md 9-3-2가 정본.
+- 굳힘: 변경 전 backup/v1.9 보관. 한영·기존 서비스·자동 수집·텔레그램 실패 경로 유지. 미래 확률이나 추천으로 표시하지 않음.
+- 넘김: 사용자 화면 확인 및 merge. 배포 후 새 /samuel/ 한영 실제 URL·색인 확인. 네이버 기존 주요 한국어 4주소는 10-05 재수집(200·색인 허용·새 제목 확인), 색인은 아직 안 됨; 중복 요청하지 말 것.
+
 ## 2026-10-05 · Codex · (이 PR)
 12화면의 언어 스위치를 국기·언어 이름 드롭다운으로 통일
 - 파일: shared/language-picker.* · assets/language/* · index.html · timing/index.html · titans/ · 기존 검사 경계·CI · CLAUDE.md · design-system.md · 이 일지

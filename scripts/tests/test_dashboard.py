@@ -134,7 +134,8 @@ class Collectors(unittest.TestCase):
     def test_successful_long_collection_returns_zero(self):
         with tempfile.TemporaryDirectory() as d, patch.object(history,"OUT",str(Path(d)/"market-long.json")), \
              patch.object(history,"yahoo_daily",return_value={"2026-09-23":100}), \
-             patch.object(history,"load_fng",return_value={"2026-09-23":35}), contextlib.redirect_stdout(io.StringIO()):
+             patch.object(history,"load_fng",return_value={"2026-09-23":35}), \
+             patch.object(history,"publish_samuel"), contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(history.main(),0)
 
 if __name__ == "__main__":
