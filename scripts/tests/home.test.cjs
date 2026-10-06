@@ -48,9 +48,9 @@ test('latest real visitor data renders valid prices and never carries fear past 
 test('each service card is one link with a button, bilingual static content before JavaScript',()=>{
   const body=html.match(/<body>([\s\S]*?)<script id="home-app">/)[1];
   // 카드 한 장이 통째로 링크이고, 오른쪽 아래 따로 가는 링크·여닫는 이야기는 없습니다(2026-09-30 사용자 요청).
-  const cards=[...body.matchAll(/<a class="s-service[^"]*" href="(\/(?:timing|titans|samuel)\/)" data-go="(\w+)" data-route="([^"]+)">([\s\S]*?)<\/a>\r?\n/g)];
-  assert.equal(cards.length,3);
-  const want={timing:['이야기 읽기','Read the story'],titans:['거장들 만나보기','Meet the investors'],samuel:['비교해보기','Compare the paths']};
+  const cards=[...body.matchAll(/<a class="s-service[^"]*" href="(\/(?:timing|titans|samuel|olympics)\/)" data-go="(\w+)" data-route="([^"]+)">([\s\S]*?)<\/a>\r?\n/g)];
+  assert.equal(cards.length,4);
+  const want={timing:['이야기 읽기','Read the story'],titans:['거장들 만나보기','Meet the investors'],samuel:['비교해보기','Compare the paths'],olympics:['선택 따라가기','Follow their decisions']};
   for(const [,href,go,route,card] of cards){
     assert.equal(route,href);assert.equal(href,`/${go}/`);
     assert.doesNotMatch(card,/<a[\s>]|<button|<details/);   // 링크 안에 링크·버튼을 넣지 않습니다

@@ -1,0 +1,1 @@
+(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else(root.OlympicStrategies||={}).emma=factory();})(typeof window==='undefined'?this:window,()=>({id:'emma',step(c){if(c.first)c.buy(c.asset,c.initial,'start');}}));

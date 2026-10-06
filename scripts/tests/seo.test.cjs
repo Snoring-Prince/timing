@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'../..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const investors=JSON.parse(read('data/titans/investors.json')).investors;
-const pages=['index.html','timing/index.html','samuel/index.html','titans/index.html','titans/13f/index.html',
+const pages=['index.html','timing/index.html','samuel/index.html','olympics/index.html','titans/index.html','titans/13f/index.html',
   ...investors.map(i=>`titans/${i.slug}/index.html`)];
 
 function painter(file,search){
@@ -27,9 +27,9 @@ function painter(file,search){
     source=config+'\n'+shared.slice(0,shared.indexOf('/* 곁들이 표 둘'));
     call='document.title=tx("docTitle",tName(),TT.since);paintHead();';
   }else{
-    const app=file==='samuel/index.html'?read('samuel/app.js'):html;
+    const app=['samuel/index.html','olympics/index.html'].includes(file)?read(file.replace('index.html','app.js')):html;
     const headCode=app.match(/const HEAD=({[\s\S]*?\n  });/)[0];
-    const fnName=['titans/index.html','samuel/index.html'].includes(file)?'paintHead':'paint';
+    const fnName=['titans/index.html','samuel/index.html','olympics/index.html'].includes(file)?'paintHead':'paint';
     let body=app.slice(app.indexOf(`  function ${fnName}(){`));
     body=body.slice(0,body.indexOf('\n  }')+4);
     if(fnName==='paint')body=body.slice(0,body.indexOf('    document.querySelectorAll('))+'\n  }';

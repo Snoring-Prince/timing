@@ -320,4 +320,28 @@
     <lastmod>2026-10-06</lastmod><!-- samuel -->
     <changefreq>weekly</changefreq>
   </url>
+  <url>
+    <loc>https://itpaidoff.com/olympics/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/olympics/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/olympics/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/olympics/"/>
+    <lastmod>2026-10-07</lastmod><!-- olympics -->
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/olympics/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/olympics/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/olympics/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/olympics/"/>
+    <lastmod>2026-10-07</lastmod><!-- olympics -->
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://itpaidoff.com/olympics/?lang=ko</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://itpaidoff.com/olympics/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://itpaidoff.com/olympics/?lang=ko"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://itpaidoff.com/olympics/"/>
+    <lastmod>2026-10-07</lastmod><!-- olympics -->
+    <changefreq>weekly</changefreq>
+  </url>
 </urlset>

@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-10-07 · Codex · (이 PR)
+투자 올림픽: 같은 목돈의 다섯 전략을 실제 공개 기록으로 재생하는 네 번째 서비스
+- 파일: olympics/ · scripts/olympics/ · fetch_olympics.py · data/olympics/ · 대문·사이트맵·CI·검사 · CLAUDE.md · design-system.md · 이 일지
+- 규칙: 사용자 승인 알리시아 예산·비례 매도, 전략 모듈·당시 공개 공시·배당 반영 가격. 계산·범위·실측·한계는 CLAUDE.md 9-3-3가 정본.
+- 굳힘: 변경 전 backup/v1.10. 없는 가격·미래 신호를 만들지 않음. 한영·텔레그램 실패 경로·원래 세 서비스 유지.
+- 넘김: 사용자 화면 확인 및 merge, 배포 후 /olympics/ 한영 실제 URL·색인 확인. 더 오래된 올림픽 기록은 상장폐지·당시 공개 자료·기업 행동 확인 후 확장. 기존 네이버 재수집 중복 요청하지 말 것.
+
 ## 2026-10-06 · Codex · PR #134
 사무엘의 결정: 같은 목돈의 일시금·분할 투자 비교를 세 번째 서비스로 추가
 - 파일: samuel/ · data/samuel/ · samuel_data.py · fetch_long.py · 대문·사이트맵·CI·검사 · CLAUDE.md · design-system.md · 이 일지

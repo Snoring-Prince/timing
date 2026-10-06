@@ -1,0 +1,1 @@
+(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else(root.OlympicStrategies||={}).samuel=factory();})(typeof window==='undefined'?this:window,()=>({id:'samuel',step(c,s){const month=c.day.slice(0,7);if(month!==s.month){c.buy(c.asset,c.initial*c.options.monthly/100,'monthly');s.month=month;}}}));
