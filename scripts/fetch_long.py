@@ -35,6 +35,7 @@ import sys
 import time
 import urllib.request
 from datetime import datetime, timedelta, timezone
+from samuel_data import publish as publish_samuel
 
 OUT = "data/market-long.json"
 
@@ -97,6 +98,8 @@ def yahoo_daily(symbol):
     vals = None
     if ind.get("adjclose"):
         vals = ind["adjclose"][0].get("adjclose")
+    if symbol in ("SPY", "QQQ", "BIL") and not vals:
+        raise RuntimeError(f"{symbol}: 배당 반영 일봉 없음 — 일반 종가로 대체하지 않습니다")
     if not vals:
         vals = ind["quote"][0]["close"]
     out = {}
@@ -189,12 +192,16 @@ def main():
 
     series = {}
     failed = []
+    daily_quotes = {}
 
     for key, name, symbol, dec in QUOTES:
         print(f"[{name}] {symbol}")
         try:
-            series[key] = pack(key, name, yahoo_daily(symbol), daily_from, dec)
+            points = yahoo_daily(symbol)
+            series[key] = pack(key, name, points, daily_from, dec)
             series[key]["ticker"] = symbol
+            if key in ("spx", "ndx"):
+                daily_quotes[key] = points
         except Exception as e:                        # noqa: BLE001
             print(f"  실패: {e}")
             failed.append(name)
@@ -217,6 +224,15 @@ def main():
 
     if len(failed) == len(QUOTES) + 1:
         raise SystemExit("모든 소스 실패 — 기존 파일과 갱신 시각을 보존합니다.")
+
+    try:
+        if not all(key in daily_quotes for key in ("spx", "ndx")):
+            raise RuntimeError("주식 ETF 일봉 누락 — BIL 추가 요청을 생략합니다")
+        daily_quotes["reserve"] = yahoo_daily("BIL")
+        publish_samuel(daily_quotes)
+    except Exception as e:                            # noqa: BLE001
+        print(f"사무엘 계산용 일봉 실패, 이전 완전한 파일 유지: {e}")
+        failed.append("사무엘 일봉")
 
     out = {
         "updated": (old.get("updated") if failed else

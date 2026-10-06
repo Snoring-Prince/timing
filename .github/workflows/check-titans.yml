@@ -15,6 +15,7 @@ on:
       - "shared/language-picker.*"
       - "assets/language/**"
       - "timing/index.html"
+      - "samuel/**"
       - "sitemap.xml"
       - "data/titans/investors.json"
       - "data/titans/prices.json"

@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fear &amp; Greed charts and great investors’ portfolios — It Paid Off</title>
+<title>Fear &amp; Greed, investor portfolios and phased investing — It Paid Off</title>
 
 <!-- 서비스로 들어가는 허브. 한영 본문은 정적 HTML입니다. 카드 한 장이 통째로 링크입니다.
      서비스 추가: a.s-service 카드와 .s-nav 링크(href·data-route·data-go)를 함께 더합니다.
      차트는 방문자용 market.json만 읽고, 수집·계산·각 서비스의 화면은 바꾸지 않습니다. -->
-<meta name="description" content="Explore investing questions through Fear &amp; Greed charts alongside the S&amp;P 500 and Nasdaq 100, and great investors’ holdings, portfolio weights and quarterly changes.">
+<meta name="description" content="Explore investing questions through Fear &amp; Greed charts, great investors’ portfolios, and historical comparisons of lump-sum and phased investing in the S&amp;P 500 and Nasdaq 100.">
 <!-- canonical is set once the language is known; see CLAUDE.md 6-2. -->
 <link rel="alternate" hreflang="en" href="https://itpaidoff.com/?lang=en">
 <link rel="alternate" hreflang="ko" href="https://itpaidoff.com/?lang=ko">
@@ -17,8 +17,8 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="itpaidoff.com">
 <meta property="og:url" content="https://itpaidoff.com/">
-<meta property="og:title" content="Fear &amp; Greed charts and great investors’ portfolios — It Paid Off">
-<meta property="og:description" content="Explore investing questions through Fear &amp; Greed charts alongside the S&amp;P 500 and Nasdaq 100, and great investors’ holdings, portfolio weights and quarterly changes.">
+<meta property="og:title" content="Fear &amp; Greed, investor portfolios and phased investing — It Paid Off">
+<meta property="og:description" content="Explore investing questions through Fear &amp; Greed charts, great investors’ portfolios, and historical comparisons of lump-sum and phased investing in the S&amp;P 500 and Nasdaq 100.">
 <meta property="og:image" content="https://itpaidoff.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -41,7 +41,7 @@
   "name": "itpaidoff.com",
   "url": "https://itpaidoff.com/",
   "inLanguage": ["en", "ko"],
-  "description": "Explore investing questions through Fear & Greed charts alongside the S&P 500 and Nasdaq 100, and great investors’ holdings, portfolio weights and quarterly changes."
+  "description": "Explore investing questions through Fear & Greed charts, great investors’ portfolios, and historical comparisons of lump-sum and phased investing in the S&P 500 and Nasdaq 100."
 }
 </script>
 
@@ -138,6 +138,14 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
 @media(max-width:370px){#two-stream-home .s-nav{font-size:12px;gap:2px}#two-stream-home .s-nav a{padding:10px 8px}}
 
 </style>
+<style>
+#two-stream-home .s-service.s-samuel{--s-accent:#27634d;--s-tint:#eef6f1;--s-tint-2:#e1eee5}
+#two-stream-home .samuel-plan{height:186px;background:#fff;border-radius:12px;padding:20px;display:flex;flex-direction:column;justify-content:center;gap:18px;color:var(--s-ink)}
+#two-stream-home .samuel-plan p{font-size:12px;color:var(--s-muted)}
+#two-stream-home .samuel-path{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;font-weight:600}
+#two-stream-home .samuel-path i{display:block;height:12px;background:var(--s-accent);border-radius:3px}
+#two-stream-home .samuel-units{width:48%;display:flex;gap:5px}#two-stream-home .samuel-units i{flex:1}
+</style>
 <link rel="stylesheet" href="/shared/language-picker.css?v=2026-10-05-lang">
 <script src="/shared/language-picker.js?v=2026-10-05-lang"></script>
 </head>
@@ -150,6 +158,7 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
         <a href="/" data-route="/" aria-current="page"><span data-lang="ko">홈</span><span data-lang="en">Home</span></a>
         <a href="/timing/" data-route="/timing/" data-go="timing"><span data-lang="ko">다니엘의 타이밍</span><span data-lang="en">Daniel’s timing</span></a>
         <a href="/titans/" data-route="/titans/" data-go="titans"><span data-lang="ko">거장들의 선택</span><span data-lang="en">Titans’ picks</span></a>
+        <a href="/samuel/" data-route="/samuel/" data-go="samuel"><span data-lang="ko">사무엘의 결정</span><span data-lang="en">Samuel’s decision</span></a>
       </nav>
       <div class="language-control" id="language-control"></div>
     </header>
@@ -186,8 +195,23 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
         </figure>
         <div class="home-actions"><span class="go"><span data-lang="ko">거장들 만나보기</span><span data-lang="en">Meet the investors</span></span></div>
       </a>
+      <a class="s-service s-samuel" href="/samuel/" data-go="samuel" data-route="/samuel/">
+        <div class="s-service-head">
+          <div class="s-service-label"><span class="s-number">03</span><h2><span data-lang="ko">사무엘의 결정</span><span data-lang="en">Samuel’s decision</span></h2></div>
+          <p class="service-question"><span data-lang="ko">한 번에 넣을까,<br>나눠 넣을까?</span><span data-lang="en">All at once,<br>or a little at a time?</span></p>
+          <p class="s-sub"><span data-lang="ko">몇 년 동안 모은 돈을 투자하기로 한 사무엘. 전부 넣자니 내일부터 떨어질까 두렵고, 나눠 넣자니 기다리는 동안 올라버릴까 걱정됩니다.<br>같은 돈으로 출발한 두 방법은 과거에 어떻게 달라졌을까요?</span><span data-lang="en">Samuel is ready to invest his savings. Investing it all feels frightening; waiting feels uncomfortable too.<br>How did two paths starting with the same cash unfold in the past?</span></p>
+        </div>
+        <figure class="s-visual">
+          <div class="samuel-plan">
+            <p><span data-lang="ko">같은 목돈, 서로 다른 두 출발.</span><span data-lang="en">The same cash. Two ways to begin.</span></p>
+            <div class="samuel-path"><span><span data-lang="ko">한 번에</span><span data-lang="en">All at once</span></span><div class="samuel-units" aria-hidden="true"><i></i></div></div>
+            <div class="samuel-path"><span><span data-lang="ko">6개월로 나눠서</span><span data-lang="en">Over six months</span></span><div class="samuel-units" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+          </div>
+        </figure>
+        <div class="home-actions"><span class="go"><span data-lang="ko">비교해보기</span><span data-lang="en">Compare the paths</span></span></div>
+      </a>
     </div>
-    <!-- 공통 면책은 다른 네 화면과 같은 문구를 유지합니다. -->
+    <!-- 공통 면책은 다른 화면과 같은 문구를 유지합니다. -->
     <footer class="foot" id="stream-about">
       <p class="signature"><span data-lang="ko">좋은 질문에서 시작해, 데이터로 확인합니다.</span><span data-lang="en">Start with a good question. Look to the data.</span></p>
       <p class="disc"><span data-lang="ko">본 사이트에서 제공하는 시장 지표, 13F 공시 자료와 과거 수익률은 미래의 투자 수익을 보장하지 않습니다. 모든 정보는 참고용이며 투자 권유가 아닙니다. 이를 바탕으로 한 투자 결정의 책임은 전적으로 사용자에게 있습니다.</span><span data-lang="en">Past performance is not indicative of future results. All market indicators, 13F filing data and historical returns are provided for informational purposes only and are not investment advice. Any investment decision made on the basis of this information is solely the user's responsibility.</span></p>
@@ -246,8 +270,8 @@ html[lang="ko"] #two-stream-home{--fear:#1f5fa9}
   }
   let LANG=pick(),MODEL=null;
   const HEAD={
-    en:{title:'Fear & Greed charts and great investors’ portfolios — It Paid Off',desc:'Explore investing questions through Fear & Greed charts alongside the S&P 500 and Nasdaq 100, and great investors’ holdings, portfolio weights and quarterly changes.'},
-    ko:{title:'공포탐욕지수 차트와 거장들의 포트폴리오 — It Paid Off',desc:'투자가 어려운 사람들의 고민을 모아놓았어요. 공포탐욕지수와 S&P500·나스닥100 비교 차트, 거장들의 보유 종목·비중·분기별 변화를 살펴보세요.'}
+    en:{title:'Fear & Greed, investor portfolios and phased investing — It Paid Off',desc:'Explore investing questions through Fear & Greed charts, great investors’ portfolios, and historical comparisons of lump-sum and phased investing in the S&P 500 and Nasdaq 100.'},
+    ko:{title:'공포탐욕지수·거장 포트폴리오·분할 투자 비교 — It Paid Off',desc:'투자가 어려운 사람들의 고민을 모아놓았어요. 공포탐욕지수 차트와 거장들의 포트폴리오, S&P500·나스닥100 일시금과 분할 투자 비교를 살펴보세요.'}
   };
   const $=id=>document.getElementById(id),svg=$('market-preview');
   function draw(){
