@@ -9,6 +9,22 @@
     ko:{john:'존',daniel:'다니엘',samuel:'사무엘',alicia:'알리시아',emma:'엠마',amount:'준비된 목돈 (USD)',asset:'다니엘·사무엘·엠마의 ETF',start:'시작일',end:'종료일',advanced:'각자의 선택 조정하기',fear:'다니엘 · 매수 공포지수 이하',greed:'다니엘 · 매도 탐욕지수 이상',buy:'다니엘 · 한 번 매수 (%)',sell:'다니엘 · 한 번 매도 (%)',monthly:'사무엘 · 매달 매수 (%)',aliciaBudget:'알리시아 · 공시당 예산 (%)',repeat:'다니엘: 조건에 맞는 관측일마다 반복 매매',entry:'기본은 해당 공포·탐욕 구간에 들어갈 때 한 번입니다. 모든 비율은 처음 목돈을 기준으로 합니다.',apply:'이 조건으로 비교하기',pending:'조건을 바꿨어요. 비교하기를 눌러 결과에 반영하세요.',first:'처음',last:'마지막',play:'재생',pause:'일시정지',timeline:'비교 날짜',total:'총자산 = 주식 + BIL · USD · 차트에 마우스·손가락을 대거나 좌우 방향키로 날짜별 값을 볼 수 있습니다.',decisions:'이날까지 어떤 선택을 했을까?',filter:'사람별 매매 보기',all:'모두',more:'더 보기',loading:'과거 기록을 불러오고 있어요.',error:'비교에 필요한 자료를 불러오지 못했어요. 잠시 뒤 다시 열어주세요.',inputs:'금액과 비율을 확인해주세요. 공포 기준은 탐욕 기준보다 낮아야 합니다.',range:'자료 범위 안에서 서로 다른 두 거래일 이상을 골라주세요.',nav:'메인 메뉴',assets:'총자산',return:'총수익률',reserve:'대기 자금 · BIL',drop:'가장 크게 줄었던 폭',empty:'이날까지 실제로 실행된 주식 매매가 없습니다. 남은 돈은 BIL에 있습니다.',buyTrade:'매수',sellTrade:'매도',chart:'다섯 사람의 과거 총자산 변화. 좌우 방향키로 날짜별 값을 확인할 수 있습니다.'},
     en:{john:'John',daniel:'Daniel',samuel:'Samuel',alicia:'Alicia',emma:'Emma',amount:'Initial cash (USD)',asset:'Daniel, Samuel & Emma’s ETF',start:'Start',end:'End',advanced:'Adjust their decisions',fear:'Daniel · Buy when fear ≤',greed:'Daniel · Sell when greed ≥',buy:'Daniel · Buy per signal (%)',sell:'Daniel · Sell per signal (%)',monthly:'Samuel · Monthly purchase (%)',aliciaBudget:'Alicia · Budget per filing (%)',repeat:'Daniel: repeat after every qualifying observation',entry:'By default, one trade on entering a fear or greed zone. All percentages use initial cash.',apply:'Compare these decisions',pending:'Settings changed. Apply them to update the result.',first:'Start',last:'End',play:'Play',pause:'Pause',timeline:'Comparison date',total:'Total assets = equities + BIL · USD · Hover, touch, or use left/right arrow keys to inspect dates.',decisions:'Decisions up to this date',filter:'Filter person',all:'Everyone',more:'Show more',loading:'Loading historical observations…',error:'The observations needed for this comparison could not be loaded. Please try again later.',inputs:'Check cash and percentages. The fear threshold must be below the greed threshold.',range:'Choose at least two different trading days within the available history.',nav:'Main',assets:'Total assets',return:'Total return',reserve:'Waiting funds · BIL',drop:'Largest peak-to-trough drop',empty:'No equity trades have executed by this date. Remaining funds stay in BIL.',buyTrade:'Buy',sellTrade:'Sell',chart:'Historical total assets for five people. Use left and right arrow keys to inspect dates.'}
   };
+  const METHODS={
+    ko:{
+      john:()=> '목돈 전부를 단기 국채 ETF인 BIL에 넣고 계속 보유합니다.',
+      daniel:(o,asset)=>`공포 ${o.fear} 이하에 ${asset} ${o.buy}% 매수, 탐욕 ${o.greed} 이상에 ${o.sell}% 매도. ${o.repeat?'조건에 맞는 관측일마다':'구간 진입 때 한 번'} 신호를 확인하고 다음 거래일에 실행합니다.`,
+      samuel:(o,asset)=>`첫날부터 매달 목돈의 ${o.monthly}%씩 ${asset}를 사고, 팔지 않고 계속 보유합니다.`,
+      alicia:o=>`버크셔의 신규 종목부터 따라 삽니다. 공시당 목돈의 ${o.alicia}%를 나눠 사고, 보유 종목의 추가 매수·비례 매도도 공개 후 따라갑니다.`,
+      emma:(o,asset)=>`첫날 목돈 전부로 ${asset}를 사고, 팔지 않고 계속 보유합니다.`
+    },
+    en:{
+      john:()=> 'Invests all initial cash in BIL, a Treasury bill ETF, and holds it.',
+      daniel:(o,asset)=>`Buys ${o.buy}% in ${asset} at fear ≤${o.fear}; sells ${o.sell}% at greed ≥${o.greed}. Signals ${o.repeat?'after every qualifying observation':'once on zone entry'}; trades the next trading day.`,
+      samuel:(o,asset)=>`Buys ${o.monthly}% of initial cash in ${asset} from day one, then monthly. Holds without selling.`,
+      alicia:o=>`Starts with new Berkshire holdings. Splits ${o.alicia}% of initial cash per filing across purchases, then follows additions and proportional sales after disclosure.`,
+      emma:(o,asset)=>`Invests all initial cash in ${asset} on day one, then holds without selling.`
+    }
+  };
   function pick(){const q=(new URLSearchParams(location.search).get('lang')||'').slice(0,2).toLowerCase();if(D[q])return q;try{const s=localStorage.getItem('dt.lang');if(D[s])return s;}catch(e){}for(const l of navigator.languages||[navigator.language||'en']){if(D[l.slice(0,2)])return l.slice(0,2);}return 'en';}
   let LANG=pick(),DATA=null,RESULT=null,INDEX=0,HOVER=0,GEOMETRY=null,TIMER=null,LIMIT=15,ERROR='loading';
   const t=k=>D[LANG][k],money=n=>new Intl.NumberFormat(LANG==='ko'?'ko-KR':'en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n),pct=n=>Math.abs(n)<.0005?'0.0%':(n>0?'+':'')+(n*100).toFixed(1)+'%';
@@ -45,11 +61,12 @@
   }
   function render(){
     if(!RESULT)return;const point=RESULT.curve[INDEX];$('timeline').value=INDEX;$('timeline').setAttribute('aria-valuetext',point.day);$('current-date').textContent=point.day;
-    $('date-note').textContent=LANG==='ko'?'순위와 아래 매매 기록은 이 날짜까지입니다. 같은 총자산은 공동 순위입니다.':'Ranks and decisions below use observations up to this date. Equal total assets share a rank.';
+    $('date-note').textContent=LANG==='ko'?'순위와 아래 매매 기록은 이 날짜까지입니다. 같은 총자산은 공동 순위입니다. 비율은 처음 목돈 기준이며, 남은 돈과 매도 대금은 BIL에 둡니다.':'Ranks and decisions below use observations up to this date. Equal total assets share a rank. Percentages use initial cash; uninvested funds and sale proceeds stay in BIL.';
     const cards=[];
     for(const row of M.rank(point,RESULT.options.amount)){
       const card=element('article',undefined,'runner');card.style.setProperty('--person','var(--'+row.id+')');card.dataset.actor=row.id;
-      const h=element('h3');h.append(element('span',t(row.id)),element('span',LANG==='ko'?row.rank+'위':'#'+row.rank,'place'));card.append(h,element('div',t('assets'),'value-label'),element('div',money(row.value),'value'));
+      const h=element('h3');h.append(element('span',t(row.id)),element('span',LANG==='ko'?row.rank+'위':'#'+row.rank,'place'));
+      card.append(h,element('p',METHODS[LANG][row.id](RESULT.options,RESULT.options.asset==='spx'?'SPY':'QQQ'),'strategy-description'),element('div',t('assets'),'value-label'),element('div',money(row.value),'value'));
       const dl=element('dl');for(const [label,value,cls] of [[t('return'),pct(row.return),row.return>0?'positive':row.return<0?'negative':''],[t('reserve'),money(row.reserve),''],[t('drop'),pct(row.drop),'']])dl.append(element('dt',label),element('dd',value,cls));
       card.append(dl);cards.push(card);
     }$('ranking').replaceChildren(...cards);
