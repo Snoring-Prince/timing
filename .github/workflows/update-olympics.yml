@@ -1,0 +1,50 @@
+name: Update Investment Olympics
+on:
+  schedule:
+    - cron: "15 0 * * 0" # Sunday 09:15 KST, after the ETF history update
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: investment-olympics-data
+  cancel-in-progress: false
+jobs:
+  race:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: 공개 날짜별 공시와 배당 반영 가격 수집·검증
+        id: collect
+        continue-on-error: true
+        env:
+          SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
+        run: python scripts/fetch_olympics.py
+      - name: 완성된 기록만 저장
+        if: steps.collect.outcome == 'success'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/olympics
+          if ! git diff --staged --quiet -- data/olympics/race.json; then
+            sed -i "s#<lastmod>[^<]*</lastmod><!-- olympics -->#<lastmod>$(date -u +%Y-%m-%d)</lastmod><!-- olympics -->#" sitemap.xml
+            git add sitemap.xml
+          fi
+          if ! git diff --staged --quiet; then
+            git commit -m "투자 올림픽 기록 갱신 $(date -u +%Y-%m-%d)"
+            git push
+          fi
+      - name: 수집 실패 상태 반영
+        if: always() && steps.collect.outcome == 'failure'
+        run: exit 1
+      - name: 실패하면 텔레그램으로
+        if: failure()
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT }}
+        run: python scripts/notify.py --title "투자 올림픽 기록 갱신이 실패했습니다"

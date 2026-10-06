@@ -10,6 +10,13 @@ on:
       - "assets/language/**"
       - "timing/index.html"
       - "samuel/**"
+      - "olympics/**"
+      - "data/olympics/**"
+      - "scripts/fetch_olympics.py"
+      - "scripts/olympics/**"
+      - "scripts/tests/test_olympics.py"
+      - "scripts/tests/olympics.test.cjs"
+      - ".github/workflows/update-olympics.yml"
       - "data/samuel/**"
       - "scripts/samuel_data.py"
       - "scripts/tests/test_samuel.py"
@@ -57,9 +64,11 @@ jobs:
 
       - name: 사무엘 일별 데이터 저장 검사
         run: python -m unittest discover -s scripts/tests -p 'test_samuel.py'
+      - name: 올림픽 공시 공개일과 보존 검사
+        run: python -m unittest discover -s scripts/tests -p 'test_olympics.py'
 
       - name: 대시보드 날짜·결측·실시간 갱신 검사
-        run: node --test scripts/tests/dashboard.test.cjs scripts/tests/live.test.cjs scripts/tests/home.test.cjs scripts/tests/samuel.test.cjs
+        run: node --test scripts/tests/dashboard.test.cjs scripts/tests/live.test.cjs scripts/tests/home.test.cjs scripts/tests/samuel.test.cjs scripts/tests/olympics.test.cjs
 
       - name: 설명 글 숫자 대조
         run: python scripts/check_about.py

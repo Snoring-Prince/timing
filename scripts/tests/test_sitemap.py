@@ -15,7 +15,7 @@ class SitemapTests(unittest.TestCase):
         self.text = (ROOT / 'sitemap.xml').read_text(encoding='utf-8')
         self.entries = ET.fromstring(self.text).findall('s:url', NS)
         investors = json.loads((ROOT / 'data/titans/investors.json').read_text(encoding='utf-8'))['investors']
-        self.paths = ['/', '/timing/', '/samuel/', '/titans/', '/titans/13f/'] + [f"/titans/{i['slug']}/" for i in investors]
+        self.paths = ['/', '/timing/', '/samuel/', '/olympics/', '/titans/', '/titans/13f/'] + [f"/titans/{i['slug']}/" for i in investors]
 
     def test_every_screen_has_default_and_both_language_urls_without_duplicates(self):
         expected = {f'https://itpaidoff.com{p}{q}' for p in self.paths for q in ['', '?lang=en', '?lang=ko']}
@@ -53,13 +53,14 @@ class SitemapTests(unittest.TestCase):
             self.assertRegex(date[1], r'^\d{4}-\d{2}-\d{2}$')
             marker = ('root' if base == 'https://itpaidoff.com/' else 'timing' if base.endswith('/timing/')
                       else 'samuel' if base.endswith('/samuel/')
+                      else 'olympics' if base.endswith('/olympics/')
                       else 'titans-13f' if base.endswith('/titans/13f/') else 'titans')
             self.assertEqual(date[2], marker, base)
             clusters.setdefault(base, set()).add(date.groups())
         self.assertTrue(all(len(dates) == 1 for dates in clusters.values()))
 
     def test_workflow_replacements_reach_every_variant_and_preserve_other_screens(self):
-        for file, markers in [('update-data.yml', ['root', 'timing']), ('update-13f.yml', ['titans']), ('update-long.yml', ['samuel'])]:
+        for file, markers in [('update-data.yml', ['root', 'timing']), ('update-13f.yml', ['titans']), ('update-long.yml', ['samuel']), ('update-olympics.yml', ['olympics'])]:
             workflow = (ROOT / '.github/workflows' / file).read_text(encoding='utf-8')
             for marker in markers:
                 target = f'<lastmod>[^<]*</lastmod><!-- {marker} -->'
@@ -68,7 +69,7 @@ class SitemapTests(unittest.TestCase):
                 wanted = 3 if marker != 'titans' else 3 * sum(p.startswith('/titans/') and p != '/titans/13f/' for p in self.paths)
                 self.assertEqual(count, wanted)
                 # No other marker's lastmod changes during this scoped replacement.
-                for other in {'root', 'timing', 'samuel', 'titans', 'titans-13f'} - {marker}:
+                for other in {'root', 'timing', 'samuel', 'olympics', 'titans', 'titans-13f'} - {marker}:
                     pattern = rf'<lastmod>([^<]+)</lastmod><!-- {other} -->'
                     self.assertEqual(re.findall(pattern, self.text), re.findall(pattern, changed))
 

@@ -1,0 +1,1 @@
+(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else(root.OlympicStrategies||={}).john=factory();})(typeof window==='undefined'?this:window,()=>({id:'john',step(){}}));
