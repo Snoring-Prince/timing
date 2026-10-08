@@ -88,7 +88,7 @@ def build(bt: dict) -> list:
          r"절반이 (\d+)% 아래", r"came in under (\d+)%",
          int(y["med"][0]), 1, 0),
         ("승률(지수 5)",
-         r"확률이 (\d+)% 인데", r"a positive return a year later (\d+)% of the time",
+         r"비율이 (\d+)% 인데", r"a positive return a year later (\d+)% of the time",
          y["win"][5], 3, 0),
         ("승률(지수 24)",
          r"24 는 (\d+)%", r"in the same bucket, it was (\d+)%",

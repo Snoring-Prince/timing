@@ -29,6 +29,7 @@
   let LANG=pick(),DATA=null,RESULT=null,INDEX=0,HOVER=0,GEOMETRY=null,TIMER=null,LIMIT=15,ERROR='loading';
   const t=k=>D[LANG][k],money=n=>new Intl.NumberFormat(LANG==='ko'?'ko-KR':'en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n),pct=n=>Math.abs(n)<.0005?'0.0%':(n>0?'+':'')+(n*100).toFixed(1)+'%';
   const tradeMoney=n=>n<.005?'< US$0.01':new Intl.NumberFormat(LANG==='ko'?'ko-KR':'en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+  const signedMoney=n=>(Math.abs(n)<.005?'':n<0?'−':'+')+new Intl.NumberFormat(LANG==='ko'?'ko-KR':'en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(Math.abs(n)<.005?0:Math.abs(n));
   const element=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
   function paintHead(){
     const h=HEAD[LANG],set=(s,v)=>document.head.querySelector(s)?.setAttribute('content',v);
@@ -62,13 +63,24 @@
   function render(){
     if(!RESULT)return;const point=RESULT.curve[INDEX];$('timeline').value=INDEX;$('timeline').setAttribute('aria-valuetext',point.day);$('current-date').textContent=point.day;
     $('date-note').textContent=LANG==='ko'?'순위와 아래 매매 기록은 이 날짜까지입니다. 같은 총자산은 공동 순위입니다. 비율은 처음 목돈 기준이며, 남은 돈과 매도 대금은 BIL에 둡니다.':'Ranks and decisions below use observations up to this date. Equal total assets share a rank. Percentages use initial cash; uninvested funds and sale proceeds stay in BIL.';
-    const cards=[];
+    const cards=[],expanded=new Set([...$('ranking').querySelectorAll('.runner-facts[open]')].map(e=>e.closest('.runner').dataset.actor));
     for(const row of M.rank(point,RESULT.options.amount)){
       const card=element('article',undefined,'runner');card.style.setProperty('--person','var(--'+row.id+')');card.dataset.actor=row.id;
       const h=element('h3');h.append(element('span',t(row.id)),element('span',LANG==='ko'?row.rank+'위':'#'+row.rank,'place'));
       card.append(h,element('p',METHODS[LANG][row.id](RESULT.options,RESULT.options.asset==='spx'?'SPY':'QQQ'),'strategy-description'),element('div',t('assets'),'value-label'),element('div',money(row.value),'value'));
       const dl=element('dl');for(const [label,value,cls] of [[t('return'),pct(row.return),row.return>0?'positive':row.return<0?'negative':''],[t('reserve'),money(row.reserve),''],[t('drop'),pct(row.drop),'']])dl.append(element('dt',label),element('dd',value,cls));
-      card.append(dl);cards.push(card);
+      const facts=point.facts[row.id],detail=element('details',undefined,'runner-facts');
+      detail.open=expanded.has(row.id);
+      detail.append(element('summary',LANG==='ko'?'실행 내역 · 손익':'Trades & gains'));
+      detail.append(element('p',LANG==='ko'?`종목별 매수 ${facts.buys}건 · 매도 ${facts.sells}건`:`Stock purchases: ${facts.buys} · Sales: ${facts.sells}`));
+      const gains=element('dl');
+      for(const [label,value] of [[LANG==='ko'?'주식 손익':'Equity gain/loss',facts.stockGain],[LANG==='ko'?'BIL 손익':'BIL gain/loss',facts.reserveGain]])gains.append(element('dt',label),element('dd',signedMoney(value),Math.abs(value)<.005?'':value<0?'negative':'positive'));
+      detail.append(gains,element('p',LANG==='ko'?'매도한 주식과 보유 중인 주식의 손익을 함께 포함해요.':'Includes realized and unrealized equity gains/losses.'));
+      if(row.id==='alicia')detail.append(element('p',LANG==='ko'?'시작 후 공개된 신규 종목부터 따라간 결과이며, 버크셔 전체의 수익률은 아니에요.':'This follows newly disclosed positions after the start, not Berkshire’s whole portfolio.'));
+      const factLine=element('p',LANG==='ko'?`주식 매수 ${facts.buys}건 · 매도 ${facts.sells}건`:`Equity buys ${facts.buys} · Sales ${facts.sells}`,'fact-line');
+      if(row.id==='daniel'&&!point.greedObserved)factLine.textContent+=LANG==='ko'?' · 확인한 매도 신호 없음':' · No observed sell signal';
+      if(row.id==='alicia')factLine.textContent=LANG==='ko'?`주식 ${signedMoney(facts.stockGain)} · BIL ${signedMoney(facts.reserveGain)}`:`Equities ${signedMoney(facts.stockGain)} · BIL ${signedMoney(facts.reserveGain)}`;
+      card.append(dl,factLine,detail);cards.push(card);
     }$('ranking').replaceChildren(...cards);
     $('legend').replaceChildren(...IDS.map((id,i)=>{const s=element('span');s.style.setProperty('--person','var(--'+id+')');s.append(element('i',undefined,i===1?'':i===4?'dotted':'dashed'),element('span',t(id)));return s;}));
     $('missing').textContent=RESULT.missingFear?(LANG==='ko'?`이 비교에 공포탐욕지수 관측이 없는 거래일 ${RESULT.missingFear}일이 있어 다니엘의 신호를 만들지 않았습니다.`:`Fear & Greed observations were absent for ${RESULT.missingFear} trading days; Daniel receives no invented signal.`):'';

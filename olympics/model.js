@@ -52,14 +52,20 @@
     const days=p.days.filter(d=>d>=start&&d<=end);if(days.length<2)throw Error('range');
     const events=new Map();
     for(const e of p.filings){if(e.filed<days[0]||e.filed>=days.at(-1))continue;const due=days.find(d=>d>e.filed);if(due){const list=events.get(due)||[];list.push(e);events.set(due,list);}}
-    const accounts=strategies.map(strategy=>({strategy,state:{},positions:{},reserve:o.amount/p.maps.reserve.get(days[0]),peak:o.amount,mdd:0}));
-    const curve=[],trades=[];let missingFear=0;
+    const accounts=strategies.map(strategy=>({strategy,state:{},positions:{},reserve:o.amount/p.maps.reserve.get(days[0]),peak:o.amount,mdd:0,stockFlow:0,reserveGain:0,buys:0,sells:0}));
+    const curve=[],trades=[];let missingFear=0,greedObserved=false;
     for(let i=0;i<days.length;i++){
       const day=days[i],bil=p.maps.reserve.get(day),price=key=>{const v=p.maps[key]?.get(day);if(!Number.isFinite(v)||v<=0)throw Error('price:'+key+':'+day);return v;};
-      const values={},reserves={},drops={};
+      const values={},reserves={},drops={},facts={};
       if(i&&!p.fear.has(days[i-1]))missingFear++;
+      if(i&&p.fear.get(days[i-1])>=o.greed)greedObserved=true;
       for(const a of accounts){
-        const record=(action,key,amount,reason,meta)=>trades.push({actor:a.strategy.id,day,action,key,amount,reason,...meta});
+        // Accrue only the BIL units held overnight; transfers are not profits.
+        if(i)a.reserveGain+=a.reserve*(bil-p.maps.reserve.get(days[i-1]));
+        const record=(action,key,amount,reason,meta)=>{
+          a.stockFlow+=action==='buy'?amount:-amount;a[action==='buy'?'buys':'sells']++;
+          trades.push({actor:a.strategy.id,day,action,key,amount,reason,...meta});
+        };
         const reserve=()=>a.reserve*bil;
         const buy=(key,wanted,reason,meta={})=>{const amount=Math.min(wanted,reserve());if(amount<1e-8)return;const px=price(key);a.positions[key]=(a.positions[key]||0)+amount/px;a.reserve=Math.max(0,a.reserve-amount/bil);record('buy',key,amount,reason,meta);};
         const sell=(key,wanted,reason,meta={})=>{if(!a.positions[key])return;const px=price(key),amount=Math.min(wanted,a.positions[key]*px);if(amount<1e-8)return;a.positions[key]=Math.max(0,a.positions[key]-amount/px);a.reserve+=amount/bil;record('sell',key,amount,reason,meta);};
@@ -70,8 +76,9 @@
         let total=reserve();for(const [key,units] of Object.entries(a.positions))if(units>1e-10)total+=units*price(key);
         if(!Number.isFinite(total)||total<0)throw Error('data');a.peak=Math.max(a.peak,total);a.mdd=Math.min(a.mdd,total/a.peak-1);
         values[a.strategy.id]=total;reserves[a.strategy.id]=reserve();drops[a.strategy.id]=a.mdd;
+        facts[a.strategy.id]={stockGain:total-reserve()-a.stockFlow,reserveGain:a.reserveGain,buys:a.buys,sells:a.sells};
       }
-      curve.push({day,values,reserves,drops});
+      curve.push({day,values,reserves,drops,facts,greedObserved});
     }
     return {from:days[0],to:days.at(-1),options:o,curve,trades,missingFear};
   }

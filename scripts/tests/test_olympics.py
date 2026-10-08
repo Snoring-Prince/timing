@@ -102,5 +102,11 @@ class Prices(unittest.TestCase):
         self.assertIn("if: steps.collect.outcome == 'success'",source)
         self.assertIn("steps.collect.outcome == 'failure'",source)
         self.assertIn("if: failure()",source);self.assertIn("python scripts/notify.py --title",source)
+        self.assertIn("workflow_call:",source);self.assertNotIn("schedule:",source)
+        self.assertIn("ref: main",source) # Read the ETF commit made after the caller started.
+        upstream=(export.ROOT/".github/workflows/update-long.yml").read_text()
+        self.assertIn("needs: long",upstream)
+        self.assertIn("uses: ./.github/workflows/update-olympics.yml",upstream)
+        self.assertIn("secrets: inherit",upstream)
 
 if __name__=="__main__":unittest.main()

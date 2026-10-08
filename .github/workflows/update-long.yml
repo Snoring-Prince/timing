@@ -62,3 +62,8 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT }}
         run: python scripts/notify.py --title "장기 이력 받기가 실패했습니다"
+
+  olympics:
+    needs: long
+    uses: ./.github/workflows/update-olympics.yml
+    secrets: inherit

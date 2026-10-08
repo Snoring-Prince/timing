@@ -19,7 +19,7 @@
 <meta name="theme-color" content="#ffffff">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Investment Olympics","url":"https://itpaidoff.com/olympics/","inLanguage":["en","ko"],"description":"Replay five investment decisions using the same initial cash and historical observations."}</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
-<link rel="stylesheet" href="style.css?v=2026-10-07">
+<link rel="stylesheet" href="style.css?v=2026-10-08-review">
 <link rel="stylesheet" href="/shared/language-picker.css?v=2026-10-05-lang">
 <script src="/shared/language-picker.js?v=2026-10-05-lang"></script>
 <script src="strategies/john.js?v=2026-10-06" defer></script>
@@ -27,7 +27,7 @@
 <script src="strategies/samuel.js?v=2026-10-06" defer></script>
 <script src="strategies/alicia.js?v=2026-10-06" defer></script>
 <script src="strategies/emma.js?v=2026-10-06" defer></script>
-<script src="model.js?v=2026-10-06" defer></script><script src="app.js?v=2026-10-07" defer></script>
+<script src="model.js?v=2026-10-08-review" defer></script><script src="app.js?v=2026-10-08-review" defer></script>
 <script>
 (function(){if(["localhost","127.0.0.1",""].includes(location.hostname))return;
 const s=document.createElement("script");s.defer=true;s.src="https://cloud.umami.is/script.js";
@@ -86,11 +86,12 @@ s.setAttribute("data-website-id","41e07a57-a87c-403b-bdf8-e12d911457b6");documen
 <div class="replay-head"><output id="current-date"></output><div class="replay-buttons"><button id="first" data-i18n="first">Start</button><button id="play" data-i18n="play">Play</button><button id="last" data-i18n="last">End</button></div></div>
 <label class="sr-only" for="timeline" data-i18n="timeline">Comparison date</label><input id="timeline" type="range" min="0" step="1" value="0">
 <p class="note" id="date-note"></p>
-<div id="ranking" class="ranking"></div>
 <div id="legend" class="legend"></div>
 <div class="chart-wrap"><svg id="chart" class="chart" role="img" tabindex="0"></svg><div id="tooltip" class="tooltip" hidden></div></div>
 <p class="note" data-i18n="total">Total assets: equities + BIL · USD · Use the arrow keys on the chart to inspect dates.</p>
 <p class="note" id="missing"></p>
+<h3 class="results-heading"><span data-lang="ko">이날까지, 각자의 결과</span><span data-lang="en">Each person’s result by this date</span></h3>
+<div id="ranking" class="ranking"></div>
 </div>
 <div class="log-head"><h2 class="section-heading" data-i18n="decisions">Decisions up to this date</h2><label><span class="sr-only" data-i18n="filter">Filter person</span><select id="actor"><option value="" data-i18n="all">Everyone</option><option value="john" data-i18n="john">john</option><option value="daniel" data-i18n="daniel">daniel</option><option value="samuel" data-i18n="samuel">samuel</option><option value="alicia" data-i18n="alicia">alicia</option><option value="emma" data-i18n="emma">emma</option></select></label></div>
 <ol id="log" class="log"></ol><button id="more" hidden data-i18n="more">Show more</button>

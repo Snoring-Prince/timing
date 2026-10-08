@@ -68,6 +68,21 @@ test('changing the amount scales assets, without changing returns or drawdowns',
   const source=rows(i=>100+i/2),a=M.simulate(source,'2020-01',settings),b=M.simulate(source,'2020-01',{...settings,amount:24000});
   near(b.lump,a.lump*2);near(b.split,a.split*2);near(a.mddS,b.mddS);near(a.returnS,b.returnS);
 });
+test('phase-in drawdowns stop on the final scheduled purchase, not the horizon end',()=>{
+  const source=rows((i,d)=>d.toISOString().slice(0,10)<'2020-08-01'?100+Math.sin(i/10)*5:20),r=M.simulate(source,'2020-01',settings);
+  assert.equal(r.phase.to,r.buys.at(-1).day);
+  const phase=r.curve.filter(p=>p.day<=r.phase.to);
+  for(const [key,metric] of [['lump','mddL'],['split','mddS']]){
+    let peak=settings.amount,drop=0;for(const p of phase){peak=Math.max(peak,p[key]);drop=Math.min(drop,p[key]/peak-1);}
+    near(r.phase[metric],drop);assert.ok(r[metric]<drop);
+  }
+});
+test('completed starting-month bounds contract when the horizon increases',()=>{
+  const source=rows(),short=M.cohorts(source,{...settings,years:1}),long=M.cohorts(source,{...settings,years:5});
+  assert.equal(short[0].month,long[0].month);assert.ok(long.at(-1).month<short.at(-1).month);
+  assert.doesNotThrow(()=>M.simulate(source,long.at(-1).month,{...settings,years:5}));
+  assert.throws(()=>M.simulate(source,short.at(-1).month,{...settings,years:5}),/range/);
+});
 test('both real daily histories support all settings; ledger matches independently',()=>{
   const data=JSON.parse(fs.readFileSync(path.join(root,'data/samuel/prices.json'),'utf8'));
   for(const key of ['spx','ndx'])for(const months of [3,6,12])for(const years of [1,3,5,10]){

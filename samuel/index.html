@@ -22,11 +22,11 @@
 <meta name="theme-color" content="#ffffff">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Samuel’s decision","url":"https://itpaidoff.com/samuel/","inLanguage":["en","ko"],"description":"Historical comparison of lump-sum and phased investing using the same initial cash."}</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
-<link rel="stylesheet" href="style.css?v=2026-10-06-bil">
+<link rel="stylesheet" href="style.css?v=2026-10-08-review">
 <link rel="stylesheet" href="/shared/language-picker.css?v=2026-10-05-lang">
 <script src="/shared/language-picker.js?v=2026-10-05-lang"></script>
-<script src="model.js?v=2026-10-06-bil" defer></script>
-<script src="app.js?v=2026-10-06-bil" defer></script>
+<script src="model.js?v=2026-10-08-review" defer></script>
+<script src="app.js?v=2026-10-08-review" defer></script>
 <script>
 window.STATS={id:"41e07a57-a87c-403b-bdf8-e12d911457b6",src:"https://cloud.umami.is/script.js"};
 (function loadStats(){
@@ -75,18 +75,26 @@ window.STATS={id:"41e07a57-a87c-403b-bdf8-e12d911457b6",src:"https://cloud.umami
       </div>
       <p class="control-note"><span data-lang="ko">첫날부터 같은 목돈이 준비돼 있다고 가정합니다. 나눠 넣는 동안 남은 돈은 BIL에 보관합니다. 매달 새로 버는 돈을 투자하는 계산은 아니며, 금액은 달러 기준입니다.</span><span data-lang="en">Both paths begin with the same cash already available. Waiting funds stay in BIL. This is not a comparison of investing new monthly income. Amounts are in USD.</span></p>
       <p class="control-note" id="data-range"></p>
+      <p class="control-note" id="start-range" aria-live="polite"></p>
     </form>
   </section>
   <p class="status" id="status" role="status" aria-live="polite"></p>
+  <button class="range-recovery" id="use-valid-start" type="button" hidden></button>
   <section class="panel" id="comparison" hidden aria-label="Historical comparison">
     <div class="summary">
       <article class="result"><h3 data-i18n="lump">All at once</h3><div class="value" id="value-lump"></div><dl><dt data-i18n="return">Total return</dt><dd id="return-lump"></dd><dt data-i18n="drawdown">Largest peak-to-trough drop</dt><dd id="drawdown-lump"></dd></dl></article>
       <article class="result split"><h3 id="split-label">In stages</h3><div class="value" id="value-split"></div><dl><dt data-i18n="return">Total return</dt><dd id="return-split"></dd><dt data-i18n="drawdown">Largest peak-to-trough drop</dt><dd id="drawdown-split"></dd></dl></article>
     </div>
+    <p class="outcome" id="outcome"></p>
     <div class="legend"><span data-i18n="lump">All at once</span><span class="split" data-i18n="split">In stages</span></div>
     <div class="chart-wrap" id="chart-wrap"><svg class="chart" id="chart" role="img" tabindex="0"></svg><div class="tooltip" id="tooltip" role="status" aria-live="polite" hidden></div></div>
     <div class="chart-caption"><span id="dates"></span><span data-i18n="totalAssets">Equity ETF + waiting funds (BIL) · USD</span></div>
     <p class="after-chart" id="reserve-note"></p>
+    <details class="phase-detail">
+      <summary><span data-lang="ko">돈을 나눠 넣던 동안에는?</span><span data-lang="en">What happened while phasing in?</span></summary>
+      <p class="after-chart"><span id="phase-dates"></span><br><span data-lang="ko">첫 매수부터 마지막 분할 매수일까지, 총자산이 이전 최고점에서 가장 크게 내려간 폭입니다.</span><span data-lang="en">The largest peak-to-trough drop in total assets, from the first purchase through the final phased purchase.</span></p>
+      <dl><dt data-i18n="lump">All at once</dt><dd id="phase-lump"></dd><dt data-i18n="split">In stages</dt><dd id="phase-split"></dd></dl>
+    </details>
     <p class="after-chart"><span data-lang="ko">‘가장 크게 줄었던 폭’은 주식 ETF와 BIL을 합친 총자산이 이전 최고점에서 얼마나 내려갔는지를 뜻합니다.</span><span data-lang="en">The peak-to-trough drop measures how far total assets, including BIL, fell from their previous high.</span></p>
   </section>
   <h2 class="section-heading" id="samples-heading" hidden><span data-lang="ko">시작하는 달이 달랐다면?</span><span data-lang="en">What if the starting month were different?</span></h2>

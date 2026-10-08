@@ -1,4 +1,5 @@
 :root{--ink:#182132;--muted:#475765;--faint:#626a78;--rule:#e5e8ee;--accent:#27634d;--tint:#eef6f1;--lump:#27634d;--split:#687b91;--up:#a62f27;--down:#1f5fa9;--text:14px;--small:12px;--number:30px;color-scheme:light}
+.range-recovery{display:block;max-width:100%;margin:0 auto 24px;padding:8px 14px;border:1px solid var(--rule);border-radius:8px;background:var(--tint);color:var(--accent)}.outcome{margin:0 0 18px;font-size:var(--text);color:var(--muted)}.phase-detail{border-top:1px solid var(--rule);margin-top:16px;font-size:var(--small);color:var(--muted)}.phase-detail summary{cursor:pointer;min-height:44px;padding:10px 0;font-weight:600;color:var(--ink)}.phase-detail dl{display:grid;grid-template-columns:1fr auto;gap:5px;max-width:440px}.phase-detail dd{margin:0;font-variant-numeric:tabular-nums;color:var(--down);font-weight:600}
 html[lang=en]{--up:#247a36;--down:#c4362c}
 *{box-sizing:border-box}body{margin:0;background:#fff;color:var(--ink);font:var(--text)/1.8 "Pretendard Variable",Pretendard,system-ui,sans-serif}
 html[lang=ko] [data-lang=en],html:not([lang=ko]) [data-lang=ko],[hidden]{display:none!important}
