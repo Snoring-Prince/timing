@@ -1,7 +1,6 @@
 name: Update Investment Olympics
 on:
-  schedule:
-    - cron: "15 0 * * 0" # Sunday 09:15 KST, after the ETF history update
+  workflow_call:
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The preceding job has just committed fresh ETF history to main.
+          ref: main
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

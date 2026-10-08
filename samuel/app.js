@@ -6,8 +6,8 @@
     ko:{title:'S&P500·나스닥100 일시금과 분할 투자 비교 — 사무엘의 결정',desc:'같은 목돈을 한 번에 투자할까, 3·6·12개월로 나눠 투자할까? SPY·QQQ의 과거 총자산 변화와 낙폭을 여러 시작 시점에서 비교해보세요.'}
   };
   const D={
-    ko:{asset:'투자 대상',amount:'준비된 목돈 (USD)',start:'투자 시작월',months:'나눠 넣는 기간',years:'비교할 기간',reserve:'기다리는 돈은',m3:'3개월',m6:'6개월',m12:'12개월',y1:'1년',y3:'3년',y5:'5년',y10:'10년',lump:'한 번에 넣기',split:'나눠 넣기',return:'총수익률',drawdown:'가장 크게 줄었던 폭',totalAssets:'주식 ETF + 대기 자금(BIL) · USD',higher:'마지막에 돈이 더 남았던 쪽',loading:'과거 일별 자료를 불러오고 있어요.',error:'자료를 불러오지 못했어요. 잠시 뒤 다시 열어주세요.',inputs:'금액·시작월을 확인해주세요.',range:'두 ETF의 자료가 겹치고 선택한 기간이 모두 끝난 시작월만 비교할 수 있어요. 아래 자료 범위 안의 시작월을 선택하고, 필요하면 비교 기간을 줄여주세요.',nav:'메인 메뉴',chart:'한 번에 넣기와 나눠 넣기의 과거 총자산 변화. 좌우 방향키로 날짜별 값을 확인할 수 있습니다.'},
-    en:{asset:'Investment',amount:'Initial cash (USD)',start:'Starting month',months:'Phase-in period',years:'Comparison horizon',reserve:'While waiting',m3:'3 months',m6:'6 months',m12:'12 months',y1:'1 year',y3:'3 years',y5:'5 years',y10:'10 years',lump:'All at once',split:'In stages',return:'Total return',drawdown:'Largest peak-to-trough drop',totalAssets:'Equity ETF + waiting funds (BIL) · USD',higher:'Which path ended with more?',loading:'Loading daily historical prices…',error:'The price history could not be loaded. Please try again later.',inputs:'Check the amount and starting month.',range:'Both ETF histories must overlap and cover the full selected horizon. Choose a starting month within the range below and shorten the horizon if needed.',nav:'Main',chart:'Historical total assets for lump-sum and phased investing. Use left and right arrow keys to inspect dates.'}
+    ko:{asset:'투자 대상',amount:'준비된 목돈 (USD)',start:'투자 시작월',months:'나눠 넣는 기간',years:'비교할 기간',reserve:'기다리는 돈은',m3:'3개월',m6:'6개월',m12:'12개월',y1:'1년',y3:'3년',y5:'5년',y10:'10년',lump:'한 번에 넣기',split:'나눠 넣기',return:'총수익률',drawdown:'가장 크게 줄었던 폭',totalAssets:'주식 ETF + 대기 자금(BIL) · USD',higher:'마지막에 돈이 더 남았던 쪽',loading:'과거 일별 자료를 불러오고 있어요.',error:'자료를 불러오지 못했어요. 잠시 뒤 다시 열어주세요.',inputs:'금액·시작월을 확인해주세요.',range:'선택한 기간이 모두 끝난 시작월만 비교할 수 있어요. 위에 표시된 시작월 범위에서 고르거나 아래 버튼을 눌러주세요.',nav:'메인 메뉴',chart:'한 번에 넣기와 나눠 넣기의 과거 총자산 변화. 좌우 방향키로 날짜별 값을 확인할 수 있습니다.'},
+    en:{asset:'Investment',amount:'Initial cash (USD)',start:'Starting month',months:'Phase-in period',years:'Comparison horizon',reserve:'While waiting',m3:'3 months',m6:'6 months',m12:'12 months',y1:'1 year',y3:'3 years',y5:'5 years',y10:'10 years',lump:'All at once',split:'In stages',return:'Total return',drawdown:'Largest peak-to-trough drop',totalAssets:'Equity ETF + waiting funds (BIL) · USD',higher:'Which path ended with more?',loading:'Loading daily historical prices…',error:'The price history could not be loaded. Please try again later.',inputs:'Check the amount and starting month.',range:'Choose a starting month with a complete horizon from the range above, or use the button below.',nav:'Main',chart:'Historical total assets for lump-sum and phased investing. Use left and right arrow keys to inspect dates.'}
   };
   function pick(){const q=(new URLSearchParams(location.search).get('lang')||'').slice(0,2).toLowerCase();if(D[q])return q;try{const s=localStorage.getItem('dt.lang');if(D[s])return s;}catch(e){}for(const language of navigator.languages||[navigator.language||'en']){const code=language.slice(0,2).toLowerCase();if(D[code])return code;}return 'en';}
   let LANG=pick(),DATA=null,RESULT=null,SAMPLE=[],SAMPLE_KEY='',GEOMETRY=null,HOVER=0,TIMER=null,FAIL=false;
@@ -33,24 +33,41 @@
     }});paintDataRange();render();
   }
   function options(){return {amount:Number($('amount').value),months:Number($('months').value),years:Number($('years').value)};}
-  function status(key){$('status').textContent=t(key);$('status').hidden=false;$('comparison').hidden=true;$('samples').hidden=true;$('samples-heading').hidden=true;RESULT=null;}
+  function status(key,keepSamples=false){
+    $('status').textContent=t(key);$('status').hidden=false;$('comparison').hidden=true;RESULT=null;
+    if(!keepSamples){$('samples').hidden=true;$('samples-heading').hidden=true;}
+    const nearest=SAMPLE.length?SAMPLE.reduce((best,r)=>Math.abs(Date.parse(r.month+'-01')-Date.parse($('start').value+'-01'))<Math.abs(Date.parse(best+'-01')-Date.parse($('start').value+'-01'))?r.month:best,SAMPLE.at(-1).month):null;
+    const button=$('use-valid-start');button.hidden=key!=='range'||!nearest;
+    button.dataset.month=nearest||'';
+    button.textContent=LANG==='ko'?`${nearest}부터 비교하기`:`Compare from ${nearest}`;
+  }
   function render(){
     if(!DATA){status(FAIL?'error':'loading');return;}
+    let ready=false;
     try{
-      if(!$('settings').checkValidity())throw Error($('start').validity.rangeUnderflow||$('start').validity.rangeOverflow?'range':'inputs');
-      const rows=M.paired(DATA,$('asset').value),o=options();RESULT=M.simulate(rows,$('start').value,o);
+      const rows=M.paired(DATA,$('asset').value),o=options();
       const key=JSON.stringify([$('asset').value,o.months,o.years]);
-      if(key!==SAMPLE_KEY){SAMPLE=M.cohorts(rows,o);SAMPLE_KEY=key;}
+      if(key!==SAMPLE_KEY){SAMPLE=M.cohorts(rows,{...o,amount:10000});SAMPLE_KEY=key;}
+      $('samples').hidden=false;$('samples-heading').hidden=false;paintSamples();ready=true;
+      $('start').min=SAMPLE[0]?.month||'';$('start').max=SAMPLE.at(-1)?.month||'';
+      $('start-range').textContent=SAMPLE.length?(LANG==='ko'?`${o.years}년 비교 가능한 시작월: ${SAMPLE[0].month} – ${SAMPLE.at(-1).month}`:`Starting months with ${o.years} full year${o.years===1?'':'s'}: ${SAMPLE[0].month} – ${SAMPLE.at(-1).month}`):t('range');
+      if(!$('settings').checkValidity())throw Error($('start').validity.rangeUnderflow||$('start').validity.rangeOverflow?'range':'inputs');
+      RESULT=M.simulate(rows,$('start').value,o);
       $('status').hidden=true;$('comparison').hidden=false;$('samples').hidden=false;$('samples-heading').hidden=false;
+      $('use-valid-start').hidden=true;
       $('value-lump').textContent=money(RESULT.lump);$('value-split').textContent=money(RESULT.split);
       $('split-label').textContent=LANG==='ko'?o.months+'개월로 나눠 넣기':`Phased over ${o.months} months`;
       for(const [id,value] of [['return-lump',RESULT.returnL],['return-split',RESULT.returnS],['drawdown-lump',RESULT.mddL],['drawdown-split',RESULT.mddS]]){
         $(id).textContent=percent(value);$(id).className=value<0?'negative':value>0?'positive':'';
       }
       $('dates').textContent=RESULT.from.replaceAll('-','.')+' – '+RESULT.to.replaceAll('-','.');
+      const gap=RESULT.split-RESULT.lump,winner=LANG==='ko'?t(gap>0?'split':'lump'):(gap>0?'Phased investing':'Lump-sum investing');
+      $('outcome').textContent=Math.abs(gap)<1?(LANG==='ko'?'마지막 금액 차이는 1달러 미만이에요.':'The final amounts differ by less than $1.'):(LANG==='ko'?`마지막에는 ${winner} 쪽에 ${money(Math.abs(gap))} 더 남았어요.`:`${winner} ended with ${money(Math.abs(gap))} more.`);
+      $('phase-dates').textContent=RESULT.phase.from+' – '+RESULT.phase.to;
+      $('phase-lump').textContent=percent(RESULT.phase.mddL);$('phase-split').textContent=percent(RESULT.phase.mddS);
       $('reserve-note').textContent=LANG==='ko'?`처음 목돈을 ${o.months}등분합니다. 기다리는 동안 생긴 BIL 수익도 각 몫과 함께 주식으로 옮깁니다.`:`Initial cash is divided into ${o.months} equal portions. Each portion’s BIL return moves into equities with it.`;
       draw();paintSamples();
-    }catch(e){status(e.message==='inputs'?'inputs':e.message==='range'?'range':'error');}
+    }catch(e){status(e.message==='inputs'?'inputs':e.message==='range'?'range':'error',ready&&['inputs','range'].includes(e.message));}
   }
   function paintSamples(){
     const s=M.summarize(SAMPLE);if(!s){$('samples').hidden=true;$('samples-heading').hidden=true;return;}
@@ -100,11 +117,11 @@
   $('chart').addEventListener('pointerleave',()=>{$('tooltip').hidden=true;$('hover-line')?.setAttribute('hidden','');});
   $('chart').addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)&&RESULT){event.preventDefault();hover(event.key==='Home'?0:event.key==='End'?RESULT.curve.length-1:HOVER+(event.key==='ArrowLeft'?-1:1));}});
   $('settings').addEventListener('submit',event=>event.preventDefault());
+  $('use-valid-start').addEventListener('click',()=>{$('start').value=$('use-valid-start').dataset.month;render();$('start').focus();});
   $('settings').addEventListener('input',()=>{clearTimeout(TIMER);TIMER=setTimeout(render,150);});
   function paintDataRange(){
     if(!DATA)return;
     const rows=M.paired(DATA,$('asset').value),from=rows[0][0],to=rows.at(-1)[0];
-    $('start').min=from.slice(0,7);$('start').max=to.slice(0,7);
     $('data-range').textContent=LANG==='ko'?`주식 ETF·BIL 공통 일별 자료 ${from} – ${to} · 매주 갱신`:`Shared equity ETF / BIL daily history ${from} – ${to} · Refreshed weekly`;
   }
   $('asset').addEventListener('change',paintDataRange);

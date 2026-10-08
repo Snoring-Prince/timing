@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-10-08 · Codex · (이 PR)
+검수 후속: 배당 자료 누락 거부·통계 문구 수정·사무엘 날짜 복구·올림픽 결과 설명과 모바일 배치
+- 파일: timing/ · samuel/ · olympics/ · backtest.py · check_about.py · update-long/olympics.yml · 검사 · CLAUDE.md · design-system.md · 이 일지
+- 규칙: 과거 빈도를 미래 확률로 쓰지 않음. 자동화는 ETF 성공 후 연결. 상세 근거·검증은 CLAUDE.md 8-1-1·9-3-2·9-3-3.
+- 굳힘: backup/v1.11 보관. 기존 계산·매매 규칙·인물별 소개·VIX 숨김·정적 본문 유지. 주식/BIL 손익은 당일까지의 실제 기록에서 계산.
+- 넘김: 사용자 merge 뒤 새 자동화 연결의 첫 실제 실행 확인. 기존 새 서비스 색인 확인은 남아 있으며 네이버 재수집 중복 요청 금지.
+
 ## 2026-10-07 · Codex · (이 PR)
 투자 올림픽의 각 순위 카드에 투자 방식 요약을 한영으로 상시 표시
 - 파일: olympics/app.js · style.css · index.html · CLAUDE.md · design-system.md · 이 일지

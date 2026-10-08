@@ -102,31 +102,31 @@ ko:{
   info:{
     spx:{name:"S&P500(SPY)",btn:"S&P500",
       tip:"S&P500은 미국을 대표하는 500개 기업을 대상으로 하는 지수고, SPY는 S&P500을 추종하는 가장 오래되고 대표적인 ETF 입니다.",
-      note:"S&P 500은 미국을 대표하는 500개 기업의 성적표(지수)라고 할 수 있습니다. 그리고 SPY는 이 성적표와 똑같이 움직이도록 설계된, 가장 오래되고 대표적인 ETF입니다. 즉, SPY 한 주를 매수하시면 미국의 1등부터 500등 기업 전체에 골고루 분산 투자하는 것과 같은 효과를 얻으실 수 있습니다."},
+      note:"S&P 500은 미국을 대표하는 500개 기업의 성적표(지수)라고 할 수 있습니다. 그리고 SPY는 이 성적표와 똑같이 움직이도록 설계된, 가장 오래되고 대표적인 ETF입니다. SPY 한 주로 미국 대표 대형 기업들에 분산 투자할 수 있습니다. 기업 규모에 따라 비중이 달라지며, 모든 기업을 같은 비중으로 담는 것은 아닙니다."},
     ndx:{name:"NASDAQ100(QQQ)",btn:"NASDAQ100",
       tip:"NASDAQ100은 기술, 인터넷, 혁신 기업 중심으로 구성된 대표 기업 100개를 대상으로 하는 지수고, QQQ는 NASDAQ100을 추종하는 대표적인 성장성 추구 ETF입니다.",
-      note:"NASDAQ100(QQQ)는 S&P 500(SPY)보다 범위는 좁지만, 애플, 마이크로소프트, 엔비디아 같은 기술주 비중이 훨씬 높습니다. 즉, 금융이나 에너지 같은 전통 산업은 제외하고, 미국의 미래를 이끄는 '기술 성장주'에 집중적으로 투자할 수 있는 가장 확실한 방법입니다."},
+      note:"NASDAQ100(QQQ)는 S&P 500(SPY)보다 범위는 좁지만, 애플, 마이크로소프트, 엔비디아 같은 기술주 비중이 훨씬 높습니다. 나스닥에 상장된 대형 비금융 기업을 담는 지수로, 기술 기업뿐 아니라 소비재·헬스케어·에너지 등 여러 업종이 포함될 수 있습니다."},
     fng:{name:"CNN공포탐욕",btn:"공포탐욕",
       tip:"극단적 공포(0)부터 극단적 탐욕(100)까지, 지금 당장 시장에 참여하는 사람들의 심리 상태를 점수로 보여주는 직관적인 계기판입니다.",
-      note:"주식 시장은 결국 사람들의 심리에 따라 움직이잖아요. CNN 공포와 탐욕 지수는 변동성, 주가 흐름, 거래량 등 7가지 핵심 지표를 하나로 합쳐서, 지금 사람들이 두려움에 주식을 팔고 있는지(공포), 아니면 너도나도 사들이고 있는지(탐욕)를 0점부터 100점 사이로 보여줍니다. 그래서 주식 초보자분들이 '아, 지금이 저렴할 때구나' 또는 '지금은 조금 조심해야겠네' 하고 판단하기에 아주 좋은 지표랍니다."},
+      note:"주식 시장은 결국 사람들의 심리에 따라 움직이잖아요. CNN 공포와 탐욕 지수는 변동성, 주가 흐름, 거래량 등 7가지 핵심 지표를 하나로 합쳐서, 지금 사람들이 두려움에 주식을 팔고 있는지(공포), 아니면 너도나도 사들이고 있는지(탐욕)를 0점부터 100점 사이로 보여줍니다. 시장 심리의 한 단면을 살펴보는 지표이며, 주식이 기업 가치보다 싼지 비싼지를 판정하는 지표는 아닙니다."},
     vix:{name:"VIX(변동성 지수)",btn:"VIX",
       tip:"앞으로 한 달 동안 미국 주식 시장이 얼마나 심하게 널뛰기할지 예측하는 수치로, 월가의 '공포 지수'라고 불리는 지표입니다.",
       note:"보통 VIX가 20 아래면 시장이 평화롭고 안정적이라는 뜻이고, 30을 넘어가면 투자자들이 패닉에 빠져 주가가 크게 출렁인다는 의미입니다. 즉, 'VIX가 급격히 치솟을 때 = 남들이 공포에 질려 주식을 던질 때(바겐세일 기회)'로 이해하시면, 주식 초보자분들도 시장의 흐름을 읽고 쉽게 활용하실 수 있습니다."}
   },
   infoLabel:"설명 보기",
   noLine:"볼 선을 하나 이상 골라 주세요.",
-  capMed:"수익률 중앙값", capWin:"수익날 확률",
-  fewSample:"표본 부족", winRateShort:"승률", avgShort:"평균", holdWord:"보유",
+  capMed:"수익률 중앙값", capWin:"과거 상승 비율",
+  fewSample:"표본 부족", winRateShort:"상승 비율", avgShort:"평균", holdWord:"보유",
   byIndex:"지수별 상이", noObservation:"관측값 없음",
   sampleDays:(n,all)=>`표본 ${n}일 / 전체 ${all}일`,
   samplePeriod:"표본 기간",
   nowIs:(s,v)=>`지금 ${s} ${v}`,
-  buyHere:h=>`여기서 사서 ${h} 뒤`,
+  buyHere:h=>`과거 비슷한 수준에서 ${h} 뒤`,
   noStats:"표본이 부족해 통계를 내지 않았습니다.",
-  winProb:"수익날 확률", medGain:"중위 수익", medLoss:"중위 손실",
+  winProb:"과거 상승 비율", medGain:"중위 수익", medLoss:"중위 손실",
   medHead:"중위 수익률", nowOf:s=>`지금 ${s}`,
   btTitleDefault:"지수별 수익률",
-  noBt:"승률 데이터가 아직 없습니다.<br>첫 계산이 끝나면 여기에 표시됩니다.",
+  noBt:"과거 상승 비율 자료가 아직 없습니다.<br>첫 계산이 끝나면 여기에 표시됩니다.",
   oldFmt:"데이터가 옛 형식입니다.<br>Actions에서 Update backtest를 한 번 실행하면 나옵니다.",
   loadFail:"데이터를 불러오지 못했습니다",
   loadFailPanel:"데이터를 불러오지 못했습니다.<br>잠시 후 새로고침해 주세요.",
@@ -151,7 +151,7 @@ ko:{
     lines:"볼 선",main:"가격과 공포 추이",
     gauge:(l,v)=>`${l} 추이, 현재 ${v}`,
     chart:n=>`${n} 전고점 대비 추이`,
-    bt:(l,h)=>`${l} 값별 ${h} 수익률과 승률`}
+    bt:(l,h)=>`${l} 값별 과거 ${h} 수익률과 상승 비율`}
 },
 en:{
   locale:"en-US", dir:"ltr", name:"English",
@@ -176,28 +176,28 @@ en:{
   info:{
     spx:{name:"S&P 500 (SPY)",btn:"S&P 500",
       tip:"The S&P 500 is an index of 500 leading US companies, and SPY is the oldest and best-known ETF that tracks it.",
-      note:"The S&P 500 is the report card of 500 companies that represent the US market. SPY is the oldest and best-known ETF designed to move in step with it. Owning one share of SPY gives you exposure to all 500 companies at once."},
+      note:"The S&P 500 is the report card of 500 companies that represent the US market. SPY is the oldest and best-known ETF designed to move in step with it. One share of SPY provides diversified exposure to large US companies. Weights depend on their float-adjusted market value; the companies are not held in equal proportions."},
     ndx:{name:"Nasdaq 100 (QQQ)",btn:"Nasdaq 100",
       tip:"The Nasdaq 100 is an index of 100 leading companies focused on technology, the internet and innovation, and QQQ is the best-known growth ETF that tracks it.",
-      note:"The Nasdaq 100 (QQQ) covers less ground than the S&P 500 (SPY), but has a much higher weighting in technology stocks such as Apple, Microsoft and Nvidia. It leaves out traditional industries such as finance and energy, focusing instead on the technology growth companies shaping America's future."},
+      note:"The Nasdaq 100 (QQQ) covers less ground than the S&P 500 (SPY), but has a much higher weighting in technology stocks such as Apple, Microsoft and Nvidia. It covers large non-financial companies listed on Nasdaq, including sectors such as consumer goods, healthcare and energy as well as technology."},
     fng:{name:"CNN Fear &amp; Greed",btn:"F&amp;G",
       tip:"A plain dial from extreme fear (0) to extreme greed (100), scoring how the people in the market feel right now.",
-      note:"Markets ultimately move with people's emotions. CNN's Fear &amp; Greed Index combines seven key indicators — including volatility, price momentum and trading volume — into one number from 0 to 100, showing whether people are selling stocks out of fear or buying them out of greed. For beginners, it can provide a simple way to see whether the market looks cheap or whether it may be a time to be more cautious."},
+      note:"Markets ultimately move with people's emotions. CNN's Fear &amp; Greed Index combines seven key indicators — including volatility, price momentum and trading volume — into one number from 0 to 100, showing whether people are selling stocks out of fear or buying them out of greed. It offers one view of market sentiment, not a measure of whether stocks are cheap or expensive relative to their underlying value."},
     vix:{name:"VIX (volatility index)",btn:"VIX",
       tip:"How hard the market expects US stocks to swing over the coming month. Wall Street calls it the fear index.",
       note:"A VIX below 20 generally means the market is calm and stable. Above 30 means investors are in a state of panic and prices are swinging sharply. You can think of a sharp rise in the VIX as a sign that investors are selling stocks out of fear — a situation that has sometimes been described as a bargain opportunity."}
   },
   infoLabel:"About this",
   noLine:"Pick at least one line to show.",
-  capMed:"Median return", capWin:"Chance of profit",
-  fewSample:"too few samples", winRateShort:"win rate", avgShort:"avg", holdWord:"hold",
+  capMed:"Median return", capWin:"Past gain rate",
+  fewSample:"too few samples", winRateShort:"past gain rate", avgShort:"avg", holdWord:"hold",
   byIndex:"varies by index", noObservation:"No observation",
   sampleDays:(n,all)=>`${n} of ${all} sample days`,
   samplePeriod:"Sample",
   nowIs:(s,v)=>`Now ${s} ${v}`,
-  buyHere:h=>`bought here, held ${h}`,
+  buyHere:h=>`Historical results after ${h}`,
   noStats:"Not enough samples to compute statistics.",
-  winProb:"Chance of profit", medGain:"Median gain", medLoss:"Median loss",
+  winProb:"Past gain rate", medGain:"Median gain", medLoss:"Median loss",
   medHead:"Median return", nowOf:s=>`${s} now`,
   btTitleDefault:"Returns by level",
   noBt:"No backtest data yet.<br>It will appear here after the first run.",
@@ -224,7 +224,7 @@ en:{
     lines:"Lines to show",main:"Price and fear over time",
     gauge:(l,v)=>`${l} trend, currently ${v}`,
     chart:n=>`${n}, drawdown from the peak`,
-    bt:(l,h)=>`Return and win rate by ${l}, held ${h}`}
+    bt:(l,h)=>`Historical return and gain rate by ${l}, held ${h}`}
 }
 };
 
@@ -565,13 +565,13 @@ body.settled .fade{animation:none;opacity:1}
 .bt-sum .cond{font-size:16.5px;color:var(--ink-2);line-height:1.45}
 .bt-sum .lead .n{margin-top:3px}
 
-/* 이름 / 수익날 확률 / 중위 수익률 세 칸. 열 머리는 한 번만 쓴다.
+/* 이름 / 과거 상승 비율 / 중위 수익률 세 칸. 열 머리는 한 번만 쓴다.
    오른쪽 여백은 아래 그래프의 그리는 영역 오른쪽 끝과 맞춘 값이다 —
    카드 가장자리(20px)까지 밀면 표만 그래프보다 튀어나와 보인다. */
 .bt-sum .grid{display:grid;grid-template-columns:auto auto auto;
   justify-content:end;gap:2px 40px;align-items:baseline;padding-right:15px}
 /* 숫자 칸은 오른쪽 맞춤이다. 왼쪽으로 맞추면 글자 폭이 제각각이라
-   («수익날 확률» 56px vs «80%» 41px) 오른쪽이 들쭉날쭉해 보인다.
+   («과거 상승 비율» 56px vs «80%» 41px) 오른쪽이 들쭉날쭉해 보인다.
    오른쪽으로 맞추면 자릿수가 같은 값끼리 소수점까지 줄이 선다. */
 /* 머리글도 줄간격을 다시 잡는다 — 카드의 1.7 이면 10.5px 글자가 18px 상자를
    차지해서, 표 전체가 그만큼 아래에서 시작한다. */
@@ -960,7 +960,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
 
       <h3>구간을 덩어리로 묶지 않습니다</h3>
       <p>'극단적 공포'를 0~24 한 칸으로 묶으면 그 안이 뭉개집니다. 지수가 5 이던 날
-      산 경우 1년 뒤 수익이 났을 확률이 <b>98%</b> 인데, 같은 칸의 24 는 <b>80%</b> 입니다.
+      산 과거 사례 중 1년 뒤 수익이 났던 비율이 <b>98%</b> 인데, 같은 칸의 24 는 <b>80%</b> 입니다.
       전혀 다른 이야기를 한 숫자로 덮는 셈입니다. 그래서 눈금마다 그 값 ±5 인 날들만
       따로 모아 계산하고, 표본이 30일도 안 되는 눈금은 비워서 선을 끊습니다.
       화면의 색 띠와 이름표는 보기 편하라고 붙인 것일 뿐 계산에는 쓰이지 않습니다.</p>
@@ -2103,7 +2103,7 @@ function btSummary(){
   const lead='<div class="lead">'+
     '<div class="cond">'+tx("buyHere",tx("hold")[btH])+'</div>'+
     S.map(s=>'<div class="n">'+s.name+'<br>'+btSample(s,v)+'</div>').join("")+'</div>';
-  /* 지수 2개 × 잣대 2개는 원래 표다. 줄글로 쓰면 "수익날 확률"·"중위 수익"이
+  /* 지수 2개 × 잣대 2개는 원래 표다. 줄글로 쓰면 "과거 상승 비율"·"중위 수익"이
      줄마다 되풀이되면서 정작 숫자를 덮는다. 이름은 열 머리에 한 번만 쓴다. */
   const cell=(x,cls)=>`<span class="q ${cls||""}">${x}</span>`;
   const body='<div class="tbl">'+lead+'<div class="grid">'+

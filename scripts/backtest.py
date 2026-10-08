@@ -133,6 +133,8 @@ def yahoo_daily(symbol):
     vals = None
     if ind.get("adjclose"):
         vals = ind["adjclose"][0].get("adjclose")
+    if symbol in ("SPY", "QQQ") and not vals:
+        raise RuntimeError(f"{symbol}: 배당 반영 일봉 없음 — 일반 종가로 대체하지 않습니다")
     if not vals:
         vals = ind["quote"][0]["close"]
     out = {}

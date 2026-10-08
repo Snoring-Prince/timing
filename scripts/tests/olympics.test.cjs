@@ -77,6 +77,26 @@ test('drawdown and rank use the selected observation; no negative zero or invent
   const r=M.run(data),p=r.curve[2];close(p.drops.emma,-.5);assert.equal(M.rank(r.curve[0],10000).filter(r=>r.rank===1).length,5);
   assert.equal(M.rank(r.curve[1],10000)[0].id,'emma');
 });
+test('daily gain attribution and trade counts reconcile independently without future trades',()=>{
+  const data=fixture();data.etfs.reserve=data.etfs.reserve.map(([d],i)=>[d,100+i*.02]);
+  data.stocks.AAA.series=data.stocks.AAA.series.map(([d],i)=>[d,10+i*.1]);
+  data.stocks.BBB.series=data.stocks.BBB.series.map(([d],i)=>[d,10-i*.05]);
+  data.disclosures.push({period:'2024-12-31',filed:'2025-01-09',holdings:[hold('OLD',20),hold('AAA',20)]});
+  const r=M.run(data),prices=M.prepare(data).maps;
+  for(const p of r.curve)for(const id of M.ids){
+    const ledger={},trades=actor(r,id).filter(t=>t.day<=p.day);let flow=0;
+    for(const t of trades){const sign=t.action==='buy'?1:-1;flow+=sign*t.amount;ledger[t.key]=(ledger[t.key]||0)+sign*t.amount/prices[t.key].get(t.day);}
+    const equity=Object.entries(ledger).reduce((v,[key,units])=>v+units*prices[key].get(p.day),0),f=p.facts[id];
+    close(f.stockGain,equity-flow);close(f.stockGain+f.reserveGain,p.values[id]-r.options.amount);
+    assert.equal(f.buys,trades.filter(t=>t.action==='buy').length);assert.equal(f.sells,trades.filter(t=>t.action==='sell').length);
+  }
+  close(r.curve[0].facts.alicia.stockGain,0);assert.equal(r.curve[0].facts.alicia.buys,0);
+});
+test('sell-threshold observation summary uses only signals available by the selected day',()=>{
+  const data=fixture();data.fear[3][1]=90;const r=M.run(data);
+  assert.equal(r.curve[3].greedObserved,false);assert.equal(r.curve[4].greedObserved,true);
+  assert.equal(r.curve[4].facts.daniel.sells,0); // No holdings, despite a qualifying signal.
+});
 test('missing held stock invalidates the comparison; pre-entry gaps are harmless',()=>{
   const data=fixture();data.stocks.AAA.series=data.stocks.AAA.series.filter(r=>r[0]!=='2025-01-07');
   assert.throws(()=>M.run(data),/price:AAA:2025-01-07/);

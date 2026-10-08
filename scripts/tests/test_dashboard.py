@@ -70,6 +70,23 @@ class Horizons(unittest.TestCase):
             self.assertEqual(out.read_bytes(), b"previous complete statistics")
 
 class Collectors(unittest.TestCase):
+    def test_equity_statistics_require_adjusted_prices_but_vix_can_use_close(self):
+        stamps = [1451606400 + i * 86400 for i in range(1001)]
+        for adjusted in (None, [], [{"adjclose": []}], [{}]):
+            ind = {"quote": [{"close": [100] * 1001}]}
+            if adjusted is not None:
+                ind["adjclose"] = adjusted
+            raw = json.dumps({"chart": {"result": [{"timestamp": stamps, "indicators": ind}]}})
+            with patch.object(bt, "fetch", return_value=raw):
+                for symbol in ("SPY", "QQQ"):
+                    with self.subTest(symbol=symbol, adjusted=adjusted), self.assertRaisesRegex(RuntimeError, "배당 반영"):
+                        bt.yahoo_daily(symbol)
+                self.assertEqual(set(bt.yahoo_daily("^VIX").values()), {100})
+        ind["adjclose"] = [{"adjclose": [80] * 1001}]
+        raw = json.dumps({"chart": {"result": [{"timestamp": stamps, "indicators": ind}]}})
+        with patch.object(bt, "fetch", return_value=raw):
+            self.assertEqual(set(bt.yahoo_daily("SPY").values()), {80})
+
     def daily_file(self):
         return {"updated": "2026-09-20T00:00:00Z",
                 "indices": {"spx": {"cur": 100}, "ndx": {"cur": 200}},

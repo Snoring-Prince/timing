@@ -50,7 +50,7 @@
     const lumpUnits=amount/rows[start][1],part=amount/months;
     if(!Number.isFinite(rows[start][2])||rows[start][2]<=0)throw Error('data');
     let units=0,reserveUnits=amount/rows[start][2],next=0,peakL=amount,peakS=amount,mddL=0,mddS=0;
-    const curve=[],buys=[];
+    const curve=[],buys=[];let phaseMddL=0,phaseMddS=0;
     for(let i=start;i<=end;i++){
       const [day,price,reservePrice]=rows[i];
       if(!Number.isFinite(reservePrice)||reservePrice<=0)throw Error('data');
@@ -65,11 +65,13 @@
       const reserve=reserveUnits*reservePrice,lump=lumpUnits*price,split=units*price+reserve;
       peakL=Math.max(peakL,lump);peakS=Math.max(peakS,split);
       mddL=Math.min(mddL,lump/peakL-1);mddS=Math.min(mddS,split/peakS-1);
+      if(i<=schedule.at(-1)){phaseMddL=mddL;phaseMddS=mddS;}
       curve.push({day,lump,split,reserve});
     }
     const last=curve.at(-1);
     return {from,to:last.day,amount,months,years,curve,buys,lump:last.lump,split:last.split,reserve:last.reserve,
-      returnL:last.lump/amount-1,returnS:last.split/amount-1,mddL,mddS};
+      returnL:last.lump/amount-1,returnS:last.split/amount-1,mddL,mddS,
+      phase:{from,to:buys.at(-1).day,mddL:phaseMddL,mddS:phaseMddS}};
   }
   function cohorts(rows,options){
     const starts=new Set(rows.map(r=>r[0].slice(0,7))),results=[];
