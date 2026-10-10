@@ -545,15 +545,17 @@ document.documentElement.scrollWidth - document.documentElement.clientWidth
 
 ## 12-2. 투자자 화면은 틀입니다 (2026-09-17)
 
-`/titans/shared/investor.css`와 `/titans/shared/investor.js`가 모든 투자자 화면의
-**단일 공통 틀**입니다. 각 투자자 페이지는 둘을 `?v=날짜` 를 붙여 부릅니다 —
+`/titans/shared/investor.css`와 `/titans/shared/investor.js`, 최신 공시 요약을 만드는
+`/titans/shared/overview.js`가 모든 투자자 화면의 **단일 공통 틀**입니다.
+각 투자자 페이지는 이 파일들을 `?v=날짜` 를 붙여 부릅니다 —
 **공통 파일을 고친 날에는 여덟 곳의 날짜를 함께 올립니다**(안 올리면 방문자 캐시에 옛 CSS 가
 남아 새 HTML 과 섞입니다. 2026-09-30 에 실제로 그림이 잘리고 글이 겹쳤습니다). 사용자가 못박았습니다 — *"다른 투자자를 추가할 때마다
 같은 서식으로 해야 하거든. 앞으로 모든 수정은 이 점을 감안해야 해."*
 
 `/titans/berkshire/index.html`에는 버크셔 고유 설정과 검색엔진이 JavaScript 없이도
-읽을 영문 제목·설명만 남습니다. 화면 구조·한국어/영어 문구·디자인·차트·계산은
-공통 두 파일에서만 관리합니다. 이후 디자인을 바꿀 때 투자자 폴더를 순회하며
+읽을 영문 제목·설명, 정적 한영 소개와 자동 생성한 최신 공시 요약을 둡니다.
+화면 구조·공통 한국어/영어 문구·디자인·차트·계산은 공통 파일에서 관리합니다.
+소개는 투자자 고유 글이며 요약은 생성기가 갱신합니다. 이후 디자인을 바꿀 때 투자자 폴더를 순회하며
 복사하거나 같은 수정을 되풀이하지 않습니다.
 
 **한 명 더 넣는 방법**
@@ -574,7 +576,14 @@ document.documentElement.scrollWidth - document.documentElement.clientWidth
 7  로고가 있으면 titans/<slug>/logo.webp(128×128, 흰 바탕, 여백을 잘라 심벌 위주)를 넣고
    window.TITAN.mark 에 "logo.webp", 목록 카드 이름표도 같은 그림으로. 없으면 둘 다
    머리글자 타일 그대로. 정적 h1 은 taglineHTML() 과 글자까지 같아야 한다(검사)
+8  공시 수집 후 node scripts/publish_titans_overviews.cjs 실행.
+   TITAN-OVERVIEW 표식 안의 복사된 요약은 생성기가 새 투자자 자료로 교체한다.
+   표식·overview.js 로딩은 유지하고 생성된 문장은 손으로 고치지 않는다.
 ```
+
+최신 요약은 소개 다음·분기 화면 앞에 평문으로 둡니다. 기존 본문 크기와 색을 쓰며
+새 카드나 강조색을 만들지 않습니다. 생성·실패 보존·문구 기준은 CLAUDE.md 6-2의
+2026-10-10 항목이 정본입니다.
 
 ```js
 window.TITAN = {
