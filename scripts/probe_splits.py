@@ -131,10 +131,15 @@ def main(argv=None):
             try:
                 row = json.loads(raw)["chart"]["result"][0]
                 splits = row.get("events", {}).get("splits", {}) or {}
-                rows = len(row.get("timestamp") or [])
+                stamps = row.get("timestamp") or []
+                rows = len(stamps)
+                # 바 개수만으로는 '어디가 빠졌나'를 모른다 — 처음·마지막 날을 같이 찍는다
+                # (2026-10-10 ET: 15년을 달라는 요청에 일봉 52개).
+                if stamps:
+                    note = f"  ({day_of(stamps[0])} ~ {day_of(stamps[-1])})"
                 first = row["meta"].get("firstTradeDate")
                 if first:
-                    note = "  상장 " + day_of(first)
+                    note += "  상장 " + day_of(first)
             except Exception as exc:  # noqa: BLE001
                 note = f"  ※ 읽지 못함: {exc}"
                 bad += 1
