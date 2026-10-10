@@ -135,6 +135,14 @@ body{
 html[lang="ko"]       .bio [data-lang="en"]{display:none}
 html:not([lang="ko"]) .bio [data-lang="ko"]{display:none}
 
+/* Published in the HTML, then kept in sync by the shared overview renderer. */
+.filing-overview{margin:0 0 20px;padding:0 2px;overflow-wrap:anywhere}
+.filing-overview h2{margin:0 0 4px;font-size:var(--t-name);line-height:1.5;font-weight:600}
+.filing-overview p{margin:8px 0 0;font-size:var(--t-text);line-height:1.75;color:var(--ink-2)}
+.filing-overview .overview-date{margin:0;font-size:var(--t-label);color:var(--ink-3)}
+html[lang="ko"] .filing-overview [data-lang="en"],
+html:not([lang="ko"]) .filing-overview [data-lang="ko"]{display:none}
+
 /* ── 이번 분기 요약 ──────────────────────────────────────── */
 .tally{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--rule-2);margin-bottom:16px}
 .tally div{flex:1 1 0;min-width:76px;padding:10px 12px;text-align:center}

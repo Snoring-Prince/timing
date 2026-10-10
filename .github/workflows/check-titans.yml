@@ -11,6 +11,7 @@ on:
       - "scripts/fetch_tickers.py"
       - "scripts/fetch_sectors.py"
       - "scripts/publish_titans.py"
+      - "scripts/publish_titans_overviews.cjs"
       - "index.html"
       - "shared/language-picker.*"
       - "assets/language/**"
@@ -22,8 +23,7 @@ on:
       - "scripts/olympics/**"
       - ".github/workflows/update-olympics.yml"
       - "sitemap.xml"
-      - "data/titans/investors.json"
-      - "data/titans/prices.json"
+      - "data/titans/*.json"
       - "data/titans/prices/**"
       - "scripts/tests/**"
       - ".github/workflows/check-titans.yml"
@@ -49,4 +49,6 @@ jobs:
       - name: 공시 수집 보존 검사
         run: python -m unittest discover -s scripts/tests -p 'test_*.py'
       - name: 화면 계산과 새 분기 검사
-        run: node --test scripts/tests/titans.test.cjs scripts/tests/seo.test.cjs
+        run: node --test scripts/tests/titans.test.cjs scripts/tests/seo.test.cjs scripts/tests/titans-overview.test.cjs
+      - name: 원본 페이지 요약과 공시 자료 대조
+        run: node scripts/publish_titans_overviews.cjs --check

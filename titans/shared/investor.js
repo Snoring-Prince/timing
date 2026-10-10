@@ -225,9 +225,12 @@ function mountInvestorShell(){
    제자리에 도로 넣습니다. 없는 투자자는 아무 일도 일어나지 않습니다. */
 if(document.body){
   const bio=document.getElementById("titan-bio");
+  const overview=document.getElementById("filing-overview");
   if(bio) bio.remove();
+  if(overview) overview.remove();
   mountInvestorShell();
   if(bio){ const q=document.getElementById("quarter"); q.parentNode.insertBefore(bio,q); }
+  if(overview){ const q=document.getElementById("quarter"); q.parentNode.insertBefore(overview,q); }
 }
 
 /* ══ 데이터 ═══════════════════════════════════════════════════════════
@@ -1268,6 +1271,11 @@ function render(){
   paintFoot();
 
   if(!RAW){ el("stamp").textContent=LOADED?tx("noData"):""; return; }
+
+  // Keep the static snapshot when fetch fails; refresh from the loaded book when
+  // it succeeds (including same-quarter amendments or an older cached HTML page).
+  const overview=el("filing-overview");
+  if(overview&&window.TitanOverview)overview.innerHTML=window.TitanOverview.content(RAW,TT);
 
   const B=build(), T=tallyOf(B);
   el("stockonly").hidden=!RAW.quarters.some(q=>q.holdings.some(h=>!isShare(h)));

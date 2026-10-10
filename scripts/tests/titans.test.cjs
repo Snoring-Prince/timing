@@ -714,9 +714,12 @@ test('every registered investor page follows the same static rules', () => {
     assert.doesNotMatch(src,/<link rel="canonical"/); // Query-specific canonical is created after choosing the language.
     assert.match(src,new RegExp(`<meta property="og:url" content="${base}">`));
     assert.match(sitemap,new RegExp(`<loc>${base}</loc>`));
-    // 다른 투자자의 이름이 복사한 껍데기에 남지 않는다.
+    // 다른 투자자의 이름이 복사한 껍데기에 남지 않는다. 자동 요약에는 실제
+    // 보유 종목(예: 히말라야의 Berkshire Hathaway)이 들어갈 수 있다.
+    // 요약 자체는 원본 데이터와 별도 대조한다(titans-overview.test.cjs).
+    const shell=src.replace(/<!-- TITAN-OVERVIEW:START -->[\s\S]*?<!-- TITAN-OVERVIEW:END -->/,'');
     for(const other of reg.investors.filter(o=>o.slug!==inv.slug))
-      assert.doesNotMatch(src,new RegExp(`${other.name.en}|/titans/${other.slug}/|${other.slug}\\.json`),inv.slug);
+      assert.doesNotMatch(shell,new RegExp(`${other.name.en}|/titans/${other.slug}/|${other.slug}\\.json`),inv.slug);
     const bio=src.match(/<section class="panel bio[^"]*" id="titan-bio">([\s\S]*?)<\/section>/)[1];
     const count=lg=>bio.match(new RegExp(`data-lang="${lg}"`,'g')).length;
     assert.equal(count('en'),count('ko'),inv.slug);
