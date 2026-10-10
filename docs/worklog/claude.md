@@ -4,7 +4,14 @@
 
 ---
 
-## 2026-10-02 · Claude · (이 PR)
+## 2026-10-10 · Claude · (이 PR)
+토요일 종가 알림(ET) 조사 — 야후 일봉이 52개로 잘려 온 것, 검사가 막음. 오류 문구에 숫자 추가
+- 파일: scripts/fetch_prices.py · scripts/probe_splits.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
+- 결과(PR #125): 머지됨.
+- 규칙: 원인과 정찰 결과는 CLAUDE.md 9-3-1 의 2026-10-10 항목. 판정 기준은 안 바꿈.
+- 넘김: 다음 토요일(10-17) 알림에 ET 가 또 나오면 숫자를 보고, 두세 주 계속되면 '알려진 상태'로 돌릴지 사용자와 정함.
+
+## 2026-10-02 · Claude · PR #125
 투자자 화면 유의사항에서 13F 설명·추정 설명 두 줄과 출처(CIK) 줄 삭제
 - 파일: titans/shared/investor.js · titans/<slug>/index.html ×8(캐시 표식) · scripts/tests/titans.test.cjs · CLAUDE.md · 이 일지
 - 결과(PR #124): 머지됨.

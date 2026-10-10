@@ -270,6 +270,36 @@ class PricesTests(unittest.TestCase):
         self.assertIn("unexpectedly shorter", errors[0])
         self.assertEqual(result["series"]["123456100"]["values"], kept)
 
+    def test_a_truncated_daily_history_is_rejected_with_the_numbers(self):
+        # 2026-10-10 실제로 겪은 일: 토요일 전체 재수집에서 야후가 ET 15년을 달라는
+        # 요청에 일봉 52개만 보냈다. 15년치를 지키는 것은 그대로이고, 알림만 보고도
+        # 무엇이 왔는지 알 수 있게 숫자가 문구에 있어야 한다.
+        now = dt.datetime(2026, 10, 10, 8, 38, tzinfo=p.UTC)          # 토요일 = 전체 재수집
+        days, day = [], dt.date(2026, 10, 9)
+        while len(days) < 52:
+            if day.weekday() < 5:
+                days.append(day.isoformat())
+            day -= dt.timedelta(days=1)
+        days.reverse()
+        payload = chart(symbol="ET")
+        row = payload["chart"]["result"][0]
+        row["meta"]["firstTradeDate"] = int(dt.datetime(2006, 2, 3, 14, 30, tzinfo=p.UTC).timestamp())
+        row["timestamp"] = [int(dt.datetime.fromisoformat(d+"T13:30:00+00:00").timestamp()) for d in days]
+        row["indicators"]["quote"][0]["close"] = [20.0]*len(days)
+        kept = {"ticker": "ET", "splitsFrom": "2011-09-21",
+                "values": [["2011-10-03", 8.2575], ["2026-10-08", 20.62]],
+                "splits": {"2014-01-27": "2.0:1.0", "2015-07-27": "2.0:1.0"}}
+        with patch.object(p, "resolve", return_value={"29273V100": "ET"}), \
+                patch.object(p, "request", return_value=payload), patch.object(p.time, "sleep"):
+            result, errors = p.collect({"29273V100": {"name": "Energy Transfer", "class": "COM UT"}},
+                                       {"series": {"29273V100": kept}}, now)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("starts too late", errors[0])
+        self.assertIn(f"first close {days[0]}", errors[0])
+        self.assertIn("52 bars, 52 closes", errors[0])
+        self.assertIn("expected from 2011-", errors[0])
+        self.assertEqual(result["series"]["29273V100"], kept)
+
     def test_a_sold_holding_leaves_the_visitor_file(self):
         # 방문자가 받는 파일에 안 쓰는 종목을 쌓지 않는다. 화면이 읽는 것은
         # 지금 보유 종목뿐이라, 팔린 종목의 종가는 한 번도 안 읽힌다.

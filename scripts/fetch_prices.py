@@ -437,11 +437,20 @@ def collect(required, previous, now, full=False, known=None, since=None, quarter
                 first_trade = payload["chart"]["result"][0]["meta"].get("firstTradeDate")
                 if verify and first_trade:
                     expected = max(day, from_epoch(first_trade).astimezone(NY).date())
-                    if dt.date.fromisoformat(parsed[0][0][0]) > expected+dt.timedelta(days=14):
-                        raise ValueError("response starts too late for a full history")
-                    elapsed = (dt.date.fromisoformat(parsed[0][-1][0])-expected).days
-                    if len(parsed[0]) < elapsed/365.25*252*.75:
-                        raise ValueError("full history has unexpectedly few daily prices")
+                    # **숫자를 남긴다.** 2026-10-10 에 ET 가 여기서 걸렸는데 문구만 있어서
+                    # 야후가 무엇을 보냈는지 정찰을 따로 돌려 봐야 했다 — 15년을 달라는
+                    # 요청에 일봉 52개뿐이었다(월봉은 멀쩡했다). 바(bar)와 종가를 따로
+                    # 세면 '바가 빠짐'과 '값이 비어 있음'도 갈린다.
+                    got = parsed[0]
+                    bars = len(payload["chart"]["result"][0].get("timestamp") or [])
+                    seen = (f"first close {got[0][0]}, expected from {expected.isoformat()}, "
+                            f"{bars:,} bars, {len(got):,} closes")
+                    if dt.date.fromisoformat(got[0][0]) > expected+dt.timedelta(days=14):
+                        raise ValueError(f"response starts too late for a full history ({seen})")
+                    elapsed = (dt.date.fromisoformat(got[-1][0])-expected).days
+                    if len(got) < elapsed/365.25*252*.75:
+                        raise ValueError(f"full history has unexpectedly few daily prices ({seen}, "
+                                         f"want at least {int(elapsed/365.25*252*.75):,})")
                 return parsed
             values, splits = download(first, refresh)
             # Incremental responses only contain recent split events. Compare those;
