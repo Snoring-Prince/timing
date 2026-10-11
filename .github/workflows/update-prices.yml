@@ -21,6 +21,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - name: 일별 종가 받기
         id: fetch
         # Keep the Python exit code even through tee; retain details for the alert.
@@ -41,6 +44,26 @@ jobs:
             git pull --rebase origin main
             git push origin HEAD:main
           fi
+      # Investor summaries name tickers from the per-investor price files, so a new
+      # or changed ticker refreshes the static HTML too. Runs on the latest main
+      # (after the price commit) so it never undoes a filing update made meanwhile.
+      - name: 투자자 요약 티커 반영
+        id: overviews
+        if: always() && steps.fetch.outcome != 'skipped'
+        run: |
+          set -o pipefail
+          git pull --rebase origin main
+          node scripts/publish_titans_overviews.cjs 2>&1 | tee overview-publish.log
+      - name: 투자자 요약 저장
+        id: save_overviews
+        if: always() && steps.overviews.outcome != 'skipped'
+        run: |
+          git add titans/*/index.html
+          if ! git diff --staged --quiet; then
+            git commit -m "투자자 요약 티커 갱신 $(date -u +%Y-%m-%d)"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
       # Runs after saving successful updates, including when only one stock failed.
       # PR checks do not run this workflow or send messages.
       - name: 오류가 생기면 텔레그램으로
@@ -50,6 +73,8 @@ jobs:
           TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT }}
           FETCH_RESULT: ${{ steps.fetch.outcome }}
           SAVE_RESULT: ${{ steps.save.outcome }}
+          OVERVIEW_RESULT: ${{ steps.overviews.outcome }}
+          OVERVIEW_SAVE_RESULT: ${{ steps.save_overviews.outcome }}
         run: |
           {
             if [ "$FETCH_RESULT" = "failure" ]; then
@@ -57,6 +82,13 @@ jobs:
             fi
             if [ "$SAVE_RESULT" = "failure" ]; then
               printf '%s\n' '가격 파일을 저장소에 올리지 못했습니다. 실행 기록을 확인해 주세요.'
+            fi
+            if [ "$OVERVIEW_RESULT" = "failure" ]; then
+              printf '%s\n' '투자자 페이지 요약을 다시 만들지 못했습니다. 그 투자자의 기존 요약은 보존합니다.'
+              tail -n 10 overview-publish.log 2>/dev/null || true
+            fi
+            if [ "$OVERVIEW_SAVE_RESULT" = "failure" ]; then
+              printf '%s\n' '투자자 페이지 요약을 저장소에 올리지 못했습니다. 실행 기록을 확인해 주세요.'
             fi
             if [ -f prices-fetch.log ]; then
               printf '\n%s\n' '수집 기록의 마지막 부분:'
