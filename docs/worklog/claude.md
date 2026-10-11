@@ -4,7 +4,14 @@
 
 ---
 
-## 2026-10-10 · Claude · (이 PR)
+## 2026-10-11 · Claude · (이 PR)
+Codex PR #139(투자자 최신 보유 요약) 검수 후속 — 이상 자료에도 목록 유지, 등록 직후 투자자, 티커 표기
+- 파일: titans/shared/overview.js · titans/shared/investor.js · scripts/publish_titans_overviews.cjs · titans/<slug>/index.html ×8(요약 재생성·캐시 표식) · .github/workflows/update-prices.yml · scripts/tests/titans-overview.test.cjs · scripts/tests/titans.test.cjs · CLAUDE.md · design-system.md · 이 일지
+- 결과(PR #138): 머지됨. Codex PR #139 도 머지된 상태에서 시작.
+- 규칙: CLAUDE.md 6-2 의 2026-10-11 후속. 공통 파일 표식 ?v=2026-10-11-ticker. 티커는 그 페이지의 prices/<slug>.json 만 씀.
+- 넘김: 머지 뒤 첫 주가 갱신(화~토 02:23 UTC)에서 `투자자 요약 티커 갱신` 커밋이 필요할 때만 생기는지 확인.
+
+## 2026-10-10 · Claude · PR #138
 토요일 종가 알림(ET) 조사 — 야후 일봉이 52개로 잘려 온 것, 검사가 막음. 오류 문구에 숫자 추가
 - 파일: scripts/fetch_prices.py · scripts/probe_splits.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
 - 결과(PR #125): 머지됨.
