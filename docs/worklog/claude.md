@@ -4,12 +4,20 @@
 
 ---
 
-## 2026-10-10 · Claude · (이 PR)
+## 2026-10-11 · Claude · (이 PR)
+Codex PR #139(투자자 최신 보유 요약) 검수 후속 — 이상 자료에도 목록 유지, 등록 직후 투자자, 티커 표기
+- 파일: titans/shared/overview.js · titans/shared/investor.js · scripts/publish_titans_overviews.cjs · titans/<slug>/index.html ×8(요약 재생성·캐시 표식) · .github/workflows/update-prices.yml · scripts/tests/titans-overview.test.cjs · scripts/tests/titans.test.cjs · CLAUDE.md · design-system.md · 이 일지
+- 결과(PR #138): 머지됨. Codex PR #139 도 머지된 상태에서 시작.
+- 규칙: CLAUDE.md 6-2 의 2026-10-11 후속. 공통 파일 표식 ?v=2026-10-11-ticker. 티커는 그 페이지의 prices/<slug>.json 만 씀.
+- 넘김: 머지 뒤 첫 주가 갱신(화~토 02:23 UTC)에서 `투자자 요약 티커 갱신` 커밋이 필요할 때만 생기는지 확인.
+- 10-15 추가: 10-14 주가 갱신 실패(ET 마지막 종가가 7일 넘게 낡음)를 조사 — 야후 쪽 일시 고장, 10-15 정찰에서 정상(3,780바). 코드 변경 없음(CLAUDE.md 9-3-1). ET 의 10-12·10-13 빈칸이 다음 갱신에서 채워졌는지만 보면 됨.
+
+## 2026-10-10 · Claude · PR #138
 토요일 종가 알림(ET) 조사 — 야후 일봉이 52개로 잘려 온 것, 검사가 막음. 오류 문구에 숫자 추가
 - 파일: scripts/fetch_prices.py · scripts/probe_splits.py · scripts/tests/test_prices.py · CLAUDE.md · 이 일지
 - 결과(PR #125): 머지됨.
 - 규칙: 원인과 정찰 결과는 CLAUDE.md 9-3-1 의 2026-10-10 항목. 판정 기준은 안 바꿈.
-- 넘김: 다음 토요일(10-17) 알림에 ET 가 또 나오면 숫자를 보고, 두세 주 계속되면 '알려진 상태'로 돌릴지 사용자와 정함.
+- 넘김: 다음 토요일(10-17) 알림에 ET 가 또 나오면 숫자를 보고, 두세 주 계속되면 '알려진 상태'로 돌릴지 사용자와 정함. (10-15: 야후 쪽에서 풀림 — 위 항목)
 
 ## 2026-10-02 · Claude · PR #125
 투자자 화면 유의사항에서 13F 설명·추정 설명 두 줄과 출처(CIK) 줄 삭제

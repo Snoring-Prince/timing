@@ -868,3 +868,48 @@ test('every investor page asks for the shared files with the same version tag', 
   }
   assert.equal(tags.size,1,'all investor pages use one version tag');
 });
+
+/* 요약 문단이 공시책의 이상한 줄 하나로 실패해도 보유 목록은 그려야 합니다
+   (2026-10-11). 고치기 전에는 render() 가 그 자리에서 멈춰 목록이 통째로 비었습니다. */
+function renderPage(data, overview) {
+  const els = {};
+  const mk = () => new Proxy({}, {
+    get(t, k) {
+      if (k in t) return t[k];
+      if (typeof k === 'symbol') return undefined;
+      if (k === 'classList') return {add(){}, remove(){}, toggle(){}, contains(){ return false; }};
+      if (k === 'querySelectorAll') return () => [];
+      if (k === 'querySelector') return () => null;
+      if (k === 'style' || k === 'dataset') return (t[k] = {});
+      if (k === 'clientWidth') return 900;
+      return undefined;
+    },
+    set(t, k, v) { t[k] = v; return true; },
+  });
+  // body 가 없으면 껍데기를 다시 끼우지 않습니다 — 요소는 getElementById 가 만들어 줍니다.
+  const document = {getElementById:id=>els[id]||(els[id]=mk()), querySelectorAll:()=>[], querySelector:()=>null,
+    documentElement:mk(), head:{querySelector:()=>mk()}, addEventListener(){}, createElement:()=>mk()};
+  const ctx = {window:{addEventListener(){}}, addEventListener(){}, console, data, document,
+    navigator:{languages:['ko-KR']}, localStorage:{getItem:()=>null, setItem(){}}, location:{search:''},
+    URLSearchParams, setTimeout, clearTimeout, requestAnimationFrame:()=>0};
+  vm.createContext(ctx);
+  vm.runInContext(code, ctx);
+  vm.runInContext('RAW=data; LANG="ko"; L10N=D.ko; LOCALE="ko-KR"; LOADED=true;', ctx);
+  els['filing-overview'] = mk(); els['filing-overview'].innerHTML = 'STATIC SNAPSHOT';
+  ctx.window.TitanOverview = overview;
+  vm.runInContext('render()', ctx);
+  const rows = id => (String(els[id]?.innerHTML || '').match(/<li class="row">/g) || []).length;
+  return {overview:els['filing-overview'].innerHTML, rows:rows('top')+rows('rest')};
+}
+test('a holding the summary cannot read keeps the dated static summary and still draws every position', () => {
+  const overview = require('../../titans/shared/overview.js');
+  const good = renderPage(real, overview);
+  assert.match(good.overview, /2026년 2분기 보유 요약/);
+  const bad = structuredClone(real);
+  bad.quarters.at(-1).holdings.at(-1).name = '';      // 이름 없는 줄 하나 — 요약 생성기가 거부합니다
+  assert.throws(() => overview.content(bad, {name:{en:'x', ko:'x'}}), /Invalid overview holding/);
+  const kept = renderPage(bad, overview);
+  assert.equal(kept.overview, 'STATIC SNAPSHOT');
+  assert.equal(kept.rows, good.rows);
+  assert.ok(good.rows >= 20);
+});

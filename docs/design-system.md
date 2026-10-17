@@ -576,14 +576,16 @@ document.documentElement.scrollWidth - document.documentElement.clientWidth
 7  로고가 있으면 titans/<slug>/logo.webp(128×128, 흰 바탕, 여백을 잘라 심벌 위주)를 넣고
    window.TITAN.mark 에 "logo.webp", 목록 카드 이름표도 같은 그림으로. 없으면 둘 다
    머리글자 타일 그대로. 정적 h1 은 taglineHTML() 과 글자까지 같아야 한다(검사)
-8  공시 수집 후 node scripts/publish_titans_overviews.cjs 실행.
-   TITAN-OVERVIEW 표식 안의 복사된 요약은 생성기가 새 투자자 자료로 교체한다.
-   표식·overview.js 로딩은 유지하고 생성된 문장은 손으로 고치지 않는다.
+8  등록하는 PR 에서 바로 node scripts/publish_titans_overviews.cjs 실행.
+   아직 공시책이 없으면 복사해 온 TITAN-OVERVIEW 요약 덩어리를 지운다(실패 아님).
+   첫 공시가 들어오면 Update 13F 가 같은 자리에 그 투자자의 요약을 만든다.
+   window.TITAN.prices 는 "../../data/titans/prices/<slug>.json" 그대로 — 요약의
+   티커도 이 파일에서 읽는다. overview.js 로딩은 유지하고 생성된 문장은 손으로 고치지 않는다.
 ```
 
 최신 요약은 소개 다음·분기 화면 앞에 평문으로 둡니다. 기존 본문 크기와 색을 쓰며
-새 카드나 강조색을 만들지 않습니다. 생성·실패 보존·문구 기준은 CLAUDE.md 6-2의
-2026-10-10 항목이 정본입니다.
+새 카드나 강조색을 만들지 않습니다. 생성·실패 보존·문구·티커 기준은 CLAUDE.md 6-2의
+2026-10-10 항목과 그 2026-10-11 후속이 정본입니다.
 
 ```js
 window.TITAN = {
