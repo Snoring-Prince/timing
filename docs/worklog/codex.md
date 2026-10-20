@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-10-20 · Codex · (이 PR)
+투자 올림픽을 결과 비교→실제 사건→차트·거래 탐색 순서로 개편
+- 파일: olympics/index.html·style.css·app.js·presentation.js · 표시 검사·CI · 사이트맵 · CLAUDE.md · design-system.md · 이 일지
+- 규칙: 사건 날짜·거래 묶음은 현재 장부에서만 읽음. 화면 동작·검증·실측은 CLAUDE.md 9-3-3의 2026-10-20 항목.
+- 굳힘: 주인 승인 전체 구성 개편. 변경 전 backup/v1.13 원격 보관. 기존 전략·계산·데이터·한영 정적 이야기 유지.
+- 넘김: 사용자 디자인 확인 및 merge 후 공개 한영 화면 확인. 기존 검색 실적 확인·과거 자료 범위 확장은 별도 미완료.
+
 ## 2026-10-10 · Codex · (이 PR)
 투자자 8명 최신 공시 요약을 한영 원본 HTML로 자동 게시
 - 파일: titans/shared/overview.js·investor.* · 투자자 HTML ×8 · publish_titans_overviews.cjs · 워크플로·검사·사이트맵 · CLAUDE.md · design-system.md · 이 일지
@@ -99,10 +106,3 @@
 - 규칙: 현재 디자인·자료 범위·검증은 CLAUDE.md 1번이 정본. 변경 전 backup/v1.2 확보.
 - 굳힘: 번호 동등, 이야기는 처음에 접기. 큰 Q·신문형·준비 중 카드·버크셔 요약 복구 금지. 서비스는 계속 추가 가능.
 - 넘김: 사용자 merge. 별도 데이터 수집·수동 배포 없음.
-
-## 2026-09-29 · Codex · (이 PR)
-PR #117 검수 후속 — 13F 안내 정확성·안내 페이지 왕복 언어 유지
-- 파일: index.html · timing/index.html · titans/index.html · titans/13f/index.html · shared/investor.js · titans.test.cjs · CLAUDE.md · 이 일지
-- 규칙: 가격 대조 범위·채권 예외·안내 링크의 언어 전달은 CLAUDE.md 9-3의 안내문 검수 후속이 정본.
-- 굳힘: 수집·계산·전체 종목·공통 면책 문구 유지. 사이트에서 제외한 자료와 원래 공시에 없는 자료를 구분.
-- 넘김: 사용자 merge. 별도 수동 배포·데이터 재수집 없음.
