@@ -19,7 +19,7 @@
 <meta name="theme-color" content="#ffffff">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Investment Olympics","url":"https://itpaidoff.com/olympics/","inLanguage":["en","ko"],"description":"Replay five investment decisions using the same initial cash and historical observations."}</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
-<link rel="stylesheet" href="style.css?v=2026-10-20-story">
+<link rel="stylesheet" href="style.css?v=2026-10-23-characters">
 <link rel="stylesheet" href="/shared/language-picker.css?v=2026-10-05-lang">
 <script src="/shared/language-picker.js?v=2026-10-05-lang"></script>
 <script src="strategies/john.js?v=2026-10-06" defer></script>
@@ -28,7 +28,7 @@
 <script src="strategies/alicia.js?v=2026-10-06" defer></script>
 <script src="strategies/emma.js?v=2026-10-06" defer></script>
 <script src="model.js?v=2026-10-08-review" defer></script>
-<script src="presentation.js?v=2026-10-20-story" defer></script><script src="app.js?v=2026-10-20-story" defer></script>
+<script src="presentation.js?v=2026-10-23-characters" defer></script><script src="app.js?v=2026-10-23-characters" defer></script>
 <script>
 (function(){if(["localhost","127.0.0.1",""].includes(location.hostname))return;
 const s=document.createElement("script");s.defer=true;s.src="https://cloud.umami.is/script.js";
@@ -48,7 +48,27 @@ s.setAttribute("data-website-id","41e07a57-a87c-403b-bdf8-e12d911457b6");documen
 <section class="intro">
 <p class="eyebrow"><span data-lang="ko">투자 올림픽</span><span data-lang="en">Investment Olympics</span></p>
 <h1><span data-lang="ko">같은 돈, 다섯 가지 선택.</span><span data-lang="en">Same cash. Five different choices.</span></h1>
-<p><span data-lang="ko">바로 살까, 나눠 살까, 기다릴까? 먼저 결과를 보고, 차이가 벌어진 순간을 따라가 보세요.</span><span data-lang="en">Buy now, buy gradually, or wait? See the results, then explore the moments that set them apart.</span></p>
+<p><span data-lang="ko">같은 목돈 앞에서도 고민은 달랐습니다. 한 사람을 골라 이야기를 읽고, 그 선택이 어떤 결과로 이어졌는지 확인해 보세요.</span><span data-lang="en">The same starting cash, but different doubts. Choose a person, read their story, then discover how their choice turned out.</span></p>
+</section>
+<section id="character-picker" class="character-picker" aria-labelledby="character-heading">
+<h2 id="character-heading" tabindex="-1"><span data-lang="ko">누구의 고민이 나와 닮았나요?</span><span data-lang="en">Whose doubts sound like yours?</span></h2>
+<div class="character-cards"><button type="button" class="character-card" data-person="john" aria-pressed="false" aria-controls="character-story" style="--person:var(--john)"><span class="character-name"><span data-lang="ko">존</span><span data-lang="en">John</span></span><strong><span data-lang="ko">“잃을까 봐 시작을 못 하겠어.”</span><span data-lang="en">“What if I lose the money?”</span></strong><span class="character-choice"><span data-lang="ko">단기국채에 맡기기</span><span data-lang="en">Hold Treasury bills</span></span><span class="character-read"><span data-lang="ko">이야기 읽기 →</span><span data-lang="en">Read the story →</span></span></button>
+<button type="button" class="character-card" data-person="daniel" aria-pressed="false" aria-controls="character-story" style="--person:var(--daniel)"><span class="character-name"><span data-lang="ko">다니엘</span><span data-lang="en">Daniel</span></span><strong><span data-lang="ko">“무서울 때 사라는데, 그게 언제지?”</span><span data-lang="en">“Buy when others are afraid. But when?”</span></strong><span class="character-choice"><span data-lang="ko">공포를 기다려 나눠 매수</span><span data-lang="en">Wait for fear, then buy</span></span><span class="character-read"><span data-lang="ko">이야기 읽기 →</span><span data-lang="en">Read the story →</span></span></button>
+<button type="button" class="character-card" data-person="samuel" aria-pressed="false" aria-controls="character-story" style="--person:var(--samuel)"><span class="character-name"><span data-lang="ko">사무엘</span><span data-lang="en">Samuel</span></span><strong><span data-lang="ko">“좋은 날을 모르겠으니, 나눠 사자.”</span><span data-lang="en">“I cannot pick the day. I will spread it out.”</span></strong><span class="character-choice"><span data-lang="ko">매달 정한 금액 매수</span><span data-lang="en">Buy a set amount each month</span></span><span class="character-read"><span data-lang="ko">이야기 읽기 →</span><span data-lang="en">Read the story →</span></span></button>
+<button type="button" class="character-card" data-person="alicia" aria-pressed="false" aria-controls="character-story" style="--person:var(--alicia)"><span class="character-name"><span data-lang="ko">알리시아</span><span data-lang="en">Alicia</span></span><strong><span data-lang="ko">“잘하는 사람의 선택을 따라가면?”</span><span data-lang="en">“What if I follow someone experienced?”</span></strong><span class="character-choice"><span data-lang="ko">버크셔의 신규 공시 따라가기</span><span data-lang="en">Follow new Berkshire disclosures</span></span><span class="character-read"><span data-lang="ko">이야기 읽기 →</span><span data-lang="en">Read the story →</span></span></button>
+<button type="button" class="character-card" data-person="emma" aria-pressed="false" aria-controls="character-story" style="--person:var(--emma)"><span class="character-name"><span data-lang="ko">엠마</span><span data-lang="en">Emma</span></span><strong><span data-lang="ko">“기다리다 또 놓치고 싶지 않아.”</span><span data-lang="en">“I do not want to keep waiting.”</span></strong><span class="character-choice"><span data-lang="ko">첫날 전부 매수하고 보유</span><span data-lang="en">Buy everything on day one</span></span><span class="character-read"><span data-lang="ko">이야기 읽기 →</span><span data-lang="en">Read the story →</span></span></button>
+</div>
+<p class="note"><span data-lang="ko">인물과 고민은 가상의 이야기입니다. 결과는 실제 과거 자료로 계산한 모의 투자예요.</span><span data-lang="en">These people and their stories are fictional. Results simulate their rules using real historical observations.</span></p>
+<button type="button" id="skip-story" class="quiet-action" disabled><span data-lang="ko">바로 전체 비교 보기 →</span><span data-lang="en">Go straight to the comparison →</span></button>
+</section>
+<section id="character-story" class="character-story" hidden><article data-story="john" hidden><h2 tabindex="-1"><span data-lang="ko">존의 선택</span><span data-lang="en">John’s choice</span></h2><div data-lang="ko"><p>존은 어렵게 모은 돈을 계좌에 넣어두고도 무엇을 사야 할지 정하지 못했습니다. 수익을 내고 싶은 마음보다, 손실이 나면 어쩌나 하는 걱정이 앞섰습니다.</p><p>그래서 미국 초단기 국채 ETF인 BIL에 전부 넣어두기로 합니다. 주식을 고를 필요도, 매수할 날을 기다릴 필요도 없는 선택이었습니다.</p><p>하지만 주가가 오르는 날에는 다른 고민이 생깁니다. ‘나는 너무 조심하고 있는 걸까?’ 돈을 지키고 싶은 마음과 기회를 놓치기 싫은 마음 사이에서, 존은 같은 선택을 유지합니다.</p></div><div data-lang="en"><p>John has saved a lump sum, but cannot decide what to buy. The possibility of losing it feels more real than the prospect of a gain.</p><p>He puts it all in BIL, a U.S. Treasury bill ETF. There are no stocks to pick and no entry date to wait for.</p><p>On days when shares rise, another doubt appears: am I being too cautious? Caught between protecting his savings and missing out, John sticks with his choice.</p></div></article>
+<article data-story="daniel" hidden><h2 tabindex="-1"><span data-lang="ko">다니엘의 선택</span><span data-lang="en">Daniel’s choice</span></h2><div data-lang="ko"><p>다니엘은 개별 종목을 고르는 대신 지수 ETF에 투자하기로 했습니다. 그런데 무엇을 살지 정하고 나니, 언제 사야 할지가 더 어려워졌습니다.</p><p>‘공포에 사고, 탐욕에 팔아라.’ 그 말에 기준을 붙여보기로 합니다. 공포탐욕지수가 정한 구간에 들어오면 목돈의 일부를 사고, 탐욕 구간에서는 일부를 파는 겁니다.</p><p>기다리는 동안 시장이 오르면 조바심이 납니다. 정작 공포가 찾아오면 뉴스는 온통 불안한 이야기뿐입니다. 다니엘의 과제는 기준을 만드는 데서 끝나지 않습니다. 불편한 날에도 그 기준을 따르는 일입니다.</p></div><div data-lang="en"><p>Daniel chooses an index ETF instead of picking individual stocks. Knowing what to buy only makes the next question clearer: when?</p><p>He gives “buy in fear, sell in greed” a rule. A Fear & Greed reading in his chosen zone triggers a purchase or sale of part of his initial budget.</p><p>Rising prices make waiting uncomfortable. When fear finally arrives, the headlines make buying uncomfortable too. His challenge is to follow the rule even when it feels difficult.</p></div></article>
+<article data-story="samuel" hidden><h2 tabindex="-1"><span data-lang="ko">사무엘의 선택</span><span data-lang="en">Samuel’s choice</span></h2><div data-lang="ko"><p>사무엘은 오늘이 비싼 날인지 싼 날인지 판단하려다 지쳤습니다. 한 번에 전부 넣었다가 바로 떨어지면 후회할 것 같았습니다.</p><p>그래서 이미 가진 목돈을 나눠, 첫날부터 매달 정해진 금액만큼 투자하기로 합니다. 월급을 새로 보태는 방식은 아닙니다. 남은 돈은 BIL에 두고, 그 돈을 조금씩 옮깁니다.</p><p>시장이 오르면 ‘처음에 다 살걸’ 하는 생각이 듭니다. 떨어지면 다음 달에도 사야 한다는 약속이 부담스럽습니다. 사무엘은 더 좋은 날을 맞히는 대신, 정한 일정을 지키기로 합니다.</p></div><div data-lang="en"><p>Samuel is tired of deciding whether today is expensive or cheap. Investing everything just before a fall would be hard to accept.</p><p>He divides the money he already has, buying a set amount from day one and each month after. These are not new salary contributions: the remainder stays in BIL until it is invested.</p><p>When prices rise, he wishes he had bought everything earlier. When they fall, the next scheduled purchase feels harder. He chooses a routine instead of trying to pick the perfect day.</p></div></article>
+<article data-story="alicia" hidden><h2 tabindex="-1"><span data-lang="ko">알리시아의 선택</span><span data-lang="en">Alicia’s choice</span></h2><div data-lang="ko"><p>알리시아는 기업을 분석하는 일이 막막했습니다. 직접 고르기 어렵다면 경험 많은 투자자의 선택에서 출발해 보고 싶었습니다.</p><p>버크셔의 공개 공시에서 새로 등장한 종목부터 따라 삽니다. 이후 자신이 보유한 종목을 더 샀다는 공시가 나오면 추가 매수하고, 줄였다는 공시가 나오면 비례해서 줄입니다.</p><p>하지만 공시를 읽는 날은 버크셔가 실제로 거래한 날과 다릅니다. 같은 종목을 사더라도 가격과 비중은 달라집니다. ‘따라 샀는데, 왜 결과는 다를까?’ 알리시아가 마주할 질문입니다.</p></div><div data-lang="en"><p>Alicia finds company analysis overwhelming. Rather than choosing from scratch, she wants to start with an experienced investor’s decisions.</p><p>She buys newly disclosed Berkshire positions, then follows reported additions and proportional reductions in the stocks she already owns.</p><p>A disclosure arrives after the underlying trades. Her entry price and portfolio weights can differ. Following some of the same stocks does not make her account Berkshire’s portfolio.</p></div></article>
+<article data-story="emma" hidden><h2 tabindex="-1"><span data-lang="ko">엠마의 선택</span><span data-lang="en">Emma’s choice</span></h2><div data-lang="ko"><p>엠마는 더 좋은 가격을 기다리다가 결국 아무것도 하지 못했던 때를 떠올렸습니다. 이번에는 기다리는 대신 투자부터 시작하기로 합니다.</p><p>첫날 목돈 전부를 지수 ETF에 넣고, 비교 기간 동안 팔지 않습니다. 매수 날짜를 더 고민하지 않아도 된다는 점은 마음에 들었습니다.</p><p>그렇다고 고민이 사라진 것은 아닙니다. 계좌가 줄어드는 날이면 ‘조금씩 살걸 그랬나?’ 하는 생각이 고개를 듭니다. 간단한 계획을 오래 유지하는 일은, 계획을 세우는 것과는 다른 어려움입니다.</p></div><div data-lang="en"><p>Emma remembers waiting for a better price and never starting. This time she chooses to invest instead of waiting.</p><p>She puts all her initial cash into an index ETF on day one and holds it throughout the comparison. There is no next purchase date to decide.</p><p>But a simple plan does not remove doubt. On falling days, she wonders whether spreading out her purchases would have felt easier. Keeping the plan can be harder than making it.</p></div></article>
+
+<p id="story-rule" class="story-rule"></p>
+<button type="button" id="reveal-result" disabled><span data-lang="ko">이 선택의 결과 보기 →</span><span data-lang="en">See how this choice turned out →</span></button>
 </section>
 
 <p id="applied" class="comparison-context"></p>
@@ -74,9 +94,18 @@ s.setAttribute("data-website-id","41e07a57-a87c-403b-bdf8-e12d911457b6");documen
 <p class="note" id="data-range"></p>
 </details>
 <p class="status" id="status" role="status" aria-live="polite" data-i18n="loading">Loading historical observations…</p>
+<section id="personal-result" class="personal-result" hidden aria-labelledby="personal-heading">
+<p class="eyebrow"><span data-lang="ko">선택한 사람의 기간 전체 결과</span><span data-lang="en">Your person’s full-period result</span></p>
+<h2 id="personal-heading" tabindex="-1"></h2><p id="personal-period" class="note"></p>
+<div id="personal-numbers" class="personal-numbers"></div><p id="personal-hardship"></p>
+<p class="reflection"><span data-lang="ko">이 과정을 겪으면서도, 나는 같은 선택을 유지할 수 있었을까요?</span><span data-lang="en">Could you have stayed with the same choice through that experience?</span></p>
+<button type="button" id="compare-people"><span data-lang="ko">다른 선택과 비교하기 →</span><span data-lang="en">Compare with the other choices →</span></button>
+</section>
 <section id="race" hidden>
+<p id="comparison-lead" class="comparison-lead" tabindex="-1"></p>
+<button type="button" id="choose-again" class="quiet-action"><span data-lang="ko">다른 사람의 이야기 읽기 ↑</span><span data-lang="en">Read another person’s story ↑</span></button>
 <section class="scoreboard" aria-labelledby="score-heading">
-<div class="score-heading"><h2 id="score-heading"><span data-lang="ko">누가 얼마나 벌었을까?</span><span data-lang="en">How did each choice turn out?</span></h2><output id="score-date"></output></div>
+<div class="score-heading"><h2 id="score-heading" tabindex="-1"><span data-lang="ko">누가 얼마나 벌었을까?</span><span data-lang="en">How did each choice turn out?</span></h2><output id="score-date"></output></div>
 <div class="score-columns" aria-hidden="true"><span><span data-lang="ko">선택 · 눌러서 자세히</span><span data-lang="en">Choice · expand to explore</span></span><span><span data-lang="ko">총자산 · 수익률</span><span data-lang="en">Value · return</span></span><span><span data-lang="ko">최대 하락폭</span><span data-lang="en">Largest drop</span></span></div>
 <div id="ranking" class="ranking"></div>
 <p class="score-help"><span data-lang="ko">하락폭은 도중에 가장 높았던 총자산에서 얼마나 떨어졌는지입니다. 같은 총자산은 공동 순위예요.</span><span data-lang="en">Largest drop measures the fall from each person’s previous high. Equal totals share a rank.</span></p>
@@ -99,14 +128,7 @@ s.setAttribute("data-website-id","41e07a57-a87c-403b-bdf8-e12d911457b6");documen
 <div class="log-head"><h2 class="section-heading" data-i18n="decisions">Decisions up to this date</h2><label><span class="sr-only" data-i18n="filter">Filter person</span><select id="actor"><option value="" data-i18n="all">Everyone</option><option value="john" data-i18n="john">john</option><option value="daniel" data-i18n="daniel">daniel</option><option value="samuel" data-i18n="samuel">samuel</option><option value="alicia" data-i18n="alicia">alicia</option><option value="emma" data-i18n="emma">emma</option></select></label></div>
 <ol id="log" class="log"></ol><button id="more" hidden data-i18n="more">Show more</button>
 </section>
-<details class="people"><summary><span data-lang="ko">다섯 사람의 선택 읽기</span><span data-lang="en">Read their five decisions</span></summary>
-<div class="stories">
-<p><strong data-i18n="john">John</strong><span data-lang="ko">투자가 너무 어려워서 전부 BIL, 미국 초단기 국채 ETF에 넣어둡니다.</span><span data-lang="en">Investing feels too difficult. He keeps everything in BIL, a U.S. Treasury bill ETF.</span></p>
-<p><strong data-i18n="daniel">Daniel</strong><span data-lang="ko">극도의 공포에 조금씩 사고, 극도의 탐욕에 조금씩 팝니다. 기다리는 돈은 BIL에 둡니다.</span><span data-lang="en">He buys in extreme fear and sells in extreme greed, keeping his waiting funds in BIL.</span></p>
-<p><strong data-i18n="samuel">Samuel</strong><span data-lang="ko">매달 처음 목돈의 일정 비율을 투자하고, 팔지 않습니다. 남은 돈은 BIL에 둡니다.</span><span data-lang="en">He invests a fixed share of his initial cash each month and never sells. The rest stays in BIL.</span></p>
-<p><strong data-i18n="alicia">Alicia</strong><span data-lang="ko">버크셔 공시에서 새로 등장한 종목을 따라 사고, 자신이 보유한 종목의 추가 매수와 매도를 따라갑니다.</span><span data-lang="en">She follows new positions disclosed by Berkshire, then follows additions and reductions in stocks she owns.</span></p>
-<p><strong data-i18n="emma">Emma</strong><span data-lang="ko">첫날 전부 투자하고, 끝까지 보유합니다.</span><span data-lang="en">She invests everything on day one and holds.</span></p>
-</div></details>
+
 <details class="method"><summary><span data-lang="ko">어떻게 비교했나요?</span><span data-lang="en">How is this calculated?</span></summary>
 <div data-lang="ko">
 <p>첫 비교는 2025년부터입니다. 다섯 사람 모두 같은 시작일과 목돈을 사용하고, 외부에서 돈을 보태거나 빌리지 않습니다. 남은 돈과 매도한 돈은 BIL에 넣습니다. BIL의 수익률은 고정하지 않고 실제 과거 변화를 사용합니다. 자료는 매주 갱신됩니다.</p>

@@ -27,7 +27,7 @@
   };
   function pick(){const q=(new URLSearchParams(location.search).get('lang')||'').slice(0,2).toLowerCase();if(D[q])return q;try{const s=localStorage.getItem('dt.lang');if(D[s])return s;}catch(e){}for(const l of navigator.languages||[navigator.language||'en']){if(D[l.slice(0,2)])return l.slice(0,2);}return 'en';}
   const SHORT={ko:{john:'단기국채에 맡기기',daniel:'공포에 나눠 매수',samuel:'매달 나눠 매수',alicia:'공개된 신규 종목 따라 사기',emma:'첫날 전액 매수'},en:{john:'Hold Treasury bills',daniel:'Buy in extreme fear',samuel:'Buy every month',alicia:'Follow new public holdings',emma:'Buy all on day one'}};
-  let LANG=pick(),DATA=null,RESULT=null,INDEX=0,HOVER=0,GEOMETRY=null,TIMER=null,LIMIT=6,ERROR='loading',FOCUS='',EVENT=null,MOMENTS=[];
+  let LANG=pick(),DATA=null,RESULT=null,INDEX=0,HOVER=0,GEOMETRY=null,TIMER=null,LIMIT=6,ERROR='loading',FOCUS='',EVENT=null,MOMENTS=[],PERSON='',REVEALED=false,COMPARING=false;
   const t=k=>D[LANG][k],money=n=>new Intl.NumberFormat(LANG==='ko'?'ko-KR':'en-US',{style:'currency',currency:'USD',currencyDisplay:'narrowSymbol',maximumFractionDigits:0}).format(n),pct=n=>Math.abs(n)<.0005?'0.0%':(n>0?'+':'')+(n*100).toFixed(1)+'%';
   const tradeMoney=n=>n>0&&n<.005?'< $0.01':new Intl.NumberFormat(LANG==='ko'?'ko-KR':'en-US',{style:'currency',currency:'USD',currencyDisplay:'narrowSymbol',minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
   const signedMoney=n=>(Math.abs(n)<.005?'':n<0?'−':'+')+new Intl.NumberFormat(LANG==='ko'?'ko-KR':'en-US',{style:'currency',currency:'USD',currencyDisplay:'narrowSymbol',maximumFractionDigits:2}).format(Math.abs(n)<.005?0:Math.abs(n));
@@ -49,7 +49,7 @@
       LANG=code;try{localStorage.setItem('dt.lang',LANG);}catch(e){}const url=new URL(location.href);url.searchParams.set('lang',LANG);history.replaceState(null,'',url);language();
     }});
     $('play').textContent=t(TIMER?'pause':'play');$('status').textContent=t(ERROR);
-    range();if(RESULT){applied();render();legend();moments();draw();eventNote();}
+    range();story();if(RESULT){applied();personal();render();legend();moments();draw();eventNote();}
   }
   function range(){if(DATA)$('data-range').textContent=LANG==='ko'?'비교 가능한 기록: '+DATA.data.from+' ~ '+DATA.data.to+' · 매주 갱신 · 아직 오지 않은 날짜는 비교하지 않습니다.':'Available history: '+DATA.data.from+' – '+DATA.data.to+' · Updated weekly · No future results.';}
   function options(){const o={asset:$('asset').value,start:$('start').value,end:$('end').value,repeat:$('repeat').checked};for(const k of ['amount','fear','greed','buy','sell','monthly','alicia'])o[k]=Number($(k).value);return o;}
@@ -59,9 +59,49 @@
   }
   function compare(){
     stop();if(!DATA)return;
-    try{if(!$('settings').checkValidity())throw Error('inputs');RESULT=M.run(DATA,options());INDEX=RESULT.curve.length-1;HOVER=INDEX;LIMIT=6;EVENT=null;$('timeline').max=INDEX;$('race').hidden=false;$('status').hidden=true;$('pending').hidden=true;applied();render();legend();moments();draw();eventNote();}
-    catch(e){RESULT=null;$('race').hidden=true;ERROR=['inputs','range'].includes(e.message)?e.message:'error';$('status').textContent=t(ERROR);$('status').hidden=false;}
+    try{if(!$('settings').checkValidity())throw Error('inputs');RESULT=M.run(DATA,options());INDEX=RESULT.curve.length-1;HOVER=INDEX;LIMIT=6;EVENT=null;$('timeline').max=INDEX;$('race').hidden=!COMPARING;$('status').hidden=true;$('pending').hidden=true;applied();story();personal();render();legend();moments();draw();eventNote();$('skip-story').disabled=false;$('reveal-result').disabled=false;}
+    catch(e){RESULT=null;$('race').hidden=true;$('personal-result').hidden=true;$('applied').textContent='';$('skip-story').disabled=true;$('reveal-result').disabled=true;story();ERROR=['inputs','range'].includes(e.message)?e.message:'error';$('status').textContent=t(ERROR);$('status').hidden=false;}
   }
+  function visit(id){$(id).scrollIntoView({block:'start'});$(id).focus({preventScroll:true});}
+  function story(){
+    $('character-story').hidden=!PERSON;
+    for(const b of document.querySelectorAll('[data-person]'))b.setAttribute('aria-pressed',String(b.dataset.person===PERSON));
+    for(const a of document.querySelectorAll('[data-story]'))a.hidden=a.dataset.story!==PERSON;
+    $('story-rule').textContent=PERSON&&RESULT?(LANG==='ko'?'이번 비교에서 따르는 규칙: ':'Rules used in this comparison: ')+METHODS[LANG][PERSON](RESULT.options,RESULT.options.asset==='spx'?'SPY':'QQQ'):'';
+  }
+  function personal(){
+    $('personal-result').hidden=!(PERSON&&REVEALED&&RESULT);if($('personal-result').hidden)return;
+    const row=M.rank(RESULT.curve.at(-1),RESULT.options.amount).find(r=>r.id===PERSON),low=P.drawdownMoment(RESULT,PERSON);
+    $('personal-result').style.setProperty('--person','var(--'+PERSON+')');
+    $('personal-heading').textContent=LANG==='ko'?t(PERSON)+'의 선택, 결과는 어땠을까요?':t(PERSON)+'’s choice: how did it turn out?';
+    $('personal-period').textContent=RESULT.from+' ~ '+RESULT.to+' · USD · '+(LANG==='ko'?'배당 재투자 가정':'Distributions reinvested');
+    const fields=LANG==='ko'?['처음 목돈','마지막 총자산','총수익률','투자 손익']:['Initial cash','Final total assets','Total return','Gain / loss'];
+    $('personal-numbers').replaceChildren(...[money(RESULT.options.amount),money(row.value),pct(row.return),signedMoney(row.value-RESULT.options.amount)].map((value,i)=>{const d=element('div');d.append(element('span',fields[i]),element('strong',value));return d;}));
+    $('personal-hardship').textContent=low?(LANG==='ko'?
+      `결과에 도달하기까지, 총자산은 ${RESULT.curve[low.peakIndex].day}의 ${money(low.peak)}에서 ${RESULT.curve[low.index].day}의 ${money(low.value)}로 떨어지기도 했습니다. 고점 대비 가장 큰 하락폭은 ${dropText(low.drop).replace('-','')}${Math.abs(low.drop)<.001?'이었습니다':'였습니다'}.`:
+      `Along the way, total assets fell from ${money(low.peak)} on ${RESULT.curve[low.peakIndex].day} to ${money(low.value)} on ${RESULT.curve[low.index].day}. The largest decline from a previous high was ${dropText(low.drop).replace('-','')}.`):
+      (LANG==='ko'?'이 비교 기간에는 이전 고점보다 총자산이 낮아진 날이 없었습니다. 다른 기간에서도 같다는 뜻은 아닙니다.':'No observation fell below a previous high in this period. Other periods can be different.');
+  }
+  function comparisonNote(point){
+    const rows=M.rank(point,RESULT.options.amount),leaders=rows.filter(r=>r.rank===1).map(r=>t(r.id)).join(' · '),gap=P.comparisonGap(rows,PERSON);
+    let text=LANG==='ko'?`${RESULT.from} ~ ${point.day}, 총자산이 가장 큰 사람: ${leaders}.`:`${RESULT.from} – ${point.day}: highest total assets — ${leaders}.`;
+    if(gap){const amount=Math.abs(gap.amount),points=Math.abs(gap.points),pp=points>0&&points<.1?(LANG==='ko'?'0.1%p 미만':'less than 0.1 percentage points'):points.toFixed(1)+(LANG==='ko'?'%p':' percentage points');
+      text+=LANG==='ko'?` 내가 고른 ${t(PERSON)}의 총자산은 ${t(gap.reference.id)}보다 ${tradeMoney(amount)} ${gap.amount>0?'많고':'적고'}, 수익률은 ${pp} ${gap.amount>0?'높습니다':'낮습니다'}.`:
+        ` Your choice, ${t(PERSON)}, has ${tradeMoney(amount)} ${gap.amount>0?'more':'less'} than ${t(gap.reference.id)}, with a return ${pp} ${gap.amount>0?'higher':'lower'}.`;
+    }
+    text+=LANG==='ko'?' 기간을 바꾸면 결과도 달라질 수 있어요.':'Results can change with the period.';
+    $('comparison-lead').textContent=text;
+  }
+  function showComparison(){
+    if(!RESULT)return;stop();COMPARING=true;EVENT=null;FOCUS='';$('actor').value='';$('race').hidden=false;seek(RESULT.curve.length-1);legend();draw();visit('comparison-lead');
+  }
+  for(const b of document.querySelectorAll('[data-person]'))b.addEventListener('click',()=>{
+    stop();PERSON=b.dataset.person;REVEALED=false;COMPARING=false;$('race').hidden=true;$('personal-result').hidden=true;story();
+    const h=document.querySelector('[data-story="'+PERSON+'"] h2');h.scrollIntoView({block:'start'});h.focus({preventScroll:true});
+  });
+  $('reveal-result').addEventListener('click',()=>{if(!RESULT)return;stop();REVEALED=true;COMPARING=false;$('race').hidden=true;personal();visit('personal-heading');});
+  $('compare-people').addEventListener('click',showComparison);$('skip-story').addEventListener('click',showComparison);
+  $('choose-again').addEventListener('click',()=>{stop();visit('character-heading');});
   function render(){
     if(!RESULT)return;const point=RESULT.curve[INDEX];$('timeline').value=INDEX;$('timeline').setAttribute('aria-valuetext',point.day);$('current-date').textContent=point.day;
     $('score-date').textContent=point.day+(LANG==='ko'?' 기준':' · selected date');
@@ -89,7 +129,7 @@
     $('date-values').replaceChildren(...IDS.map(id=>{const e=element('span');e.style.setProperty('--person','var(--'+id+')');e.append(element('span',t(id)),element('strong',money(point.values[id])));return e;}));
     $('total-note').textContent=LANG==='ko'?'남은 돈은 BIL(단기국채 ETF)에 투자합니다. 매매 설정의 비율은 처음 목돈 기준이며 배당은 재투자해요.':'Uninvested funds stay in BIL (Treasury bills). Trade-size percentages use initial cash; distributions are reinvested.';
     $('missing').textContent=RESULT.missingFear?(LANG==='ko'?`이 비교에 공포탐욕지수 관측이 없는 거래일 ${RESULT.missingFear}일이 있어 다니엘의 신호를 만들지 않았습니다.`:`Fear & Greed observations were absent for ${RESULT.missingFear} trading days; Daniel receives no invented signal.`):'';
-    log();marker();
+    comparisonNote(point);log();marker();
   }
   function reason(trade){
     const k=trade.reason;
@@ -140,7 +180,7 @@
   }
   const DASH=['7 4','','10 4','4 3','2 4'];
   function draw(){
-    if(!RESULT)return;const svg=$('chart'),W=Math.max(200,Math.round(svg.clientWidth)),H=svg.clientHeight,L=W<500?45:62,R=W-12,T=15,B=H-30,rows=RESULT.curve;
+    if(!RESULT||$('race').hidden)return;const svg=$('chart'),W=Math.max(200,Math.round(svg.clientWidth)),H=svg.clientHeight,L=W<500?45:62,R=W-12,T=15,B=H-30,rows=RESULT.curve;
     let lo=Infinity,hi=-Infinity;for(const r of rows)for(const v of Object.values(r.values)){lo=Math.min(lo,v);hi=Math.max(hi,v);}
     const pad=Math.max((hi-lo)*.1,RESULT.options.amount*.03);lo=Math.max(0,lo-pad);hi+=pad;
     const from=Date.parse(RESULT.from),span=Date.parse(RESULT.to)-from,x=d=>L+(Date.parse(d)-from)/span*(R-L),y=v=>B-(v-lo)/(hi-lo)*(B-T),n=v=>v.toFixed(2);GEOMETRY={W,H,L,R,T,B,x,y};
