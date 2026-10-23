@@ -45,3 +45,16 @@ test('real-data moments and trade groups reconcile with the unmodified engine in
     }assert.equal(JSON.stringify(r),before);
   }
 });
+test('the comparison sentence leaves a space between its sentences in both languages',()=>{
+  const vm=require('node:vm'),app=fs.readFileSync(path.join(__dirname,'../../olympics/app.js'),'utf8');
+  const dict=app.match(/  const D=\{[\s\S]*?\n  \};/)[0],money=app.match(/  const tradeMoney=.*;/)[0];
+  let note=app.slice(app.indexOf('  function comparisonNote('));note=note.slice(0,note.indexOf('\n  }')+4);
+  const raw=JSON.parse(fs.readFileSync(path.join(__dirname,'../../data/olympics/race.json'),'utf8'));
+  const r=M.run(raw,{asset:'spx',amount:10000}),final=r.curve.at(-1);
+  for(const lang of ['ko','en'])for(const person of ['',...M.ids]){
+    const out={},ctx=vm.createContext({Intl,M,P,RESULT:r,out,final});
+    vm.runInContext(`let LANG=${JSON.stringify(lang)},PERSON=${JSON.stringify(person)};const $=()=>out,t=k=>D[LANG][k];\n${money}\n${dict}\n${note}\ncomparisonNote(final);`,ctx);
+    assert.ok(out.textContent.length>20);
+    assert.doesNotMatch(out.textContent,/[.][A-Za-z가-힣]/,`${lang}/${person||'none'}: ${out.textContent}`);
+  }
+});

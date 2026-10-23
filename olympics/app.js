@@ -89,7 +89,7 @@
       text+=LANG==='ko'?` 내가 고른 ${t(PERSON)}의 총자산은 ${t(gap.reference.id)}보다 ${tradeMoney(amount)} ${gap.amount>0?'많고':'적고'}, 수익률은 ${pp} ${gap.amount>0?'높습니다':'낮습니다'}.`:
         ` Your choice, ${t(PERSON)}, has ${tradeMoney(amount)} ${gap.amount>0?'more':'less'} than ${t(gap.reference.id)}, with a return ${pp} ${gap.amount>0?'higher':'lower'}.`;
     }
-    text+=LANG==='ko'?' 기간을 바꾸면 결과도 달라질 수 있어요.':'Results can change with the period.';
+    text+=LANG==='ko'?' 기간을 바꾸면 결과도 달라질 수 있어요.':' Results can change with the period.';
     $('comparison-lead').textContent=text;
   }
   function showComparison(){
