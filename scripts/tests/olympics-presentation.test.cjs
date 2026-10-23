@@ -1,6 +1,12 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const P=require('../../olympics/presentation.js'),M=require('../../olympics/model.js');
 const fs=require('node:fs'),path=require('node:path');
+test('comparison gaps use dollar differences and percentage points, including tied winners',()=>{
+  const rows=[{id:'emma',rank:1,value:130,return:.3},{id:'daniel',rank:1,value:130,return:.3},{id:'john',rank:3,value:105,return:.05}];
+  const lower=P.comparisonGap(rows,'john');assert.equal(lower.amount,-25);assert.equal(lower.points,-25);assert.equal(lower.reference.id,'emma');
+  const leader=P.comparisonGap(rows,'daniel');assert.equal(leader.amount,25);assert.equal(leader.reference.id,'john');
+  assert.equal(P.comparisonGap(rows.slice(0,2),'emma'),null);assert.equal(P.comparisonGap(rows,''),null);
+});
 test('drawdown moment retains the actual earlier peak rather than the eventual high',()=>{
   const r={options:{amount:100},curve:[100,120,90,110,140,130].map((v,i)=>({day:String(i),values:{emma:v}}))};
   assert.deepEqual(P.drawdownMoment(r,'emma'),{index:2,peakIndex:1,drop:-.25,peak:120,value:90});

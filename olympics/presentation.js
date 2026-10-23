@@ -28,5 +28,11 @@
     }
     return [...groups.values()].sort((a,b)=>b.day.localeCompare(a.day)||a.actor.localeCompare(b.actor));
   }
-  return {firstTrade,drawdownMoment,groupTrades};
+  function comparisonGap(rows,actor){
+    const chosen=rows.find(r=>r.id===actor);
+    if(!chosen)return null;
+    const reference=chosen.rank===1?rows.find(r=>r.rank>1):rows.find(r=>r.rank===1);
+    return reference?{chosen,reference,amount:chosen.value-reference.value,points:(chosen.return-reference.return)*100}:null;
+  }
+  return {firstTrade,drawdownMoment,groupTrades,comparisonGap};
 });
