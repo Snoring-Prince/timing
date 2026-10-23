@@ -37,7 +37,7 @@
     const h=HEAD[LANG],set=(s,v)=>document.head.querySelector(s)?.setAttribute('content',v);
     document.title=h.title;set('meta[name="description"]',h.desc);set('meta[property="og:title"]',h.title);set('meta[property="og:description"]',h.desc);
     set('meta[property="og:locale"]',LANG==='ko'?'ko_KR':'en_US');set('meta[property="og:locale:alternate"]',LANG==='ko'?'en_US':'ko_KR');
-    set('meta[property="og:image"]','https://itpaidoff.com/'+(LANG==='ko'?'og-ko.png':'og.png'));
+    set('meta[property="og:image"]','https://itpaidoff.com/olympics/og.png'); // 미리보기 수집기는 JS 를 거의 안 돌리므로 두 언어가 든 한 장을 같이 씁니다
     const self='https://itpaidoff.com/olympics/'+(new URLSearchParams(location.search).get('lang')?'?lang='+LANG:'');
     const canonical=document.head.querySelector('link[rel="canonical"]')||document.head.appendChild(document.createElement('link'));
     canonical.setAttribute('rel','canonical');canonical.setAttribute('href',self);set('meta[property="og:url"]',self);
@@ -89,7 +89,7 @@
       text+=LANG==='ko'?` 내가 고른 ${t(PERSON)}의 총자산은 ${t(gap.reference.id)}보다 ${tradeMoney(amount)} ${gap.amount>0?'많고':'적고'}, 수익률은 ${pp} ${gap.amount>0?'높습니다':'낮습니다'}.`:
         ` Your choice, ${t(PERSON)}, has ${tradeMoney(amount)} ${gap.amount>0?'more':'less'} than ${t(gap.reference.id)}, with a return ${pp} ${gap.amount>0?'higher':'lower'}.`;
     }
-    text+=LANG==='ko'?' 기간을 바꾸면 결과도 달라질 수 있어요.':'Results can change with the period.';
+    text+=LANG==='ko'?' 기간을 바꾸면 결과도 달라질 수 있어요.':' Results can change with the period.';
     $('comparison-lead').textContent=text;
   }
   function showComparison(){

@@ -60,3 +60,16 @@ for(const file of pages)test(`${file}: English, Korean and default metadata surv
     }
   }
 });
+
+test('olympics/index.html: one bilingual share card, kept in both languages and present at 1200×630',()=>{
+  const want='https://itpaidoff.com/olympics/og.png',html=read('olympics/index.html');
+  assert.equal(html.match(/<meta property="og:image" content="([^"]+)">/)[1],want);
+  for(const query of ['','?lang=ko']){
+    const p=painter('olympics/index.html',query);
+    for(const lang of ['ko','en'])p.paint(lang),assert.equal(p.head.querySelector('meta[property="og:image"]').attrs.content,want);
+  }
+  const png=fs.readFileSync(path.join(root,'olympics/og.png'));
+  assert.equal(png.toString('latin1',1,4),'PNG');
+  assert.deepEqual([png.readUInt32BE(16),png.readUInt32BE(20)],[1200,630]);
+  assert.ok(fs.existsSync(path.join(root,'scripts/og/olympics.html')),'keep the source so the card can be baked again');
+});
