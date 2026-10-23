@@ -47,6 +47,7 @@ window.STATS={
   if(!s.id)return;
   var h=location.hostname;
   if(h==="localhost"||h==="127.0.0.1"||h==="")return;
+  try{ if(localStorage.getItem("umami.disabled"))return; }catch(e){}  /* 본인 기기는 안 셈 — /notrack/ 에서 켬(CLAUDE.md 5번) */
   var t=document.createElement("script");
   t.defer=true; t.src=s.src;
   t.setAttribute("data-website-id",s.id);

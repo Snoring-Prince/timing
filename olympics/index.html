@@ -33,6 +33,7 @@
 <script src="presentation.js?v=2026-10-23-characters" defer></script><script src="app.js?v=2026-10-23-share" defer></script>
 <script>
 (function(){if(["localhost","127.0.0.1",""].includes(location.hostname))return;
+try{if(localStorage.getItem("umami.disabled"))return;}catch(e){} /* 본인 기기는 안 셈 — /notrack/ 에서 켬(CLAUDE.md 5번) */
 const s=document.createElement("script");s.defer=true;s.src="https://cloud.umami.is/script.js";
 s.setAttribute("data-website-id","41e07a57-a87c-403b-bdf8-e12d911457b6");document.head.appendChild(s);})();
 </script>

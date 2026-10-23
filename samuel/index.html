@@ -32,6 +32,7 @@ window.STATS={id:"41e07a57-a87c-403b-bdf8-e12d911457b6",src:"https://cloud.umami
 (function loadStats(){
   var s=window.STATS||{},h=location.hostname;
   if(!s.id||h==="localhost"||h==="127.0.0.1"||h==="")return;
+  try{ if(localStorage.getItem("umami.disabled"))return; }catch(e){}  /* 본인 기기는 안 셈 — /notrack/ 에서 켬(CLAUDE.md 5번) */
   var t=document.createElement("script");t.defer=true;t.src=s.src;
   t.setAttribute("data-website-id",s.id);document.head.appendChild(t);
 })();

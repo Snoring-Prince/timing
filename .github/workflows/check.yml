@@ -30,6 +30,10 @@ on:
       - "scripts/tests/test_dashboard.py"
       - "scripts/tests/dashboard.test.cjs"
       - "scripts/tests/home.test.cjs"
+      - "scripts/tests/stats.test.cjs"
+      - "notrack/**"
+      - "titans/index.html"
+      - "titans/13f/index.html"
       - "assets/home/**"
       - "scripts/tests/live.test.cjs"
       - "scripts/tests/test_dashboard_publish.py"
@@ -68,7 +72,7 @@ jobs:
         run: python -m unittest discover -s scripts/tests -p 'test_olympics.py'
 
       - name: 대시보드 날짜·결측·실시간 갱신 검사
-        run: node --test scripts/tests/dashboard.test.cjs scripts/tests/live.test.cjs scripts/tests/home.test.cjs scripts/tests/samuel.test.cjs scripts/tests/olympics.test.cjs
+        run: node --test scripts/tests/dashboard.test.cjs scripts/tests/live.test.cjs scripts/tests/home.test.cjs scripts/tests/samuel.test.cjs scripts/tests/olympics.test.cjs scripts/tests/stats.test.cjs
 
       - name: 설명 글 숫자 대조
         run: python scripts/check_about.py
