@@ -5,8 +5,10 @@
 ---
 
 ## 2026-10-23 · Claude · (이 PR)
-Codex PR #146·#147(투자 올림픽 화면 개편) 머지 뒤 확인 · 영어 비교 문장 띄어쓰기 수정
-- 파일: olympics/app.js(한 글자)·index.html(캐시 표식) · scripts/tests/olympics-presentation.test.cjs(+1건) · CLAUDE.md(0-4 백업 순서·9-3-3·구조 트리·머리 날짜) · 다음에 할 일.md · 이 일지
+Codex PR #146·#147(투자 올림픽 화면 개편) 머지 뒤 확인 · 영어 비교 문장 띄어쓰기 수정 · 올림픽 전용 공유 그림
+- 파일: olympics/app.js(한 글자 · 공유 그림 한 줄)·index.html(캐시 표식 · og:image)·og.png(새 그림) · scripts/og/olympics.html·bake.cjs(원본·굽는 도구) · scripts/tests/olympics-presentation.test.cjs(+1건)·seo.test.cjs(+1건) · CLAUDE.md(0-4 백업 순서·6-2 공유 카드·9-3-3·구조 트리·머리 날짜) · 다음에 할 일.md(4번 새로) · 이 일지
+- 공유 그림: 사용자가 트래픽 개선안 중 1번을 고름. 미리보기 수집기는 `?lang=` 과 무관하게 정적 HTML 을 읽으므로 한영 한 장 · 숫자 없음. CLAUDE.md 6-2 의 "`?lang=ko` 로 공유하라"는 틀린 안내도 바로잡음.
+- 규칙: 이 환경에서 jsdelivr 막힘 — Pretendard 는 npm 패키지에서 받아 로컬에 깔고 구움(CLAUDE.md 6-2).
 - 결과(PR #145): 머지됨. 10-20 주가 갱신의 새 요약 단계 둘 초록·티커 변화 없어 커밋 없음·`--check` 통과(예약 확인 끝).
 - 확인: #146·#147 PR 검사·Pages 배포 초록. 로컬 Chromium 한영 × 5폭에서 다섯 사람 흐름 전부 정상(CLAUDE.md 9-3-3 머지 뒤 확인).
 - 규칙: codex.md 의 "(이 PR)" 두 줄(#146·#147)은 Codex 일지라 손대지 않음.
