@@ -5,6 +5,14 @@
 ---
 
 ## 2026-10-23 · Claude · (이 PR)
+`/notrack/` 을 열면 그 브라우저를 방문 통계에서 뺌 · 세 번째 언어 보류 기록
+- 파일: notrack/index.html(새) · 통계 부르는 6화면(index·timing·titans·titans/13f·samuel·olympics)에 한 줄씩 · scripts/tests/stats.test.cjs(새, 7건) · .github/workflows/check.yml(검사 연결) · CLAUDE.md(5번·6번·구조 트리·머리 날짜) · 다음에 할 일.md(5번 새로) · 이 일지
+- 결과(PR #148): 머지됨.
+- 근거: 사용자 Umami 캡처(10월 1~23일 방문자 44 · 출처 있는 방문 4 · 구글 0 · 한국 19 미국 11) — 본인 방문이 섞여 판단 불가, 언어 추가 근거 없음.
+- 규칙: `cloud.umami.is` 가 이 환경에서 막혀 Umami 원본은 못 봄 — 우리 코드가 직접 Umami 를 안 부르게 해서 그쪽 동작에 기대지 않음.
+- 넘김: 투자자별 화면 8개는 원래 통계를 안 부름 — 붙일지는 사용자 판단(할 일 6번).
+
+## 2026-10-23 · Claude · PR #148
 Codex PR #146·#147(투자 올림픽 화면 개편) 머지 뒤 확인 · 영어 비교 문장 띄어쓰기 수정 · 올림픽 전용 공유 그림
 - 파일: olympics/app.js(한 글자 · 공유 그림 한 줄)·index.html(캐시 표식 · og:image)·og.png(새 그림) · scripts/og/olympics.html·bake.cjs(원본·굽는 도구) · scripts/tests/olympics-presentation.test.cjs(+1건)·seo.test.cjs(+1건) · CLAUDE.md(0-4 백업 순서·6-2 공유 카드·9-3-3·구조 트리·머리 날짜) · 다음에 할 일.md(4번 새로) · 이 일지
 - 공유 그림: 사용자가 트래픽 개선안 중 1번을 고름. 미리보기 수집기는 `?lang=` 과 무관하게 정적 HTML 을 읽으므로 한영 한 장 · 숫자 없음. CLAUDE.md 6-2 의 "`?lang=ko` 로 공유하라"는 틀린 안내도 바로잡음.

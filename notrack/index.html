@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>이 기기 방문 세지 않기 · Don't count this device — itpaidoff.com</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<!-- 사이트 주인이 자기 기기를 방문 통계(Umami)에서 빼는 곳입니다(CLAUDE.md 5번).
+     열면 이 브라우저에 umami.disabled 를 적고, 여섯 화면의 통계 불러오기 코드가 그 표시를 보면 Umami 를 아예 안 불러옵니다.
+     이 페이지 자체는 통계를 불러오지 않고, 사이트맵에도 없습니다. -->
+<style>
+:root{--ink:#182132;--muted:#475765;--rule:#e5e8ee;--tint:#f3f5f8;--ok:#27634d;--mark:#224ddb}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font:15px/1.65 "Pretendard Variable",Pretendard,system-ui,sans-serif}
+.wrap{max-width:620px;margin:0 auto;padding:28px 20px 56px}
+.brand{display:inline-flex;align-items:center;gap:8px;font-size:22px;font-weight:800;letter-spacing:-1px;color:var(--ink);text-decoration:none}
+.brand i{display:grid;place-items:center;width:24px;height:24px;border-radius:6px;background:var(--mark);color:#fff;font-style:normal;font-size:16px}
+h1{margin:32px 0 4px;font-size:26px;line-height:1.3;letter-spacing:-.6px}
+.en{color:var(--muted)}
+h1 .en{display:block;font-size:17px;font-weight:600;letter-spacing:0}
+.state{margin:24px 0;padding:18px 20px;border-radius:14px;background:var(--tint)}
+.state p{margin:0}
+.state p+p{margin-top:2px}
+.state .big{font-size:18px;font-weight:750}
+.state[data-state="off"]{background:#eaf3ee}
+.state[data-state="off"] .big{color:var(--ok)}
+button{min-height:44px;padding:10px 18px;border:1px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink);font:inherit;font-weight:650;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+ul{margin:28px 0 0;padding:0;list-style:none;border-top:1px solid var(--rule)}
+li{padding:12px 0;border-bottom:1px solid var(--rule)}
+li span{display:block}
+.back{display:inline-block;margin-top:28px;color:var(--ink)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main class="wrap">
+<a class="brand" href="/"><i aria-hidden="true">↗</i>itpaidoff.</a>
+<h1>이 기기의 방문 세지 않기<span class="en">Don't count this device</span></h1>
+<p>이 페이지를 열면 지금 쓰는 브라우저의 방문이 방문 통계에서 빠집니다.<br><span class="en">Opening this page stops this browser's visits from being counted in the visitor statistics.</span></p>
+
+<section class="state" id="state" aria-live="polite">
+  <div data-show="off" hidden>
+    <p class="big">✓ 이 브라우저는 이제 통계에서 빠집니다.</p>
+    <p class="en">This browser is no longer counted.</p>
+  </div>
+  <div data-show="on" hidden>
+    <p class="big">이 브라우저의 방문은 통계에 세어집니다.</p>
+    <p class="en">Visits from this browser are counted.</p>
+  </div>
+  <div data-show="na" hidden>
+    <p class="big">이 브라우저는 설정을 기억하지 못합니다.</p>
+    <p class="en">This browser cannot keep the setting. A private window, or blocked site data, does this.</p>
+    <p>사생활 보호(시크릿) 창이거나 사이트 데이터 저장이 막혀 있을 때 그렇습니다.</p>
+  </div>
+  <noscript><p class="big">자바스크립트가 꺼져 있어 설정할 수 없습니다.</p><p class="en">JavaScript is off, so the setting cannot be changed.</p></noscript>
+</section>
+
+<button type="button" id="count-again" data-show="off" hidden>다시 세기 · Count this browser again</button>
+<button type="button" id="stop-counting" data-show="on" hidden>통계에서 빼기 · Stop counting this browser</button>
+
+<ul>
+  <li><span>기기와 브라우저마다 한 번씩 여세요. PC 크롬, 휴대폰 사파리, 카카오톡 안에서 열리는 브라우저는 서로 따로입니다.</span><span class="en">Open it once in each browser on each device. Desktop Chrome, mobile Safari and the browser inside a messaging app are all separate.</span></li>
+  <li><span>아이폰·맥의 사파리는 이 사이트를 7일 넘게 안 열면 설정을 지울 수 있습니다. 통계에 다시 잡히면 이 페이지를 다시 여세요.</span><span class="en">Safari may clear the setting after seven days without a visit. If you show up in the statistics again, reopen this page.</span></li>
+  <li><span>지난 방문 기록은 지워지지 않습니다. 지금부터 빠집니다.</span><span class="en">Past visits stay in the statistics. Only future visits are left out.</span></li>
+</ul>
+<a class="back" href="/">← itpaidoff.com</a>
+</main>
+<script>
+(function(){
+  var KEY="umami.disabled",box=document.getElementById("state");
+  function read(){try{return localStorage.getItem(KEY)?"off":"on";}catch(e){return "na";}}
+  function paint(){
+    var st=read();box.setAttribute("data-state",st);
+    var nodes=document.querySelectorAll("[data-show]");
+    for(var i=0;i<nodes.length;i++)nodes[i].hidden=nodes[i].getAttribute("data-show")!==st;
+  }
+  function exclude(off){try{if(off)localStorage.setItem(KEY,"1");else localStorage.removeItem(KEY);}catch(e){}paint();}
+  function flip(off,next){exclude(off);var n=document.getElementById(next);if(!n.hidden&&n.focus)n.focus();} /* 누른 단추가 숨으므로 초점을 새 단추로 */
+  document.getElementById("count-again").addEventListener("click",function(){flip(false,"stop-counting");});
+  document.getElementById("stop-counting").addEventListener("click",function(){flip(true,"count-again");});
+  exclude(true);   /* 여는 것이 곧 빼달라는 뜻입니다. 화면은 실제로 적힌 값을 다시 읽어 그립니다. */
+})();
+</script>
+</body>
+</html>
