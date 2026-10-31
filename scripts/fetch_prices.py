@@ -149,6 +149,55 @@ def mark_matches(values, splits, mark, tolerance=.02):
     return bool(got) and abs(got[1]/mark[1]-1) <= tolerance
 
 
+def align_splits(values, splits, smallest=5, tolerance=1.35):
+    """야후가 분할을 **기록해 놓고 그 앞 가격은 안 고쳐** 보낼 때가 있다.
+
+    ENLV 2026-10-27 1:16 병합 — 기록에는 올라왔는데 그 전 종가가 병합 전 값 그대로
+    와서, 평일 갱신이 열흘치를 덮으며 차트에 가짜 −94%·+1,380% 가 생겼고 토요일
+    전체 확인은 공시 가격과 16배 어긋났다(2026-10-28~31). 고치지 않은 역사는 분할
+    날 근처에 **하루에 꼭 분할 배수만큼의 절벽**이 있다. 그러면 그 앞 종가에 배수를
+    곱해 나머지와 같은 기준으로 맞춘다. 하루에 다섯 배 넘게 뛰거나 빠지는 시세는
+    분할 말고는 없다고 보고 그보다 작은 분할(2:1·3:2)은 건드리지 않는다 — 그만한
+    하루 등락은 실제로 있다. 절벽이 없으면(정상) 한 값도 안 바뀐다.
+
+    **그 앞에 반대 방향 절벽이 있으면 손대지 않는다.** 앞 역사 전체가 아니라 며칠만
+    빈 '섬'이다 — SKE 는 2017-10-20~24 사흘만 10분의 1 값이고(야후 원본) 그 앞은
+    멀쩡하다. 이 규칙 없이 돌렸더니 그 앞 6년치를 10배로 키울 뻔했다(저장된 373종목에
+    돌려 보다 잡음). 저장본처럼 이미 섞인 자료도 같은 모양이라 여기서 건드리지 않고,
+    basis_shift 가 전체를 다시 받게 한다."""
+    days, closes, notes = [d for d, _ in values], [c for _, c in values], []
+    for when, ratio in sorted(splits.items()):
+        num, den = (float(x) for x in ratio.split(":"))
+        if num <= 0 or den <= 0:
+            continue
+        jump = den/num          # 안 고친 역사에서 분할 날 종가가 뛰는 배수
+        if max(jump, 1/jump) < smallest:
+            continue
+        lo = (dt.date.fromisoformat(when)-dt.timedelta(days=7)).isoformat()
+        hi = (dt.date.fromisoformat(when)+dt.timedelta(days=7)).isoformat()
+        # 기록된 날짜와 실제 절벽이 하루 이틀 어긋난다(ENLV 기록 10-27 · 절벽 10-23→10-26).
+        near = [(abs(math.log(closes[i+1]/closes[i]/jump)), i) for i in range(len(days)-1)
+                if lo <= days[i] and days[i+1] <= hi]
+        miss, cut = min(near, default=(math.inf, -1))
+        island = any(abs(math.log(closes[i+1]/closes[i]*jump)) <= math.log(tolerance) for i in range(cut))
+        if miss <= math.log(tolerance) and not island:
+            closes[:cut+1] = [round(c*jump, 4) for c in closes[:cut+1]]
+            notes.append(f"history was not adjusted for the {when} {ratio} split — "
+                         f"closes up to {days[cut]} ×{jump:g}")
+    return list(zip(days, closes)), notes
+
+
+def basis_shift(saved, values, tolerance=1.25):
+    """평일에 다시 받은 열흘이 저장된 종가와 **다른 기준**인가. 몇 센트 정정은
+    덮어써도 되지만, 같은 날 값이 25% 넘게 다르면 정정이 아니라 기준이 바뀐 것이다.
+    그대로 덮으면 15년 중 열흘만 다른 기준이 된다(ENLV 2026-10-28)."""
+    old = dict(saved or [])
+    for day, close in values:
+        if old.get(day) and not 1/tolerance <= close/old[day] <= tolerance:
+            return day, old[day], close
+    return None
+
+
 class Unpriced(ValueError):
     """고장이 아니라 **답이 '없다'로 온 것** — 번호로도 이름으로도 짝이 없거나,
     시세 쪽이 그 티커를 모른다. 매일 빨간불로 울리면 진짜 고장이 묻히므로
@@ -461,10 +510,20 @@ def collect(required, previous, now, full=False, known=None, since=None, quarter
                     values, splits = download(dt.date.fromisoformat(need) if deep else start, True)
                 else:
                     splits = old.get("splits", {}) | splits
-            if refresh and not deep:
+            def outside(events):
                 # 이 응답에는 창 밖 분할이 없다. 지우지 말고 책에서 되살린다.
-                splits = {d: v for d, v in old.get("splits", {}).items()
-                          if d < start.isoformat()} | splits
+                return {d: v for d, v in old.get("splits", {}).items() if d < start.isoformat()} | events
+            if refresh and not deep:
+                splits = outside(splits)
+            values, aligned = align_splits(values, splits)
+            if not refresh and basis_shift(old.get("values"), values):
+                refresh = True
+                values, splits = download(dt.date.fromisoformat(need) if deep else start, True)
+                if not deep:
+                    splits = outside(splits)
+                values, aligned = align_splits(values, splits)
+            for note in aligned:
+                print(f"{cusip} {ticker}: {note}", flush=True)
             if (now.astimezone(NY).date()-dt.date.fromisoformat(values[-1][0])).days > 7:
                 raise ValueError("last closing price is more than seven days old")
             mark = (quarter_marks or {}).get(cusip, ("", 0))

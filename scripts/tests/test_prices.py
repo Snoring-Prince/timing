@@ -661,3 +661,84 @@ class UnpricedTests(unittest.TestCase):
                 run()
             self.assertIn("123456100", json.loads(out.read_text())["unpriced"])
             run()   # 다음 날: 같은 종목이면 초록불
+
+
+# ENLV — 야후가 2026-10-27 1:16 병합을 기록해 놓고 그 앞 종가는 안 고쳐 보냈다.
+# 아래 '맞는 값'은 야후가 10-27 에 처음 보낸 그대로(저장소 이력 1ee8e1e)이고,
+# '안 고친 값'은 10-23 까지를 16으로 나눈 것 — 6월 30일이 8.2485 가 되어
+# 토요일 대조가 0.0344 로 걸린 바로 그 모양이다(2026-10-31 알림).
+ENLV_OK = [("2026-06-29", 139.2), ("2026-06-30", 131.976), ("2026-07-01", 129.984), ("2026-07-08", 115.32),
+           ("2026-07-09", 118.4), ("2026-07-10", 109.76), ("2026-07-28", 35.84), ("2026-09-01", 20.48),
+           ("2026-10-01", 6.7632), ("2026-10-15", 3.5872), ("2026-10-16", 3.28), ("2026-10-19", 3.3184),
+           ("2026-10-20", 3.5792), ("2026-10-21", 3.2352), ("2026-10-22", 3.1872), ("2026-10-23", 2.7744),
+           ("2026-10-26", 2.5648), ("2026-10-28", 2.61), ("2026-10-29", 2.54), ("2026-10-30", 2.5)]
+ENLV_RAW = [(d, round(c/16, 4)) if d <= "2026-10-23" else (d, c) for d, c in ENLV_OK]
+ENLV_SPLITS = (("2026-07-09", 1.0, 15.0), ("2026-10-27", 1.0, 16.0))
+ENLV_EVENTS = {"2026-07-09": "1.0:15.0", "2026-10-27": "1.0:16.0"}
+
+
+def bars(symbol, rows, splits=()):
+    stamp = lambda d: int(dt.datetime.fromisoformat(d+"T13:30:00+00:00").timestamp())
+    return {"chart": {"result": [{"meta": {"currency": "USD", "symbol": symbol},
+        "timestamp": [stamp(d) for d, _ in rows], "indicators": {"quote": [{"close": [c for _, c in rows]}]},
+        "events": {"splits": {str(i): {"date": stamp(d), "numerator": n, "denominator": m}
+                              for i, (d, n, m) in enumerate(splits)}}}], "error": None}}
+
+
+def close_to(test, got, want):
+    test.assertEqual([d for d, _ in got], [d for d, _ in want])
+    for (day, a), (_, b) in zip(got, want):
+        test.assertAlmostEqual(a/b, 1, places=4, msg=day)
+
+
+class SplitBasisTests(unittest.TestCase):
+    def test_history_left_unadjusted_for_a_big_split_is_brought_onto_one_basis(self):
+        got, notes = p.align_splits(ENLV_RAW, ENLV_EVENTS)
+        close_to(self, got, ENLV_OK)
+        self.assertEqual(len(notes), 1)
+        self.assertIn("2026-10-27 1.0:16.0", notes[0])
+        # 고친 뒤에는 분기말 대조가 공시(0.5499)와 맞는다. 고치기 전 값이 알림의 0.0344 다.
+        self.assertAlmostEqual(p.mark_close(ENLV_RAW, ENLV_EVENTS, ("2026-06-30", 0.5499))[1], 0.0344, places=4)
+        self.assertTrue(p.mark_matches(got, ENLV_EVENTS, ("2026-06-30", 0.5499)))
+
+    def test_consistent_history_islands_and_small_splits_are_left_alone(self):
+        self.assertEqual(p.align_splits(ENLV_OK, ENLV_EVENTS), (ENLV_OK, []))
+        # SKE 야후 원본 그대로 — 2017-10-20~24 사흘만 10분의 1. 그 앞을 10배로 키우면 안 된다.
+        ske = [("2017-10-18", 1.88), ("2017-10-19", 1.8), ("2017-10-20", 0.18), ("2017-10-23", 0.18),
+               ("2017-10-24", 0.18), ("2017-10-25", 1.704), ("2017-10-26", 1.704)]
+        self.assertEqual(p.align_splits(ske, {"2017-10-20": "1.0:10.0"}), (ske, []))
+        # 2:1 은 하루 −50% 가 실제로 있을 수 있어 맞추지 않는다.
+        halved = [("2026-09-16", 100), ("2026-09-17", 50.5)]
+        self.assertEqual(p.align_splits(halved, {"2026-09-17": "2:1"}), (halved, []))
+
+    def test_a_weekday_window_on_another_basis_is_not_merged(self):
+        self.assertIsNone(p.basis_shift(ENLV_OK, [("2026-10-28", 2.62), ("2026-10-29", 2.55)]))
+        self.assertEqual(p.basis_shift(ENLV_OK, [("2026-10-16", 0.205)]), ("2026-10-16", 3.28, 0.205))
+
+    def test_saturday_check_passes_when_yahoo_forgot_to_adjust_the_history(self):
+        required = {"M4130Y106": {"name": "Enlivex Ltd", "class": "Common Stock"}}
+        def resolve(cusips, required, known, unverified=None, outage=None):
+            unverified.add("M4130Y106")     # 이름으로 붙인 해외 종목 — 공시 가격과 대조를 거친다
+            return {"M4130Y106": "ENLV"}
+        with patch.object(p, "resolve", side_effect=resolve), \
+                patch.object(p, "request", return_value=bars("ENLV", ENLV_RAW, ENLV_SPLITS)), \
+                patch.object(p.time, "sleep"), patch("builtins.print"):
+            result, errors = p.collect(required, {}, dt.datetime(2026, 10, 31, 8, 30, tzinfo=p.UTC),
+                                       quarter_marks={"M4130Y106": ("2026-06-30", 0.5499)})
+        self.assertEqual((errors, result.get("unpriced")), ([], None))
+        close_to(self, result["series"]["M4130Y106"]["values"], ENLV_OK)
+
+    def test_a_weekday_run_heals_a_window_saved_on_the_old_basis(self):
+        # 10-28 평일 갱신이 열흘을 덮은 저장본 그대로 — 10-16~23 만 병합 전 값이다.
+        broken = [[d, c/16 if "2026-10-16" <= d <= "2026-10-23" else c] for d, c in ENLV_OK if d <= "2026-10-29"]
+        old = {"series": {"M4130Y106": {"ticker": "ENLV", "values": broken, "splits": ENLV_EVENTS,
+                                        "splitsFrom": "2011-09-22"}}}
+        window = [(d, c) for d, c in ENLV_RAW if d >= "2026-10-19"]
+        replies = [bars("ENLV", window, ENLV_SPLITS[1:]), bars("ENLV", ENLV_RAW, ENLV_SPLITS)]
+        with patch.object(p, "request", side_effect=replies) as req, patch.object(p.time, "sleep"), \
+                patch("builtins.print"):
+            result, errors = p.collect({"M4130Y106": {"name": "Enlivex Ltd", "class": "Common Stock"}}, old,
+                                       dt.datetime(2026, 11, 2, 22, tzinfo=p.UTC))
+        self.assertEqual(errors, [])
+        self.assertEqual(req.call_count, 2)     # 열흘이 기준이 달라 전체를 다시 받았다
+        close_to(self, result["series"]["M4130Y106"]["values"], ENLV_OK)
