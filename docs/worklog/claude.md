@@ -4,7 +4,14 @@
 
 ---
 
-## 2026-10-23 · Claude · (이 PR)
+## 2026-10-31 · Claude · (이 PR)
+ENLV 주가 갱신 알림 — 야후가 병합 기록만 올리고 그 앞 가격을 안 고친 자료를 맞춤
+- 파일: scripts/fetch_prices.py(`align_splits`·`basis_shift`) · scripts/tests/test_prices.py(+5건) · CLAUDE.md(9-3-1·머리 날짜) · 이 일지
+- 결과(PR #149): 머지됨.
+- 확인: Probe Splits(run 41246491953)로 병합 기록 2건 확인 · 저장된 373종목 무변화 · 오늘 상태 재현 0.0344→0.5499.
+- 넘김: 머지 뒤 첫 평일 주가 갱신(11-03 예정)에서 ENLV 10-16~23 이 고쳐지고 `unpriced` 에서 빠지는지 확인.
+
+## 2026-10-23 · Claude · PR #149
 `/notrack/` 을 열면 그 브라우저를 방문 통계에서 뺌 · 세 번째 언어 보류 기록
 - 파일: notrack/index.html(새) · 통계 부르는 6화면(index·timing·titans·titans/13f·samuel·olympics)에 한 줄씩 · scripts/tests/stats.test.cjs(새, 7건) · .github/workflows/check.yml(검사 연결) · CLAUDE.md(5번·6번·구조 트리·머리 날짜) · 다음에 할 일.md(5번 새로) · 이 일지
 - 결과(PR #148): 머지됨.
