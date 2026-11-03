@@ -205,6 +205,15 @@ class Unpriced(ValueError):
     분기말 가격으로만 그린다."""
 
 
+class EmptyChart(ValueError):
+    """시세 쪽이 그 기호에 가격을 **하나도** 안 갖고 있다는 빈 응답(HTTP 200).
+
+    2026-11-03 STKL(SunOpta): 4주 동안 404 이던 기호가 이 모양으로 바뀌었다(러너 원문) —
+    종가 칸이 아예 없고(`timestamp` 없음 · `quote:[{}]`), 통화·상장일·마지막 거래
+    시각이 전부 null 이다. 404 와 같은 말이라 같은 길로 보낸다. 통화가 비었다고
+    '기호/통화 불일치'로 읽으면 처음 보는 고장처럼 **매일** 빨간불이 된다."""
+
+
 def resolve(cusips, required, known, unverified=None, outage=None):
     result = {}
     for offset in range(0, len(cusips), 10):
@@ -389,8 +398,12 @@ def parse_chart(payload, ticker, now):
         raise ValueError(f"{ticker}: missing chart")
     row = result[0]
     meta = row["meta"]
-    if meta.get("currency") != "USD" or meta.get("symbol", "").upper() != ticker.upper():
-        raise ValueError(f"{ticker}: symbol/currency mismatch")
+    if not row.get("timestamp") and not meta.get("currency"):
+        raise EmptyChart(f"{ticker}: price source returned no prices")
+    if meta.get("currency") != "USD" or str(meta.get("symbol") or "").upper() != ticker.upper():
+        # 무엇이 왔는지 남긴다 — 문구만 있으면 정찰을 따로 돌려 봐야 안다(2026-11-03 STKL).
+        raise ValueError(f"{ticker}: symbol/currency mismatch "
+                         f"(got symbol {meta.get('symbol')!r}, currency {meta.get('currency')!r})")
     stamps = row.get("timestamp", [])
     closes = row["indicators"]["quote"][0]["close"]
     if len(stamps) != len(closes):
@@ -482,7 +495,14 @@ def collect(required, previous, now, full=False, known=None, since=None, quarter
                     if exc.code == 404 and not old.get("values"):
                         raise Unpriced(f"price source does not know {ticker}") from exc
                     raise
-                parsed = parse_chart(payload, ticker, now)
+                try:
+                    parsed = parse_chart(payload, ticker, now)
+                except EmptyChart as exc:
+                    # 404 와 같은 규칙: 한 번도 받은 적 없는 티커면 알려진 상태,
+                    # 받아 둔 종가가 있던 티커가 비면 고장으로 남긴다.
+                    if not old.get("values"):
+                        raise Unpriced(f"price source does not know {ticker}") from exc
+                    raise
                 first_trade = payload["chart"]["result"][0]["meta"].get("firstTradeDate")
                 if verify and first_trade:
                     expected = max(day, from_epoch(first_trade).astimezone(NY).date())

@@ -643,6 +643,32 @@ class UnpricedTests(unittest.TestCase):
         self.assertEqual((len(errors), result.get("unpriced")), (1, None))
         self.assertEqual(result["series"], old["series"])
 
+    def test_an_empty_chart_is_the_same_answer_as_a_404(self):
+        # 2026-11-03 STKL — 4주 동안 404 이던 기호에 야후가 보낸 원문 그대로(러너 정찰).
+        empty = json.loads(STKL_EMPTY)
+        now = dt.datetime(2026, 11, 3, 10, tzinfo=p.UTC)
+        with self.assertRaises(p.EmptyChart):
+            p.parse_chart(empty, "STKL", now)
+        required = {"8676EP108": {"name": "SUNOPTA INC", "class": "COMMON STOCK"}}
+        mapping = [{"data": [{"ticker": "STKL", "marketSector": "Equity", "exchCode": "US"}]}]
+        with patch.object(p, "request", side_effect=[mapping, empty]), patch.object(p.time, "sleep"):
+            result, errors = p.collect(required, {}, now)
+        self.assertEqual(errors, [])
+        self.assertEqual(result["unpriced"]["8676EP108"],
+                         {"ticker": "STKL", "reason": "price source does not know STKL"})
+        # 받아 둔 종가가 있던 티커가 비어 오면 알려진 상태가 아니라 고장이다.
+        old = {"series": {"8676EP108": {"ticker": "STKL", "values": [["2026-10-30", 1]], "splits": {}}}}
+        with patch.object(p, "request", return_value=empty), patch.object(p.time, "sleep"):
+            result, errors = p.collect(required, old, now)
+        self.assertEqual((len(errors), result.get("unpriced")), (1, None))
+        self.assertEqual(result["series"], old["series"])
+
+    def test_a_mismatch_says_what_came_back(self):
+        with self.assertRaises(ValueError) as caught:
+            p.parse_chart(chart(currency="CAD", symbol="SOY.TO"), "STKL", dt.datetime(2026, 9, 19, 1, tzinfo=p.UTC))
+        self.assertIn("got symbol 'SOY.TO', currency 'CAD'", str(caught.exception))
+        self.assertNotIsInstance(caught.exception, p.EmptyChart)
+
     def test_a_new_unpriced_holding_turns_the_run_red_once(self):
         with tempfile.TemporaryDirectory() as tmp:
             out, folder = Path(tmp)/"prices.json", Path(tmp)/"prices"
@@ -661,6 +687,18 @@ class UnpricedTests(unittest.TestCase):
                 run()
             self.assertIn("123456100", json.loads(out.read_text())["unpriced"])
             run()   # 다음 날: 같은 종목이면 초록불
+
+
+# STKL(SunOpta) — 2026-11-03 러너 정찰 원문 그대로(probe-splits 41614200482, 1d).
+STKL_EMPTY = ('{"chart":{"result":[{"meta":{"currency":null,"symbol":"STKL","exchangeName":"NMS",'
+              '"fullExchangeName":"NasdaqGS","instrumentType":"EQUITY","firstTradeDate":null,'
+              '"regularMarketTime":null,"hasPrePostMarketData":true,"gmtoffset":-18000,"timezone":"EST",'
+              '"exchangeTimezoneName":"America/New_York","fulldayChange":0.0,"fulldayChangePercent":0.0,'
+              '"priceHint":2,"currentTradingPeriod":{"pre":{"timezone":"EST","end":1793716200,'
+              '"start":1793696400,"gmtoffset":-18000},"regular":{"timezone":"EST","end":1793739600,'
+              '"start":1793716200,"gmtoffset":-18000},"post":{"timezone":"EST","end":1793754000,'
+              '"start":1793739600,"gmtoffset":-18000}},"dataGranularity":"1d","range":"",'
+              '"validRanges":["1d","5d"]},"indicators":{"quote":[{}],"adjclose":[{}]}}],"error":null}}')
 
 
 # ENLV — 야후가 2026-10-27 1:16 병합을 기록해 놓고 그 앞 종가는 안 고쳐 보냈다.
