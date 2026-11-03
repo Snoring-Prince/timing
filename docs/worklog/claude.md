@@ -4,7 +4,14 @@
 
 ---
 
-## 2026-10-31 · Claude · (이 PR)
+## 2026-11-03 · Claude · (이 PR)
+STKL 주가 갱신 알림 — 야후가 404 대신 보낸 빈 응답을 같은 알려진 상태로
+- 파일: scripts/fetch_prices.py(`EmptyChart`·불일치 문구) · scripts/tests/test_prices.py(+2건) · scripts/probe_splits.py(기호·통화·짧은 원문을 찍음) · CLAUDE.md(9-3-1·오크트리 줄·머리 날짜) · 이 일지
+- 결과(PR #150): 머지됨. 11-03 평일 갱신에서 ENLV 10-16~23 복구·알림에서 빠짐 확인. 10-26 은 야후가 지금 안 보내 빠짐(CLAUDE.md 9-3-1).
+- 확인: Probe Splits 를 이 브랜치에서 두 번(41614072065 · 41614200482) — STKL 은 HTTP 200 빈 껍데기, 원문을 검사에 그대로 씀. Python 163건 통과.
+- 넘김: 머지 뒤 첫 주가 갱신에서 STKL 이 `처음 봄` 으로 한 번 더 울리고 그다음부터 `알려진 상태` 로만 찍히는지 확인.
+
+## 2026-10-31 · Claude · PR #150
 ENLV 주가 갱신 알림 — 야후가 병합 기록만 올리고 그 앞 가격을 안 고친 자료를 맞춤
 - 파일: scripts/fetch_prices.py(`align_splits`·`basis_shift`) · scripts/tests/test_prices.py(+5건) · CLAUDE.md(9-3-1·머리 날짜) · 이 일지
 - 결과(PR #149): 머지됨.

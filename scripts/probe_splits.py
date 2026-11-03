@@ -137,9 +137,22 @@ def main(argv=None):
                 # (2026-10-10 ET: 15년을 달라는 요청에 일봉 52개).
                 if stamps:
                     note = f"  ({day_of(stamps[0])} ~ {day_of(stamps[-1])})"
-                first = row["meta"].get("firstTradeDate")
+                meta = row["meta"]
+                first = meta.get("firstTradeDate")
                 if first:
                     note += "  상장 " + day_of(first)
+                # 수집기는 응답의 기호·통화가 물은 것과 다르면 거부한다(`symbol/currency
+                # mismatch`). 무엇이 왔는지 보려면 그 칸들을 그대로 찍어야 한다
+                # (2026-11-03 STKL: 4주 동안 404 였다가 다른 답이 왔다).
+                note += ("\n         meta " + " · ".join(
+                    f"{k}={meta.get(k)!r}" for k in ("symbol", "currency", "exchangeName",
+                                                       "fullExchangeName", "instrumentType",
+                                                       "longName", "shortName")
+                    if k in meta))
+                closes = (row.get("indicators", {}).get("quote") or [{}])[0].get("close") or []
+                tail = [(day_of(s), c) for s, c in zip(stamps, closes)][-3:]
+                if tail:
+                    note += "\n         마지막 종가 " + ", ".join(f"{d} {c}" for d, c in tail)
             except Exception as exc:  # noqa: BLE001
                 note = f"  ※ 읽지 못함: {exc}"
                 bad += 1
@@ -151,6 +164,10 @@ def main(argv=None):
                   f"바 {rows:>6,}개 · 분할 {len(days)}건{note}")
             for d in days:
                 print(f"         {d}")
+            # 짧은 응답(빈 껍데기·오류)은 원문을 통째로 찍는다 — 아티팩트는 개발 환경에서
+            # 못 받으므로, 검사를 짐작한 모양이 아니라 이 원문으로 짜기 위해서다.
+            if len(raw) < 2000:
+                print("         원문 " + raw.decode("utf-8", "replace"))
         # **간격을 바꿔도 분할 목록이 같은가** — 이 정찰을 만든 질문입니다.
         # 답은 "아니오"로 이미 나왔으므로(위 주석) 다름 자체는 실패가 아닙니다.
         # 실패로 두면 옛 분할이 있는 종목마다 빨간불이 떠서, 진짜 고장이
