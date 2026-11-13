@@ -3144,6 +3144,11 @@
   "desc": "Television Broadcasting Stations",
   "sic": "4833"
  },
+ "35661P": {
+  "cik": "2017526",
+  "desc": "Services-Medical Laboratories",
+  "sic": "8071"
+ },
  "35671D": {
   "cik": "831259",
   "desc": "Metal Mining",
@@ -6599,6 +6604,11 @@
   "desc": "Security Brokers, Dealers & Flotation Companies",
   "sic": "6211"
  },
+ "811033": {
+  "cik": "1853921",
+  "desc": "Biological Products, (No Diagnostic Substances)",
+  "sic": "2836"
+ },
  "81141R": {
   "cik": "1703399",
   "desc": "Services-Miscellaneous Business Services",
@@ -6623,6 +6633,11 @@
   "cik": "1693256",
   "desc": "Oil & Gas Field Services, NEC",
   "sic": "1389"
+ },
+ "81517B": {
+  "cik": "2094496",
+  "desc": "Finance Services",
+  "sic": "6199"
  },
  "81578P": {
   "cik": "1726445",
@@ -10274,6 +10289,11 @@
   "desc": "",
   "sic": ""
  },
+ "M8769Q": {
+  "cik": "818686",
+  "desc": "Pharmaceutical Preparations",
+  "sic": "2834"
+ },
  "M87915": {
   "cik": "928876",
   "desc": "Semiconductors & Related Devices",
@@ -10564,6 +10584,6 @@
   "desc": "",
   "sic": ""
  },
- "_asked": "2026-09-29",
+ "_asked": "2026-11-13",
  "_sources": "sec-sic3"
 }
