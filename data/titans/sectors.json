@@ -6804,6 +6804,11 @@
   "desc": "Radio Broadcasting Stations",
   "sic": "4832"
  },
+ "82982L": {
+  "cik": "1650729",
+  "desc": "Wholesale-Professional & Commercial Equipment & Supplies",
+  "sic": "5040"
+ },
  "82982V": {
   "cik": "",
   "desc": "",
@@ -10584,6 +10589,6 @@
   "desc": "",
   "sic": ""
  },
- "_asked": "2026-11-13",
+ "_asked": "2026-11-14",
  "_sources": "sec-sic3"
 }
