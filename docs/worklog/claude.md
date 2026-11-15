@@ -4,7 +4,14 @@
 
 ---
 
-## 2026-11-03 · Claude · (이 PR)
+## 2026-11-15 · Claude · (이 PR)
+ROKU·TATT 주가 갱신 알림 — 거래가 멈춘 종목은 알려진 상태로, 이미 받아 온 짝은 토요일 재대조를 10% 로
+- 파일: scripts/fetch_prices.py(`Halted`·`SETTLED`·알림 문구) · scripts/tests/test_prices.py(+4건) · CLAUDE.md(9-3-1·머리 날짜) · 이 일지
+- 결과(PR #151): 머지됨. 11-04 에 STKL 이 '처음 봄' 으로 한 번 울리고 그 뒤 조용함 확인.
+- 확인: Probe Splits(43700981942) — ROKU 마지막 거래 11-06 · OpenFIGI 번호 모름(11-14 로그). TATT 티커 정상, ARK 9월 값만 −3.41%. Python 전체 통과.
+- 넘김: 머지 뒤 11-17 평일 갱신에서 ROKU 가 `price source shows no trade since 2026-11-06 — 처음 봄` 으로 한 번 울리는지, 다음 토요일(11-21)에 TATT 가 안 울리는지 확인.
+
+## 2026-11-03 · Claude · PR #151
 STKL 주가 갱신 알림 — 야후가 404 대신 보낸 빈 응답을 같은 알려진 상태로
 - 파일: scripts/fetch_prices.py(`EmptyChart`·불일치 문구) · scripts/tests/test_prices.py(+2건) · scripts/probe_splits.py(기호·통화·짧은 원문을 찍음) · CLAUDE.md(9-3-1·오크트리 줄·머리 날짜) · 이 일지
 - 결과(PR #150): 머지됨. 11-03 평일 갱신에서 ENLV 10-16~23 복구·알림에서 빠짐 확인. 10-26 은 야후가 지금 안 보내 빠짐(CLAUDE.md 9-3-1).

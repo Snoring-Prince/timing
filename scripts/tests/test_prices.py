@@ -701,6 +701,29 @@ STKL_EMPTY = ('{"chart":{"result":[{"meta":{"currency":null,"symbol":"STKL","exc
               '"validRanges":["1d","5d"]},"indicators":{"quote":[{}],"adjclose":[{}]}}],"error":null}}')
 
 
+# ROKU — 2026-11-14 토요일 확인에서 걸렸다. 정찰 43700981942 가 받은 원문 그대로(1mo, 1,412바이트):
+# `regularMarketTime` 이 11-06 16:00(뉴욕)이고 같은 날 OpenFIGI 도 그 번호를 몰랐다 — 거래가 멈춘 종목.
+ROKU_STOPPED = ('{"chart":{"result":[{"meta":{"currency":"USD","symbol":"ROKU","exchangeName":"NMS","fullExchange'
+                'Name":"NasdaqGS","instrumentType":"EQUITY","firstTradeDate":1506605400,"regularMarketTime":17939'
+                '98800,"hasPrePostMarketData":true,"gmtoffset":-18000,"timezone":"EST","exchangeTimezoneName":"Am'
+                'erica/New_York","regularMarketPrice":160.52,"regularMarketChangePercent":0.094,"fulldayPrice":16'
+                '0.52,"fulldayChange":0.0,"fulldayChangePercent":0.0,"fiftyTwoWeekHigh":163.57,"fiftyTwoWeekLow":'
+                '78.53,"regularMarketDayHigh":162.265,"regularMarketDayLow":158.82,"regularMarketVolume":11521849'
+                ',"longName":"Roku, Inc.","shortName":"Roku, Inc.","chartPreviousClose":155.54,"priceHint":2,"cur'
+                'rentTradingPeriod":{"pre":{"timezone":"EST","start":1794560400,"end":1794580200,"gmtoffset":-180'
+                '00},"regular":{"timezone":"EST","start":1794580200,"end":1794603600,"gmtoffset":-18000},"post":{'
+                '"timezone":"EST","start":1794603600,"end":1794618000,"gmtoffset":-18000}},"dataGranularity":"1mo'
+                '","range":"","validRanges":["1d","5d","1mo","3mo","6mo","1y","2y","5y","10y","ytd","max"]},"time'
+                'stamp":[1793505600,1793998800],"indicators":{"quote":[{"open":[157.44000244140625,160.3699951171'
+                '875],"close":[160.52000427246094,160.52000427246094],"high":[163.57000732421875,162.264999389648'
+                '44],"low":[154.22999572753906,158.82000732421875],"volume":[27982700,11521849]}],"adjclose":[{"a'
+                'djclose":[160.52000427246094,160.52000427246094]}]}}],"error":null}}')
+# TATT — 실제 저장 종가(나스닥). ARK 9월 공시는 주당 36.2779 로 매겼다(9-30 종가 대비 −3.41%).
+TATT_CLOSES = [("2026-09-24", 37.39), ("2026-09-25", 37.57), ("2026-09-28", 35.64), ("2026-09-29", 35.42),
+               ("2026-09-30", 35.04), ("2026-10-01", 34.83), ("2026-10-02", 35.19)]
+TATT_MARK = ("2026-09-30", 36.2779)
+
+
 # ENLV — 야후가 2026-10-27 1:16 병합을 기록해 놓고 그 앞 종가는 안 고쳐 보냈다.
 # 아래 '맞는 값'은 야후가 10-27 에 처음 보낸 그대로(저장소 이력 1ee8e1e)이고,
 # '안 고친 값'은 10-23 까지를 16으로 나눈 것 — 6월 30일이 8.2485 가 되어
@@ -780,3 +803,86 @@ class SplitBasisTests(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(req.call_count, 2)     # 열흘이 기준이 달라 전체를 다시 받았다
         close_to(self, result["series"]["M4130Y106"]["values"], ENLV_OK)
+
+
+class StoppedAndSettledTests(unittest.TestCase):
+    ROKU = {"77543R102": {"name": "Roku Inc", "class": "COM CL A"}}
+    KEPT = [["2026-11-05", 160.37], ["2026-11-06", 160.52], ["2026-11-09", 160.52]]
+
+    def test_a_stopped_listing_is_a_known_state_and_keeps_its_closes(self):
+        stopped = json.loads(ROKU_STOPPED)
+        self.assertEqual(len(ROKU_STOPPED), 1412)
+        tuesday = dt.datetime(2026, 11, 17, 10, tzinfo=p.UTC)
+        with self.assertRaises(p.Halted) as caught:
+            p.parse_chart(stopped, "ROKU", tuesday)
+        self.assertEqual(caught.exception.since, "2026-11-06")
+        old = {"series": {"77543R102": {"ticker": "ROKU", "values": self.KEPT, "splits": {}}}}
+        with patch.object(p, "request", return_value=stopped), patch.object(p.time, "sleep"):
+            result, errors = p.collect(self.ROKU, old, tuesday)
+        self.assertEqual(errors, [])
+        self.assertEqual(result["unpriced"]["77543R102"],
+                         {"ticker": "ROKU", "reason": "price source shows no trade since 2026-11-06"})
+        self.assertEqual(result["series"], old["series"])     # 마지막 거래일까지의 종가는 그대로 둔다
+        # 같은 응답이 거래 중인 날짜에 오면(11-06 직후) 멈춘 것이 아니다 — 그대로 받는다.
+        values, _ = p.parse_chart(stopped, "ROKU", dt.datetime(2026, 11, 9, 10, tzinfo=p.UTC))
+        self.assertEqual(values[-1], ("2026-11-06", 160.52))
+
+    def test_a_trading_listing_with_stale_closes_is_still_an_error(self):
+        # 시세 쪽이 지금도 거래 중이라고 적는데 종가만 빈다(2026-10 ET) — 자료 고장, 매번 빨간불.
+        now = dt.datetime(2026, 11, 17, 10, tzinfo=p.UTC)
+        stale = bars("ET", [("2026-11-05", 20.4), ("2026-11-06", 20.5)])
+        stale["chart"]["result"][0]["meta"]["regularMarketTime"] = int((now-dt.timedelta(days=1)).timestamp())
+        old = {"series": {"29273V100": {"ticker": "ET", "values": [["2026-11-06", 20.5]], "splits": {}}}}
+        with patch.object(p, "request", return_value=stale), patch.object(p.time, "sleep"):
+            result, errors = p.collect({"29273V100": {"name": "Energy Transfer", "class": "COM"}}, old, now)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("more than seven days old", errors[0])
+        self.assertIsNone(result.get("unpriced"))
+
+    def run_tatt(self, saved, mark):
+        required = {"M8740S227": {"name": "TAT Technologies Ltd", "class": "ORD SHS"}}
+        def resolve(cusips, required, known, unverified=None, outage=None):
+            unverified.add("M8740S227")     # 이름으로 붙인 해외 종목 — 토요일마다 공시 가격과 대조한다
+            return {"M8740S227": "TATT"}
+        old = {"series": {"M8740S227": {"ticker": "TATT", "values": [list(x) for x in TATT_CLOSES],
+                                        "splits": {}, "splitsFrom": "2011-09-22"}}} if saved else {}
+        with patch.object(p, "resolve", side_effect=resolve), \
+                patch.object(p, "request", return_value=bars("TATT", TATT_CLOSES)), \
+                patch.object(p.time, "sleep"), patch("builtins.print") as said:
+            result, errors = p.collect(required, old, dt.datetime(2026, 10, 3, 9, tzinfo=p.UTC),
+                                       quarter_marks={"M8740S227": mark})
+        return result, errors, " ".join(str(c.args[0]) for c in said.call_args_list if c.args)
+
+    def test_a_ticker_already_priced_is_rechecked_against_a_wider_rule(self):
+        result, errors, said = self.run_tatt(True, TATT_MARK)
+        self.assertEqual((errors, result.get("unpriced")), ([], None))
+        self.assertIn("-3.41%", said)       # 넘어가도 얼마나 어긋났는지는 기록에 남긴다
+        # 처음 붙이는 짝이면 2% 그대로 — 정체를 가리는 자는 느슨해지지 않았다.
+        result, errors, _ = self.run_tatt(False, TATT_MARK)
+        self.assertEqual(errors, [])
+        self.assertIn("(-3.41%)", result["unpriced"]["M8740S227"]["reason"])
+        # 이미 받아 온 짝이라도 자료가 망가진 만큼 어긋나면(ENLV 병합 −93.75%) 그대로 걸린다.
+        result, errors, _ = self.run_tatt(True, ("2026-09-30", 35.04*16))
+        self.assertEqual(errors, [])
+        self.assertIn("M8740S227", result["unpriced"])
+
+    def test_the_alert_says_what_the_screen_draws(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out, folder = Path(tmp)/"prices.json", Path(tmp)/"prices"
+            book = {"quarters": [{"period": "2026-09-30", "holdings": [
+                {"cusip": "77543R102", "name": "Roku Inc", "shares": 1, "value": 1},
+                {"cusip": "8676EP108", "name": "SunOpta", "shares": 1, "value": 1}]}]}
+            inv = type("Inv", (), {"slug": "x", "output": out})()
+            got = ({"method": "split-adjusted-close",
+                    "series": {"77543R102": {"ticker": "ROKU", "values": self.KEPT, "splits": {}}},
+                    "unpriced": {"77543R102": {"ticker": "ROKU", "reason": "price source shows no trade since 2026-11-06"},
+                                 "8676EP108": {"ticker": "STKL", "reason": "price source does not know STKL"}}}, [])
+            with patch.object(p.registry, "load", return_value=[inv]), \
+                    patch.object(p, "books", return_value=[book]), patch.object(p, "OUT", out), \
+                    patch.object(p, "PER", folder), patch.object(p, "collect", return_value=got), \
+                    patch.object(p.sys, "argv", ["fetch_prices.py"]), patch("builtins.print"):
+                with self.assertRaises(SystemExit) as caught:
+                    p.main()
+        text = str(caught.exception.code)
+        self.assertIn("ROKU: price source shows no trade since 2026-11-06 — 처음 봄, 이 줄은 받아 둔 종가(마지막 2026-11-09)까지 그립니다", text)
+        self.assertIn("STKL: price source does not know STKL — 처음 봄, 이 줄은 분기말 가격으로만 그립니다", text)
