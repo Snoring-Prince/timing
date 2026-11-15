@@ -143,6 +143,10 @@ def mark_close(values, splits, mark):
     return near[-1][0], close
 
 
+# 이미 그 티커로 종가를 받아 온 짝을 토요일에 다시 잴 때의 자(`collect` 의 설명 참고).
+SETTLED = .10
+
+
 def mark_matches(values, splits, mark, tolerance=.02):
     """분기말 종가(그 뒤 분할만큼 되돌림)가 공시의 금액 ÷ 주식수와 맞는가."""
     got = mark_close(values, splits, mark)
@@ -212,6 +216,20 @@ class EmptyChart(ValueError):
     종가 칸이 아예 없고(`timestamp` 없음 · `quote:[{}]`), 통화·상장일·마지막 거래
     시각이 전부 null 이다. 404 와 같은 말이라 같은 길로 보낸다. 통화가 비었다고
     '기호/통화 불일치'로 읽으면 처음 보는 고장처럼 **매일** 빨간불이 된다."""
+
+
+class Halted(ValueError):
+    """시세 쪽이 그 종목의 **마지막 거래를 일주일도 더 전으로** 적는다 — 거래가 멈춘 종목.
+
+    2026-11-14 ROKU: 응답의 `regularMarketTime` 이 11-06 이고 그 뒤 바는 종가가 비어 있었다.
+    같은 날 OpenFIGI 도 그 번호를 몰랐다(러너 원문 · 정찰 43700981942). 상장 폐지나 긴 거래
+    정지라 다음 13F 가 그 종목을 뺄 때까지 매일 같은 답이 온다. 그래서 404 처럼 처음 볼 때만
+    울리고 알려진 상태로 둔다. 받아 둔 종가는 그대로 남아 마지막 거래일까지 그린다.
+    시세 쪽이 **지금도 거래 중이라고 적는데** 종가가 비는 것(2026-10 ET)은 여기 안 든다 —
+    그건 자료 고장이라 예전처럼 매번 빨간불이다."""
+    def __init__(self, ticker, since):
+        super().__init__(f"{ticker}: price source shows no trade since {since}")
+        self.since = since
 
 
 def resolve(cusips, required, known, unverified=None, outage=None):
@@ -404,6 +422,11 @@ def parse_chart(payload, ticker, now):
         # 무엇이 왔는지 남긴다 — 문구만 있으면 정찰을 따로 돌려 봐야 안다(2026-11-03 STKL).
         raise ValueError(f"{ticker}: symbol/currency mismatch "
                          f"(got symbol {meta.get('symbol')!r}, currency {meta.get('currency')!r})")
+    last = meta.get("regularMarketTime")
+    if isinstance(last, (int, float)) and not isinstance(last, bool):
+        traded = from_epoch(int(last)).astimezone(NY).date()
+        if (now.astimezone(NY).date()-traded).days > 7:
+            raise Halted(ticker, traded.isoformat())
     stamps = row.get("timestamp", [])
     closes = row["indicators"]["quote"][0]["close"]
     if len(stamps) != len(closes):
@@ -503,6 +526,8 @@ def collect(required, previous, now, full=False, known=None, since=None, quarter
                     if not old.get("values"):
                         raise Unpriced(f"price source does not know {ticker}") from exc
                     raise
+                except Halted as exc:
+                    raise Unpriced(f"price source shows no trade since {exc.since}") from exc
                 first_trade = payload["chart"]["result"][0]["meta"].get("firstTradeDate")
                 if verify and first_trade:
                     expected = max(day, from_epoch(first_trade).astimezone(NY).date())
@@ -547,7 +572,20 @@ def collect(required, previous, now, full=False, known=None, since=None, quarter
             if (now.astimezone(NY).date()-dt.date.fromisoformat(values[-1][0])).days > 7:
                 raise ValueError("last closing price is more than seven days old")
             mark = (quarter_marks or {}).get(cusip, ("", 0))
-            if cusip in unverified and not mark_matches(values, splits, mark):
+            # 처음 붙일 때는 2% 로 잰다 — 이름으로 찾은 티커가 맞는 종목인지 가리는 자다.
+            # 이미 그 티커로 종가를 받아 온 짝이면 정체는 그때 확인이 끝났고, 토요일에
+            # 다시 재는 것은 자료가 망가지지 않았는지(분할 기준·엉뚱한 값) 보는 일이다.
+            # 2026-11-14 TATT: 6월 공시는 나스닥 종가와 0.5% 차이였는데 9월 공시는 −3.4% —
+            # 운용사가 다른 거래소(텔아비브) 값으로 매긴 것으로 보인다(짐작). 2% 로 계속 재면
+            # 평일에는 안 재므로 **토요일마다** '처음 봄' 이 울린다. 망가진 자료는 그보다
+            # 훨씬 크게 어긋난다(ENLV 병합 −93.75%) — 그래서 이미 받아 온 짝은 10% 로 잰다.
+            settled = old.get("ticker") == ticker and bool(old.get("values"))
+            if cusip in unverified and settled and not mark_matches(values, splits, mark):
+                got = mark_close(values, splits, mark)
+                if got and mark_matches(values, splits, mark, SETTLED):
+                    print(f"{cusip} {ticker}: filing value differs from the close by "
+                          f"{got[1]/mark[1]-1:+.2%} ({got[0]}) — already priced under this ticker, kept", flush=True)
+            if cusip in unverified and not mark_matches(values, splits, mark, SETTLED if settled else .02):
                 # 이름으로 붙인 티커가 다른 종류(A↔C)거나 다른 회사면 여기서 걸린다.
                 # **얼마나 어긋났는지 숫자를 남긴다** — 오크트리의 토름(1위)이 여기
                 # 걸렸는데 숫자가 없어 티커가 틀린 것인지 공시 기준가가 다른 것인지
@@ -648,10 +686,15 @@ def main():
     # 진짜 고장(통신·형식)이 묻힌다(6-2). 고장은 지금처럼 매번 빨간불이다.
     seen = previous.get("unpriced", {})
     unpriced = result.get("unpriced", {})
+    # 받아 둔 종가가 있는 종목(거래가 멈춘 ROKU 등)은 그 종가까지 그린다 — 화면이 하는
+    # 일을 그대로 적는다. 없는 종목만 분기말 가격으로 그린다.
+    def drawn(c):
+        kept = result["series"].get(c, {}).get("values")
+        return f"받아 둔 종가(마지막 {kept[-1][0]})까지 그립니다" if kept else "분기말 가격으로만 그립니다"
     for cusip, why in sorted(unpriced.items()):
         if cusip in seen:
-            print(f"{cusip} {why['ticker'] or '?'}: 알려진 상태 — 분기말 가격으로만 그립니다 ({why['reason']})")
-    news = [f"{c} {w['ticker'] or '?'}: {w['reason']} — 처음 봄, 이 줄은 분기말 가격으로만 그립니다"
+            print(f"{cusip} {why['ticker'] or '?'}: 알려진 상태 — {drawn(cusip)} ({why['reason']})")
+    news = [f"{c} {w['ticker'] or '?'}: {w['reason']} — 처음 봄, 이 줄은 {drawn(c)}"
             for c, w in sorted(unpriced.items()) if c not in seen]
     if errors or news:
         raise SystemExit("\n".join(errors + news))
