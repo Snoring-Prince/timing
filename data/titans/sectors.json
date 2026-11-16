@@ -2239,6 +2239,11 @@
   "desc": "Radio Broadcasting Stations",
   "sic": "4832"
  },
+ "23255M": {
+  "cik": "1755237",
+  "desc": "Pharmaceutical Preparations",
+  "sic": "2834"
+ },
  "232820": {
   "cik": "",
   "desc": "",
@@ -3859,6 +3864,11 @@
   "desc": "Grain Mill Products",
   "sic": "2040"
  },
+ "45765U": {
+  "cik": "932696",
+  "desc": "Retail-Catalog & Mail-Order Houses",
+  "sic": "5961"
+ },
  "457669": {
   "cik": "1104506",
   "desc": "Pharmaceutical Preparations",
@@ -4644,6 +4654,11 @@
   "desc": "Operative Builders",
   "sic": "1531"
  },
+ "55306N": {
+  "cik": "1049502",
+  "desc": "Industrial Instruments For Measurement, Display, and Control",
+  "sic": "3823"
+ },
  "553274": {
   "cik": "",
   "desc": "",
@@ -4993,6 +5008,11 @@
   "cik": "1682852",
   "desc": "Biological Products, (No Diagnostic Substances)",
   "sic": "2836"
+ },
+ "607828": {
+  "cik": "67347",
+  "desc": "Motor Vehicle Parts & Accessories",
+  "sic": "3714"
  },
  "608190": {
   "cik": "851968",
@@ -7209,6 +7229,11 @@
   "desc": "",
   "sic": ""
  },
+ "87162W": {
+  "cik": "1177394",
+  "desc": "Wholesale-Computers & Peripheral Equipment & Software",
+  "sic": "5045"
+ },
  "87165B": {
   "cik": "1601712",
   "desc": "Finance Services",
@@ -7248,6 +7273,11 @@
   "cik": "",
   "desc": "",
   "sic": ""
+ },
+ "87305R": {
+  "cik": "1116942",
+  "desc": "Printed Circuit Boards",
+  "sic": "3672"
  },
  "87336U": {
   "cik": "",
@@ -8113,6 +8143,11 @@
   "cik": "737468",
   "desc": "State Commercial Banks",
   "sic": "6022"
+ },
+ "94352A": {
+  "cik": "1631574",
+  "desc": "Pharmaceutical Preparations",
+  "sic": "2834"
  },
  "94419L": {
   "cik": "1616707",
@@ -10474,6 +10509,11 @@
   "desc": "",
   "sic": ""
  },
+ "T19377": {
+  "cik": "2004711",
+  "desc": "Services-Computer Programming, Data Processing, Etc.",
+  "sic": "7370"
+ },
  "V5633W": {
   "cik": "1495153",
   "desc": "Transportation Services",
@@ -10589,6 +10629,6 @@
   "desc": "",
   "sic": ""
  },
- "_asked": "2026-11-14",
+ "_asked": "2026-11-16",
  "_sources": "sec-sic3"
 }
