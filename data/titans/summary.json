@@ -7,23 +7,23 @@
     "ko": "버크셔 해서웨이"
    },
    "since": 1998,
-   "period": "2026-06-30",
-   "filed": "2026-08-14",
-   "quarters": 111,
-   "total": 299253556246,
-   "stocks": 26,
+   "period": "2026-09-30",
+   "filed": "2026-11-16",
+   "quarters": 112,
+   "total": 304196581325,
+   "stocks": 27,
    "top": [
     {
      "name": "Apple Inc",
-     "w": 22.0
+     "w": 25.0
     },
     {
      "name": "American Express Co",
-     "w": 17.1
+     "w": 15.2
     },
     {
      "name": "Alphabet Inc",
-     "w": 12.6
+     "w": 12.0
     }
    ]
   },
@@ -34,23 +34,23 @@
     "ko": "히말라야 캐피털"
    },
    "since": 2016,
-   "period": "2026-06-30",
-   "filed": "2026-08-14",
-   "quarters": 35,
-   "total": 3702921099,
+   "period": "2026-09-30",
+   "filed": "2026-11-16",
+   "quarters": 36,
+   "total": 3781431260,
    "stocks": 7,
    "top": [
     {
      "name": "Alphabet Inc",
-     "w": 47.9
+     "w": 45.2
     },
     {
      "name": "Pdd Holdings Inc",
-     "w": 22.2
+     "w": 24.2
     },
     {
      "name": "Berkshire Hathaway Inc Del",
-     "w": 15.0
+     "w": 14.6
     }
    ]
   },
@@ -61,23 +61,23 @@
     "ko": "애팔루사"
    },
    "since": 2013,
-   "period": "2026-06-30",
-   "filed": "2026-08-14",
-   "quarters": 53,
-   "total": 7471257999,
-   "stocks": 25,
+   "period": "2026-09-30",
+   "filed": "2026-11-16",
+   "quarters": 54,
+   "total": 7559628593,
+   "stocks": 24,
    "top": [
     {
-     "name": "Amazon Com Inc",
-     "w": 16.0
+     "name": "Micron Technology Inc",
+     "w": 17.6
     },
     {
-     "name": "Micron Technology Inc",
-     "w": 15.1
+     "name": "Amazon Com Inc",
+     "w": 14.7
     },
     {
      "name": "Taiwan Semiconductor Manufac",
-     "w": 10.5
+     "w": 9.5
     }
    ]
   },
@@ -169,23 +169,23 @@
     "ko": "듀케인 패밀리 오피스"
    },
    "since": 2013,
-   "period": "2026-06-30",
-   "filed": "2026-08-14",
-   "quarters": 53,
-   "total": 4354220000,
-   "stocks": 85,
+   "period": "2026-09-30",
+   "filed": "2026-11-16",
+   "quarters": 54,
+   "total": 4148873000,
+   "stocks": 59,
    "top": [
     {
      "name": "Natera Inc",
-     "w": 19.9
+     "w": 31.5
     },
     {
-     "name": "Taiwan Semiconductor Manufac",
-     "w": 6.5
+     "name": "Seagate Technology Hldngs Pl",
+     "w": 7.6
     },
     {
-     "name": "Stmicroelectronics N V",
-     "w": 5.3
+     "name": "Fox Corp",
+     "w": 5.5
     }
    ]
   },
