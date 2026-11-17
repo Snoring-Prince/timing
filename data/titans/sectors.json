@@ -9684,6 +9684,11 @@
   "desc": "Pharmaceutical Preparations",
   "sic": "2834"
  },
+ "H01301": {
+  "cik": "1167379",
+  "desc": "Ophthalmic Goods",
+  "sic": "3851"
+ },
  "H1467J": {
   "cik": "896159",
   "desc": "Fire, Marine & Casualty Insurance",
@@ -10629,6 +10634,6 @@
   "desc": "",
   "sic": ""
  },
- "_asked": "2026-11-16",
+ "_asked": "2026-11-17",
  "_sources": "sec-sic3"
 }
