@@ -68,6 +68,19 @@ test('changing the amount scales assets, without changing returns or drawdowns',
   const source=rows(i=>100+i/2),a=M.simulate(source,'2020-01',settings),b=M.simulate(source,'2020-01',{...settings,amount:24000});
   near(b.lump,a.lump*2);near(b.split,a.split*2);near(a.mddS,b.mddS);near(a.returnS,b.returnS);
 });
+
+test('typical gap is the median paired return difference, even if the separate medians agree',()=>{
+  const s=M.summarize([{lump:.1,split:.2},{lump:.2,split:.3},{lump:.3,split:.1}]);
+  near(s.medianL-s.medianS,0);near(s.medianGap,-.1);
+});
+
+test('the published Korean and English SPY example matches current daily prices',()=>{
+  const {updateExample}=require('../publish_samuel_example.cjs');
+  const html=fs.readFileSync(path.join(root,'samuel/index.html'),'utf8');
+  const data=JSON.parse(fs.readFileSync(path.join(root,'data/samuel/prices.json'),'utf8'));
+  assert.equal(updateExample(html,data),html);
+  assert.throws(()=>updateExample(html.replace('SAMUEL-EXAMPLE:START',''),data),/markers/);
+});
 test('phase-in drawdowns stop on the final scheduled purchase, not the horizon end',()=>{
   const source=rows((i,d)=>d.toISOString().slice(0,10)<'2020-08-01'?100+Math.sin(i/10)*5:20),r=M.simulate(source,'2020-01',settings);
   assert.equal(r.phase.to,r.buys.at(-1).day);

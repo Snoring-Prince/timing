@@ -563,8 +563,8 @@ document.documentElement.scrollWidth - document.documentElement.clientWidth
 ```
 1  titans/berkshire/index.html의 짧은 투자자 껍데기만 복사 → titans/<slug>/index.html
 2  <head> 의 canonical·hreflang·og:url·title·description 및 정적 h1·소개를 새 투자자로
-3  window.TITAN 블록의 설정을 고친다. 공통 CSS·JS 경로는 그대로 둔다
-3-1 #titan-bio 덩어리(소개 글·인용·그림)를 그 투자자의 것으로 바꾼다 — 이 글은
+3  window.TITAN 블록의 설정을 고친다. 공통 CSS·JS와 방문 측정용 /shared/stats.js를 함께 사용한다
+3-1 #titan-bio 덩어리(소개 글·인용·관련 링크·그림)를 그 투자자의 것으로 바꾼다 — 이 글은
     **HTML 에 글자로** 있어야 한다(사전에 넣으면 크롤러가 받는 페이지에서 사라진다).
     두 언어를 다 넣고 조각 수를 맞춘다. 그림은 그 폴더의 face.webp(정사각 가상
     캐리커처 · 목록 카드와 같은 그림)이다. 캡션은 달지 않고 alt 에만 가상 그림이라고 적는다.

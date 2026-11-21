@@ -525,6 +525,7 @@ let PRICE_ASOF="";
 /* 요약 문단의 티커. 정적 생성기와 같은 함수(overview.js)로 같은 파일을 읽어야
    원본 HTML 과 다시 그린 요약이 글자까지 같습니다. */
 let PRICE_TICKERS={};
+let renderedOverviewBook=null;
 /* 발행사(CUSIP 앞 여섯 자리)별 **진짜 액면분할**. `{from, days:Map(날짜→배수)}`
    — `from` 은 자료가 시작하는 날이라 그 이전 분기는 알 수 없습니다. */
 let SPLIT_BOOK={};
@@ -1281,8 +1282,15 @@ function render(){
   /* 요약을 못 만들어도(공시책에 이상한 줄 하나) 아래 보유 목록은 그립니다 —
      날짜가 적힌 정적 요약을 그대로 둡니다. 요약 하나 때문에 화면이 비면 안 됩니다. */
   const overview=el("filing-overview");
-  if(overview&&window.TitanOverview){
-    try{ overview.innerHTML=window.TitanOverview.content(RAW,TT,PRICE_TICKERS); }catch(e){}
+  if(overview&&window.TitanOverview&&RAW!==renderedOverviewBook){
+    // Both languages share this table. Keep its disclosure open across loading
+    // and language changes, including when the HTML predates a filing amendment.
+    try{
+      const wasOpen=overview.querySelector("details[open]");
+      overview.innerHTML=window.TitanOverview.content(RAW,TT,PRICE_TICKERS);
+      if(wasOpen){const table=overview.querySelector("details");if(table)table.open=true;}
+      renderedOverviewBook=RAW;
+    }catch(e){}
   }
 
   const B=build(), T=tallyOf(B);

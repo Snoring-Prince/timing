@@ -2,6 +2,13 @@
 
 형식과 규칙은 `README.md`. **맨 위가 최신이다.** Codex 만 이 파일에 쓴다.
 
+## 2026-11-21 · Codex · (이 PR)
+투자자 상세 방문 측정과 한영 보유표·사무엘 대표 비교 자동 게시
+- 파일: shared/stats.js · titans/ · samuel/ · olympics/ · timing/index.html · 게시 스크립트·주간 워크플로·검사 · sitemap.xml · CLAUDE.md
+- 규칙: 비중 변화는 평가액의 %p 차이. 사무엘 예시는 완료된 시작월마다 두 결과를 짝지어 비교. 세부 계산과 색인 점검은 CLAUDE.md 6-2.
+- 굳힘: 투자자 공통 틀·기기별 방문 제외·인물 선택 후 결과 공개 유지.
+- 넘김: 병합·배포 후 운영 Umami 수신과 주간 자동 갱신 첫 실행 확인. Google 재수집 뒤 동일 URL·기간으로 검색 노출 비교.
+
 ## 2026-10-23 · Codex · (이 PR)
 투자 올림픽을 인물 카드→고민 이야기→개인 성과→다섯 선택 비교 순서로 개편
 - 파일: olympics/index.html·style.css·app.js·presentation.js · 표시 검사 · 사이트맵 · CLAUDE.md · design-system.md · 이 일지
@@ -99,10 +106,3 @@
 - 규칙: 변경 전 backup/v1.7 보관. 구현·검증은 CLAUDE.md 4번의 두 차트 디자인 조정이 정본.
 - 굳힘: 담백한 상단 서사·기존 통계·낙폭 표시·기간 연동·VIX 숨김 유지. 기간 버튼 자체는 한 줄.
 - 넘김: 사용자 디자인 확인 및 merge. 별도 자료 수집·수동 배포 없음.
-
-## 2026-10-03 · Codex · PR #126
-다니엘 화면을 대문과 잇는 디자인·담백한 상단 서사
-- 파일: timing/index.html · scripts/tests/home.test.cjs · CLAUDE.md · design-system.md · 이 일지
-- 규칙: PR #120~#125 확인 및 backup/v1.6 확보. 디자인·서사·검증은 CLAUDE.md 1번이 정본.
-- 굳힘: 대문의 카드 전체 링크 유지. 다니엘 서사는 상단 정적 한영 본문. 푸른 상단 카드·큰 질문·번호 장식 복구 금지. 차트·계산·VIX 숨김·기존 면책 유지.
-- 넘김: 사용자 디자인 확인 및 merge. 별도 수동 배포·자료 재수집 없음.

@@ -25,7 +25,8 @@ test('stock scope, share classes, preferred shares and weights agree with the li
     const tickers=overview.tickersFrom(prices);
     const s=overview.summarize(data,tickers), total=rows.reduce((sum,r)=>sum+r.value,0);
     assert.equal(s.stocks,rows.length,inv.slug);
-    assert.deepEqual(s.top.map(({tickers,...r})=>r),rows.slice(0,3).map(({cusip,...r})=>({...r,weight:total?r.value/total*100:null})),inv.slug);
+    assert.deepEqual(s.holdings.map(({key,name,value,weight})=>({key,name,value,weight})),rows.map(({cusip,...r})=>({...r,weight:total?r.value/total*100:null})),inv.slug);
+    assert.deepEqual(s.top,s.holdings.slice(0,3));
     // Tickers: the same filter as the page's price loader, and the ticker the page
     // draws for a row (its largest class) is always among the summary's tickers.
     ctx.prices=prices;vm.runInContext('acceptPrices(prices)',ctx);
@@ -34,7 +35,7 @@ test('stock scope, share classes, preferred shares and weights agree with the li
     s.top.forEach((r,i)=>{ if(page[rows[i].cusip])assert.ok(r.tickers.includes(page[rows[i].cusip]),`${inv.slug} ${r.name}`); });
     const html=fs.readFileSync(path.join(root,`titans/${inv.slug}/index.html`),'utf8');
     assert.ok(html.includes(`prices: "../../data/titans/prices/${inv.slug}.json"`),inv.slug);
-    assert.ok(html.includes(overview.section(data,inv,tickers)),`${inv.slug}: static and live summaries differ`);
+    assert.ok(html.replace(/\r\n/g,'\n').includes(overview.section(data,inv,tickers)),`${inv.slug}: static and live summaries differ`);
   }
 });
 test('options and principal are excluded, common classes merged and preferred kept separate',()=>{
@@ -48,15 +49,28 @@ test('first filing never implies new purchases; gaps always name the actual comp
   const first=book([q('2026-06-30',[holding()])]);
   assert.deepEqual(overview.summarize(first).appeared,[]);
   assert.match(overview.content(first,investor),/이전 공시가 없어/);
+  assert.doesNotMatch(overview.content(first,investor),/Change \(pp\)|Newly present/);
   const gap=book([q('2025-12-31',[]),q('2026-06-30',[holding()])]);
   const html=overview.content(gap,investor);
   assert.match(html,/2025년 4분기 공시와 비교/);assert.match(html,/Q4 2025 filing/);
   assert.doesNotMatch(html,/직전 분기|previous quarter|신규 매수|purchased/);
 });
+test('weight changes compare reported stock values, including price-only moves and leaving unknown denominators blank',()=>{
+  const a=value=>holding('111111100',value,{name:'A Corp'});
+  const b=value=>holding('222222100',value,{name:'B Corp'});
+  const c=value=>holding('333333100',value,{name:'C Corp'});
+  const qs=[q('2026-03-31',[a(50),b(50)]),q('2026-06-30',[a(70),b(20),c(10)])];
+  const html=overview.content(book(qs),investor,{'111111100':'AAA'});
+  assert.match(html,/<th scope="row">A Corp \(AAA\)<\/th><td>70\.0%<\/td><td>\+20\.0<\/td>/);
+  assert.match(html,/B Corp had the largest decrease in weight \(−30.0 pp\)/);
+  assert.match(html,/<th scope="row">C Corp<\/th><td>10\.0%<\/td><td><span data-lang="en">Newly present/);
+  const zero=overview.content(book([q('2026-03-31',[a(0)]),q('2026-06-30',[a(10)])]),investor);
+  assert.match(zero,/<td>100.0%<\/td><td>—<\/td>/);assert.doesNotMatch(zero,/increase in weight|decrease in weight|NaN|Infinity/);
+});
 test('splits and class substitutions cannot produce an entry or disappearance',()=>{
   const data=book([q('2026-03-31',[holding()]),q('2026-06-30',[holding('123456200',100,{shares:20})])]);
   const s=overview.summarize(data);assert.deepEqual(s.appeared,[]);assert.deepEqual(s.absent,[]);
-  assert.match(overview.content(data,investor),/수량·비중 변화/);
+  assert.match(overview.content(data,investor),/새로 나타나거나 빠진 종목은 없습니다/);
 });
 test('re-entry is reported as newly present, and disappearance is not called an executed sale',()=>{
   const data=book([q('2025-12-31',[holding()]),q('2026-03-31',[holding('654321100')]),q('2026-06-30',[holding()])]);
@@ -114,6 +128,22 @@ test('same-quarter corrections and new quarters replace both languages; --check 
   data.quarters.push({...q('2026-09-30',[]),filed:'2026-11-13'});fs.writeFileSync(datafile,JSON.stringify(data));publish(dir);
   const html=fs.readFileSync(file,'utf8');assert.match(html,/2026년 3분기/);assert.match(html,/Q3 2026/);
   assert.equal(html.split('id="filing-overview"').length,2);
+});
+test('first publication, stale checks, updates and removal preserve LF and CRLF checkouts',t=>{
+  for(const eol of ['\n','\r\n']){
+    const {dir,file,datafile}=fixture(t);
+    const shell=fs.readFileSync(file,'utf8').replace('</main>',eol+'</main>');
+    fs.writeFileSync(file,shell);
+    assert.deepEqual(publish(dir),['sample']);
+    assert.deepEqual(publish(dir,{check:true}),[]);
+    fs.writeFileSync(datafile,JSON.stringify(book([q('2026-09-30',[holding()])])));
+    assert.throws(()=>publish(dir,{check:true}),/Stale/);
+    assert.deepEqual(publish(dir),['sample']);
+    const updated=fs.readFileSync(file,'utf8');
+    assert.equal(updated,updated.replace(/\r?\n/g,eol));
+    assert.deepEqual(publish(dir,{check:true}),[]);
+    assert.equal(removeOverview(updated),shell);
+  }
 });
 function addInvestor(dir,inv,html,data){
   const registry=JSON.parse(fs.readFileSync(path.join(dir,'data/titans/investors.json'),'utf8'));
@@ -212,7 +242,7 @@ test('workflow publishes and saves HTML after filings and includes failures in t
   assert.match(wf,/steps.overviews.outcome == 'failure'/);assert.match(wf,/overview-publish.log >> 13f-error.txt/);
 });
 test('the price workflow republishes ticker changes on the latest main, saves them and alerts on failure',()=>{
-  const wf=fs.readFileSync(path.join(root,'.github/workflows/update-prices.yml'),'utf8');
+  const wf=fs.readFileSync(path.join(root,'.github/workflows/update-prices.yml'),'utf8').replace(/\r\n/g,'\n');
   const at=s=>{const i=wf.indexOf(s);assert.ok(i>=0,s);return i;};
   assert.ok(at('git push origin HEAD:main')<at('git pull --rebase origin main\n          node scripts/publish_titans_overviews.cjs'));
   assert.ok(at('node scripts/publish_titans_overviews.cjs')<at('git add titans/*/index.html'));

@@ -6,13 +6,14 @@ const overview=require('../titans/shared/overview.js');
 const START='<!-- TITAN-OVERVIEW:START -->', END='<!-- TITAN-OVERVIEW:END -->';
 
 function replaceOverview(html,section){
-  const block=`${START}\n${section}\n${END}`;
+  const newline=html.match(/\r?\n/)?.[0]||'\n';
+  const block=[START,section.replace(/\r?\n/g,newline),END].join(newline);
   const starts=html.split(START).length-1, ends=html.split(END).length-1;
   if(starts===0&&ends===0){
     // A new investor shell may predate the generator. Never guess another page.
     if(!/id="static-investor"/.test(html)||html.split('</main>').length!==2)
       throw new Error('Missing investor shell');
-    return html.replace('</main>',`${block}\n</main>`);
+    return html.replace('</main>',()=>`${block}${newline}</main>`);
   }
   if(starts!==1||ends!==1||html.indexOf(START)>html.indexOf(END))throw new Error('Invalid overview markers');
   return html.slice(0,html.indexOf(START))+block+html.slice(html.indexOf(END)+END.length);
@@ -25,7 +26,7 @@ function removeOverview(html){
   if(starts===0&&ends===0)return html;
   if(starts!==1||ends!==1||html.indexOf(START)>html.indexOf(END))throw new Error('Invalid overview markers');
   const after=html.indexOf(END)+END.length;
-  return html.slice(0,html.indexOf(START))+html.slice(html[after]==='\n'?after+1:after);
+  return html.slice(0,html.indexOf(START))+html.slice(after).replace(/^\r?\n/,'');
 }
 
 // The page's own price file (window.TITAN.prices), read the way the browser does:

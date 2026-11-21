@@ -22,21 +22,12 @@
 <meta name="theme-color" content="#ffffff">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Samuel’s decision","url":"https://itpaidoff.com/samuel/","inLanguage":["en","ko"],"description":"Historical comparison of lump-sum and phased investing using the same initial cash."}</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
-<link rel="stylesheet" href="style.css?v=2026-10-08-review">
+<link rel="stylesheet" href="style.css?v=historical-example-1">
 <link rel="stylesheet" href="/shared/language-picker.css?v=2026-10-05-lang">
 <script src="/shared/language-picker.js?v=2026-10-05-lang"></script>
 <script src="model.js?v=2026-10-08-review" defer></script>
-<script src="app.js?v=2026-10-08-review" defer></script>
-<script>
-window.STATS={id:"41e07a57-a87c-403b-bdf8-e12d911457b6",src:"https://cloud.umami.is/script.js"};
-(function loadStats(){
-  var s=window.STATS||{},h=location.hostname;
-  if(!s.id||h==="localhost"||h==="127.0.0.1"||h==="")return;
-  try{ if(localStorage.getItem("umami.disabled"))return; }catch(e){}  /* 본인 기기는 안 셈 — /notrack/ 에서 켬(CLAUDE.md 5번) */
-  var t=document.createElement("script");t.defer=true;t.src=s.src;
-  t.setAttribute("data-website-id",s.id);document.head.appendChild(t);
-})();
-</script>
+<script src="app.js?v=2026-11-stats" defer></script>
+<script src="/shared/stats.js?v=1" defer></script>
 </head>
 <body>
 <main class="wrap">
@@ -63,6 +54,19 @@ window.STATS={id:"41e07a57-a87c-403b-bdf8-e12d911457b6",src:"https://cloud.umami
       <p>The same money, invested all at once or in stages. Samuel decides to go back to different points in history and compare the two paths.</p>
     </div>
   </section>
+  <!-- SAMUEL-EXAMPLE:START -->
+  <section class="historical-example" aria-labelledby="example-heading">
+    <h2 id="example-heading"><span data-lang="ko">S&amp;P 500에 한 번에 넣을까, 6개월로 나눠 넣을까?</span><span data-lang="en">Invest in the S&amp;P 500 all at once or over six months?</span></h2>
+    <div data-lang="ko">
+      <p>2007-05부터 2023-11까지 시작월을 한 달씩 옮겨 같은 목돈을 SPY에 투자했을 때의 결과를 비교했습니다. 3년 뒤 일시금 투자에 더 많이 남은 경우는 199개 시작월 중 <strong>137회(68.8%)</strong>, 분할 투자에 더 많이 남은 경우는 62회(31.2%)였습니다. 각 시작월의 3년 수익률 차이(일시금 − 분할)를 구하면 중앙값은 +3.7%p였습니다.</p>
+      <p class="assumptions">대기 자금은 미국 초단기 국채 ETF인 BIL에 두고 두 ETF의 분배금은 재투자했습니다. 각 시작월의 3년 구간은 서로 겹칩니다. 자료 기준일 2026-11-13.</p>
+    </div>
+    <div data-lang="en">
+      <p>We compared two ways to invest the same cash in SPY for every starting month from 2007-05 through 2023-11. After three years, lump-sum investing finished ahead in <strong>137 of 199 starts (68.8%)</strong> and phased investing in 62 (31.2%). The median difference in three-year total return (lump sum minus phased, paired by starting month) was +3.7 percentage points.</p>
+      <p class="assumptions">Waiting funds were held in BIL, a U.S. Treasury bill ETF. Distributions from both ETFs were reinvested. The three-year periods overlap. Data through 2026-11-13.</p>
+    </div>
+  </section>
+  <!-- SAMUEL-EXAMPLE:END -->
   <h2 class="section-heading"><span data-lang="ko">같은 돈, 서로 다른 두 출발.</span><span data-lang="en">The same money. Two ways to begin.</span></h2>
   <section class="panel" aria-label="Comparison settings">
     <form id="settings">
@@ -106,6 +110,7 @@ window.STATS={id:"41e07a57-a87c-403b-bdf8-e12d911457b6",src:"https://cloud.umami
     <p class="sample-note" id="sample-note"></p>
     <p class="sample-note"><span data-lang="ko">각 달의 첫 거래일에서 같은 조건으로 시작한 과거 기록입니다. 기간 전체가 있는 시작월만 비교하며, 구간이 서로 겹칩니다. 미래에 더 나을 확률을 뜻하지 않습니다.</span><span data-lang="en">These historical comparisons start on the first trading day of each month under the same settings. Only complete horizons are included. Periods overlap; these shares are not probabilities of future outperformance.</span></p>
   </section>
+  <p class="next-question"><a href="/olympics/" data-route="/olympics/"><span data-lang="ko">공포를 기다렸다가 산 다니엘의 결과는 어땠을까? 투자 올림픽에서 비교하기 →</span><span data-lang="en">How did Daniel do when he waited for fear to buy? Compare strategies in the Investment Olympics →</span></a></p>
   <details class="method">
     <summary><span data-lang="ko">어떻게 계산했을까?</span><span data-lang="en">How is this calculated?</span></summary>
     <div data-lang="ko">
