@@ -82,7 +82,8 @@
     if(!results.length)return null;
     const median=values=>{const sorted=values.slice().sort((a,b)=>a-b),n=sorted.length;return n%2?sorted[(n-1)/2]:(sorted[n/2-1]+sorted[n/2])/2;};
     const eps=1e-9,lump=results.filter(r=>r.lump-r.split>eps).length,split=results.filter(r=>r.split-r.lump>eps).length;
-    return {n:results.length,lump,split,ties:results.length-lump-split,medianL:median(results.map(r=>r.lump)),medianS:median(results.map(r=>r.split))};
+    return {n:results.length,lump,split,ties:results.length-lump-split,medianL:median(results.map(r=>r.lump)),medianS:median(results.map(r=>r.split)),
+      medianGap:median(results.map(r=>r.lump-r.split))};
   }
   return {series,paired,simulate,cohorts,summarize,lowerBound,addMonths};
 });

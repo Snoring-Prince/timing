@@ -140,6 +140,14 @@ html:not([lang="ko"]) .bio [data-lang="ko"]{display:none}
 .filing-overview h2{margin:0 0 4px;font-size:var(--t-name);line-height:1.5;font-weight:600}
 .filing-overview p{margin:8px 0 0;font-size:var(--t-text);line-height:1.75;color:var(--ink-2)}
 .filing-overview .overview-date{margin:0;font-size:var(--t-label);color:var(--ink-3)}
+.overview-holdings{margin-top:8px;font-size:var(--t-text);color:var(--ink-2)}
+.overview-holdings summary{width:fit-content;max-width:100%;padding:6px 0;cursor:pointer;font-weight:600}
+.overview-holdings table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+.overview-holdings caption{text-align:start;margin:6px 0;font-size:var(--t-small)}
+.overview-holdings th,.overview-holdings td{padding:6px 4px;border-bottom:1px solid var(--rule-2);text-align:end}
+.overview-holdings th:first-child{text-align:start}
+.overview-holdings tbody th{font-weight:400}
+.overview-holdings td{white-space:nowrap}
 html[lang="ko"] .filing-overview [data-lang="en"],
 html:not([lang="ko"]) .filing-overview [data-lang="ko"]{display:none}
 

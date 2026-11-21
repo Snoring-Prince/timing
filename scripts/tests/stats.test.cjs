@@ -1,9 +1,11 @@
-// The six visitor-stats loaders and the /notrack/ page: an opted-out browser must not load Umami at all.
-// No network: the inline loader and the opt-out script run in a tiny fake DOM.
+// Execute the loader referenced by each public page without contacting Umami.
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'../..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const pages=['index.html','timing/index.html','titans/index.html','titans/13f/index.html','samuel/index.html','olympics/index.html'];
+for(const investor of JSON.parse(read('data/titans/investors.json')).investors){
+  if(investor.active!==false)pages.push(`titans/${investor.slug}/index.html`);
+}
 const ID='41e07a57-a87c-403b-bdf8-e12d911457b6';
 
 function storage(init={},broken=false){
@@ -12,7 +14,9 @@ function storage(init={},broken=false){
   return {map:m,getItem:k=>(guard(),m.has(k)?m.get(k):null),setItem:(k,v)=>(guard(),m.set(k,String(v))),removeItem:k=>(guard(),m.delete(k))};
 }
 function loader(file){
-  const blocks=[...read(file).matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).filter(s=>s.includes('cloud.umami.is'));
+  const html=read(file);
+  const blocks=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).filter(s=>s.includes('cloud.umami.is'));
+  for(const match of html.matchAll(/<script\b[^>]*\bsrc="\/(shared\/stats\.js)(?:\?[^"]*)?"[^>]*>/g))blocks.push(read(match[1]));
   assert.equal(blocks.length,1,file);
   return blocks[0];
 }

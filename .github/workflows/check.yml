@@ -7,6 +7,8 @@ on:
     paths:
       - "index.html"
       - "shared/language-picker.*"
+      - "shared/stats.js"
+      - "data/titans/investors.json"
       - "assets/language/**"
       - "timing/index.html"
       - "samuel/**"
@@ -19,6 +21,7 @@ on:
       - ".github/workflows/update-olympics.yml"
       - "data/samuel/**"
       - "scripts/samuel_data.py"
+      - "scripts/publish_samuel_example.cjs"
       - "scripts/tests/test_samuel.py"
       - "scripts/tests/samuel.test.cjs"
       - "data/backtest.json"

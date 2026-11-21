@@ -94,12 +94,18 @@
   }
   function showComparison(){
     if(!RESULT)return;stop();COMPARING=true;EVENT=null;FOCUS='';$('actor').value='';$('race').hidden=false;seek(RESULT.curve.length-1);legend();draw();visit('comparison-lead');
+    window.track?.('olympics_compare');
   }
   for(const b of document.querySelectorAll('[data-person]'))b.addEventListener('click',()=>{
     stop();PERSON=b.dataset.person;REVEALED=false;COMPARING=false;$('race').hidden=true;$('personal-result').hidden=true;story();
     const h=document.querySelector('[data-story="'+PERSON+'"] h2');h.scrollIntoView({block:'start'});h.focus({preventScroll:true});
+    window.track?.('olympics_character',{person:PERSON});
   });
-  $('reveal-result').addEventListener('click',()=>{if(!RESULT)return;stop();REVEALED=true;COMPARING=false;$('race').hidden=true;personal();visit('personal-heading');});
+  $('reveal-result').addEventListener('click',()=>{
+    if(!RESULT||!PERSON)return;
+    stop();REVEALED=true;COMPARING=false;$('race').hidden=true;personal();visit('personal-heading');
+    window.track?.('olympics_result',{person:PERSON});
+  });
   $('compare-people').addEventListener('click',showComparison);$('skip-story').addEventListener('click',showComparison);
   $('choose-again').addEventListener('click',()=>{stop();visit('character-heading');});
   function render(){

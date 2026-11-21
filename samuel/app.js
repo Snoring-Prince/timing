@@ -117,7 +117,17 @@
   $('chart').addEventListener('pointerleave',()=>{$('tooltip').hidden=true;$('hover-line')?.setAttribute('hidden','');});
   $('chart').addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)&&RESULT){event.preventDefault();hover(event.key==='Home'?0:event.key==='End'?RESULT.curve.length-1:HOVER+(event.key==='ArrowLeft'?-1:1));}});
   $('settings').addEventListener('submit',event=>event.preventDefault());
-  $('use-valid-start').addEventListener('click',()=>{$('start').value=$('use-valid-start').dataset.month;render();$('start').focus();});
+  function compareChangedSettings(){
+    clearTimeout(TIMER);
+    render();
+    if(RESULT)window.track?.('samuel_compare');
+  }
+  $('use-valid-start').addEventListener('click',()=>{
+    $('start').value=$('use-valid-start').dataset.month;
+    compareChangedSettings();
+    $('start').focus();
+  });
+  $('settings').addEventListener('change',compareChangedSettings);
   $('settings').addEventListener('input',()=>{clearTimeout(TIMER);TIMER=setTimeout(render,150);});
   function paintDataRange(){
     if(!DATA)return;
