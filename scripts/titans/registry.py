@@ -76,10 +76,21 @@ def one(slug, path=REGISTRY):
     raise ValueError(f"unknown investor: {slug}")
 
 
+# Warrants and rights are reported as SH rows under the issuer's own CUSIP prefix,
+# so without this they were added to the common stock's shares and value (Oaktree
+# 2026Q2: Alvotech warrants were 75% of the "ALVO" row). The pattern matches the 13F
+# class strings actually seen — WARRANT, *W EXP mm/dd/yy, W EXP, EQUITY WRT, RIGHT —
+# and nothing else in any saved book (2026-11-23). Units and trust units stay shares.
+# Keep this identical to isShare() in titans/shared/investor.js and overview.js.
+NON_SHARE = re.compile(r"\bWARRANTS?\b|\bWRTS?\b|\bWTS?\b|\bW EXP\b|\bRIGHTS?\b|\bRTS?\b")
+
+
 def is_share(holding):
-    """Options name underlying shares; PRN names principal, not share counts."""
+    """Options name underlying shares; PRN names principal, not share counts;
+    warrants and rights are not the company's shares either."""
     return (str(holding.get("type") or "SH").strip().upper() == "SH"
-            and not str(holding.get("putCall") or "").strip())
+            and not str(holding.get("putCall") or "").strip()
+            and not NON_SHARE.search(str(holding.get("class") or "").upper()))
 
 
 def books(investors=None, *, strict=False):

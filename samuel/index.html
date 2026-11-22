@@ -25,9 +25,9 @@
 <link rel="stylesheet" href="style.css?v=historical-example-1">
 <link rel="stylesheet" href="/shared/language-picker.css?v=2026-10-05-lang">
 <script src="/shared/language-picker.js?v=2026-10-05-lang"></script>
-<script src="model.js?v=2026-10-08-review" defer></script>
+<script src="model.js?v=2026-11-23-first-month" defer></script>
 <script src="app.js?v=2026-11-stats" defer></script>
-<script src="/shared/stats.js?v=1" defer></script>
+<script src="/shared/stats.js?v=2" defer></script>
 </head>
 <body>
 <main class="wrap">
@@ -58,11 +58,11 @@
   <section class="historical-example" aria-labelledby="example-heading">
     <h2 id="example-heading"><span data-lang="ko">S&amp;P 500에 한 번에 넣을까, 6개월로 나눠 넣을까?</span><span data-lang="en">Invest in the S&amp;P 500 all at once or over six months?</span></h2>
     <div data-lang="ko">
-      <p>2007-05부터 2023-11까지 시작월을 한 달씩 옮겨 같은 목돈을 SPY에 투자했을 때의 결과를 비교했습니다. 3년 뒤 일시금 투자에 더 많이 남은 경우는 199개 시작월 중 <strong>137회(68.8%)</strong>, 분할 투자에 더 많이 남은 경우는 62회(31.2%)였습니다. 각 시작월의 3년 수익률 차이(일시금 − 분할)를 구하면 중앙값은 +3.7%p였습니다.</p>
+      <p>2007-06부터 2023-11까지 시작월을 한 달씩 옮겨 같은 목돈을 SPY에 투자했을 때의 결과를 비교했습니다. 3년 뒤 일시금 투자에 더 많이 남은 경우는 198개 시작월 중 <strong>137회(69.2%)</strong>, 분할 투자에 더 많이 남은 경우는 61회(30.8%)였습니다. 각 시작월의 3년 수익률 차이(일시금 − 분할)를 구하면 중앙값은 +3.7%p였습니다.</p>
       <p class="assumptions">대기 자금은 미국 초단기 국채 ETF인 BIL에 두고 두 ETF의 분배금은 재투자했습니다. 각 시작월의 3년 구간은 서로 겹칩니다. 자료 기준일 2026-11-20.</p>
     </div>
     <div data-lang="en">
-      <p>We compared two ways to invest the same cash in SPY for every starting month from 2007-05 through 2023-11. After three years, lump-sum investing finished ahead in <strong>137 of 199 starts (68.8%)</strong> and phased investing in 62 (31.2%). The median difference in three-year total return (lump sum minus phased, paired by starting month) was +3.7 percentage points.</p>
+      <p>We compared two ways to invest the same cash in SPY for every starting month from 2007-06 through 2023-11. After three years, lump-sum investing finished ahead in <strong>137 of 198 starts (69.2%)</strong> and phased investing in 61 (30.8%). The median difference in three-year total return (lump sum minus phased, paired by starting month) was +3.7 percentage points.</p>
       <p class="assumptions">Waiting funds were held in BIL, a U.S. Treasury bill ETF. Distributions from both ETFs were reinvested. The three-year periods overlap. Data through 2026-11-20.</p>
     </div>
   </section>
@@ -114,13 +114,13 @@
   <details class="method">
     <summary><span data-lang="ko">어떻게 계산했을까?</span><span data-lang="en">How is this calculated?</span></summary>
     <div data-lang="ko">
-      <p>SPY·QQQ·BIL의 배당·분배금과 액면분할을 반영한 일별 조정 종가를 사용합니다. 매주 갱신하며, 주식 ETF와 BIL 자료가 함께 있는 2007년부터 비교합니다. 상장월은 두 자료가 처음 겹치는 날부터 시작합니다. 상장 전이나 아직 끝나지 않은 기간의 결과는 만들지 않습니다.</p>
+      <p>SPY·QQQ·BIL의 배당·분배금과 액면분할을 반영한 일별 조정 종가를 사용합니다. 매주 갱신하며, 주식 ETF와 BIL 자료가 함께 있는 2007년 6월부터 비교합니다. BIL이 상장한 2007년 5월은 그달 첫 거래일에 BIL 가격이 없어 시작월에서 뺍니다. 상장 전이나 아직 끝나지 않은 기간의 결과는 만들지 않습니다.</p>
       <p>한 번에 투자하는 경로는 시작월 첫 거래일의 종가에 목돈 전부를 넣습니다. 나눠 넣는 경로는 처음 목돈을 3·6·12등분하여 첫 몫은 같은 날 주식에, 나머지는 BIL에 넣습니다. 이후 매달 첫 거래일에 BIL에서 한 몫씩 주식으로 옮깁니다.</p>
       <p>BIL 분배금은 재투자된 것으로 계산하며, 각 몫의 수익이나 손실도 함께 옮깁니다. 따라서 실제로 옮기는 금액은 매달 조금 달라집니다. 마지막 회차에 남은 BIL을 모두 옮기며, 그 전에는 BIL 보유액도 총자산에 포함합니다. 수익률을 고정하거나 원금을 보장한다고 가정하지 않습니다.</p>
       <p>비교 종료일은 시작일로부터 선택한 햇수가 지난 날 또는 그 뒤 첫 거래일입니다. 소수 단위 투자와 분배금 재투자 효과를 가정한 비교이며 실제 주식수·체결을 재현하지 않습니다. 수익률은 마지막 총자산을 처음 목돈과 비교합니다. ETF 운용 비용은 가격에 반영되지만 세금·거래 비용·환율·물가는 따로 계산하지 않습니다.</p>
     </div>
     <div data-lang="en">
-      <p>Daily adjusted closing prices for SPY, QQQ and BIL reflect dividends, distributions and splits. Data refreshes weekly. Comparisons begin in 2007 when both ETF histories are available. The listing month begins on their first shared observation. There are no pre-listing or unfinished future results.</p>
+      <p>Daily adjusted closing prices for SPY, QQQ and BIL reflect dividends, distributions and splits. Data refreshes weekly. Comparisons begin in June 2007. May 2007, when BIL listed, is not a starting month because BIL had no price on that month’s first trading day. There are no pre-listing or unfinished future results.</p>
       <p>The lump-sum path invests all initial cash at the first trading day’s close. The phased path divides the initial cash into 3, 6 or 12 equal portions, investing the first in equities on the same day and parking the rest in BIL. One remaining portion moves from BIL into equities on the first trading day of each following month.</p>
       <p>BIL distributions are assumed reinvested. Each portion’s gain or loss moves with it, so the transferred amount varies. All remaining BIL moves into equities on the final purchase. Before then, BIL holdings count toward total assets. Returns are not fixed and principal is not assumed guaranteed.</p>
       <p>The horizon ends on the start date’s anniversary, or the next trading day. Fractional investment and distribution reinvestment are assumed, without reconstructing actual shares or executed trades. Total return compares ending assets with initial cash. ETF operating expenses are reflected in prices; taxes, trading costs, exchange rates and inflation are not separately calculated.</p>

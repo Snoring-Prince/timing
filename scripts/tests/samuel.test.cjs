@@ -69,6 +69,25 @@ test('changing the amount scales assets, without changing returns or drawdowns',
   near(b.lump,a.lump*2);near(b.split,a.split*2);near(a.mddS,b.mddS);near(a.returnS,b.returnS);
 });
 
+test('a month whose first stock trading day has no BIL price is never a starting month',()=>{
+  // BIL listed on 2007-05-30: May 2007 began on the 30th and its second purchase came
+  // two days later, while the page says every start is a month's first trading day.
+  const stock=rows().map(r=>r.slice(0,2)),data=bil=>({version:2,basis:'dividend-adjusted',frequency:'daily',
+    series:{spx:{ticker:'SPY',series:stock},reserve:{ticker:'BIL',series:bil}}});
+  const mid=stock.findIndex(r=>r[0]>='2018-10-10'),late=M.paired(data(stock.slice(mid)),'spx');
+  assert.equal(late[0][0],stock[mid][0]);assert.equal(late.partialMonth,'2018-10');
+  assert.throws(()=>M.simulate(late,'2018-10',settings),/range/);
+  assert.equal(M.cohorts(late,settings)[0].month,'2018-11');
+  const whole=stock.findIndex(r=>r[0]>='2018-10-01'),onTime=M.paired(data(stock.slice(whole)),'spx');
+  assert.equal(onTime.partialMonth,undefined);assert.equal(M.cohorts(onTime,settings)[0].month,'2018-10');
+  // The real files: both ETFs start comparisons in June 2007, never on 2007-05-30.
+  const real=JSON.parse(fs.readFileSync(path.join(root,'data/samuel/prices.json'),'utf8'));
+  for(const key of ['spx','ndx']){
+    const paired=M.paired(real,key);assert.equal(paired[0][0],'2007-05-30');
+    assert.equal(M.cohorts(paired,{months:6,years:3})[0].month,'2007-06');
+    assert.equal(M.simulate(paired,'2007-06',{months:6,years:3}).from,'2007-06-01');
+  }
+});
 test('typical gap is the median paired return difference, even if the separate medians agree',()=>{
   const s=M.summarize([{lump:.1,split:.2},{lump:.2,split:.3},{lump:.3,split:.1}]);
   near(s.medianL-s.medianS,0);near(s.medianGap,-.1);

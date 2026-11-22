@@ -6,7 +6,11 @@
 })(typeof window==='object'?window:this,function(){
   'use strict';
   const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const isShare=h=>String(h.type||'SH').trim().toUpperCase()==='SH'&&!String(h.putCall||'').trim();
+  // Warrants and rights share the issuer's CUSIP prefix; never add them to its stock.
+  // Same rule as isShare() in investor.js and registry.is_share() in Python.
+  const NONSHARE=/\bWARRANTS?\b|\bWRTS?\b|\bWTS?\b|\bW EXP\b|\bRIGHTS?\b|\bRTS?\b/;
+  const isShare=h=>String(h.type||'SH').trim().toUpperCase()==='SH'&&!String(h.putCall||'').trim()
+    &&!NONSHARE.test(String(h.class||'').toUpperCase());
   const key=h=>h.cusip.slice(0,6)+(/\bPFD\b|PREFERRED/.test((h.class||'').toUpperCase())?'|P':'');
   const keep=new Set(['IBM','HP','NVR','USA','US','UK','AT&T','PLC','LLC','NV','SA','AG','ADR','REIT','MTN']);
   const small=new Set(['of','and','the','for','de','la']);
@@ -101,26 +105,9 @@
     return (lang==='ko'?`${basis} 공시와 비교했습니다. `:`Compared with the ${basis} filing. `)
       +parts.join(lang==='ko'?'이며, ':'. ')+(lang==='ko'?'입니다.':'.');
   }
-  // Percentage points compare the same stock-only denominator at each date.
-  // A price move can change weight even when the share count stays constant.
-  function weightMoves(s,lang){
-    let rise=null,fall=null;
-    for(const r of s.holdings){
-      if(r.change===null||Math.abs(r.change)<0.05)continue;
-      if(r.change>0&&(!rise||r.change>rise.change))rise=r;
-      if(r.change<0&&(!fall||r.change<fall.change))fall=r;
-    }
-    const moves=[];
-    const ko=lang==='ko';
-    for(const r of [rise,fall].filter(Boolean)){
-      const size=Math.abs(r.change).toFixed(1),name=escape(r.name);
-      if(ko)moves.push(r===rise?`비중이 가장 많이 오른 종목은 ${name}(+${size}%p)`:`비중이 가장 많이 내린 종목은 ${name}(−${size}%p)`);
-      else moves.push(r===rise?`${name} had the largest increase in weight (+${size} pp)`:`${name} had the largest decrease in weight (−${size} pp)`);
-    }
-    if(!moves.length)return '';
-    return ko?` 두 공시에 모두 나온 종목 중 ${moves.join(', ')}입니다.`
-      :` Among positions in both filings, ${moves.join(' and ')}.`;
-  }
+  /* Weight changes live only in the folded table, beside the note that prices move
+     weights too. The summary never names a "largest increase": a price-only move
+     read like a purchase (2026-11-23 review — Apple +2.9pp with no shares changed). */
   const bilingual=(en,ko)=>`<span data-lang="en">${en}</span><span data-lang="ko">${ko}</span>`;
   function holdingsTable(s){
     if(!s.holdings.length)return '';
@@ -157,7 +144,7 @@
       const held=ko?`${name}의 미국 상장 주식 보유 기록은 ${s.stocks}종목입니다.`
         :`${name} reports ${s.stocks} US-listed stock position${s.stocks===1?'':'s'}.`;
       const largest=top?(ko?` 보유 금액 상위 ${s.top.length}종목은 ${top}입니다.`:` The ${s.top.length===1?'largest position is':`largest ${s.top.length} positions are`} ${top}.`):'';
-      return `  <div data-lang="${lang}">\n    <h2>${heading}</h2>\n    <p class="overview-date">${escape(stamp)}</p>\n    <p>${held}${largest}</p>\n    <p>${changes(s,lang)}${weightMoves(s,lang)}</p>\n  </div>`;
+      return `  <div data-lang="${lang}">\n    <h2>${heading}</h2>\n    <p class="overview-date">${escape(stamp)}</p>\n    <p>${held}${largest}</p>\n    <p>${changes(s,lang)}</p>\n  </div>`;
     }).join('\n')+'\n'+holdingsTable(s);
   }
   function section(book,investor,tickers){

@@ -62,8 +62,14 @@ test('weight changes compare reported stock values, including price-only moves a
   const qs=[q('2026-03-31',[a(50),b(50)]),q('2026-06-30',[a(70),b(20),c(10)])];
   const html=overview.content(book(qs),investor,{'111111100':'AAA'});
   assert.match(html,/<th scope="row">A Corp \(AAA\)<\/th><td>70\.0%<\/td><td>\+20\.0<\/td>/);
-  assert.match(html,/B Corp had the largest decrease in weight \(−30.0 pp\)/);
+  assert.match(html,/<th scope="row">B Corp<\/th><td>20\.0%<\/td><td>−30\.0<\/td>/);
   assert.match(html,/<th scope="row">C Corp<\/th><td>10\.0%<\/td><td><span data-lang="en">Newly present/);
+  // A weight move can be a price move with no shares traded (Berkshire's Apple, Q3 2026:
+  // +2.9pp, 227,917,808 shares both quarters). The summary must not single one out as if
+  // it were a purchase; the table keeps every change beside its price caveat.
+  const summary=html.split('<details')[0];
+  assert.doesNotMatch(summary,/increase in weight|decrease in weight|비중이 가장|%p\)|pp\)/);
+  assert.match(html,/Market prices also affect weights\./);assert.match(html,/주가가 변해도 비중은 달라집니다\./);
   const zero=overview.content(book([q('2026-03-31',[a(0)]),q('2026-06-30',[a(10)])]),investor);
   assert.match(zero,/<td>100.0%<\/td><td>—<\/td>/);assert.doesNotMatch(zero,/increase in weight|decrease in weight|NaN|Infinity/);
 });
@@ -95,6 +101,36 @@ test('untrusted names are escaped in both languages and bad or duplicate periods
   assert.throws(()=>overview.summarize(book([q('2026-06-30',[]),q('2026-06-30',[])])),/unordered/);
   assert.throws(()=>overview.summarize(book([q('2026-06-31',[])])),/Invalid/);
   assert.throws(()=>overview.summarize(book([q('2026-06-30',[holding('123456100',-1)])])),/Invalid/);
+});
+/* Warrants and rights are filed as SH rows under the issuer's own CUSIP prefix. They
+   were added to the common stock's shares and value (Oaktree Q2 2026: 4,666,667
+   Alvotech warrants turned 97,982 shares into 4,764,649). The class strings below are
+   the ones the saved books actually use. Units and trust units stay shares. */
+const NOT_SHARES=['WARRANT','WARRANT STRIKE 5.75 EXP 11/09/2023','*W EXP 07/10/201','W EXP 03/28/202','EQUITY WRT','RIGHT','RIGHT 10/10/2024'];
+const STILL_SHARES=['COM','ORD SHS','SHS CL A','UNIT 99/99/9999','TR UNIT','COM UNIT REP LTD','SPONSORED ADR'];
+test('warrants and rights are never added to the same company’s shares, in the summary or on the page',()=>{
+  const rows=[holding('123456100',100,{shares:10}),
+    ...NOT_SHARES.map((c,i)=>holding(`12345611${i}`,1000,{shares:5000,class:c})),
+    ...STILL_SHARES.map((c,i)=>holding(`65432${i}100`,1,{shares:1,class:c,name:`KEPT ${i}`}))];
+  const s=overview.summarize(book([q('2026-06-30',rows)]));
+  const sample=s.holdings.find(r=>r.key==='123456');
+  assert.equal(sample.value,100);assert.equal(s.stocks,1+STILL_SHARES.length);
+  // The live page merges the same way, so its share count is the common stock alone.
+  const core=fs.readFileSync(path.join(root,'titans/shared/investor.js'),'utf8').split('/* 곁들이 표 둘')[0];
+  const ctx={window:{TITAN:{slug:'x',cik:'1',name:{en:'X',ko:'X'},since:2020}},console,document:{},URLSearchParams,q:{holdings:rows}};
+  vm.createContext(ctx);vm.runInContext(core,ctx);
+  const merged=JSON.parse(vm.runInContext('JSON.stringify([...merge(q).values()].map(r=>[r.key,r.shares,r.value]))',ctx));
+  assert.deepEqual(merged.find(r=>r[0]==='123456'),['123456',10,100]);
+  assert.equal(merged.length,1+STILL_SHARES.length);
+});
+test('the warrant rule is one rule: the page, the summary and the Python bots share the same pattern',()=>{
+  const py=fs.readFileSync(path.join(root,'scripts/titans/registry.py'),'utf8').match(/NON_SHARE = re\.compile\(r"([^"]+)"\)/)[1];
+  for(const f of ['titans/shared/investor.js','titans/shared/overview.js']){
+    const js=fs.readFileSync(path.join(root,f),'utf8').match(/const NONSHARE=\/(.+?)\/;/)[1];
+    assert.equal(js,py,f);
+  }
+  for(const c of NOT_SHARES)assert.match(c,new RegExp(py),c);
+  for(const c of STILL_SHARES)assert.doesNotMatch(c,new RegExp(py),c);
 });
 
 function fixture(t){

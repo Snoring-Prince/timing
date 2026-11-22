@@ -20,12 +20,13 @@ function loader(file){
   assert.equal(blocks.length,1,file);
   return blocks[0];
 }
-function runLoader(file,{host='itpaidoff.com',store=storage()}={}){
-  const added=[],el=()=>({attrs:{},setAttribute(k,v){this.attrs[k]=v;}});
+function runLoader(file,{host='itpaidoff.com',store=storage(),ctxOut}={}){
+  const added=[],el=()=>({attrs:{},on:{},setAttribute(k,v){this.attrs[k]=v;},addEventListener(t,f){(this.on[t]||=[]).push(f);}});
   const ctx=vm.createContext({location:{hostname:host},localStorage:store,
     document:{createElement:el,head:{appendChild:n=>{added.push(n);return n;}}}});
   ctx.window=ctx;
   vm.runInContext(loader(file),ctx);
+  if(ctxOut)ctxOut.ctx=ctx;
   return added.filter(n=>/cloud\.umami\.is/.test(n.src||''));
 }
 
@@ -68,4 +69,25 @@ test('notrack/index.html: opening it opts the browser out, the button undoes it,
   const blocked=notrack(storage({},true));
   assert.equal(blocked.byId.state.attrs['data-state'],'na');
   assert.equal(blocked.shown(),'na');
+});
+
+// 2026-11-23 review: clicks made while Umami was still loading were dropped. On the
+// Olympics page the first character / result / comparison clicks often came first.
+test('shared/stats.js keeps clicks made before Umami loads and sends them once, in order',()=>{
+  const out={},[script]=runLoader('olympics/index.html',{ctxOut:out}),{ctx}=out,sent=[];
+  ctx.track('olympics_character',{person:'alicia'});ctx.track('olympics_result',{person:'alicia'});
+  assert.deepEqual(sent,[]);
+  ctx.umami={track:(n,d)=>sent.push([n,d&&d.person])};
+  for(const f of script.on.load)f();
+  ctx.track('olympics_compare');
+  assert.deepEqual(sent,[['olympics_character','alicia'],['olympics_result','alicia'],['olympics_compare',undefined]]);
+  for(const f of script.on.load)f();
+  assert.equal(sent.length,3,'a second load event must not resend');
+  // Blocked by an ad blocker: nothing is held for ever and nothing throws.
+  const out2={},[blocked]=runLoader('samuel/index.html',{ctxOut:out2});
+  out2.ctx.track('samuel_compare');for(const f of blocked.on.error)f();
+  for(let i=0;i<50;i++)out2.ctx.track('samuel_compare');
+  out2.ctx.umami={track:()=>{throw new Error('down');}};
+  for(const f of blocked.on.load||[])f();
+  assert.doesNotThrow(()=>out2.ctx.track('samuel_compare'));
 });
