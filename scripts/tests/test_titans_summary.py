@@ -38,6 +38,21 @@ class SummaryTests(unittest.TestCase):
         self.assertEqual((s["total"], s["stocks"]), (400, 2))
         self.assertEqual([t["w"] for t in s["top"]], [75.0, 25.0])
 
+    def test_warrants_and_rights_are_not_the_companys_shares(self):
+        # 오크트리 2026년 2분기: 알보테크 워런트 4,666,667개가 보통주 97,982주에 더해져
+        # 목록·주가·티커 수집이 모두 워런트를 그 회사 주식으로 셌다(2026-11-23 검수).
+        common = {"cusip": "123456100", "name": "FIX CORP", "class": "COM", "shares": 10, "value": 300}
+        others = [{**common, "cusip": f"12345611{i}", "class": c, "shares": 5000, "value": 900}
+                  for i, c in enumerate(["WARRANT", "*W EXP 07/10/201", "W EXP 03/28/202",
+                                         "EQUITY WRT", "RIGHT", "RIGHT 10/10/2024"])]
+        for h in others:
+            self.assertFalse(registry.is_share(h), h["class"])
+        for c in ["COM", "ORD SHS", "UNIT 99/99/9999", "TR UNIT", "COM UNIT REP LTD", "SHS CL A"]:
+            self.assertTrue(registry.is_share({**common, "class": c}), c)
+        book = {"quarters": [{"period": "2026-06-30", "holdings": [common, *others]}]}
+        s = pt.summarize(SimpleNamespace(slug="x", name={"en": "X", "ko": "X"}, since=2020), book)
+        self.assertEqual((s["total"], s["stocks"]), (300, 1))
+
     def test_missing_books_are_skipped_and_nothing_at_all_keeps_the_old_file(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)

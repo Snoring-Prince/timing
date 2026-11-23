@@ -4,12 +4,19 @@
 
 ---
 
-## 2026-11-15 · Claude · (이 PR)
+## 2026-11-23 · Claude · (이 PR)
+PR #153 검수(Codex 7건, docs/worklog/2026-11-23-pr-153-review.md) 후속 — 사용자가 7건 모두 진행으로 정함
+- 파일: titans/shared/overview.js·investor.js · scripts/titans/registry.py · titans/*/index.html(재생성·표식) · titans/13f · data/titans/summary.json(재생성) · samuel/model.js·index.html · shared/stats.js · .github/workflows/update-long.yml · timing/index.html · sitemap.xml · 검사 6건 · CLAUDE.md(5·6-2·9-3-1·9-3-2·구조·머리 날짜)
+- 규칙: 요약에 비중 최대 변화 문장 안 씀 · 워런트·신주인수권은 주식 아님(정규식 한 벌, 세 곳 대조) · 사무엘 시작월은 그달 첫 거래일에 BIL 이 있는 달만 · 예시 문단 실패는 가격 저장·올림픽을 막지 않고 따로 알림 · 통계는 로딩 전 클릭을 보관.
+- 확인: Python 169·Node 174 통과, 고친 자리마다 되돌리면 실패. 크로미움 투자자 8곳×한영×4폭 문제 0, 오크트리 ALVO 97,982주, 올림픽 Umami 9초 지연에서 옛 0건/새 3건.
+- 넘김: 머지 뒤 첫 주가 갱신에서 오크트리 워런트 둘(L01800116·G7553X114)이 수집·`unpriced` 에서 빠지는지, 토요일 장기 이력에서 사무엘 예시가 2007-06 시작으로 다시 써지는지 확인.
+
+## 2026-11-15 · Claude · PR #152
 ROKU·TATT 주가 갱신 알림 — 거래가 멈춘 종목은 알려진 상태로, 이미 받아 온 짝은 토요일 재대조를 10% 로
 - 파일: scripts/fetch_prices.py(`Halted`·`SETTLED`·알림 문구) · scripts/tests/test_prices.py(+4건) · CLAUDE.md(9-3-1·머리 날짜) · 이 일지
 - 결과(PR #151): 머지됨. 11-04 에 STKL 이 '처음 봄' 으로 한 번 울리고 그 뒤 조용함 확인.
 - 확인: Probe Splits(43700981942) — ROKU 마지막 거래 11-06 · OpenFIGI 번호 모름(11-14 로그). TATT 티커 정상, ARK 9월 값만 −3.41%. Python 전체 통과.
-- 넘김: 머지 뒤 11-17 평일 갱신에서 ROKU 가 `price source shows no trade since 2026-11-06 — 처음 봄` 으로 한 번 울리는지, 다음 토요일(11-21)에 TATT 가 안 울리는지 확인.
+- 넘김: 끝 — 11-17 평일 갱신에서 ROKU 가 `처음 봄` 으로 한 번 울리고 `unpriced` 에 들어갔으며, TATT 는 `unpriced` 에서 빠짐(11-17 로그·main 확인).
 
 ## 2026-11-03 · Claude · PR #151
 STKL 주가 갱신 알림 — 야후가 404 대신 보낸 빈 응답을 같은 알려진 상태로
@@ -716,19 +723,3 @@ Codex 검수에 넘기기 전 — 낡은 지도 셋을 고침 (사용자 요청)
   정정 병합(PR #64)은 2026-09-20 일요일 실행에서 **7분기 반영 · 43분기
   `pre-xml` 표시**로 예행값과 일치했다(확인 끝). SEO 분석 · 영어 `--up`
   대비 4.49(비중 막대 위)가 미착수.
-
----
-
-## 2026-09-22 · Claude
-사건 줄(재진입·전량매도)에 로고·섹터 · 사건 블록을 한 격자로 (사용자 요청)
-- 파일: titans/shared/investor.js · investor.css · scripts/tests/titans.test.cjs ·
-  CLAUDE.md · docs/worklog/claude.md
-- 규칙: 사건 줄은 목록이 쓰는 `markHTML()`·`sectorOf()` 를 **그대로** 쓴다.
-  **격자는 줄이 아니라 `.events` 블록이 쥔다**(`.ev{display:contents}`) —
-  줄마다 두면 이름표 폭이 달라 마크가 줄마다 다른 자리에서 시작한다.
-  `display:contents` 요소는 상자가 없다: 여백은 부모 `row-gap`, 글꼴은 자식이
-  직접, **검수에서 `getBoundingClientRect()` 는 자식을 재야 한다.**
-- 굳힘: 전량매도 줄도 마크·섹터가 나온다(`B.out` 이 cusip·key 를 들고 있다).
-  못 찾으면 글자 타일 + 빈 섹터 — 틀린 것을 적지 않는다.
-- 넘김: 정정 병합(PR #64)의 실제 SEC 실행은 아직 0회 — 일요일 01:00 UTC 전체
-  점검이 첫 실행. SEO 분석 · 영어 `--up` 대비 4.49(비중 막대 위)가 미착수.

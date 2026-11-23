@@ -25,7 +25,13 @@
       if(!prices.has(day))throw Error('data');
       return [day,price,prices.get(day)];
     });
-    if(rows.length<2)throw Error('data');return rows;
+    if(rows.length<2)throw Error('data');
+    // A month is a start only when its first stock trading day already has a BIL price.
+    // BIL listed on 2007-05-30, so May 2007 began on the 30th with the second purchase
+    // two days later (2026-11-23 review). The rows stay; that month is just not a start.
+    const first=equity.findIndex(r=>r[0]===rows[0][0]);
+    if(first>0&&equity[first-1][0].slice(0,7)===rows[0][0].slice(0,7))rows.partialMonth=rows[0][0].slice(0,7);
+    return rows;
   }
   function lowerBound(rows,day){let lo=0,hi=rows.length;while(lo<hi){const m=(lo+hi)>>1;if(rows[m][0]<day)lo=m+1;else hi=m;}return lo;}
   function addMonths(day,n){
@@ -37,6 +43,7 @@
   function simulate(rows,month,{amount=10000,months=6,years=3}={}){
     if(!/^\d{4}-\d{2}$/.test(month)||!validDate(month+'-01')||!Number.isFinite(amount)||amount<=0||amount>1e9||
       ![3,6,12].includes(months)||![1,3,5,10].includes(years))throw Error('inputs');
+    if(rows.partialMonth===month)throw Error('range');
     const start=lowerBound(rows,month+'-01');
     if(start>=rows.length||rows[start][0].slice(0,7)!==month)throw Error('range');
     const from=rows[start][0],target=addMonths(from,years*12),end=lowerBound(rows,target);

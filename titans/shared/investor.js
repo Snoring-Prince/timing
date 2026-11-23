@@ -29,7 +29,7 @@ en:{
      세 가지를 가리켰습니다. 한국어는 `보유`/`유지` 로 갈라져 있습니다. */
   kNew:"new", kAdd:"added", kTrim:"trimmed", kHold:"unchanged", kOut:"exited",
   /* 영어는 단수를 따로 적는다. 한국어는 `26종목` 하나로 끝난다. */
-  stockOnly:"Stock positions only; options and bonds excluded from totals and weights.",
+  stockOnly:"Stock positions only; options, warrants, rights and bonds are excluded from totals and weights.",
   positions:n=>`${n} position${n===1?"":"s"}`,
   bought:(n,v)=>`<i>Largest buy</i><span>${n}</span><em>${v} est.</em>`,
   sold:(n,v)=>`<i>Largest sale</i><span>${n}</span><em>${v} est.</em>`,
@@ -97,7 +97,7 @@ ko:{
   filedOn:d=>`${d} 공시`,
   quarterHead:d=>`${qLabel("ko",d)} (${qSpan("ko",d)})`,
   kNew:"신규", kAdd:"확대", kTrim:"축소", kHold:"유지", kOut:"전량매도",
-  stockOnly:"주식 보유분만 집계합니다. 옵션·채권은 총액·비중에서 제외합니다.",
+  stockOnly:"주식 보유분만 집계합니다. 옵션·워런트·신주인수권·채권은 총액·비중에서 제외합니다.",
   positions:n=>`${n}종목`,
   /* **줄글이 아니라 이름표 + 값입니다** (사용자 요청). 한 화면에 나란히 놓이는
      두 줄이라 같은 꼴이어야 견줘집니다 — "가장 많이 산 것은 … 입니다" 는
@@ -247,7 +247,12 @@ let RAW=null, LOADED=false;
 const ISPFD=/\bPFD\b|PREFERRED/;
 const gkey=h=>h.cusip.slice(0,6)+(ISPFD.test((h.class||"").toUpperCase())?"|P":"");
 
-const isShare=h=>(h.type||"SH").trim().toUpperCase()==="SH"&&!String(h.putCall||"").trim();
+/* 워런트·신주인수권(RIGHT)은 발행사의 CUSIP 앞 여섯 자리를 그대로 쓰는 SH 줄이라,
+   거르지 않으면 보통주 줄에 수량·금액이 더해진다(오크트리 2026년 2분기 ALVO 줄의 75%가
+   워런트였다). 파이썬 registry.is_share 와 overview.js 와 같은 규칙이다. */
+const NONSHARE=/\bWARRANTS?\b|\bWRTS?\b|\bWTS?\b|\bW EXP\b|\bRIGHTS?\b|\bRTS?\b/;
+const isShare=h=>(h.type||"SH").trim().toUpperCase()==="SH"&&!String(h.putCall||"").trim()
+  &&!NONSHARE.test(String(h.class||"").toUpperCase());
 function merge(q){
   const g=new Map();
   for(const h of q.holdings){

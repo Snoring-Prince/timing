@@ -2,6 +2,7 @@
 import contextlib
 import io
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -85,6 +86,57 @@ class Export(unittest.TestCase):
         for symbol in ("SPY", "QQQ", "BIL"):
             with patch.object(history, "fetch", return_value=raw), self.assertRaisesRegex(RuntimeError, "배당 반영"):
                 history.yahoo_daily(symbol)
+
+    def test_a_failed_example_never_holds_back_the_saved_prices(self):
+        # 2026-11-23 검수: 예시 문단 생성이 실패하면 사무엘 가격까지 저장하지 않았고,
+        # long 잡이 실패해 그 주 올림픽 갱신도 건너뛰었다. 워크플로의 실제 저장 스크립트를
+        # 임시 저장소에서 그대로 돌려 본다.
+        root = Path(__file__).resolve().parents[2]
+        wf = (root / ".github/workflows/update-long.yml").read_text(encoding="utf-8")
+        lines = wf.splitlines()
+        run = lines.index("        run: |", lines.index("      - name: 결과 저장"))
+        body = []
+        for line in lines[run + 1:]:
+            if line.strip() and not line.startswith("          "):
+                break
+            body.append(line[10:])
+        script = "\n".join(body)
+        self.assertIn("${{ steps.samuel.outcome }}", script)
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            remote, work = tmp / "remote.git", tmp / "work"
+            def git(*args):
+                return subprocess.run(["git", *args], cwd=work, check=True,
+                                      capture_output=True, text=True).stdout
+            subprocess.run(["git", "init", "--bare", "-q", str(remote)], check=True)
+            subprocess.run(["git", "clone", "-q", str(remote), str(work)], check=True, capture_output=True)
+            for name, text in {"data/market-long.json": "1", "data/dashboard/market-long.json": "1",
+                               "data/samuel/prices.json": "old prices", "samuel/index.html": "old example",
+                               "sitemap.xml": "<lastmod>2000-01-01</lastmod><!-- samuel -->\n"}.items():
+                (work / name).parent.mkdir(parents=True, exist_ok=True)
+                (work / name).write_text(text, encoding="utf-8")
+            git("add", "-A")
+            git("-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-qm", "base")
+            git("push", "-q", "-u", "origin", "HEAD")
+            (work / "data/samuel/prices.json").write_text("new prices", encoding="utf-8")
+            (work / "samuel/index.html").write_text("new example", encoding="utf-8")
+            def save(outcome):
+                subprocess.run(["bash", "-eo", "pipefail", "-c",
+                                script.replace("${{ steps.samuel.outcome }}", outcome)],
+                               cwd=work, check=True, capture_output=True, text=True)
+            save("failure")
+            self.assertEqual(git("show", "HEAD:data/samuel/prices.json"), "new prices")
+            self.assertEqual(git("show", "HEAD:samuel/index.html"), "old example")
+            self.assertNotIn("2000-01-01", git("show", "HEAD:sitemap.xml"))
+            self.assertIn("new prices", subprocess.run(["git", "--git-dir", str(remote), "show", "HEAD:data/samuel/prices.json"],
+                                                      check=True, capture_output=True, text=True).stdout)
+            save("success")
+            self.assertEqual(git("show", "HEAD:samuel/index.html"), "new example")
+        # 실패 상태는 수집 실패에만 걸고, 예시 실패는 제 제목으로 따로 알린다.
+        self.assertIn("if: always() && steps.collect.outcome == 'failure'\n        run: exit 1", wf)
+        self.assertIn("if: always() && steps.samuel.outcome == 'failure'", wf)
+        self.assertIn('--title "사무엘 비교 예시 갱신 실패"', wf)
+        self.assertIn("needs: long", wf)
 
     def test_weekly_job_reuses_full_points_before_thinning_and_reports_export_failure(self):
         quotes = fixture()
